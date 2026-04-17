@@ -18,8 +18,10 @@
 | Sistema de diseno | `.claude/context/design-system.md` |
 | Convenciones | `.claude/context/conventions.md` |
 | Esquema de datos | `.claude/context/data-schema.md` |
+| Versionado y releases | `.claude/context/versioning.md` |
 | Estado de sesion | `.claude/state/session.md` |
 | Componentes instalados | `.claude/state/installed-components.md` |
+| Changelog | `CHANGELOG.md` |
 
 ## Reglas de Workflow (No Negociables)
 
@@ -46,6 +48,29 @@
 5. **Cero spaghetti** — Codigo reutilizable, escalable, mantenible. Separar logica de presentacion.
 6. **Sin hardcoding** — Data reutilizable en composables o stores. Configuracion en runtime config.
 7. **tenant_id** — Todas las tablas tenant-scoped llevan `tenant_id` FK. Sin excepciones.
+
+## Reglas de Seguridad de Datos (No Negociables)
+
+1. **Migraciones additive-only** — NUNCA DROP TABLE, DROP COLUMN, ni ALTER COLUMN en migraciones sin autorizacion + backup confirmado.
+2. **Backward compatible** — El codigo anterior debe seguir funcionando con el schema nuevo. Nuevas columnas con DEFAULT o nullable.
+3. **Schema aislado por modulo** — Cada modulo tiene su propio archivo en `server/db/schema/`. No modificar schemas de otros modulos.
+4. **FK en el schema nuevo** — Si un modulo necesita relacion con otro, la FK va en el archivo del modulo nuevo, no del existente.
+5. **Probar migraciones en dev** — SIEMPRE ejecutar y verificar en Docker local antes de produccion.
+
+## Reglas de Versionado (No Negociables)
+
+1. **Semantic Versioning** — MAJOR.MINOR.PATCH (ver `.claude/context/versioning.md`)
+2. **Git tags** — Cada release a produccion tiene tag `v0.X.0`
+3. **CHANGELOG.md** — Actualizar en cada version con cambios, fixes y breaking changes
+4. **Branch protection** — `main` = produccion. Desarrollo en branches por modulo.
+
+## Reglas de Componentizacion (No Negociables)
+
+1. **Componentes genericos** — Vistas (tablas, listas, grids) reciben datos via props/slots. NUNCA hardcodear logica de negocio.
+2. **Composables = logica** — Componentes solo renderizan. Toda logica en composables.
+3. **DRY obligatorio** — Si un patron se repite en 2+ lugares, DETENER y refactorizar antes de continuar.
+4. **Tipos compartidos** — Definir en `shared/types/`, usar en client y server.
+5. **Nunca copiar-pegar** — Extraer a composable o componente reutilizable.
 
 ## Reglas de Sesion
 
