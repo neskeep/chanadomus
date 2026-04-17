@@ -1,31 +1,32 @@
 # Estado de Sesion — ChanaDomus
 
-## Sesion Actual
+## Ultima Sesion
 - **Fecha**: 2026-04-17
 - **Sesion #**: 2
-- **Fase**: Scaffolding (Fase 0)
-- **Objetivo**: Levantar estructura base del proyecto
+- **Fase**: Scaffolding (Fase 0) — COMPLETADA
+- **Version**: v0.0.0
+- **Branch**: dev
 
-## Trabajo Completado esta Sesion
-- [x] Nuxt 4.4.2 inicializado (template minimal)
-- [x] Tailwind CSS 4.2.2 instalado y configurado
-- [x] shadcn-vue inicializado (preset a6PDm8yA: reka-luma/taupe/inter)
-- [x] Dependencias core instaladas (drizzle, better-auth, vueuse)
-- [x] CLAUDE.md creado con reglas estrictas
-- [x] Archivos de contexto creados
-- [ ] Estructura de carpetas (server/, shared/)
-- [ ] Docker Compose + .env.example
-- [ ] Schema tenants + conexion DB
-- [ ] Git init + primer commit
-- [ ] Verificacion (pnpm dev funciona)
+## Resumen Session 2
+- Scaffold completo: Nuxt 4.4.2 + shadcn-vue + Tailwind + Drizzle
+- CLAUDE.md con reglas estrictas (7 secciones de reglas no negociables)
+- 5 archivos de contexto + 2 archivos de estado
+- Docker Compose para PostgreSQL 16
+- Schema base: tenants (SaaS-ready)
+- Repo GitHub: neskeep/chanadomus (privado)
+- Branches: main (v0.0.0) + dev
+- Incidente seguridad resuelto: .mcp.json purgado del historial Git
+- CHANGELOG.md + versioning.md creados
 
-## Decisiones de esta Sesion
-- MVP single-tenant, SaaS-ready (tenant_id en schema)
-- Preset shadcn a6PDm8yA tal cual (sin customizacion de branding)
-- Handoff automatico al 90% de contexto
+## Proximo Modulo: Auth (v0.1.0)
+- Branch: `feat/auth` desde `dev`
+- Schema: auth.ts (users, sessions, tenant_memberships)
+- Backend: Better Auth config + PostgreSQL adapter + middleware
+- Frontend: Pagina login + redirect por rol + layouts por rol
+- Componentes shadcn necesarios: Button, Input, Label, Card (instalar al desarrollar)
+- Al completar: merge a dev, tag v0.1.0
 
-## Bloqueadores
-- Ninguno actualmente
-
-## Proxima Sesion
-- Desarrollo del modulo de Auth (Better Auth + 4 roles + tenant_memberships)
+## Prerequisitos para Session 3
+1. Docker corriendo (`docker compose up -d`)
+2. PostgreSQL accesible en localhost:5432
+3. Primera migracion Drizzle (tenant + auth schemas)
