@@ -2,31 +2,25 @@
 
 ## Ultima Sesion
 - **Fecha**: 2026-04-17
-- **Sesion #**: 2
-- **Fase**: Scaffolding (Fase 0) — COMPLETADA
-- **Version**: v0.0.0
-- **Branch**: dev
+- **Sesion #**: 4
+- **Fase**: Auth (v0.1.0) — COMPLETADA
+- **Version**: v0.1.0
+- **Branch**: feat/auth (pendiente merge a dev)
 
-## Resumen Session 2
-- Scaffold completo: Nuxt 4.4.2 + shadcn-vue + Tailwind + Drizzle
-- CLAUDE.md con reglas estrictas (7 secciones de reglas no negociables)
-- 5 archivos de contexto + 2 archivos de estado
-- Docker Compose para PostgreSQL 16
-- Schema base: tenants (SaaS-ready)
-- Repo GitHub: neskeep/chanadomus (privado)
-- Branches: main (v0.0.0) + dev
-- Incidente seguridad resuelto: .mcp.json purgado del historial Git
-- CHANGELOG.md + versioning.md creados
+## Resumen Session 4
+- Fix seed: reemplazado scrypt generico por `hashPassword` de `better-auth/crypto`
+- Fix import: `~/server/db` → `~~/server/db` en `server/lib/auth.ts`
+- Fix middleware: reescrito `auth.global.ts` como SSR-safe (fetch isomorfico en vez de `authClient.useSession()`)
+- Fix composable: corregido `useAuth.ts` para shape real de `useSession()` (`session.value.data` en vez de `session.data.value`)
+- Fix components: agregado `pathPrefix: false` en `nuxt.config.ts` para auto-import de shadcn-vue sin prefijo `Ui`
+- Re-seed exitoso con hash compatible de Better Auth
+- Verificacion E2E completa: login → redirect por rol → proteccion de rutas → sign out
+- CHANGELOG.md actualizado con v0.1.0
+- installed-components.md actualizado con Button, Input, Label, Card
 
-## Proximo Modulo: Auth (v0.1.0)
-- Branch: `feat/auth` desde `dev`
-- Schema: auth.ts (users, sessions, tenant_memberships)
-- Backend: Better Auth config + PostgreSQL adapter + middleware
-- Frontend: Pagina login + redirect por rol + layouts por rol
-- Componentes shadcn necesarios: Button, Input, Label, Card (instalar al desarrollar)
-- Al completar: merge a dev, tag v0.1.0
-
-## Prerequisitos para Session 3
-1. Docker corriendo (`docker compose up -d`)
-2. PostgreSQL accesible en localhost:5432
-3. Primera migracion Drizzle (tenant + auth schemas)
+## Proximo Modulo: QR/Access (v0.2.0)
+- Branch: `feat/qr-access` desde `dev`
+- Schema: access codes, access logs
+- Backend: QR generation, validation API
+- Frontend: QR scanner, access log views
+- Prerequisito: Auth module merged y funcional (v0.1.0)
