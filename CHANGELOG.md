@@ -7,6 +7,27 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.7.0] - 2026-04-19
+
+### Added
+- Drizzle schema: `financial_reports` table with title, file_path, month, year, uploaded_by FK, tenant FK, 2 indices (M2.2)
+- Migration 0007: CREATE TABLE financial_reports (additive-only)
+- Shared types: UnitSummary, FinancialReport in shared/types/financial.ts
+- API GET /api/finance/summary: returns all units with calculated balance and debt flag (admin only)
+- API POST /api/finance/records: create cargo/abono records with validation (admin only)
+- API POST /api/finance/reports/upload: multipart PDF upload with 10MB limit, file type validation (admin only)
+- API GET /api/finance/reports: paginated list of financial reports (admin/propietario)
+- API GET /api/finance/reports/[filename]: serve PDF files with directory traversal protection
+- Composable useFinanceSummary: fetchSummary, summaries, totalUnits, totalInDebt
+- Composable useFinanceRecords: createRecord with validation
+- Composable useFinancialReports: fetchReports (paginated), uploadReport (multipart)
+- Composable useUnits: fetchUnits for unit dropdown
+- Vista admin Panel Financiero (/admin/finanzas): 3-tab layout (Resumen table with search/sort, Registrar Movimiento form, Informes upload + list)
+- Vista propietario Informes Financieros (/propietario/informes): card-based report list with download, pagination, empty state
+- Navigation: Finanzas link for admin, Informes link for propietario in bottom nav
+- Sonner toast notifications integrated in app.vue
+- shadcn-vue components: Table, Tabs, Skeleton, Sonner, Dialog
+
 ## [0.6.0] - 2026-04-19
 
 ### Added
