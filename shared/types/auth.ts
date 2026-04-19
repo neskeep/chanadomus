@@ -23,4 +23,4 @@ export const ROUTE_ROLE_MAP: Record<string, UserRole[]> = {
   '/vigilancia': ['admin', 'vigilancia'],
 }
 
-export const PUBLIC_ROUTES = ['/login']
+export const PUBLIC_ROUTES = ['/login', '/acceso']

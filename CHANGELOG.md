@@ -7,6 +7,24 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-04-19
+
+### Added
+- QR Access module (M1.3): generation, validation, and WhatsApp sharing
+- Drizzle schema: `units` table (86 ranchos), `qr_codes` and `access_logs` tables with enums (visitor_type, entry_type, access_result)
+- API POST /api/qr/generate: session-protected QR code generation with UUID v4 tokens
+- API POST /api/qr/validate: public endpoint for token validation (valid/expired/used/invalid)
+- API GET /api/qr/my-codes: owner's QR history with dynamic status filtering
+- API GET /api/units: tenant-scoped unit listing for form selects
+- Shared types in shared/types/qr.ts (QrCodeRecord, GenerateQrInput, ValidationResult)
+- Composable useQr: QR generation, listing, and unit fetching logic
+- Page /propietario/nueva-visita: form with visitor data, unit select, QR rendering via `qrcode` library, Web Share API for WhatsApp with clipboard fallback
+- Page /propietario/mis-visitas: QR history with status filters (all/active/used/expired), expandable QR view, share functionality
+- Page /acceso/[token]: public standalone page showing QR validation status with visual states (green=valid, amber=expired, blue=used, red=invalid)
+- shadcn-vue components: Select, Badge, Separator
+- Database seed: 86 units (R-001 to R-086) for Ranchos de Chana tenant
+- Public route support: /acceso/* excluded from auth middleware (client + server)
+
 ## [0.1.0] - 2026-04-17
 
 ### Added
