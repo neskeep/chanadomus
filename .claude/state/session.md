@@ -6,8 +6,8 @@
 - **Fase**: Fichas de Viviendas y Base de Personal (v0.9.0)
 - **Version**: v0.9.0
 - **Branch**: feat/fichas-viviendas
-- **Commit**: pendiente
-- **Push**: Pendiente
+- **Commit**: 205233c (feat), d92c260 (merge), c121e70 (fix warnings), 50022b3 (devtools)
+- **Push**: Completado
 
 ## Resumen Session 12
 
@@ -61,8 +61,7 @@
 - Errores pre-existentes en typecheck: finance/reports (row undefined), nuxt.config (websocket flag)
 
 ## Proximo paso
-- Commit feat + changelog
-- Merge feat/fichas-viviendas → dev
-- Tag v0.9.0
-- Push a remote
-- Siguiente: M3.1 — Chat Tiempo Real
+- Siguiente: Fase 3 — Comunicacion Comunitaria
+- M3.1 — Chat Tiempo Real: 4 Canales WebSocket con Historial Persistente
+- Fix aplicado: duplicate component warnings (extensions: ['.vue'])
+- Fix aplicado: devtools desactivado
