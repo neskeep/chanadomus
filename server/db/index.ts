@@ -5,6 +5,8 @@ import * as authSchema from './schema/auth'
 import * as unitSchema from './schema/unit'
 import * as accessSchema from './schema/access'
 import * as deviceSchema from './schema/device'
+import * as pushSchema from './schema/push'
+import * as panicSchema from './schema/panic'
 
 const connectionString = process.env.DATABASE_URL!
 
@@ -17,5 +19,7 @@ export const db = drizzle(client, {
     ...unitSchema,
     ...accessSchema,
     ...deviceSchema,
+    ...pushSchema,
+    ...panicSchema,
   },
 })
