@@ -5,32 +5,44 @@
 - **Sesion #**: 9
 - **Fase**: Schema Financiero y Estado de Cuenta Personal (v0.6.0)
 - **Version**: v0.6.0
-- **Branch**: feat/schema-financiero
-- **Commit**: pendiente
-- **Push**: Pendiente
+- **Branch**: dev (merged)
+- **Commit**: 676465a
+- **Push**: Completado
 
 ## Resumen Session 9
-- Schema: server/db/schema/financial.ts (financial_records + record_type enum)
-- Migracion: 0005_flowery_alice.sql (additive-only: CREATE TYPE + CREATE TABLE + FKs + indices)
+
+### M2.1 Completado (3/3 tareas hub)
+- Schema: server/db/schema/financial.ts (financial_records + record_type enum cargo/abono)
+- Migracion 0005: CREATE TYPE record_type + CREATE TABLE financial_records (additive-only)
 - Tipos: shared/types/financial.ts (RecordType, FinancialRecord, AccountStatement)
 - Endpoint: GET /api/finance/my-account (movimientos por unidad + saldo calculado)
 - Composable: app/composables/useMyAccount.ts (fetchStatement, balance, records, isInDebt)
 - Vista: app/pages/propietario/estado-cuenta.vue (balance hero, movimientos, loading, empty state)
-- DB index: server/db/index.ts actualizado con financialSchema
-- CHANGELOG actualizado para v0.6.0
-- Hub: 3/3 tareas de M2.1 completadas
-- Build: exitoso sin errores nuevos
 
-## Completado en esta sesion
-- [x] Tarea 1: Schema Drizzle financial_records + migracion (hub: 65d55418)
-- [x] Tarea 2: Endpoint GET /api/finance/my-account (hub: 68378422)
-- [x] Tarea 3: Vista propietario estado-cuenta.vue (hub: 5210af74)
+### Adicional: unit_id en user table
+- Agregado unit_id nullable a user table (server/db/schema/auth.ts)
+- Registrado en Better Auth additionalFields (server/lib/auth.ts)
+- Migracion 0006: ALTER TABLE user ADD COLUMN unit_id uuid (additive-only)
+- Necesario para que my-account resuelva la unidad del propietario desde su sesion
 
-## Notas tecnicas
-- user tabla NO tiene unitId — se extrae de session.user con cast (patron de panic.post.ts)
-- amount es numeric(12,2) — viene como string de PG, parseado en endpoint
-- Saldo = sum(abonos) - sum(cargos), calculado en el endpoint
-- Error preexistente: websocket en experimental de nuxt.config (no afecta build)
+### Estado del Hub
+- M2.1: COMPLETED (3/3 tareas + milestone marcado completed)
+- M1.6: pendiente (bloqueado VPS)
+
+### Git
+- Branch feat/schema-financiero merged → dev
+- Tag v0.6.0 creado y pushed
+- Commit adicional 676465a (unit_id) directo en dev
+
+### Datos de prueba en DB local
+- Propietario: juan@chanadomus.com / Demo2026! → unidad R-001
+- 8 movimientos financieros: 4 cuotas 1500 + 1 derrama 250 + 3 abonos 1500
+- Saldo esperado: -1750.00 (en mora)
+
+### Notas tecnicas
+- Dev server funciona en localhost:3000 (limpiar procesos zombie si hay conflicto de puerto)
+- Bug conocido Nuxt 4.4.2: "Cannot access renderer before initialization" — se resuelve matando procesos zombie en puerto 3000
+- pnpm-lock.yaml modificado por reinstall limpio (no commiteado)
 
 ## Pendiente M1.6 (bloqueado VPS)
 - [ ] Migraciones en produccion + seed
@@ -39,5 +51,4 @@
 - [ ] Merge feat/pwa-deploy → dev + tag v0.5.0
 
 ## Proximo paso
-- Merge feat/schema-financiero → dev + tag v0.6.0
 - M2.2: Panel Financiero Admin (movimientos, saldos, PDFs)
