@@ -2,59 +2,67 @@
 
 ## Ultima Sesion
 - **Fecha**: 2026-04-19
-- **Sesion #**: 11
-- **Fase**: Modulo de Incidencias (v0.8.0)
-- **Version**: v0.8.0
-- **Branch**: feat/modulo-incidencias
+- **Sesion #**: 12
+- **Fase**: Fichas de Viviendas y Base de Personal (v0.9.0)
+- **Version**: v0.9.0
+- **Branch**: feat/fichas-viviendas
 - **Commit**: pendiente
 - **Push**: Pendiente
 
-## Resumen Session 11
+## Resumen Session 12
 
-### M2.3 Completado (5/5 tareas hub)
-- Schema: server/db/schema/incident.ts (incidents, incident_photos, incident_updates)
-- Enums PG: incident_status (open/in_progress/resolved/closed), incident_priority (low/medium/high)
-- Migracion 0008: CREATE TABLE incidents + incident_photos + incident_updates (additive-only)
-- Tipos: Incident, IncidentPhoto, IncidentUpdate, IncidentStatus, IncidentPriority en shared/types/incident.ts
-- Endpoint: POST /api/incidents (crear con fotos multipart, solo propietario, push a admin)
-- Endpoint: GET /api/incidents (listar paginado con filtros, JOIN user/unit)
-- Endpoint: GET /api/incidents/[id] (detalle con fotos e historial)
-- Endpoint: PATCH /api/incidents/[id]/status (cambiar estado, solo admin, push al propietario)
-- Endpoint: GET /api/incidents/photos/[filename] (servir fotos, proteccion traversal, cache)
-- Composable: useIncidents (fetchIncidents paginado/filtrado, createIncident multipart)
-- Composable: useIncidentDetail (fetchIncident con fotos/updates, updateStatus)
-- Vista: app/pages/propietario/incidencias/index.vue (cards con expand, status/priority badges, fotos, historial)
-- Vista: app/pages/propietario/incidencias/nueva.vue (form con titulo, desc, prioridad, upload 3 fotos)
-- Vista: app/pages/admin/incidencias.vue (tabla desktop / cards mobile, filtros, dialog detalle con cambio estado)
-- Navegacion: links Incidencias para admin y propietario en bottom nav
-- shadcn-vue: Textarea instalado
+### M2.4 Completado (5/5 tareas hub)
+- Schema: server/db/schema/household.ts (household_members + enum household_relationship)
+- Schema: server/db/schema/vehicle.ts (vehicles con unique tenant+plate)
+- Schema: server/db/schema/staff.ts (staff + enum staff_role)
+- Migracion 0009: CREATE TABLE household_members + vehicles + staff (additive-only)
+- Tipos: HouseholdMember, Vehicle, Staff en shared/types/
+- Endpoint: GET /api/units/directory (lista con conteos member/vehicle via LEFT JOIN)
+- Endpoint: GET/POST /api/units/[id]/members (listar/crear miembros)
+- Endpoint: PATCH/DELETE /api/members/[id] (actualizar/soft-delete miembro)
+- Endpoint: GET/POST /api/units/[id]/vehicles (listar/crear vehiculos)
+- Endpoint: PATCH/DELETE /api/vehicles/[id] (actualizar/hard-delete vehiculo)
+- Endpoint: GET /api/vehicles (busqueda global por placa con ILIKE, JOIN unit)
+- Endpoint: GET/POST /api/staff (listar con filtro rol/crear personal)
+- Endpoint: PATCH/DELETE /api/staff/[id] (actualizar/soft-delete personal)
+- Composable: useUnitMembers (CRUD miembros por unidad)
+- Composable: useUnitVehicles (CRUD vehiculos por unidad)
+- Composable: useStaff (CRUD personal con filtro por rol)
+- Composable: useVehicleSearch (busqueda global por placa)
+- Vista: app/pages/admin/unidades/index.vue (directorio con conteos, search)
+- Vista: app/pages/admin/unidades/[id].vue (ficha con tabs Miembros/Vehiculos, CRUD)
+- Vista: app/pages/admin/personal/index.vue (gestion personal, filtro rol, CRUD)
+- Vista: app/pages/vigilancia/residentes/index.vue (directorio + busqueda placa)
+- Vista: app/pages/vigilancia/residentes/[id].vue (ficha read-only)
+- Navegacion: links Unidades y Personal (admin), Residentes (vigilancia)
+- shadcn-vue: AlertDialog instalado
 
 ### Estado del Hub
 - M1.1-M1.5: completed
 - M1.6: pendiente (bloqueado VPS)
-- M2.1-M2.2: completed
-- M2.3: **completed** (5/5 tareas)
+- M2.1-M2.3: completed
+- M2.4: **completed** (5/5 tareas)
 
 ### Git
-- Branch feat/modulo-incidencias creado desde dev
+- Branch feat/fichas-viviendas creado desde dev
 - Pendiente: commit, merge, tag, push
 
 ### Datos de prueba en DB local
 - Admin: admin@chanadomus.com / Admin2026!
 - Propietario: juan@chanadomus.com / Demo2026! → unidad R-001
-- Tablas incidents, incident_photos, incident_updates creadas (vacias)
+- Tablas household_members, vehicles, staff creadas (vacias)
 
 ### Notas tecnicas
-- Fotos almacenadas en uploads/incidents/ (disco local, .gitignore)
-- Max 3 fotos por incidencia, 5MB cada una (JPEG/PNG/WebP)
-- Push notifications: al crear incidencia → admins, al cambiar estado → propietario
-- Directory traversal protection en endpoint de fotos
-- Errores pre-existentes en typecheck: finance/reports (row undefined), nuxt.config (websocket)
+- Vehiculos: placa normalizada a uppercase, unique per tenant
+- Staff: soft delete (isActive = false)
+- Members: soft delete (isActive = false)
+- Vehicles: hard delete
+- Directory endpoint usa LEFT JOIN + COUNT DISTINCT para conteos
+- Errores pre-existentes en typecheck: finance/reports (row undefined), nuxt.config (websocket flag)
 
 ## Proximo paso
 - Commit feat + changelog
-- Merge feat/modulo-incidencias → dev
-- Tag v0.8.0
+- Merge feat/fichas-viviendas → dev
+- Tag v0.9.0
 - Push a remote
-- Actualizar hub: M2.3 tareas completed + milestone completed
-- Siguiente: M2.4 — Fichas de Viviendas y Base de Personal
+- Siguiente: M3.1 — Chat Tiempo Real

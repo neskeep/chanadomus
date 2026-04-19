@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { LogOut, Home, Wallet, AlertTriangle } from 'lucide-vue-next'
+import { LogOut, Home, Wallet, AlertTriangle, Building2, Users, Shield } from 'lucide-vue-next'
 import { ROLE_LABELS, ROLE_REDIRECTS } from '~~/shared/types/auth'
 import type { UserRole } from '~~/shared/types/auth'
 
@@ -15,10 +15,15 @@ const navItems = computed(() => {
   if (role.value === 'admin') {
     base.push({ label: 'Finanzas', icon: Wallet, to: '/admin/finanzas' })
     base.push({ label: 'Incidencias', icon: AlertTriangle, to: '/admin/incidencias' })
+    base.push({ label: 'Unidades', icon: Building2, to: '/admin/unidades' })
+    base.push({ label: 'Personal', icon: Users, to: '/admin/personal' })
   }
   if (role.value === 'propietario') {
     base.push({ label: 'Informes', icon: Wallet, to: '/propietario/informes' })
     base.push({ label: 'Incidencias', icon: AlertTriangle, to: '/propietario/incidencias' })
+  }
+  if (role.value === 'vigilancia') {
+    base.push({ label: 'Residentes', icon: Shield, to: '/vigilancia/residentes' })
   }
   return base
 })
