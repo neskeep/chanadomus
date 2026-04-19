@@ -7,6 +7,26 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.13.0] - 2026-04-19
+
+### Added
+- PWA manifest (`manifest.webmanifest`): name, icons, standalone display, portrait orientation, theme colors (M3.4)
+- PWA icons: 192px and 512px placeholder PNGs in `/public/icons/`
+- Offline fallback page (`/public/offline.html`): static HTML with ChanaDomus branding
+- Service Worker offline caching: cache-first for static assets, network-first for API/pages, offline fallback (M3.4)
+- Apple PWA meta tags: apple-touch-icon, apple-mobile-web-app-capable, theme-color
+- Drizzle schema: `push_preferences` table with 7 boolean category columns, unique index per user+tenant (M3.4)
+- Migration 0013: CREATE TABLE push_preferences (additive-only)
+- Shared types: PushCategory, PushPreferences, PUSH_CATEGORIES constant with labels/descriptions
+- API GET /api/me/push-preferences: get or create user preferences with all-enabled defaults
+- API PATCH /api/me/push-preferences: partial update with validation, upsert logic
+- Push preference filtering: sendPushToAll/sendPushToRole now respect per-user category preferences
+- Category mapping for legacy push categories (announcement→anuncio, incident→incidencia, poll→votacion)
+- Composable `usePushPreferences`: fetch, toggleCategory with optimistic updates
+- Page `/mi-chana/notificaciones`: push subscription status, 7 category toggles with Switch components
+- Bell icon in header for all roles linking to notification preferences
+- shadcn-vue component: Switch
+
 ## [0.12.0] - 2026-04-19
 
 ### Added

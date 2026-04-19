@@ -2,46 +2,40 @@
 
 ## Ultima Sesion
 - **Fecha**: 2026-04-19
-- **Sesion #**: 15
-- **Fase**: Votaciones Comunitarias (v0.12.0)
-- **Version**: v0.12.0
-- **Branch**: feat/votaciones-comunitarias (pending merge → dev)
-- **Commits**: a7b69c4 (feat)
+- **Sesion #**: 16
+- **Fase**: Refinamiento UX Movil + Push Preferences (v0.13.0)
+- **Version**: v0.13.0
+- **Branch**: feat/refinamiento-ux-movil (pending merge → dev)
 - **Tag**: pendiente
 - **Push**: pendiente
 
-## Resumen Session 15
+## Resumen Session 16
 
-### M3.3 Completado
-- Schema: server/db/schema/poll.ts (polls + poll_options + poll_votes + 2 enums)
-- Migracion 0012: CREATE TABLE polls, poll_options, poll_votes (additive-only, unique index 1 voto por unidad)
-- Tipos: shared/types/poll.ts (Poll, PollOption, PollVote, PollStatus, PollType)
-- API: 7 endpoints (CRUD + vote + results) + push on publish/close
-- Composable: usePolls.ts (fetch, create, update, publish, close, delete, vote)
-- Vista Admin: app/pages/admin/votaciones/index.vue (tabla/cards, dialog CRUD con opciones dinámicas, progress bars)
-- Vista Propietario: app/pages/mi-chana/votaciones/index.vue (radio buttons para votar, resultados con progress bars, tabs activas/cerradas)
-- Navegacion: Votaciones link para admin y propietario en default.vue
-- shadcn-vue: RadioGroup + Progress instalados
+### Pendientes Session 15 (completados)
+- Merge feat/votaciones-comunitarias → dev, tag v0.12.0, push
+- M3.1, M3.2, M3.3 marcados completed en hub
+- M3.2 segunda tarea (907c5a07) completada
 
-### Estado del Hub
-- M1.1-M1.5: completed
-- M1.6: pendiente (bloqueado VPS)
-- M2.1-M2.4: completed
-- M3.1: completed (3/3)
-- M3.2: 1/2 tareas completadas (segunda tarea no localizada)
-- M3.3: completed (3/3)
-
-### Datos de prueba en DB local
-- Admin: admin@chanadomus.com / Admin2026!
-- Propietario: juan@chanadomus.com / Demo2026! → unidad R-001
-- 89 salas de chat, 1 anuncio publicado (Mantenimiento 1)
-- Tablas polls, poll_options, poll_votes creadas pero vacías
+### M3.4 Completado
+- PWA Manifest: public/manifest.webmanifest (standalone, portrait, theme colors)
+- PWA Icons: public/icons/icon-192.png, icon-512.png (placeholders)
+- Offline: public/offline.html (static fallback)
+- SW Caching: cache-first static, network-first API/pages, offline fallback
+- Apple PWA metas en nuxt.config.ts
+- Schema: push_preferences (7 boolean categories, unique user+tenant)
+- Migration 0013: CREATE TABLE push_preferences
+- API: GET/PATCH /api/me/push-preferences
+- Push filtering: sendPushToAll/sendPushToRole respetan preferencias
+- Composable: usePushPreferences.ts
+- Vista: mi-chana/notificaciones.vue (subscription status + 7 switches)
+- Nav: Bell icon en header
+- shadcn: Switch instalado
 
 ### Notas tecnicas
 - Errores pre-existentes: finance/reports (row undefined), useAppConfig duplicado
-- Votaciones MVP: solo type='single' soportado (enum 'multiple' reservado para futuro)
-- Unique index poll_vote_unit_poll_idx enforce 1 voto por unidad por votacion
+- Icons PWA son placeholders — reemplazar con logo real
+- Responsive audit OK en 375px y 1024px
 
 ## Proximo paso
-- Merge feat/votaciones-comunitarias → dev, tag v0.12.0
-- M3.4 — Refinamiento UX Movil, Offline Parcial y Push Notifications Completo
+- Merge feat/refinamiento-ux-movil → dev, tag v0.13.0
+- Fase 4 — Servicios, Comunidad y Lanzamiento

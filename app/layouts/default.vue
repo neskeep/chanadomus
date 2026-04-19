@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { LogOut, Home, Wallet, AlertTriangle, Building2, Users, Shield, MessageCircle, Megaphone, Vote } from 'lucide-vue-next'
+import { LogOut, Home, Wallet, AlertTriangle, Building2, Users, Shield, MessageCircle, Megaphone, Vote, Bell } from 'lucide-vue-next'
 import { ROLE_LABELS, ROLE_REDIRECTS } from '~~/shared/types/auth'
 import type { UserRole } from '~~/shared/types/auth'
 
@@ -46,8 +46,13 @@ const navItems = computed(() => {
     <!-- Top bar -->
     <header class="sticky top-0 z-40 flex h-14 items-center justify-between border-b bg-background/95 px-4 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <span class="text-sm font-semibold tracking-tight text-primary">ChanaDomus</span>
-      <div class="flex items-center gap-3">
+      <div class="flex items-center gap-2">
         <span class="text-xs text-muted-foreground">{{ roleLabel }}</span>
+        <NuxtLink to="/mi-chana/notificaciones">
+          <Button variant="ghost" size="icon" class="size-8">
+            <Bell class="size-4" />
+          </Button>
+        </NuxtLink>
         <Button variant="ghost" size="icon" class="size-8" @click="signOut">
           <LogOut class="size-4" />
         </Button>
