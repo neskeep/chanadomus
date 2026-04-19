@@ -1,5 +1,6 @@
 import { pgTable, text, timestamp, boolean, uuid, index } from 'drizzle-orm/pg-core'
 import { tenants } from './tenant'
+import { units } from './unit'
 
 // Better Auth core tables + admin plugin fields + custom tenantId
 
@@ -18,9 +19,11 @@ export const user = pgTable('user', {
   banExpires: timestamp('ban_expires'),
   // Custom: tenant scope
   tenantId: uuid('tenant_id').notNull().references(() => tenants.id),
+  unitId: uuid('unit_id').references(() => units.id), // nullable — no todos los roles tienen unidad
 }, (table) => [
   index('user_tenant_idx').on(table.tenantId),
   index('user_email_idx').on(table.email),
+  index('user_unit_idx').on(table.unitId),
 ])
 
 export const session = pgTable('session', {

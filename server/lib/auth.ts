@@ -23,6 +23,11 @@ export const auth = betterAuth({
         required: true,
         input: false,
       },
+      unitId: {
+        type: 'string',
+        required: false,
+        input: false,
+      },
     },
   },
 
