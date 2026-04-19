@@ -71,6 +71,13 @@
       "when": 1776631047856,
       "tag": "0009_shiny_carmella_unuscione",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1776632654223,
+      "tag": "0010_medical_thor",
+      "breakpoints": true
     }
   ]
 }

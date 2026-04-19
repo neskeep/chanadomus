@@ -7,6 +7,29 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.10.0] - 2026-04-19
+
+### Added
+- Drizzle schema: `chat_rooms` and `messages` tables with enum chat_room_type (M3.1)
+- Migration 0010: CREATE TABLE chat_rooms, messages with FKs, indices, unique constraint (additive-only)
+- Shared types: ChatRoom, ChatMessage, ChatRoomType
+- Seed script: seed-chat.ts creates General, Vigilancia, Admin rooms + 86 unit rooms
+- WebSocket handler: `server/routes/_ws/chat.ts` with token auth, room access control, message broadcast
+- Server util: `ws-chat.ts` with peer management per room, `userCanAccessRoom` access control
+- API GET /api/chat/rooms: list accessible rooms filtered by user role
+- API GET /api/chat/[roomId]/messages: cursor-based pagination (50 per page) with user JOIN
+- Composable `useChatRooms`: fetch and filter rooms by type
+- Composable `useChatRoom`: WebSocket connection, message history, auto-reconnect, keepalive ping
+- Page `/mi-chana/chat/index.vue`: room list grouped by type with icons and badges
+- Page `/mi-chana/chat/[roomId].vue`: full-screen chat with message grouping, auto-scroll, connection indicator
+- Navigation: Chat link added for all roles (admin, propietario, vigilancia, conserje)
+
+### Access Control
+- General room: all authenticated users
+- Unit rooms: admin + unit owner only
+- Vigilancia room: admin + vigilancia + conserje
+- Admin room: admin only
+
 ## [0.9.0] - 2026-04-19
 
 ### Added
