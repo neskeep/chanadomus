@@ -37,6 +37,11 @@ const navItems = computed(() => {
       <slot />
     </main>
 
+    <!-- Panic button (floating, above bottom nav) -->
+    <div class="fixed bottom-20 right-4 z-50 flex flex-col items-center md:bottom-6">
+      <PanicButton />
+    </div>
+
     <!-- Bottom nav (mobile) -->
     <nav class="fixed bottom-0 left-0 right-0 z-40 flex h-16 items-center justify-around border-t bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 md:hidden">
       <NuxtLink
