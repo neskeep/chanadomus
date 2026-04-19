@@ -21,7 +21,7 @@ definePageMeta({ layout: 'default' })
 const { staffList, isLoading, isSubmitting, error, fetchStaff, createStaffMember, updateStaffMember, deleteStaffMember } = useStaff()
 
 // Filters
-const selectedRole = ref<StaffRole | ''>('')
+const selectedRole = ref<StaffRole | 'all'>('all')
 const searchQuery = ref('')
 
 // Dialog state
@@ -34,7 +34,7 @@ const formRole = ref<StaffRole | ''>('')
 const formDocument = ref('')
 const formPhone = ref('')
 const formEmail = ref('')
-const formShift = ref('')
+const formShift = ref('none')
 
 // Delete dialog
 const deleteDialogOpen = ref(false)
@@ -75,7 +75,7 @@ function openCreateDialog() {
   formDocument.value = ''
   formPhone.value = ''
   formEmail.value = ''
-  formShift.value = ''
+  formShift.value = 'none'
   dialogOpen.value = true
 }
 
@@ -86,7 +86,7 @@ function openEditDialog(staff: Staff) {
   formDocument.value = staff.idDocument ?? ''
   formPhone.value = staff.phone ?? ''
   formEmail.value = staff.email ?? ''
-  formShift.value = staff.shift ?? ''
+  formShift.value = staff.shift ?? 'none'
   dialogOpen.value = true
 }
 
@@ -104,7 +104,7 @@ async function handleSubmit() {
     idDocument: formDocument.value.trim() || undefined,
     phone: formPhone.value.trim() || undefined,
     email: formEmail.value.trim() || undefined,
-    shift: formShift.value || undefined,
+    shift: formShift.value === 'none' ? undefined : formShift.value || undefined,
   }
 
   try {
@@ -137,7 +137,7 @@ async function handleDelete() {
 }
 
 watch(selectedRole, (role) => {
-  fetchStaff(role || undefined)
+  fetchStaff(role === 'all' ? undefined : role)
 })
 
 onMounted(() => {
@@ -184,7 +184,7 @@ onMounted(() => {
             <SelectValue placeholder="Todos los roles" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="">Todos</SelectItem>
+            <SelectItem value="all">Todos</SelectItem>
             <SelectItem value="conserje">Conserje</SelectItem>
             <SelectItem value="vigilancia">Vigilancia</SelectItem>
             <SelectItem value="mantenimiento">Mantenimiento</SelectItem>
@@ -210,7 +210,7 @@ onMounted(() => {
       <div>
         <p class="font-medium">No hay personal registrado</p>
         <p class="mt-1 text-sm text-muted-foreground">
-          {{ selectedRole ? 'Prueba cambiando el filtro de rol' : 'Agrega miembros del personal del condominio' }}
+          {{ selectedRole !== 'all' ? 'Prueba cambiando el filtro de rol' : 'Agrega miembros del personal del condominio' }}
         </p>
       </div>
     </div>
@@ -393,7 +393,7 @@ onMounted(() => {
                 <SelectValue placeholder="Seleccionar turno" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Sin asignar</SelectItem>
+                <SelectItem value="none">Sin asignar</SelectItem>
                 <SelectItem value="mañana">Mañana</SelectItem>
                 <SelectItem value="tarde">Tarde</SelectItem>
                 <SelectItem value="noche">Noche</SelectItem>
