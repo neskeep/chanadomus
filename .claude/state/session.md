@@ -2,66 +2,54 @@
 
 ## Ultima Sesion
 - **Fecha**: 2026-04-19
-- **Sesion #**: 12
-- **Fase**: Fichas de Viviendas y Base de Personal (v0.9.0)
-- **Version**: v0.9.0
-- **Branch**: feat/fichas-viviendas
-- **Commit**: 205233c (feat), d92c260 (merge), c121e70 (fix warnings), 50022b3 (devtools)
+- **Sesion #**: 13
+- **Fase**: Chat Tiempo Real (v0.10.0)
+- **Version**: v0.10.0
+- **Branch**: feat/chat-tiempo-real (merged → dev)
+- **Commits**: 212d983 (feat), a064d9c (fix SelectItem)
+- **Tag**: v0.10.0
 - **Push**: Completado
 
-## Resumen Session 12
+## Resumen Session 13
 
-### M2.4 Completado (5/5 tareas hub)
-- Schema: server/db/schema/household.ts (household_members + enum household_relationship)
-- Schema: server/db/schema/vehicle.ts (vehicles con unique tenant+plate)
-- Schema: server/db/schema/staff.ts (staff + enum staff_role)
-- Migracion 0009: CREATE TABLE household_members + vehicles + staff (additive-only)
-- Tipos: HouseholdMember, Vehicle, Staff en shared/types/
-- Endpoint: GET /api/units/directory (lista con conteos member/vehicle via LEFT JOIN)
-- Endpoint: GET/POST /api/units/[id]/members (listar/crear miembros)
-- Endpoint: PATCH/DELETE /api/members/[id] (actualizar/soft-delete miembro)
-- Endpoint: GET/POST /api/units/[id]/vehicles (listar/crear vehiculos)
-- Endpoint: PATCH/DELETE /api/vehicles/[id] (actualizar/hard-delete vehiculo)
-- Endpoint: GET /api/vehicles (busqueda global por placa con ILIKE, JOIN unit)
-- Endpoint: GET/POST /api/staff (listar con filtro rol/crear personal)
-- Endpoint: PATCH/DELETE /api/staff/[id] (actualizar/soft-delete personal)
-- Composable: useUnitMembers (CRUD miembros por unidad)
-- Composable: useUnitVehicles (CRUD vehiculos por unidad)
-- Composable: useStaff (CRUD personal con filtro por rol)
-- Composable: useVehicleSearch (busqueda global por placa)
-- Vista: app/pages/admin/unidades/index.vue (directorio con conteos, search)
-- Vista: app/pages/admin/unidades/[id].vue (ficha con tabs Miembros/Vehiculos, CRUD)
-- Vista: app/pages/admin/personal/index.vue (gestion personal, filtro rol, CRUD)
-- Vista: app/pages/vigilancia/residentes/index.vue (directorio + busqueda placa)
-- Vista: app/pages/vigilancia/residentes/[id].vue (ficha read-only)
-- Navegacion: links Unidades y Personal (admin), Residentes (vigilancia)
-- shadcn-vue: AlertDialog instalado
+### M3.1 Completado (3/3 tareas hub)
+- Schema: server/db/schema/chat.ts (chat_rooms + messages + enum chat_room_type)
+- Migracion 0010: CREATE TABLE chat_rooms + messages (additive-only)
+- Tipos: ChatRoom, ChatMessage, ChatRoomType en shared/types/chat.ts
+- Seed: seed-chat.ts (General + Vigilancia + Admin + 86 unit rooms = 89 salas)
+- WebSocket: server/routes/_ws/chat.ts (token auth, room access, message broadcast)
+- Server util: server/utils/ws-chat.ts (peer management, userCanAccessRoom)
+- Endpoint: GET /api/chat/rooms (salas accesibles por rol)
+- Endpoint: GET /api/chat/[roomId]/messages (historial cursor-based, 50 per page)
+- Composable: useChatRooms (fetch, filter por tipo, getRoomById)
+- Composable: useChatRoom (WS connection, history, auto-reconnect, keepalive ping)
+- Vista: app/pages/mi-chana/chat/index.vue (lista salas agrupadas por tipo)
+- Vista: app/pages/mi-chana/chat/[roomId].vue (chat full-screen, message groups, auto-scroll)
+- Navegacion: Chat link para admin, propietario, vigilancia, conserje
+- Fix: SelectItem value="" → "all"/"none" en admin/personal (bug pre-existente)
+
+### Control de Acceso a Salas
+- general: todos los usuarios autenticados
+- unit: admin + propietario de esa unidad
+- vigilancia: admin + vigilancia + conserje
+- admin: solo admin
 
 ### Estado del Hub
 - M1.1-M1.5: completed
 - M1.6: pendiente (bloqueado VPS)
-- M2.1-M2.3: completed
-- M2.4: **completed** (5/5 tareas)
-
-### Git
-- Branch feat/fichas-viviendas creado desde dev
-- Pendiente: commit, merge, tag, push
+- M2.1-M2.4: completed
+- M3.1: **completed** (3/3 tareas)
 
 ### Datos de prueba en DB local
 - Admin: admin@chanadomus.com / Admin2026!
 - Propietario: juan@chanadomus.com / Demo2026! → unidad R-001
-- Tablas household_members, vehicles, staff creadas (vacias)
+- 89 salas de chat creadas (General + Vigilancia + Admin + 86 unit rooms)
 
 ### Notas tecnicas
-- Vehiculos: placa normalizada a uppercase, unique per tenant
-- Staff: soft delete (isActive = false)
-- Members: soft delete (isActive = false)
-- Vehicles: hard delete
-- Directory endpoint usa LEFT JOIN + COUNT DISTINCT para conteos
-- Errores pre-existentes en typecheck: finance/reports (row undefined), nuxt.config (websocket flag)
+- WebSocket auth via session token cookie (better-auth.session_token)
+- Cursor-based pagination para historial
+- Auto-reconnect 5s, keepalive ping 30s
+- Errores pre-existentes: finance/reports (row undefined), useAppConfig duplicado (Nitro warning)
 
 ## Proximo paso
-- Siguiente: Fase 3 — Comunicacion Comunitaria
-- M3.1 — Chat Tiempo Real: 4 Canales WebSocket con Historial Persistente
-- Fix aplicado: duplicate component warnings (extensions: ['.vue'])
-- Fix aplicado: devtools desactivado
+- M3.2 — Anuncios Avanzados: Adjuntos PDF, Difusion Global y Cartelera
