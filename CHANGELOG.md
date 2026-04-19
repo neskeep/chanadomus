@@ -7,6 +7,23 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.11.0] - 2026-04-19
+
+### Added
+- Drizzle schema: `announcements` table with enums announcement_category (6) and announcement_status (3) (M3.2)
+- Migration 0011: CREATE TABLE announcements with FKs, 4 indices (additive-only)
+- Shared types: Announcement, AnnouncementCategory, AnnouncementStatus
+- API GET /api/announcements: list with pagination, category filter, role-based visibility (admin sees all, others only published)
+- API POST /api/announcements: create with multipart form data, PDF attachment (max 10MB), push notification on publish
+- API GET /api/announcements/[id]: single announcement detail
+- API PATCH /api/announcements/[id]: update/publish/archive with auto push on first publish
+- API DELETE /api/announcements/[id]: delete with PDF cleanup
+- API GET /api/announcements/attachments/[filename]: serve PDF files with directory traversal protection
+- Composable `useAnnouncements`: fetch, create, update, publish, archive, delete
+- Page `/admin/cartelera`: admin panel with table/cards, search, category filter, create/edit dialog, publish/archive/delete actions
+- Page `/mi-chana/cartelera`: community bulletin board with expandable cards, "Nuevo" badge (24h), category tabs, PDF download
+- Navigation: Cartelera link added for all roles (admin → /admin/cartelera, others → /mi-chana/cartelera)
+
 ## [0.10.0] - 2026-04-19
 
 ### Added

@@ -14,6 +14,7 @@ import * as householdSchema from './schema/household'
 import * as vehicleSchema from './schema/vehicle'
 import * as staffSchema from './schema/staff'
 import * as chatSchema from './schema/chat'
+import * as announcementSchema from './schema/announcement'
 
 const connectionString = process.env.DATABASE_URL!
 
@@ -35,5 +36,6 @@ export const db = drizzle(client, {
     ...vehicleSchema,
     ...staffSchema,
     ...chatSchema,
+    ...announcementSchema,
   },
 })
