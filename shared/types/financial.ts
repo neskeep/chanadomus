@@ -15,3 +15,21 @@ export interface AccountStatement {
   balance: string // saldo calculado
   records: FinancialRecord[]
 }
+
+export interface UnitSummary {
+  unitId: string
+  unitNumber: string
+  unitLabel: string | null
+  balance: string
+  isInDebt: boolean
+}
+
+export interface FinancialReport {
+  id: string
+  title: string
+  filePath: string
+  month: number
+  year: number
+  uploadedById: string
+  createdAt: string
+}

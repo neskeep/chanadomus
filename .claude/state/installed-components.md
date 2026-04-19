@@ -12,6 +12,11 @@ Actualizar este archivo cada vez que se ejecute `shadcn add`.
 | Select | 2026-04-19 | nueva-visita.vue |
 | Badge | 2026-04-19 | mis-visitas.vue, acceso/[token].vue |
 | Separator | 2026-04-19 | nueva-visita.vue, acceso/[token].vue |
+| Table | 2026-04-19 | Admin finanzas resumen |
+| Tabs | 2026-04-19 | Admin finanzas navegacion |
+| Skeleton | 2026-04-19 | Loading states |
+| Sonner | 2026-04-19 | Toast notifications |
+| Dialog | 2026-04-19 | Modals (disponible) |
 
 ## Notas
 - El preset a6PDm8yA (reka-luma) esta configurado
