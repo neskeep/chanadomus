@@ -2,6 +2,7 @@ import { pgTable, pgEnum, uuid, text, timestamp, index } from 'drizzle-orm/pg-co
 import { tenants } from './tenant'
 import { user } from './auth'
 import { units } from './unit'
+import { devices } from './device'
 
 // Enums
 export const visitorTypeEnum = pgEnum('visitor_type', ['invitado', 'proveedor'])
@@ -37,9 +38,14 @@ export const accessLogs = pgTable('access_logs', {
   result: accessResultEnum('result').notNull(),
   tenantId: uuid('tenant_id').notNull().references(() => tenants.id),
   notes: text('notes'), // notas opcionales
+  visitorName: text('visitor_name'), // para entries manuales/webhook sin QR
+  visitorDocument: text('visitor_document'), // cedula para entries manuales
+  unitId: uuid('unit_id').references(() => units.id), // unidad destino para entries manuales
+  deviceId: uuid('device_id').references(() => devices.id), // dispositivo que origino el webhook
   createdAt: timestamp('created_at').notNull().defaultNow(),
 }, (table) => [
   index('access_log_tenant_idx').on(table.tenantId),
   index('access_log_qr_idx').on(table.qrCodeId),
   index('access_log_created_idx').on(table.createdAt),
+  index('access_log_device_idx').on(table.deviceId),
 ])

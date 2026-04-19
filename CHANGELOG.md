@@ -7,6 +7,26 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-04-19
+
+### Added
+- Webhook access module (M1.4): hardware integration, real-time monitoring, manual entry
+- Drizzle schema: `devices` table with device_key_hash authentication and status enum
+- Additive migration: 4 new nullable columns on `access_logs` (visitor_name, visitor_document, unit_id, device_id)
+- API POST /api/webhook/access-scan: public webhook for hardware devices (QR/RFID/PIN), authenticated via X-Device-Key header with SHA-256 hash validation
+- API POST /api/access/manual: conserje/admin manual visitor entry with authorization
+- API GET /api/access/logs: tenant-scoped daily access log listing with COALESCE for visitor data
+- Nitro WebSocket handler (/_ws/access): real-time broadcast of access events to connected clients
+- Server util ws-access.ts: global peer management with broadcastAccessEvent
+- Shared types in shared/types/access.ts (EntryType, AccessResult, ScanType, WebhookScanPayload, AccessEvent)
+- Composable useAccessStream: WebSocket client with auto-reconnect, heartbeat, and initial load
+- Composable useQrScanner: camera-based QR scanning with jsQR, token extraction from URLs, validation
+- Page /vigilancia/accesos: real-time access feed with color-coded event cards, connection status badge
+- Page /vigilancia/escanear: full-screen QR scanner with camera viewfinder, overlay corners, result cards
+- Page /conserje/nueva-entrada: manual entry form with unit selector, visitor type toggle, authorize/deny buttons
+- Documentation: docs/webhook-access-scan.md with endpoint specs, payload examples, hardware setup (ZKTeco/Hikvision)
+- Dependency: jsqr 1.4.0 for client-side QR code scanning
+
 ## [0.2.0] - 2026-04-19
 
 ### Added
