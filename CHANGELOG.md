@@ -7,6 +7,25 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.4.0] - 2026-04-19
+
+### Added
+- Web Push VAPID module (M1.5): push notifications, service worker, and panic button
+- Dependency: web-push 3.6.7 for server-side VAPID push notifications
+- Drizzle schema: `push_subscriptions` table (user_id, endpoint, p256dh, auth, role, tenant_id)
+- Drizzle schema: `panic_events` table (user_id, unit_id, tenant_id)
+- Migrations 0003 (push_subscriptions) and 0004 (panic_events)
+- API POST /api/push/subscribe: upsert push subscription with endpoint deduplication
+- API GET /api/push/vapid-key: exposes VAPID public key to client
+- API POST /api/panic: registers panic event and sends push notification to all vigilancia subscribers
+- Server util web-push.ts: sendPushToRole, sendPushToUser, sendPushToAll with auto-cleanup of expired subscriptions (410 Gone)
+- Composable usePushNotifications: subscribe, checkSubscription, permission state management
+- Service worker (sw.js): push event handler with JSON payload, native notification with vibrate/tag/renotify, notificationclick with route navigation
+- Plugin sw-register.client.ts: automatic service worker registration
+- Component PanicButton.vue: 2-second press & hold with SVG progress ring, loading/triggered/error states, auto-reset after 5s
+- PanicButton integrated as floating element in default layout (above bottom nav on mobile)
+- VAPID_SUBJECT added to .env.example
+
 ## [0.3.0] - 2026-04-19
 
 ### Added
