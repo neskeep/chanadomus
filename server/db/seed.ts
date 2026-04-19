@@ -3,6 +3,7 @@ import postgres from 'postgres'
 import { hashPassword } from 'better-auth/crypto'
 import { tenants } from './schema/tenant'
 import { user, account } from './schema/auth'
+import { units } from './schema/unit'
 
 const connectionString = process.env.DATABASE_URL!
 const client = postgres(connectionString)
@@ -12,11 +13,12 @@ async function seed() {
   console.log('Seeding database...')
 
   // 1. Create tenant
-  const [tenant] = await db.insert(tenants).values({
+  const rows = await db.insert(tenants).values({
     name: 'Ranchos de Chana',
     slug: 'ranchos-de-chana',
     status: 'active',
   }).returning()
+  const tenant = rows[0]!
   console.log(`  Tenant: ${tenant.name} (${tenant.id})`)
 
   // 2. Create admin user directly
@@ -46,6 +48,17 @@ async function seed() {
   })
 
   console.log(`  Admin: admin@chanadomus.com / Admin2026!`)
+
+  // 3. Create 86 units (ranchos)
+  const unitValues = Array.from({ length: 86 }, (_, i) => ({
+    number: `R-${String(i + 1).padStart(3, '0')}`,
+    label: `Rancho ${i + 1}`,
+    tenantId: tenant.id,
+  }))
+
+  await db.insert(units).values(unitValues)
+  console.log(`  Units: ${unitValues.length} ranchos created`)
+
   console.log('Seed complete!')
 
   await client.end()

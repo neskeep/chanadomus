@@ -22,7 +22,7 @@ export default defineNuxtRouteMiddleware(async (to) => {
     session = null
   }
 
-  const isPublic = PUBLIC_ROUTES.includes(to.path)
+  const isPublic = PUBLIC_ROUTES.some((route) => to.path === route || to.path.startsWith(route + '/'))
 
   // Not authenticated -> redirect to login
   if (!session?.user) {

@@ -1,8 +1,9 @@
 export default defineEventHandler(async (event) => {
   const path = getRequestURL(event).pathname
 
-  // Better Auth handles its own routes
+  // Public API routes (no auth required)
   if (path.startsWith('/api/auth')) return
+  if (path === '/api/qr/validate') return
 
   // Only protect API routes (client routes handled by client middleware)
   if (!path.startsWith('/api/')) return
