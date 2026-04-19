@@ -7,6 +7,18 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.5.0] - 2026-04-19
+
+### Added
+- PWA Manifest (M1.6): manifest.json with name, display:standalone, theme_color, orientation:portrait
+- PWA icon: SVG icon (512x512) with teal background and house silhouette in public/icons/
+- Service Worker extended: install event with precaching, fetch handler (network-first for API, stale-while-revalidate for static), cache versioning and cleanup
+- Meta tags in nuxt.config.ts: theme-color, apple-mobile-web-app-capable, apple-touch-icon, manifest link
+- Seed script enhanced: demo users for each role (propietario, conserje, vigilancia) with helper function
+
+### Changed
+- Service Worker (sw.js): APP_ICON updated to use SVG icon, activate handler now cleans old caches
+
 ## [0.4.0] - 2026-04-19
 
 ### Added

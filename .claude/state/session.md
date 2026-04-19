@@ -2,33 +2,29 @@
 
 ## Ultima Sesion
 - **Fecha**: 2026-04-19
-- **Sesion #**: 7
-- **Fase**: Web Push VAPID + Panic Button (v0.4.0) — COMPLETADA
-- **Version**: v0.4.0
-- **Branch**: feat/anuncios-push
-- **Commit**: eeff414
+- **Sesion #**: 8
+- **Fase**: PWA Manifest, SW Caching y Despliegue (v0.5.0) — EN PROGRESO
+- **Version**: v0.5.0 (en desarrollo)
+- **Branch**: feat/pwa-deploy
+- **Commit**: pendiente primer commit
 - **Push**: Pendiente
 
-## Resumen Session 7
-- Schema: push.ts (push_subscriptions), panic.ts (panic_events)
-- Migrations: 0003 (push_subscriptions), 0004 (panic_events)
-- API: 3 endpoints (push/subscribe, push/vapid-key, panic)
-- Server util: web-push.ts (sendPushToRole, sendPushToUser, sendPushToAll)
-- Composable: usePushNotifications
-- Service Worker: public/sw.js + app/plugins/sw-register.client.ts
-- Component: PanicButton.vue (press & hold 2s, SVG ring, push a vigilancia)
-- Layout: PanicButton integrado como floating en default.vue
-- Dep: web-push 3.6.7 + @types/web-push
-- CHANGELOG actualizado, hub M1.5 completado (4 tareas + milestone)
-- TypeScript: 0 errores nuevos
+## Resumen Session 8 (hasta ahora)
+- Manifest: public/manifest.json (standalone, portrait, theme teal)
+- Icon: public/icons/icon.svg (512x512 SVG, casa sobre fondo teal)
+- SW extendido: install+precache, fetch (network-first API / SWR static), cache cleanup
+- Meta tags: theme-color, apple-mobile-web-app-capable, manifest link en nuxt.config.ts
+- Seed: helper createUser, 3 demo users (propietario, conserje, vigilancia)
+- CHANGELOG actualizado para v0.5.0
+- Build: exitoso sin errores
+
+## Completado en esta sesion
+- [x] Tarea 1: Manifest + SW caching + meta tags + seed demo users
 
 ## Pendiente en esta sesion
-- Merge feat/anuncios-push → dev
-- Tag v0.4.0
-- Push a origin
-
-## Proximo Modulo: M1.6 — PWA Manifest, Service Worker y Despliegue
-- Branch: desde dev despues del merge
-- Hub milestone: M1.6
-- 3 tareas en hub
-- Requiere: M1.5 completado (done)
+- [ ] Commit y push del branch
+- [ ] Tarea 2: Migraciones en produccion + seed (requiere acceso servidor)
+- [ ] Tarea 3: Prueba de humo E2E (requiere produccion desplegada)
+- [ ] Merge feat/pwa-deploy → dev
+- [ ] Tag v0.5.0
+- [ ] Actualizar hub M1.6

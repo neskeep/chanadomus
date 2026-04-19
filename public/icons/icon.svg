@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <!-- Rounded square background -->
+  <rect width="512" height="512" rx="102" ry="102" fill="#1a8a7d"/>
+  <!-- House/building silhouette -->
+  <g fill="#ffffff">
+    <!-- Roof -->
+    <polygon points="256,100 120,220 160,220 160,200 256,120 352,200 352,220 392,220"/>
+    <!-- Main building body -->
+    <rect x="160" y="220" width="192" height="180" rx="4"/>
+    <!-- Door -->
+    <rect x="228" y="300" width="56" height="100" rx="4" fill="#1a8a7d"/>
+    <!-- Door knob -->
+    <circle cx="272" cy="355" r="5" fill="#ffffff"/>
+    <!-- Left window -->
+    <rect x="180" y="248" width="44" height="36" rx="4" fill="#1a8a7d"/>
+    <!-- Right window -->
+    <rect x="288" y="248" width="44" height="36" rx="4" fill="#1a8a7d"/>
+    <!-- Window panes - left -->
+    <line x1="202" y1="248" x2="202" y2="284" stroke="#1a8a7d" stroke-width="3"/>
+    <line x1="180" y1="266" x2="224" y2="266" stroke="#1a8a7d" stroke-width="3"/>
+    <!-- Window panes - right -->
+    <line x1="310" y1="248" x2="310" y2="284" stroke="#1a8a7d" stroke-width="3"/>
+    <line x1="288" y1="266" x2="332" y2="266" stroke="#1a8a7d" stroke-width="3"/>
+    <!-- Chimney -->
+    <rect x="310" y="140" width="30" height="70" rx="2"/>
+  </g>
+</svg>
