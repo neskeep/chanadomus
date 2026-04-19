@@ -2,40 +2,38 @@
 
 ## Ultima Sesion
 - **Fecha**: 2026-04-19
-- **Sesion #**: 16
-- **Fase**: Refinamiento UX Movil + Push Preferences (v0.13.0)
-- **Version**: v0.13.0
+- **Sesion #**: 17
+- **Fase**: Bugfix Chat WebSocket (sin version nueva)
+- **Version**: v0.13.0 (pendiente merge + tag)
 - **Branch**: feat/refinamiento-ux-movil (pending merge → dev)
 - **Tag**: pendiente
 - **Push**: pendiente
 
-## Resumen Session 16
+## Resumen Session 17
 
-### Pendientes Session 15 (completados)
-- Merge feat/votaciones-comunitarias → dev, tag v0.12.0, push
-- M3.1, M3.2, M3.3 marcados completed en hub
-- M3.2 segunda tarea (907c5a07) completada
+### Bugs corregidos en Chat WebSocket
+1. **Input bloqueado**: `:disabled="!connected"` impedia focus en el input cuando WS no conectaba. Removido el disabled del Input, solo el boton Send queda bloqueado.
+2. **Error no visible**: `error` del composable no estaba destructurado en la vista. Agregado al destructuring + banner muestra error real.
+3. **Nitro no interceptaba WS**: `experimental.websocket` estaba a nivel Nuxt, no de Nitro. Movido a `nitro.experimental.websocket` en nuxt.config.ts.
+4. **Cookie httpOnly**: El composable intentaba leer `better-auth.session_token` via `useCookie()` (client-side), pero es httpOnly. Eliminado token de URL, el servidor ahora lee cookies del upgrade request via `auth.api.getSession({ headers })`.
+5. **Origin rechazado**: Better Auth rechazaba requests desde IP de red local (192.168.81.11). Agregado `trustedOrigins` configurable via env `BETTER_AUTH_TRUSTED_ORIGINS`.
 
-### M3.4 Completado
-- PWA Manifest: public/manifest.webmanifest (standalone, portrait, theme colors)
-- PWA Icons: public/icons/icon-192.png, icon-512.png (placeholders)
-- Offline: public/offline.html (static fallback)
-- SW Caching: cache-first static, network-first API/pages, offline fallback
-- Apple PWA metas en nuxt.config.ts
-- Schema: push_preferences (7 boolean categories, unique user+tenant)
-- Migration 0013: CREATE TABLE push_preferences
-- API: GET/PATCH /api/me/push-preferences
-- Push filtering: sendPushToAll/sendPushToRole respetan preferencias
-- Composable: usePushPreferences.ts
-- Vista: mi-chana/notificaciones.vue (subscription status + 7 switches)
-- Nav: Bell icon en header
-- shadcn: Switch instalado
+### Archivos modificados
+- `app/pages/mi-chana/chat/[roomId].vue` — input siempre habilitado, banner con error real, destructuring de `error`
+- `app/composables/useChatRoom.ts` — removido token de URL, WS conecta sin query param token
+- `server/routes/_ws/chat.ts` — auth via `auth.api.getSession({ headers })` en vez de query manual a DB
+- `server/lib/auth.ts` — agregado `trustedOrigins` desde env
+- `nuxt.config.ts` — movido websocket de `experimental` a `nitro.experimental`
+- `.env` / `.env.example` — agregado `BETTER_AUTH_TRUSTED_ORIGINS`
+
+### Usuario de prueba creado
+- Joilen (joilen@chanadomus.com / Admin2026!) — propietario, R-002
 
 ### Notas tecnicas
-- Errores pre-existentes: finance/reports (row undefined), useAppConfig duplicado
-- Icons PWA son placeholders — reemplazar con logo real
-- Responsive audit OK en 375px y 1024px
+- Chat probado con 2 usuarios simultaneos (admin + Joilen) en sala General — funciona estable
+- El ECONNRESET era consecuencia del origin rechazado, no un bug aparte
+- BETTER_AUTH_SECRET sigue corto (warning en logs) — cambiar antes de produccion
 
-## Proximo paso
-- Merge feat/refinamiento-ux-movil → dev, tag v0.13.0
-- Fase 4 — Servicios, Comunidad y Lanzamiento
+## Pendientes para Session 18
+1. Merge feat/refinamiento-ux-movil → dev, tag v0.13.0, push
+2. Comenzar Fase 4 — Servicios, Comunidad y Lanzamiento (M4.1: Directorio Proveedores)

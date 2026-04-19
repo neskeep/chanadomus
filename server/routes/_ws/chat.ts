@@ -1,6 +1,7 @@
 import { db } from '~~/server/db'
-import { session, user } from '~~/server/db/schema/auth'
-import { eq, and, gt } from 'drizzle-orm'
+import { user } from '~~/server/db/schema/auth'
+import { eq } from 'drizzle-orm'
+import { auth } from '~~/server/lib/auth'
 import {
   addChatPeer,
   removeChatPeer,
@@ -23,30 +24,33 @@ function isValidIncomingMessage(data: unknown): data is IncomingMessage {
 export default defineWebSocketHandler({
   async open(peer) {
     try {
-      // Extract query params from peer URL
-      const url = new URL(peer.request.url, 'http://localhost')
+      // Extract roomId from URL query params
+      const url = new URL(peer.request?.url || '', 'http://localhost')
       const roomId = url.searchParams.get('roomId')
-      const token = url.searchParams.get('token')
 
-      if (!roomId || !token) {
-        peer.send(JSON.stringify({ type: 'error', message: 'Missing roomId or token' }))
-        peer.close(4001, 'Missing roomId or token')
+      if (!roomId) {
+        peer.send(JSON.stringify({ type: 'error', message: 'Missing roomId' }))
+        peer.close(4001, 'Missing roomId')
         return
       }
 
-      // Validate token via Better Auth session table
-      const [sessionRecord] = await db
-        .select()
-        .from(session)
-        .where(and(eq(session.token, token), gt(session.expiresAt, new Date())))
-
-      if (!sessionRecord) {
-        peer.send(JSON.stringify({ type: 'error', message: 'Invalid or expired token' }))
-        peer.close(4001, 'Invalid or expired token')
+      // Validate session via Better Auth API using upgrade request headers
+      const headers = peer.request?.headers
+      if (!headers) {
+        peer.send(JSON.stringify({ type: 'error', message: 'No request headers' }))
+        peer.close(4001, 'No request headers')
         return
       }
 
-      // Fetch user info
+      const sessionResult = await auth.api.getSession({ headers })
+
+      if (!sessionResult?.session || !sessionResult?.user) {
+        peer.send(JSON.stringify({ type: 'error', message: 'Session invalida o expirada' }))
+        peer.close(4001, 'Invalid or expired session')
+        return
+      }
+
+      // Fetch extended user info (tenantId, unitId, role)
       const [userRecord] = await db
         .select({
           id: user.id,
@@ -57,7 +61,7 @@ export default defineWebSocketHandler({
           unitId: user.unitId,
         })
         .from(user)
-        .where(eq(user.id, sessionRecord.userId))
+        .where(eq(user.id, sessionResult.user.id))
 
       if (!userRecord || !userRecord.tenantId) {
         peer.send(JSON.stringify({ type: 'error', message: 'User not found or no tenant' }))

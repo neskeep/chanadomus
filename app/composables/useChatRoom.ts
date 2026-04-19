@@ -78,15 +78,9 @@ export function useChatRoom(roomId: Ref<string> | string) {
       return
     }
 
-    const sessionToken = useCookie('better-auth.session_token')
-    if (!sessionToken.value) {
-      error.value = 'No hay sesión activa'
-      return
-    }
-
     const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:'
     const host = window.location.host
-    const wsUrl = `${protocol}//${host}/_ws/chat?roomId=${rid}&token=${sessionToken.value}`
+    const wsUrl = `${protocol}//${host}/_ws/chat?roomId=${rid}`
 
     ws = new WebSocket(wsUrl)
 

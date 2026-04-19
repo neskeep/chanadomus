@@ -39,7 +39,9 @@ export default defineNuxtConfig({
     strict: true,
   },
 
-  experimental: {
-    websocket: true,
+  nitro: {
+    experimental: {
+      websocket: true,
+    },
   },
 })

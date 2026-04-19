@@ -18,6 +18,7 @@ const {
   messages,
   isLoading,
   connected,
+  error,
   hasMore,
   loadOlderMessages,
   sendMessage,
@@ -269,13 +270,21 @@ onBeforeUnmount(() => {
       </div>
     </div>
 
+    <!-- Connection status banner -->
+    <div
+      v-if="!connected && !isLoading"
+      class="flex shrink-0 items-center justify-center gap-2 bg-destructive/10 px-4 py-1.5 text-xs text-destructive"
+    >
+      <Loader2 class="size-3 animate-spin" />
+      {{ error || 'Reconectando...' }}
+    </div>
+
     <!-- Input area -->
     <div class="flex shrink-0 items-center gap-2 border-t bg-background px-4 py-3">
       <Input
         v-model="messageInput"
         placeholder="Escribe un mensaje..."
         class="flex-1"
-        :disabled="!connected"
         @keydown="handleKeydown"
       />
       <Button
