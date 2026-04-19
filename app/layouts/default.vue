@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { LogOut, Home, Wallet, AlertTriangle, Building2, Users, Shield, MessageCircle, Megaphone } from 'lucide-vue-next'
+import { LogOut, Home, Wallet, AlertTriangle, Building2, Users, Shield, MessageCircle, Megaphone, Vote } from 'lucide-vue-next'
 import { ROLE_LABELS, ROLE_REDIRECTS } from '~~/shared/types/auth'
 import type { UserRole } from '~~/shared/types/auth'
 
@@ -18,12 +18,14 @@ const navItems = computed(() => {
     base.push({ label: 'Unidades', icon: Building2, to: '/admin/unidades' })
     base.push({ label: 'Personal', icon: Users, to: '/admin/personal' })
     base.push({ label: 'Cartelera', icon: Megaphone, to: '/admin/cartelera' })
+    base.push({ label: 'Votaciones', icon: Vote, to: '/admin/votaciones' })
     base.push({ label: 'Chat', icon: MessageCircle, to: '/mi-chana/chat' })
   }
   if (role.value === 'propietario') {
     base.push({ label: 'Informes', icon: Wallet, to: '/propietario/informes' })
     base.push({ label: 'Incidencias', icon: AlertTriangle, to: '/propietario/incidencias' })
     base.push({ label: 'Cartelera', icon: Megaphone, to: '/mi-chana/cartelera' })
+    base.push({ label: 'Votaciones', icon: Vote, to: '/mi-chana/votaciones' })
     base.push({ label: 'Chat', icon: MessageCircle, to: '/mi-chana/chat' })
   }
   if (role.value === 'vigilancia') {

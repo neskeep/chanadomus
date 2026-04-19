@@ -7,6 +7,25 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.12.0] - 2026-04-19
+
+### Added
+- Drizzle schema: `polls`, `poll_options`, `poll_votes` tables with enums poll_status (3) and poll_type (2) (M3.3)
+- Migration 0012: CREATE TABLE polls, poll_options, poll_votes with FKs, unique index for 1 vote per unit per poll (additive-only)
+- Shared types: Poll, PollOption, PollVote, PollStatus, PollType
+- API GET /api/polls: list with pagination, status filter, role-based visibility, options with vote counts, userVote tracking
+- API POST /api/polls: create poll with options in transaction, push notification on publish
+- API GET /api/polls/[id]: detail with options, vote counts, percentages, participation
+- API PATCH /api/polls/[id]: update/publish/close with push on status changes
+- API DELETE /api/polls/[id]: delete with cascade (blocks active polls)
+- API POST /api/polls/[id]/vote: vote as propietario (1 vote per unit enforced by unique index)
+- API GET /api/polls/[id]/results: results with vote counts, percentages, participation rate
+- Composable `usePolls`: fetch, create, update, publish, close, delete, vote
+- Page `/admin/votaciones`: admin panel with table/cards, search, status filter, create/edit dialog with dynamic options, results with progress bars
+- Page `/mi-chana/votaciones`: propietario voting view with radio buttons, "Ya votaste" badge, results with progress bars, active/closed tabs
+- Navigation: Votaciones link for admin and propietario roles
+- shadcn-vue components: RadioGroup, Progress
+
 ## [0.11.0] - 2026-04-19
 
 ### Added
