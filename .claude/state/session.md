@@ -2,53 +2,59 @@
 
 ## Ultima Sesion
 - **Fecha**: 2026-04-19
-- **Sesion #**: 9
-- **Fase**: Schema Financiero y Estado de Cuenta Personal (v0.6.0)
-- **Version**: v0.6.0
-- **Branch**: dev (merged)
-- **Commit**: 676465a
-- **Push**: Completado
+- **Sesion #**: 11
+- **Fase**: Modulo de Incidencias (v0.8.0)
+- **Version**: v0.8.0
+- **Branch**: feat/modulo-incidencias
+- **Commit**: pendiente
+- **Push**: Pendiente
 
-## Resumen Session 9
+## Resumen Session 11
 
-### M2.1 Completado (3/3 tareas hub)
-- Schema: server/db/schema/financial.ts (financial_records + record_type enum cargo/abono)
-- Migracion 0005: CREATE TYPE record_type + CREATE TABLE financial_records (additive-only)
-- Tipos: shared/types/financial.ts (RecordType, FinancialRecord, AccountStatement)
-- Endpoint: GET /api/finance/my-account (movimientos por unidad + saldo calculado)
-- Composable: app/composables/useMyAccount.ts (fetchStatement, balance, records, isInDebt)
-- Vista: app/pages/propietario/estado-cuenta.vue (balance hero, movimientos, loading, empty state)
-
-### Adicional: unit_id en user table
-- Agregado unit_id nullable a user table (server/db/schema/auth.ts)
-- Registrado en Better Auth additionalFields (server/lib/auth.ts)
-- Migracion 0006: ALTER TABLE user ADD COLUMN unit_id uuid (additive-only)
-- Necesario para que my-account resuelva la unidad del propietario desde su sesion
+### M2.3 Completado (5/5 tareas hub)
+- Schema: server/db/schema/incident.ts (incidents, incident_photos, incident_updates)
+- Enums PG: incident_status (open/in_progress/resolved/closed), incident_priority (low/medium/high)
+- Migracion 0008: CREATE TABLE incidents + incident_photos + incident_updates (additive-only)
+- Tipos: Incident, IncidentPhoto, IncidentUpdate, IncidentStatus, IncidentPriority en shared/types/incident.ts
+- Endpoint: POST /api/incidents (crear con fotos multipart, solo propietario, push a admin)
+- Endpoint: GET /api/incidents (listar paginado con filtros, JOIN user/unit)
+- Endpoint: GET /api/incidents/[id] (detalle con fotos e historial)
+- Endpoint: PATCH /api/incidents/[id]/status (cambiar estado, solo admin, push al propietario)
+- Endpoint: GET /api/incidents/photos/[filename] (servir fotos, proteccion traversal, cache)
+- Composable: useIncidents (fetchIncidents paginado/filtrado, createIncident multipart)
+- Composable: useIncidentDetail (fetchIncident con fotos/updates, updateStatus)
+- Vista: app/pages/propietario/incidencias/index.vue (cards con expand, status/priority badges, fotos, historial)
+- Vista: app/pages/propietario/incidencias/nueva.vue (form con titulo, desc, prioridad, upload 3 fotos)
+- Vista: app/pages/admin/incidencias.vue (tabla desktop / cards mobile, filtros, dialog detalle con cambio estado)
+- Navegacion: links Incidencias para admin y propietario en bottom nav
+- shadcn-vue: Textarea instalado
 
 ### Estado del Hub
-- M2.1: COMPLETED (3/3 tareas + milestone marcado completed)
+- M1.1-M1.5: completed
 - M1.6: pendiente (bloqueado VPS)
+- M2.1-M2.2: completed
+- M2.3: **completed** (5/5 tareas)
 
 ### Git
-- Branch feat/schema-financiero merged → dev
-- Tag v0.6.0 creado y pushed
-- Commit adicional 676465a (unit_id) directo en dev
+- Branch feat/modulo-incidencias creado desde dev
+- Pendiente: commit, merge, tag, push
 
 ### Datos de prueba en DB local
+- Admin: admin@chanadomus.com / Admin2026!
 - Propietario: juan@chanadomus.com / Demo2026! → unidad R-001
-- 8 movimientos financieros: 4 cuotas 1500 + 1 derrama 250 + 3 abonos 1500
-- Saldo esperado: -1750.00 (en mora)
+- Tablas incidents, incident_photos, incident_updates creadas (vacias)
 
 ### Notas tecnicas
-- Dev server funciona en localhost:3000 (limpiar procesos zombie si hay conflicto de puerto)
-- Bug conocido Nuxt 4.4.2: "Cannot access renderer before initialization" — se resuelve matando procesos zombie en puerto 3000
-- pnpm-lock.yaml modificado por reinstall limpio (no commiteado)
-
-## Pendiente M1.6 (bloqueado VPS)
-- [ ] Migraciones en produccion + seed
-- [ ] Prueba de humo E2E
-- [ ] Pipeline Coolify
-- [ ] Merge feat/pwa-deploy → dev + tag v0.5.0
+- Fotos almacenadas en uploads/incidents/ (disco local, .gitignore)
+- Max 3 fotos por incidencia, 5MB cada una (JPEG/PNG/WebP)
+- Push notifications: al crear incidencia → admins, al cambiar estado → propietario
+- Directory traversal protection en endpoint de fotos
+- Errores pre-existentes en typecheck: finance/reports (row undefined), nuxt.config (websocket)
 
 ## Proximo paso
-- M2.2: Panel Financiero Admin (movimientos, saldos, PDFs)
+- Commit feat + changelog
+- Merge feat/modulo-incidencias → dev
+- Tag v0.8.0
+- Push a remote
+- Actualizar hub: M2.3 tareas completed + milestone completed
+- Siguiente: M2.4 — Fichas de Viviendas y Base de Personal

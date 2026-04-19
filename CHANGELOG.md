@@ -7,6 +7,25 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.8.0] - 2026-04-19
+
+### Added
+- Drizzle schema: `incidents`, `incident_photos`, `incident_updates` tables with enums incident_status and incident_priority (M2.3)
+- Migration 0008: CREATE TABLE incidents, incident_photos, incident_updates with FKs and indices (additive-only)
+- Shared types: Incident, IncidentPhoto, IncidentUpdate, IncidentStatus, IncidentPriority in shared/types/incident.ts
+- API POST /api/incidents: create incident with up to 3 photos (multipart), propietario only, push to admin
+- API GET /api/incidents: list with filters (status, priority, unit_id, mine), pagination, JOIN user/unit names
+- API GET /api/incidents/[id]: detail with photos and status update history
+- API PATCH /api/incidents/[id]/status: change status with optional note (admin only), push to owner
+- API GET /api/incidents/photos/[filename]: serve photos with directory traversal protection, cache headers
+- Composable useIncidents: fetchIncidents (paginated/filtered), createIncident (multipart)
+- Composable useIncidentDetail: fetchIncident (detail with photos/updates), updateStatus
+- Vista propietario Mis Incidencias (/propietario/incidencias): card list with expand detail, status/priority badges, photos gallery, status history
+- Vista propietario Nueva Incidencia (/propietario/incidencias/nueva): form with title, description, priority select, photo upload (max 3 with preview)
+- Vista admin Gestion de Incidencias (/admin/incidencias): table (desktop) / cards (mobile), filters, search, dialog detail with status update form
+- Navigation: Incidencias link for admin and propietario in bottom nav
+- shadcn-vue component: Textarea
+
 ## [0.7.0] - 2026-04-19
 
 ### Added

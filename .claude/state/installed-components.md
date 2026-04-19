@@ -16,7 +16,8 @@ Actualizar este archivo cada vez que se ejecute `shadcn add`.
 | Tabs | 2026-04-19 | Admin finanzas navegacion |
 | Skeleton | 2026-04-19 | Loading states |
 | Sonner | 2026-04-19 | Toast notifications |
-| Dialog | 2026-04-19 | Modals (disponible) |
+| Dialog | 2026-04-19 | Modals, admin incidencias detalle |
+| Textarea | 2026-04-19 | Nueva incidencia form, admin status note |
 
 ## Notas
 - El preset a6PDm8yA (reka-luma) esta configurado
