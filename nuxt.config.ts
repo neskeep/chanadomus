@@ -17,7 +17,7 @@ export default defineNuxtConfig({
   },
 
   components: [
-    { path: '~/components/ui', pathPrefix: false },
+    { path: '~/components/ui', pathPrefix: false, extensions: ['.vue'] },
     { path: '~/components' },
   ],
 
