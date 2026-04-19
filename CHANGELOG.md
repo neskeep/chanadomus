@@ -7,6 +7,16 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.6.0] - 2026-04-19
+
+### Added
+- Drizzle schema: `financial_records` table with record_type enum (cargo/abono), numeric(12,2) amount, unit/user/tenant FKs, 4 indices (M2.1)
+- Migration 0005: CREATE TYPE record_type + CREATE TABLE financial_records (additive-only)
+- Shared types: FinancialRecord, AccountStatement, RecordType in shared/types/financial.ts
+- API GET /api/finance/my-account: returns movements for authenticated propietario's unit, ordered by date desc, with calculated balance (abonos - cargos)
+- Composable useMyAccount: fetchStatement, balance, records, isInDebt computed refs
+- Vista propietario Estado de Cuenta (/propietario/estado-cuenta): balance hero card with al-dia/en-mora badge, movements list with cargo/abono color coding, loading skeletons, empty state
+
 ## [0.4.0] - 2026-04-19
 
 ### Added
