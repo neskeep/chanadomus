@@ -19,6 +19,8 @@ Actualizar este archivo cada vez que se ejecute `shadcn add`.
 | Dialog | 2026-04-19 | Modals, admin incidencias detalle |
 | Textarea | 2026-04-19 | Nueva incidencia form, admin status note |
 | AlertDialog | 2026-04-19 | Delete confirmations en unidades, personal |
+| RadioGroup | 2026-04-19 | Votaciones propietario (seleccionar opción) |
+| Progress | 2026-04-19 | Votaciones resultados (barras de progreso) |
 
 ## Notas
 - El preset a6PDm8yA (reka-luma) esta configurado
