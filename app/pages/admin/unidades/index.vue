@@ -1,0 +1,123 @@
+<script setup lang="ts">
+import { Search, Users, Car, Home } from 'lucide-vue-next'
+
+definePageMeta({ layout: 'default' })
+
+interface UnitDirectory {
+  id: string
+  number: string
+  label: string | null
+  memberCount: number
+  vehicleCount: number
+}
+
+const searchQuery = ref('')
+const isLoading = ref(true)
+const error = ref<string | null>(null)
+const units = ref<UnitDirectory[]>([])
+
+async function fetchUnits() {
+  isLoading.value = true
+  error.value = null
+  try {
+    const res = await $fetch<{ data: UnitDirectory[] }>('/api/units/directory')
+    units.value = res.data
+  }
+  catch (err: unknown) {
+    error.value = err instanceof Error ? err.message : 'Error al cargar unidades'
+  }
+  finally {
+    isLoading.value = false
+  }
+}
+
+const filteredUnits = computed(() => {
+  if (!searchQuery.value.trim()) return units.value
+  const q = searchQuery.value.trim().toLowerCase()
+  return units.value.filter(u =>
+    u.number.toLowerCase().includes(q)
+    || u.label?.toLowerCase().includes(q),
+  )
+})
+
+onMounted(() => {
+  fetchUnits()
+})
+</script>
+
+<template>
+  <div class="mx-auto max-w-5xl">
+    <!-- Header -->
+    <div class="mb-6">
+      <h1 class="text-xl font-semibold tracking-tight">Unidades</h1>
+      <p class="mt-1 text-sm text-muted-foreground">Directorio de las {{ units.length }} unidades del condominio</p>
+    </div>
+
+    <!-- Error -->
+    <div
+      v-if="error"
+      role="alert"
+      class="mb-4 rounded-lg border border-destructive/50 bg-destructive/10 p-3 text-sm text-destructive"
+    >
+      {{ error }}
+    </div>
+
+    <!-- Search -->
+    <div class="mb-4">
+      <div class="relative">
+        <Search class="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+        <Input
+          v-model="searchQuery"
+          placeholder="Buscar por numero o nombre..."
+          class="pl-9"
+        />
+      </div>
+    </div>
+
+    <!-- Loading -->
+    <div v-if="isLoading" class="grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-4">
+      <Skeleton v-for="i in 8" :key="i" class="h-28 w-full rounded-lg" />
+    </div>
+
+    <!-- Empty state -->
+    <div
+      v-else-if="filteredUnits.length === 0"
+      class="flex flex-col items-center gap-4 rounded-lg border border-dashed p-8 text-center"
+    >
+      <div class="flex size-12 items-center justify-center rounded-full bg-muted">
+        <Home class="size-6 text-muted-foreground" />
+      </div>
+      <div>
+        <p class="font-medium">No se encontraron unidades</p>
+        <p class="mt-1 text-sm text-muted-foreground">
+          {{ searchQuery ? 'Prueba con otro termino de busqueda' : 'No hay unidades registradas' }}
+        </p>
+      </div>
+    </div>
+
+    <!-- Grid -->
+    <div v-else class="grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-4">
+      <Card
+        v-for="unit in filteredUnits"
+        :key="unit.id"
+        class="cursor-pointer transition-shadow hover:shadow-md"
+        @click="navigateTo(`/admin/unidades/${unit.id}`)"
+      >
+        <CardContent class="p-4">
+          <p class="text-lg font-semibold">{{ unit.number }}</p>
+          <p v-if="unit.label" class="mt-0.5 text-sm text-muted-foreground">{{ unit.label }}</p>
+          <div class="mt-3 flex items-center gap-3">
+            <span class="inline-flex items-center gap-1 text-xs text-muted-foreground">
+              <Users class="size-3.5" />
+              {{ unit.memberCount }}
+            </span>
+            <span class="inline-flex items-center gap-1 text-xs text-muted-foreground">
+              <Car class="size-3.5" />
+              {{ unit.vehicleCount }}
+            </span>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  </div>
+</template>

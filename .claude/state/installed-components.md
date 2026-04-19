@@ -18,6 +18,7 @@ Actualizar este archivo cada vez que se ejecute `shadcn add`.
 | Sonner | 2026-04-19 | Toast notifications |
 | Dialog | 2026-04-19 | Modals, admin incidencias detalle |
 | Textarea | 2026-04-19 | Nueva incidencia form, admin status note |
+| AlertDialog | 2026-04-19 | Delete confirmations en unidades, personal |
 
 ## Notas
 - El preset a6PDm8yA (reka-luma) esta configurado

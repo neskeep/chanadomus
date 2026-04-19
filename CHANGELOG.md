@@ -7,6 +7,32 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.9.0] - 2026-04-19
+
+### Added
+- Drizzle schema: `household_members`, `vehicles`, `staff` tables with enums household_relationship and staff_role (M2.4)
+- Migration 0009: CREATE TABLE household_members, vehicles, staff with FKs and indices (additive-only)
+- Shared types: HouseholdMember, Vehicle, Staff with role/relationship type aliases
+- API GET /api/units/directory: unit list with member/vehicle counts (LEFT JOIN + COUNT DISTINCT)
+- API CRUD /api/units/[id]/members: GET (list), POST (create) — admin only for mutations
+- API CRUD /api/members/[id]: PATCH (update), DELETE (soft delete) — admin only
+- API CRUD /api/units/[id]/vehicles: GET (list), POST (create) — admin only for mutations
+- API CRUD /api/vehicles/[id]: PATCH (update), DELETE (hard delete) — admin only
+- API GET /api/vehicles: global search by plate with ILIKE, includes unit number (JOIN)
+- API CRUD /api/staff: GET (list with role filter), POST (create) — admin only
+- API CRUD /api/staff/[id]: PATCH (update), DELETE (soft delete) — admin only
+- Composable useUnitMembers: CRUD operations for household members per unit
+- Composable useUnitVehicles: CRUD operations for vehicles per unit
+- Composable useStaff: CRUD operations for condominium staff with role filter
+- Composable useVehicleSearch: global vehicle plate search for vigilancia
+- Vista admin Directorio de Unidades (/admin/unidades): card grid with member/vehicle counts, search
+- Vista admin Ficha de Unidad (/admin/unidades/[id]): tabs Miembros/Vehiculos, CRUD with Dialog/AlertDialog
+- Vista admin Gestion de Personal (/admin/personal): table/cards with role filter, CRUD with Dialog/AlertDialog
+- Vista vigilancia Directorio de Residentes (/vigilancia/residentes): unit list + plate search
+- Vista vigilancia Detalle de Unidad (/vigilancia/residentes/[id]): read-only members and vehicles
+- Navigation: Unidades and Personal links for admin, Residentes link for vigilancia
+- shadcn-vue component: AlertDialog
+
 ## [0.8.0] - 2026-04-19
 
 ### Added
