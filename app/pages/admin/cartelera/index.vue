@@ -143,7 +143,8 @@ async function handleSubmit() {
       formData.append('title', formTitle.value)
       formData.append('body', formBody.value)
       formData.append('category', formCategory.value)
-      if (formExpiresAt.value) formData.append('expiresAt', formExpiresAt.value)
+      formData.append('status', formStatus.value)
+      if (formExpiresAt.value) formData.append('expires_at', formExpiresAt.value)
       if (formPdfFile.value) formData.append('attachment', formPdfFile.value)
       await createAnnouncement(formData)
       toast.success('Anuncio creado correctamente')
@@ -550,6 +551,19 @@ function formatDate(dateStr: string): string {
                 <SelectItem value="financiero">Financiero</SelectItem>
                 <SelectItem value="evento">Evento</SelectItem>
                 <SelectItem value="urgente">Urgente</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div>
+            <label for="ann-status" class="text-sm font-medium">Estado</label>
+            <Select v-model="formStatus">
+              <SelectTrigger id="ann-status" class="mt-1.5">
+                <SelectValue placeholder="Seleccionar estado" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="draft">Borrador</SelectItem>
+                <SelectItem value="published">Publicado</SelectItem>
               </SelectContent>
             </Select>
           </div>
