@@ -1,40 +1,38 @@
 <script setup lang="ts">
-import {
-  AlertTriangle,
-  Calendar,
-  Megaphone,
-  Vote,
-} from 'lucide-vue-next'
+import { AlertTriangle, Calendar, Megaphone, Vote } from 'lucide-vue-next'
 
 definePageMeta({ layout: 'default' })
 
 const { user } = useAuth()
 
 interface DashboardStats {
-  openIncidents: number
-  inProgressIncidents: number
+  myOpenIncidents: number
   activePolls: number
+  publishedAnnouncements: number
   upcomingMeetings: number
   nextMeeting: { title: string; date: string } | null
-  publishedAnnouncements: number
-  activeProviders: number
-  totalUnits: number
-  unitsInDebt: number
-  pendingProviders: number
-  myOpenIncidents: number
-  todayAccessCount: number
 }
 
 const stats = ref<DashboardStats | null>(null)
 const isLoading = ref(true)
 
+const statCards = computed(() => [
+  { label: 'Mis Incidencias', value: stats.value?.myOpenIncidents ?? 0, icon: AlertTriangle, color: 'amber' },
+  { label: 'Votaciones Activas', value: stats.value?.activePolls ?? 0, icon: Vote, color: 'purple' },
+  { label: 'Anuncios', value: stats.value?.publishedAnnouncements ?? 0, icon: Megaphone, color: 'blue' },
+  { label: 'Reuniones Proximas', value: stats.value?.upcomingMeetings ?? 0, icon: Calendar, color: 'emerald' },
+])
+
+const colorMap: Record<string, string> = {
+  amber: 'bg-amber-100 text-amber-600 dark:bg-amber-900/30',
+  purple: 'bg-purple-100 text-purple-600 dark:bg-purple-900/30',
+  blue: 'bg-blue-100 text-blue-600 dark:bg-blue-900/30',
+  emerald: 'bg-emerald-100 text-emerald-600 dark:bg-emerald-900/30',
+}
+
 function formatDate(iso: string): string {
   return new Date(iso).toLocaleDateString('es-VE', {
-    weekday: 'long',
-    day: 'numeric',
-    month: 'long',
-    hour: '2-digit',
-    minute: '2-digit',
+    weekday: 'long', day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit',
   })
 }
 
@@ -43,7 +41,7 @@ onMounted(async () => {
     const res = await $fetch<{ data: DashboardStats }>('/api/dashboard/stats')
     stats.value = res.data
   } catch {
-    // silent fail, stats stay null
+    // silent
   } finally {
     isLoading.value = false
   }
@@ -53,117 +51,32 @@ onMounted(async () => {
 <template>
   <div>
     <h1 class="text-xl font-semibold tracking-tight">Mi Vivienda</h1>
-    <p class="mt-1 text-sm text-muted-foreground">
-      Hola, {{ user?.name }}
-    </p>
+    <p class="mt-1 text-sm text-muted-foreground">Hola, {{ user?.name }}</p>
 
-    <div class="mt-6 grid grid-cols-2 gap-3">
-      <!-- Mis Incidencias -->
-      <Card>
-        <CardContent class="p-4">
-          <template v-if="isLoading">
-            <div class="flex items-center justify-between">
-              <div class="space-y-2">
-                <Skeleton class="h-7 w-10" />
-                <Skeleton class="h-3 w-24" />
-              </div>
-              <Skeleton class="size-10 rounded-lg" />
-            </div>
-          </template>
-          <div v-else class="flex items-center justify-between">
-            <div>
-              <p class="text-2xl font-bold">{{ stats?.myOpenIncidents ?? 0 }}</p>
-              <p class="text-xs text-muted-foreground">Mis Incidencias</p>
-            </div>
-            <div class="flex size-10 items-center justify-center rounded-lg bg-amber-100 dark:bg-amber-900/30">
-              <AlertTriangle class="size-5 text-amber-600" />
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      <!-- Votaciones Activas -->
-      <Card>
-        <CardContent class="p-4">
-          <template v-if="isLoading">
-            <div class="flex items-center justify-between">
-              <div class="space-y-2">
-                <Skeleton class="h-7 w-10" />
-                <Skeleton class="h-3 w-24" />
-              </div>
-              <Skeleton class="size-10 rounded-lg" />
-            </div>
-          </template>
-          <div v-else class="flex items-center justify-between">
-            <div>
-              <p class="text-2xl font-bold">{{ stats?.activePolls ?? 0 }}</p>
-              <p class="text-xs text-muted-foreground">Votaciones Activas</p>
-            </div>
-            <div class="flex size-10 items-center justify-center rounded-lg bg-purple-100 dark:bg-purple-900/30">
-              <Vote class="size-5 text-purple-600" />
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      <!-- Anuncios -->
-      <Card>
-        <CardContent class="p-4">
-          <template v-if="isLoading">
-            <div class="flex items-center justify-between">
-              <div class="space-y-2">
-                <Skeleton class="h-7 w-10" />
-                <Skeleton class="h-3 w-24" />
-              </div>
-              <Skeleton class="size-10 rounded-lg" />
-            </div>
-          </template>
-          <div v-else class="flex items-center justify-between">
-            <div>
-              <p class="text-2xl font-bold">{{ stats?.publishedAnnouncements ?? 0 }}</p>
-              <p class="text-xs text-muted-foreground">Anuncios</p>
-            </div>
-            <div class="flex size-10 items-center justify-center rounded-lg bg-blue-100 dark:bg-blue-900/30">
-              <Megaphone class="size-5 text-blue-600" />
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      <!-- Reuniones Proximas -->
-      <Card>
-        <CardContent class="p-4">
-          <template v-if="isLoading">
-            <div class="flex items-center justify-between">
-              <div class="space-y-2">
-                <Skeleton class="h-7 w-10" />
-                <Skeleton class="h-3 w-24" />
-              </div>
-              <Skeleton class="size-10 rounded-lg" />
-            </div>
-          </template>
-          <div v-else class="flex items-center justify-between">
-            <div>
-              <p class="text-2xl font-bold">{{ stats?.upcomingMeetings ?? 0 }}</p>
-              <p class="text-xs text-muted-foreground">Reuniones Proximas</p>
-            </div>
-            <div class="flex size-10 items-center justify-center rounded-lg bg-emerald-100 dark:bg-emerald-900/30">
-              <Calendar class="size-5 text-emerald-600" />
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+    <div class="mt-6 grid grid-cols-2 gap-2">
+      <div
+        v-for="(card, i) in statCards"
+        :key="i"
+        class="flex items-center gap-3 rounded-lg border bg-card p-3"
+      >
+        <div class="flex size-8 shrink-0 items-center justify-center rounded-md" :class="colorMap[card.color]">
+          <component :is="card.icon" class="size-4" />
+        </div>
+        <div v-if="isLoading" class="space-y-1">
+          <Skeleton class="h-5 w-8" />
+          <Skeleton class="h-3 w-16" />
+        </div>
+        <div v-else>
+          <p class="text-lg font-bold leading-none">{{ card.value }}</p>
+          <p class="mt-0.5 text-[11px] text-muted-foreground">{{ card.label }}</p>
+        </div>
+      </div>
     </div>
 
-    <!-- Next Meeting -->
-    <Card v-if="stats?.nextMeeting" class="mt-4">
-      <CardContent class="p-4">
-        <p class="text-xs font-medium text-muted-foreground">Proxima reunion</p>
-        <p class="mt-1 text-sm font-medium">{{ stats.nextMeeting.title }}</p>
-        <p class="mt-0.5 text-xs text-muted-foreground">
-          {{ formatDate(stats.nextMeeting.date) }}
-        </p>
-      </CardContent>
-    </Card>
+    <div v-if="stats?.nextMeeting" class="mt-3 rounded-lg border bg-card p-3">
+      <p class="text-[11px] font-medium text-muted-foreground">Proxima reunion</p>
+      <p class="mt-0.5 text-sm font-medium">{{ stats.nextMeeting.title }}</p>
+      <p class="text-[11px] text-muted-foreground">{{ formatDate(stats.nextMeeting.date) }}</p>
+    </div>
   </div>
 </template>
