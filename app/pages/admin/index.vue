@@ -57,9 +57,8 @@ onMounted(async () => {
 <template>
   <div>
     <h1 class="text-xl font-semibold tracking-tight">Panel Administrador</h1>
-    <p class="mt-1 text-sm text-muted-foreground">Hola, {{ user?.name }}</p>
 
-    <div class="mt-6 grid grid-cols-2 gap-2">
+    <div class="mt-4 grid grid-cols-2 gap-2">
       <div
         v-for="(card, i) in statCards"
         :key="i"

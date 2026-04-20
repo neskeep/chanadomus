@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import { AlertTriangle, Loader2 } from 'lucide-vue-next'
+import { ShieldAlert, Loader2 } from 'lucide-vue-next'
 
-const HOLD_DURATION = 2000 // 2 segundos de press & hold
+const HOLD_DURATION = 2000
 
 const isHolding = ref(false)
 const isTriggered = ref(false)
@@ -24,7 +24,7 @@ function startHold() {
   progressInterval = setInterval(() => {
     const elapsed = Date.now() - startTime
     holdProgress.value = Math.min((elapsed / HOLD_DURATION) * 100, 100)
-  }, 16) // ~60fps
+  }, 16)
 
   holdTimer = setTimeout(() => {
     triggerPanic()
@@ -52,13 +52,14 @@ async function triggerPanic() {
   try {
     await $fetch('/api/panic', { method: 'POST' })
     isTriggered.value = true
-
-    // Reset despues de 5 segundos
     setTimeout(() => {
       isTriggered.value = false
     }, 5000)
   } catch (e: unknown) {
     error.value = e instanceof Error ? e.message : 'Error al enviar alerta'
+    setTimeout(() => {
+      error.value = null
+    }, 3000)
   } finally {
     isLoading.value = false
   }
@@ -71,77 +72,49 @@ onUnmounted(() => {
 
 <template>
   <button
-    class="group relative flex size-14 items-center justify-center rounded-full shadow-lg transition-all duration-200 select-none"
+    class="relative flex size-8 items-center justify-center rounded-md transition-all select-none"
     :class="[
       isTriggered
         ? 'bg-green-600 text-white'
         : isHolding
-          ? 'scale-110 bg-red-700 text-white ring-4 ring-red-300'
-          : 'bg-red-600 text-white hover:bg-red-700 active:scale-95',
+          ? 'scale-110 bg-red-600 text-white ring-2 ring-red-300'
+          : 'text-red-600 hover:bg-red-100 dark:hover:bg-red-900/30',
     ]"
     :disabled="isLoading"
+    :title="isTriggered ? 'Alerta enviada' : 'Manten presionado para alerta de panico'"
     @pointerdown.prevent="startHold"
     @pointerup="cancelHold"
     @pointerleave="cancelHold"
     @contextmenu.prevent
   >
-    <!-- Progress ring -->
+    <!-- Progress ring (subtle) -->
     <svg
       v-if="isHolding"
       class="absolute inset-0 -rotate-90"
-      viewBox="0 0 56 56"
+      viewBox="0 0 32 32"
     >
       <circle
-        cx="28"
-        cy="28"
-        r="26"
+        cx="16"
+        cy="16"
+        r="14"
         fill="none"
         stroke="rgba(255,255,255,0.3)"
-        stroke-width="3"
+        stroke-width="2"
       />
       <circle
-        cx="28"
-        cy="28"
-        r="26"
+        cx="16"
+        cy="16"
+        r="14"
         fill="none"
         stroke="white"
-        stroke-width="3"
+        stroke-width="2"
         stroke-linecap="round"
-        :stroke-dasharray="163.36"
-        :stroke-dashoffset="163.36 - (163.36 * holdProgress) / 100"
-        class="transition-[stroke-dashoffset] duration-75"
+        :stroke-dasharray="87.96"
+        :stroke-dashoffset="87.96 - (87.96 * holdProgress) / 100"
       />
     </svg>
 
-    <!-- Icon -->
-    <Loader2 v-if="isLoading" class="size-6 animate-spin" />
-    <AlertTriangle v-else class="size-6" />
+    <Loader2 v-if="isLoading" class="size-4 animate-spin" />
+    <ShieldAlert v-else class="size-4" />
   </button>
-
-  <!-- Status text -->
-  <Transition
-    enter-active-class="transition-opacity duration-200"
-    leave-active-class="transition-opacity duration-200"
-    enter-from-class="opacity-0"
-    leave-to-class="opacity-0"
-  >
-    <p
-      v-if="isHolding"
-      class="mt-1 text-center text-[10px] font-medium text-red-600"
-    >
-      Mantén presionado...
-    </p>
-    <p
-      v-else-if="isTriggered"
-      class="mt-1 text-center text-[10px] font-medium text-green-600"
-    >
-      Alerta enviada
-    </p>
-    <p
-      v-else-if="error"
-      class="mt-1 text-center text-[10px] font-medium text-destructive"
-    >
-      {{ error }}
-    </p>
-  </Transition>
 </template>

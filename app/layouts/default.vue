@@ -88,9 +88,12 @@ const isSecondaryActive = computed(() =>
   <div class="flex min-h-dvh flex-col bg-background">
     <!-- Top bar -->
     <header class="sticky top-0 z-40 flex h-14 items-center justify-between border-b bg-background/95 px-4 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      <span class="text-sm font-semibold tracking-tight text-primary">ChanaDomus</span>
-      <div class="flex items-center gap-2">
-        <span class="text-xs text-muted-foreground">{{ roleLabel }}</span>
+      <div>
+        <span class="text-sm font-semibold tracking-tight">{{ user?.name }}</span>
+        <span class="ml-1.5 text-xs text-muted-foreground">{{ roleLabel }}</span>
+      </div>
+      <div class="flex items-center gap-1">
+        <PanicButton />
         <NuxtLink to="/mi-chana/notificaciones">
           <Button variant="ghost" size="icon" class="size-8">
             <Bell class="size-4" />
@@ -106,11 +109,6 @@ const isSecondaryActive = computed(() =>
     <main class="flex-1 px-4 py-6">
       <slot />
     </main>
-
-    <!-- Panic button (floating, above bottom nav) -->
-    <div class="fixed bottom-20 right-4 z-50 flex flex-col items-center md:bottom-6">
-      <PanicButton />
-    </div>
 
     <!-- Bottom nav (mobile) -->
     <nav class="fixed bottom-0 left-0 right-0 z-40 flex h-16 items-center justify-around border-t bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 md:hidden">
