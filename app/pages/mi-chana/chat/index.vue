@@ -13,41 +13,46 @@ definePageMeta({ layout: 'default', title: 'Chat' })
 
 const { rooms, isLoading, error, fetchRooms } = useChatRooms()
 
-const ROOM_TYPE_CONFIG: Record<ChatRoomType, { label: string; icon: typeof Globe; badgeClass: string }> = {
+const ROOM_TYPE_CONFIG: Record<ChatRoomType, { label: string; icon: typeof Globe; iconBg: string; iconColor: string }> = {
   general: {
     label: 'General',
     icon: Globe,
-    badgeClass: 'bg-primary/10 text-primary',
+    iconBg: 'bg-primary/10',
+    iconColor: 'text-primary',
   },
   unit: {
     label: 'Mi Rancho',
     icon: Home,
-    badgeClass: 'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400',
+    iconBg: 'bg-amber-100 dark:bg-amber-900/30',
+    iconColor: 'text-amber-700 dark:text-amber-400',
   },
   vigilancia: {
     label: 'Vigilancia',
     icon: Shield,
-    badgeClass: 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400',
+    iconBg: 'bg-blue-100 dark:bg-blue-900/30',
+    iconColor: 'text-blue-700 dark:text-blue-400',
   },
   admin: {
     label: 'Admin',
     icon: Settings,
-    badgeClass: 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-400',
+    iconBg: 'bg-emerald-100 dark:bg-emerald-900/30',
+    iconColor: 'text-emerald-700 dark:text-emerald-400',
   },
 }
 
-const TYPE_ORDER: ChatRoomType[] = ['general', 'unit', 'vigilancia', 'admin']
+const activeTab = ref<'canales' | 'mi-rancho'>('canales')
 
-const groupedRooms = computed(() => {
-  const groups: { type: ChatRoomType; label: string; items: typeof rooms.value }[] = []
-  for (const type of TYPE_ORDER) {
-    const items = rooms.value.filter(r => r.type === type)
-    if (items.length > 0) {
-      groups.push({ type, label: ROOM_TYPE_CONFIG[type].label, items })
-    }
-  }
-  return groups
-})
+const channelRooms = computed(() =>
+  rooms.value.filter(r => r.type !== 'unit'),
+)
+
+const unitRooms = computed(() =>
+  rooms.value.filter(r => r.type === 'unit'),
+)
+
+const activeRooms = computed(() =>
+  activeTab.value === 'canales' ? channelRooms.value : unitRooms.value,
+)
 
 onMounted(() => {
   fetchRooms()
@@ -56,6 +61,24 @@ onMounted(() => {
 
 <template>
   <div class="mx-auto max-w-lg">
+    <!-- Tabs -->
+    <div class="mb-4 flex gap-2">
+      <Button
+        :variant="activeTab === 'canales' ? 'default' : 'outline'"
+        size="sm"
+        @click="activeTab = 'canales'"
+      >
+        Canales
+      </Button>
+      <Button
+        :variant="activeTab === 'mi-rancho' ? 'default' : 'outline'"
+        size="sm"
+        @click="activeTab = 'mi-rancho'"
+      >
+        Mi Rancho
+      </Button>
+    </div>
+
     <!-- Error -->
     <div
       v-if="error"
@@ -66,75 +89,65 @@ onMounted(() => {
     </div>
 
     <!-- Loading -->
-    <div v-if="isLoading" class="space-y-3">
-      <Card v-for="i in 4" :key="i">
-        <CardContent class="p-3">
-          <div class="flex items-center gap-2.5">
-            <Skeleton class="size-8 shrink-0 rounded-md" />
-            <div class="flex-1 space-y-2">
-              <Skeleton class="h-4 w-2/3" />
-              <Skeleton class="h-5 w-16 rounded-full" />
-            </div>
-            <Skeleton class="size-4 shrink-0" />
-          </div>
-        </CardContent>
-      </Card>
+    <div v-if="isLoading" class="divide-y rounded-xl border bg-card">
+      <div v-for="i in 4" :key="i" class="flex items-center gap-3 px-3 py-2.5">
+        <Skeleton class="size-9 shrink-0 rounded-full" />
+        <div class="flex-1 space-y-1.5">
+          <Skeleton class="h-4 w-2/3" />
+          <Skeleton class="h-3 w-1/3" />
+        </div>
+        <Skeleton class="size-4 shrink-0" />
+      </div>
     </div>
 
     <!-- Content -->
     <template v-else-if="!error">
       <!-- Empty state -->
       <div
-        v-if="rooms.length === 0"
+        v-if="activeRooms.length === 0"
         class="flex flex-col items-center gap-4 rounded-lg border border-dashed p-8 text-center"
       >
         <div class="flex size-10 items-center justify-center rounded-lg bg-muted">
           <MessageCircle class="size-5 text-muted-foreground" />
         </div>
         <div>
-          <p class="font-medium">No hay salas disponibles</p>
-          <p class="mt-1 text-sm text-muted-foreground">Las salas de chat aparecerán aquí cuando estén habilitadas</p>
+          <p class="font-medium">
+            {{ activeTab === 'canales' ? 'No hay canales disponibles' : 'No hay chats de unidad' }}
+          </p>
+          <p class="mt-1 text-sm text-muted-foreground">
+            {{ activeTab === 'canales' ? 'Los canales aparecerán aquí cuando estén habilitados' : 'Los chats de tu rancho aparecerán aquí' }}
+          </p>
         </div>
       </div>
 
-      <!-- Grouped rooms -->
-      <div v-else class="space-y-6">
-        <div v-for="group in groupedRooms" :key="group.type">
-          <p class="mb-2 text-xs font-medium uppercase tracking-wider text-muted-foreground">
-            {{ group.label }}
-          </p>
-          <div class="space-y-2">
-            <NuxtLink
-              v-for="room in group.items"
-              :key="room.id"
-              :to="`/mi-chana/chat/${room.id}`"
-              class="block"
-            >
-              <Card class="py-0 transition-shadow hover:shadow-md">
-                <CardContent class="flex items-center gap-2.5 p-3">
-                  <!-- Icon -->
-                  <div class="flex size-8 shrink-0 items-center justify-center rounded-md bg-muted">
-                    <component :is="ROOM_TYPE_CONFIG[room.type].icon" class="size-4 text-muted-foreground" />
-                  </div>
-
-                  <!-- Info -->
-                  <div class="min-w-0 flex-1">
-                    <p class="truncate text-sm font-medium">{{ room.name }}</p>
-                    <span
-                      class="mt-1 inline-flex rounded-full px-2 py-0.5 text-[10px] font-medium"
-                      :class="ROOM_TYPE_CONFIG[room.type].badgeClass"
-                    >
-                      {{ ROOM_TYPE_CONFIG[room.type].label }}
-                    </span>
-                  </div>
-
-                  <!-- Chevron -->
-                  <ChevronRight class="size-4 shrink-0 text-muted-foreground" />
-                </CardContent>
-              </Card>
-            </NuxtLink>
+      <!-- Room list -->
+      <div v-else class="divide-y rounded-xl border bg-card">
+        <NuxtLink
+          v-for="room in activeRooms"
+          :key="room.id"
+          :to="`/mi-chana/chat/${room.id}`"
+          class="flex items-center gap-3 px-3 py-2.5 transition-colors active:bg-muted/50"
+        >
+          <!-- Icon -->
+          <div
+            class="flex size-9 shrink-0 items-center justify-center rounded-full"
+            :class="ROOM_TYPE_CONFIG[room.type].iconBg"
+          >
+            <component
+              :is="ROOM_TYPE_CONFIG[room.type].icon"
+              class="size-4"
+              :class="ROOM_TYPE_CONFIG[room.type].iconColor"
+            />
           </div>
-        </div>
+
+          <!-- Info -->
+          <div class="min-w-0 flex-1">
+            <p class="truncate text-sm font-medium">{{ room.name }}</p>
+          </div>
+
+          <!-- Chevron -->
+          <ChevronRight class="size-4 shrink-0 text-muted-foreground/50" />
+        </NuxtLink>
       </div>
     </template>
   </div>
