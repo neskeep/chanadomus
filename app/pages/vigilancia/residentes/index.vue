@@ -7,7 +7,7 @@ import {
   X,
 } from 'lucide-vue-next'
 
-definePageMeta({ layout: 'default' })
+definePageMeta({ layout: 'default', title: 'Directorio de Residentes' })
 
 // Vehicle search
 const { results: vehicleResults, isLoading: vehicleSearchLoading, query: vehicleQuery, searchByPlate, clearSearch } = useVehicleSearch()
@@ -63,12 +63,6 @@ onMounted(() => {
 
 <template>
   <div class="mx-auto max-w-5xl">
-    <!-- Header -->
-    <div class="mb-6">
-      <h1 class="text-xl font-semibold tracking-tight">Directorio de Residentes</h1>
-      <p class="mt-1 text-sm text-muted-foreground">Consulta información de unidades y residentes</p>
-    </div>
-
     <!-- Plate search -->
     <Card class="mb-6">
       <CardContent class="p-4">

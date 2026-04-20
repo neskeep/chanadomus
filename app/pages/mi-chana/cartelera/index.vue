@@ -10,7 +10,7 @@ import {
 } from 'lucide-vue-next'
 import type { AnnouncementCategory } from '~~/shared/types/announcement'
 
-definePageMeta({ layout: 'default' })
+definePageMeta({ layout: 'default', title: 'Cartelera' })
 
 const { announcements, meta, isLoading, error, totalPages, fetchAnnouncements } = useAnnouncements()
 
@@ -82,12 +82,6 @@ function formatDate(dateStr: string): string {
 
 <template>
   <div class="mx-auto max-w-lg">
-    <!-- Header -->
-    <div class="mb-6">
-      <h1 class="text-xl font-semibold tracking-tight">Cartelera</h1>
-      <p class="mt-1 text-sm text-muted-foreground">Anuncios de la comunidad</p>
-    </div>
-
     <!-- Category filter tabs -->
     <div class="mb-4 flex gap-2 overflow-x-auto pb-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
       <Button

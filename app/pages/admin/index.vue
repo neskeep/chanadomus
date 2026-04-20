@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { AlertTriangle, Building2, Calendar, Vote, Wallet } from 'lucide-vue-next'
 
-definePageMeta({ layout: 'default' })
+definePageMeta({ layout: 'default', title: 'Panel Administrador' })
 
 const { user } = useAuth()
 
@@ -56,8 +56,6 @@ onMounted(async () => {
 
 <template>
   <div>
-    <h1 class="text-xl font-semibold tracking-tight">Panel Administrador</h1>
-
     <div class="mt-4 grid grid-cols-2 gap-2">
       <div
         v-for="(card, i) in statCards"

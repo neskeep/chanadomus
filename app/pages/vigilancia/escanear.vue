@@ -2,7 +2,7 @@
 import { SwitchCamera, CheckCircle2, XCircle, AlertTriangle, Camera } from 'lucide-vue-next'
 import type { ValidationStatus } from '~~/shared/types/qr'
 
-definePageMeta({ layout: 'default' })
+definePageMeta({ layout: 'default', title: 'Escanear QR' })
 
 const {
   isScanning,
@@ -60,8 +60,7 @@ function resultIconBgClass(status: ValidationStatus): string {
 <template>
   <div class="-mx-4 -my-6 flex min-h-[calc(100dvh-3.5rem-4rem)] flex-col bg-background">
     <!-- Header -->
-    <div class="flex items-center justify-between border-b px-4 py-3">
-      <h1 class="text-xl font-semibold">Escanear QR</h1>
+    <div class="flex items-center justify-end border-b px-4 py-3">
       <Button variant="ghost" size="icon" class="size-9" @click="toggleCamera">
         <SwitchCamera class="size-5" />
         <span class="sr-only">Cambiar cámara</span>

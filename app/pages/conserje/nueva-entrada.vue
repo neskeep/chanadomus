@@ -2,7 +2,7 @@
 import { CheckCircle2, XCircle, Loader2 } from 'lucide-vue-next'
 import type { AccessResult } from '~~/shared/types/access'
 
-definePageMeta({ layout: 'default' })
+definePageMeta({ layout: 'default', title: 'Registrar Entrada' })
 
 interface Unit {
   id: string
@@ -94,12 +94,6 @@ async function submit(result: 'allowed' | 'denied') {
 
 <template>
   <div class="min-h-screen bg-background">
-    <!-- Header -->
-    <div class="mb-6">
-      <h1 class="text-xl font-semibold">Registrar Entrada</h1>
-      <p class="text-sm text-muted-foreground">Registro manual de visitante</p>
-    </div>
-
     <!-- Error alert -->
     <div
       v-if="error"

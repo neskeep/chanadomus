@@ -14,7 +14,7 @@ import {
 } from 'lucide-vue-next'
 import type { Incident, IncidentStatus, IncidentPriority } from '~~/shared/types/incident'
 
-definePageMeta({ layout: 'default' })
+definePageMeta({ layout: 'default', title: 'Mis Incidencias' })
 
 const { incidents, meta, isLoading, error, totalPages, fetchIncidents } = useIncidents()
 const currentPage = ref(1)
@@ -72,11 +72,7 @@ function formatDateTime(dateStr: string): string {
 <template>
   <div class="mx-auto max-w-lg">
     <!-- Header -->
-    <div class="mb-6 flex items-start justify-between">
-      <div>
-        <h1 class="text-xl font-semibold tracking-tight">Mis Incidencias</h1>
-        <p class="mt-1 text-sm text-muted-foreground">Reporta y da seguimiento a problemas</p>
-      </div>
+    <div class="mb-6 flex justify-end">
       <Button size="sm" as-child>
         <NuxtLink to="/propietario/incidencias/nueva">
           <Plus class="mr-1.5 size-4" />

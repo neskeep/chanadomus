@@ -16,7 +16,7 @@ import {
 import { toast } from 'vue-sonner'
 import type { StaffRole, Staff } from '~~/shared/types/staff'
 
-definePageMeta({ layout: 'default' })
+definePageMeta({ layout: 'default', title: 'Personal' })
 
 const { staffList, isLoading, isSubmitting, error, fetchStaff, createStaffMember, updateStaffMember, deleteStaffMember } = useStaff()
 
@@ -148,11 +148,7 @@ onMounted(() => {
 <template>
   <div class="mx-auto max-w-5xl">
     <!-- Header -->
-    <div class="mb-6 flex items-center justify-between">
-      <div>
-        <h1 class="text-xl font-semibold tracking-tight">Personal</h1>
-        <p class="mt-1 text-sm text-muted-foreground">Gestiona el personal del condominio</p>
-      </div>
+    <div class="mb-6 flex justify-end">
       <Button size="sm" @click="openCreateDialog">
         <Plus class="mr-1.5 size-4" />
         Agregar

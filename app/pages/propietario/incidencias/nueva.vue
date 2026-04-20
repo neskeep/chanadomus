@@ -3,7 +3,7 @@ import { ArrowLeft, Camera, X, Loader2 } from 'lucide-vue-next'
 import { toast } from 'vue-sonner'
 import type { IncidentPriority } from '~~/shared/types/incident'
 
-definePageMeta({ layout: 'default' })
+definePageMeta({ layout: 'default', title: 'Reportar Incidencia' })
 
 const router = useRouter()
 const { isCreating, error, createIncident } = useIncidents()
@@ -83,14 +83,12 @@ onUnmounted(() => {
   <div class="mx-auto max-w-lg">
     <!-- Header -->
     <div class="mb-6">
-      <Button variant="ghost" size="sm" class="-ml-2 mb-2" as-child>
+      <Button variant="ghost" size="sm" class="-ml-2" as-child>
         <NuxtLink to="/propietario/incidencias">
           <ArrowLeft class="mr-1 size-4" />
           Volver
         </NuxtLink>
       </Button>
-      <h1 class="text-xl font-semibold tracking-tight">Reportar Incidencia</h1>
-      <p class="mt-1 text-sm text-muted-foreground">Describe el problema y adjunta fotos si es necesario</p>
     </div>
 
     <form class="space-y-5" @submit.prevent="handleSubmit">

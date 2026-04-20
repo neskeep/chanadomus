@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ChevronLeft, ChevronRight, FileText } from 'lucide-vue-next'
 
-definePageMeta({ layout: 'default' })
+definePageMeta({ layout: 'default', title: 'Informes Financieros' })
 
 const MONTHS = [
   'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
@@ -39,12 +39,6 @@ function openReport(filePath: string): void {
 
 <template>
   <div class="mx-auto max-w-lg">
-    <!-- Header -->
-    <div class="mb-6">
-      <h1 class="text-xl font-semibold tracking-tight">Informes Financieros</h1>
-      <p class="mt-1 text-sm text-muted-foreground">Reportes publicados por la administración</p>
-    </div>
-
     <!-- Error alert -->
     <div
       v-if="error"

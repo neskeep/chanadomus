@@ -21,7 +21,7 @@ import type {
 } from '~~/shared/types/meeting'
 import { MEETING_TYPES, MEETING_STATUSES } from '~~/shared/types/meeting'
 
-definePageMeta({ layout: 'default' })
+definePageMeta({ layout: 'default', title: 'Gestion de Reuniones' })
 
 const {
   meetings,
@@ -240,11 +240,7 @@ async function handleDelete() {
 <template>
   <div class="mx-auto max-w-5xl">
     <!-- Header -->
-    <div class="mb-6 flex items-start justify-between">
-      <div>
-        <h1 class="text-xl font-semibold tracking-tight">Gestion de Reuniones</h1>
-        <p class="mt-1 text-sm text-muted-foreground">Administra las reuniones del condominio</p>
-      </div>
+    <div class="mb-6 flex justify-end">
       <Button size="sm" @click="openCreateDialog">
         <Plus class="mr-1.5 size-4" />
         Nueva Reunion

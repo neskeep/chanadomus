@@ -18,7 +18,7 @@ import {
 import { toast } from 'vue-sonner'
 import type { Poll, PollStatus } from '~~/shared/types/poll'
 
-definePageMeta({ layout: 'default' })
+definePageMeta({ layout: 'default', title: 'Gestion de Votaciones' })
 
 const {
   polls,
@@ -222,11 +222,7 @@ function participationText(poll: Poll): string {
 <template>
   <div class="mx-auto max-w-5xl">
     <!-- Header -->
-    <div class="mb-6 flex items-start justify-between">
-      <div>
-        <h1 class="text-xl font-semibold tracking-tight">Gestión de Votaciones</h1>
-        <p class="mt-1 text-sm text-muted-foreground">Crea y administra votaciones para los propietarios</p>
-      </div>
+    <div class="mb-6 flex justify-end">
       <Button size="sm" @click="openCreateDialog">
         <Plus class="mr-1.5 size-4" />
         Nueva Votación

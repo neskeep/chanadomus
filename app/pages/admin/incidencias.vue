@@ -14,7 +14,7 @@ import {
 import { toast } from 'vue-sonner'
 import type { Incident, IncidentStatus, IncidentPriority } from '~~/shared/types/incident'
 
-definePageMeta({ layout: 'default' })
+definePageMeta({ layout: 'default', title: 'Gestion de Incidencias' })
 
 const { incidents, meta, isLoading, error, totalPages, fetchIncidents } = useIncidents()
 const detail = useIncidentDetail()
@@ -116,12 +116,6 @@ function formatDateTime(dateStr: string): string {
 
 <template>
   <div class="mx-auto max-w-5xl">
-    <!-- Header -->
-    <div class="mb-6">
-      <h1 class="text-xl font-semibold tracking-tight">Gestión de Incidencias</h1>
-      <p class="mt-1 text-sm text-muted-foreground">Administra reportes de los propietarios</p>
-    </div>
-
     <!-- Stats cards -->
     <div class="mb-6 grid grid-cols-2 gap-4">
       <Card>

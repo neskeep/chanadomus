@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { AlertTriangle, Calendar, Megaphone, Shield } from 'lucide-vue-next'
 
-definePageMeta({ layout: 'default' })
+definePageMeta({ layout: 'default', title: 'Panel Vigilancia' })
 
 const { user } = useAuth()
 
@@ -50,8 +50,6 @@ onMounted(async () => {
 
 <template>
   <div>
-    <h1 class="text-xl font-semibold tracking-tight">Panel Vigilancia</h1>
-
     <div class="mt-4 grid grid-cols-2 gap-2">
       <div
         v-for="(card, i) in statCards"

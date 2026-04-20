@@ -12,7 +12,7 @@ import {
 import { toast } from 'vue-sonner'
 import type { Poll, PollStatus } from '~~/shared/types/poll'
 
-definePageMeta({ layout: 'default' })
+definePageMeta({ layout: 'default', title: 'Votaciones' })
 
 const { polls, meta, isLoading, isSubmitting, error, totalPages, fetchPolls, vote } = usePolls()
 
@@ -91,12 +91,6 @@ function getParticipation(poll: Poll): string {
 
 <template>
   <div class="mx-auto max-w-lg">
-    <!-- Header -->
-    <div class="mb-6">
-      <h1 class="text-xl font-semibold tracking-tight">Votaciones</h1>
-      <p class="mt-1 text-sm text-muted-foreground">Participa en las decisiones de la comunidad</p>
-    </div>
-
     <!-- Tabs -->
     <div class="mb-4 flex gap-2">
       <Button

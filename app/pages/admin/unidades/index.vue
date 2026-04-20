@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { Search, Users, Car, Home } from 'lucide-vue-next'
 
-definePageMeta({ layout: 'default' })
+definePageMeta({ layout: 'default', title: 'Unidades' })
 
 interface UnitDirectory {
   id: string
@@ -47,12 +47,6 @@ onMounted(() => {
 
 <template>
   <div class="mx-auto max-w-5xl">
-    <!-- Header -->
-    <div class="mb-6">
-      <h1 class="text-xl font-semibold tracking-tight">Unidades</h1>
-      <p class="mt-1 text-sm text-muted-foreground">Directorio de las {{ units.length }} unidades del condominio</p>
-    </div>
-
     <!-- Error -->
     <div
       v-if="error"

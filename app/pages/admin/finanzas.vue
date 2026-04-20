@@ -14,7 +14,7 @@ import {
 import { toast } from 'vue-sonner'
 import type { RecordType } from '~~/shared/types/financial'
 
-definePageMeta({ layout: 'default' })
+definePageMeta({ layout: 'default', title: 'Panel Financiero' })
 
 // --- Composables ---
 const { summaries, isLoading, error, totalUnits, totalInDebt, fetchSummary } = useFinanceSummary()
@@ -157,14 +157,6 @@ onMounted(async () => {
 
 <template>
   <div class="mx-auto max-w-5xl">
-    <!-- Header -->
-    <div class="mb-6">
-      <h1 class="text-xl font-semibold tracking-tight">Panel Financiero</h1>
-      <p class="mt-1 text-sm text-muted-foreground">
-        Gestion de saldos, movimientos e informes
-      </p>
-    </div>
-
     <!-- Stats cards -->
     <div class="mb-6 grid grid-cols-2 gap-4">
       <Card>

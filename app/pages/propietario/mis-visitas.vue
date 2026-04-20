@@ -3,7 +3,7 @@ import { Share2, Plus, ChevronDown, ChevronUp, CalendarClock, User, Loader2 } fr
 import type { QrStatus } from '~~/shared/types/qr'
 import QRCode from 'qrcode'
 
-definePageMeta({ layout: 'default' })
+definePageMeta({ layout: 'default', title: 'Mis Visitas' })
 
 const { myCodes, fetchMyCodes, isLoading, error } = useQr()
 
@@ -94,8 +94,7 @@ const statusConfig: Record<QrStatus, { label: string; variant: 'default' | 'seco
 <template>
   <div class="mx-auto max-w-lg">
     <!-- Header -->
-    <div class="mb-6 flex items-center justify-between">
-      <h1 class="text-xl font-semibold tracking-tight">Mis Visitas</h1>
+    <div class="mb-6 flex justify-end">
       <Button size="sm" as-child>
         <NuxtLink to="/propietario/nueva-visita">
           <Plus class="size-4" />

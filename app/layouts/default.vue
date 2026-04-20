@@ -12,6 +12,7 @@ const roleHome = computed(() => role.value ? ROLE_REDIRECTS[role.value] : '/')
 
 const moreOpen = ref(false)
 const route = useRoute()
+const pageTitle = computed(() => (route.meta.title as string) || 'ChanaDomus')
 
 // Close sheet on navigation
 watch(() => route.path, () => {
@@ -88,10 +89,7 @@ const isSecondaryActive = computed(() =>
   <div class="flex min-h-dvh flex-col bg-background">
     <!-- Top bar -->
     <header class="sticky top-0 z-40 flex h-14 items-center justify-between border-b bg-background/95 px-4 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      <div>
-        <span class="text-sm font-semibold tracking-tight">{{ user?.name }}</span>
-        <span class="ml-1.5 text-xs text-muted-foreground">{{ roleLabel }}</span>
-      </div>
+      <span class="text-sm font-semibold tracking-tight">{{ pageTitle }}</span>
       <div class="flex items-center gap-1">
         <PanicButton />
         <NuxtLink to="/mi-chana/notificaciones">

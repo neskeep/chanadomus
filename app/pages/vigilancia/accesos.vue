@@ -2,7 +2,7 @@
 import { Shield, CheckCircle2, XCircle, AlertTriangle } from 'lucide-vue-next'
 import type { AccessResult, EntryType } from '~~/shared/types/access'
 
-definePageMeta({ layout: 'default' })
+definePageMeta({ layout: 'default', title: 'Panel de Accesos' })
 
 const { events, isConnected, loadInitialEvents } = useAccessStream()
 
@@ -60,8 +60,7 @@ function formatTime(dateStr: string): string {
   <div class="min-h-screen bg-background">
     <!-- Header sticky -->
     <div class="sticky top-14 z-10 border-b bg-background/95 px-4 py-3 backdrop-blur">
-      <div class="flex items-center justify-between">
-        <h1 class="text-xl font-semibold">Panel de Accesos</h1>
+      <div class="flex items-center justify-end">
         <Badge
           :class="isConnected ? 'border-green-500 text-green-600' : 'border-red-500 text-red-600'"
           variant="outline"

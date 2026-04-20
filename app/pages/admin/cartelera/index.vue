@@ -18,7 +18,7 @@ import {
 import { toast } from 'vue-sonner'
 import type { Announcement, AnnouncementCategory, AnnouncementStatus } from '~~/shared/types/announcement'
 
-definePageMeta({ layout: 'default' })
+definePageMeta({ layout: 'default', title: 'Gestion de Anuncios' })
 
 const {
   announcements,
@@ -216,11 +216,7 @@ function formatDate(dateStr: string): string {
 <template>
   <div class="mx-auto max-w-5xl">
     <!-- Header -->
-    <div class="mb-6 flex items-start justify-between">
-      <div>
-        <h1 class="text-xl font-semibold tracking-tight">Gestión de Anuncios</h1>
-        <p class="mt-1 text-sm text-muted-foreground">Crea y administra anuncios para la cartelera</p>
-      </div>
+    <div class="mb-6 flex justify-end">
       <Button size="sm" @click="openCreateDialog">
         <Plus class="mr-1.5 size-4" />
         Nuevo Anuncio

@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { Wallet } from 'lucide-vue-next'
 
-definePageMeta({ layout: 'default' })
+definePageMeta({ layout: 'default', title: 'Estado de Cuenta' })
 
 const { balance, records, isInDebt, isLoading, error, fetchStatement } = useMyAccount()
 
@@ -26,12 +26,6 @@ function formatDate(dateStr: string): string {
 
 <template>
   <div class="mx-auto max-w-lg">
-    <!-- Header -->
-    <div class="mb-6">
-      <h1 class="text-xl font-semibold tracking-tight">Estado de Cuenta</h1>
-      <p class="mt-1 text-sm text-muted-foreground">Resumen de cargos y abonos de tu unidad</p>
-    </div>
-
     <!-- Error alert -->
     <div
       v-if="error"

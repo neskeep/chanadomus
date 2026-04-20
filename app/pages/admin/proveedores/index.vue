@@ -23,7 +23,7 @@ import type {
 } from '~~/shared/types/provider'
 import { PROVIDER_CATEGORIES } from '~~/shared/types/provider'
 
-definePageMeta({ layout: 'default' })
+definePageMeta({ layout: 'default', title: 'Gestion de Proveedores' })
 
 const {
   providers,
@@ -269,11 +269,7 @@ function renderStars(rating: number | undefined): number[] {
 <template>
   <div class="mx-auto max-w-5xl">
     <!-- Header -->
-    <div class="mb-6 flex items-start justify-between">
-      <div>
-        <h1 class="text-xl font-semibold tracking-tight">Gestion de Proveedores</h1>
-        <p class="mt-1 text-sm text-muted-foreground">Administra el directorio de proveedores</p>
-      </div>
+    <div class="mb-6 flex justify-end">
       <Button size="sm" @click="openCreateDialog">
         <Plus class="mr-1.5 size-4" />
         Nuevo Proveedor

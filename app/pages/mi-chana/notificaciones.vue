@@ -3,6 +3,8 @@ import { Bell, BellOff, Loader2 } from 'lucide-vue-next'
 import { PUSH_CATEGORIES } from '~~/shared/types/push-preferences'
 import type { PushCategory } from '~~/shared/types/push-preferences'
 
+definePageMeta({ title: 'Notificaciones' })
+
 const { preferences, isLoading, isSaving, error, fetchPreferences, toggleCategory } = usePushPreferences()
 const { isSupported, permission, isSubscribed, subscribe, checkSubscription } = usePushNotifications()
 
@@ -28,11 +30,6 @@ function handleToggle(category: PushCategory, enabled: boolean) {
 
 <template>
   <div class="mx-auto max-w-lg space-y-6">
-    <div>
-      <h1 class="text-lg font-semibold tracking-tight">Notificaciones</h1>
-      <p class="text-sm text-muted-foreground">Configura qué notificaciones push deseas recibir</p>
-    </div>
-
     <!-- Push Subscription Status -->
     <Card class="p-4">
       <div class="flex items-center justify-between gap-4">

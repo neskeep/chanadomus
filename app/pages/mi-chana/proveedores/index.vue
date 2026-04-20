@@ -14,7 +14,7 @@ import { toast } from 'vue-sonner'
 import type { ProviderCategory } from '~~/shared/types/provider'
 import { PROVIDER_CATEGORIES } from '~~/shared/types/provider'
 
-definePageMeta({ layout: 'default' })
+definePageMeta({ layout: 'default', title: 'Directorio de Proveedores' })
 
 const { role } = useAuth()
 const {
@@ -138,12 +138,6 @@ function renderStars(rating: number | undefined): number[] {
 
 <template>
   <div class="mx-auto max-w-5xl">
-    <!-- Header -->
-    <div class="mb-6">
-      <h1 class="text-xl font-semibold tracking-tight">Directorio de Proveedores</h1>
-      <p class="mt-1 text-sm text-muted-foreground">Encuentra servicios de confianza para tu hogar</p>
-    </div>
-
     <!-- Error -->
     <div
       v-if="error"

@@ -9,7 +9,7 @@ import {
 import type { Meeting, MeetingType, MeetingStatus } from '~~/shared/types/meeting'
 import { MEETING_TYPES, MEETING_STATUSES } from '~~/shared/types/meeting'
 
-definePageMeta({ layout: 'default' })
+definePageMeta({ layout: 'default', title: 'Reuniones' })
 
 const { meetings, isLoading, error, fetchMeetings } = useMeetings()
 
@@ -81,12 +81,6 @@ onMounted(() => {
 
 <template>
   <div class="mx-auto max-w-lg">
-    <!-- Header -->
-    <div class="mb-6">
-      <h1 class="text-xl font-semibold tracking-tight">Reuniones</h1>
-      <p class="mt-1 text-sm text-muted-foreground">Próximas reuniones de la comunidad</p>
-    </div>
-
     <!-- Error -->
     <div
       v-if="error"

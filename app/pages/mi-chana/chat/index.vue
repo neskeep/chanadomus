@@ -9,7 +9,7 @@ import {
 } from 'lucide-vue-next'
 import type { ChatRoomType } from '~~/shared/types/chat'
 
-definePageMeta({ layout: 'default' })
+definePageMeta({ layout: 'default', title: 'Chat' })
 
 const { rooms, isLoading, error, fetchRooms } = useChatRooms()
 
@@ -56,12 +56,6 @@ onMounted(() => {
 
 <template>
   <div class="mx-auto max-w-lg">
-    <!-- Header -->
-    <div class="mb-6">
-      <h1 class="text-xl font-semibold tracking-tight">Chat</h1>
-      <p class="mt-1 text-sm text-muted-foreground">Conversaciones del condominio</p>
-    </div>
-
     <!-- Error -->
     <div
       v-if="error"

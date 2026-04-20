@@ -3,7 +3,7 @@ import { ArrowLeft, Loader2, Share2, Copy, Plus, QrCode } from 'lucide-vue-next'
 import type { VisitorType } from '~~/shared/types/qr'
 import QRCode from 'qrcode'
 
-definePageMeta({ layout: 'default' })
+definePageMeta({ layout: 'default', title: 'Nueva Visita' })
 
 const router = useRouter()
 const { generateQr, units, fetchUnits, isGenerating, error } = useQr()
@@ -136,12 +136,11 @@ function formatDate(dateStr: string): string {
 <template>
   <div class="mx-auto max-w-lg">
     <!-- Header -->
-    <div class="mb-6 flex items-center gap-3">
-      <Button variant="ghost" size="icon" class="size-8 shrink-0" @click="router.back()">
-        <ArrowLeft class="size-4" />
-        <span class="sr-only">Volver</span>
+    <div class="mb-6">
+      <Button variant="ghost" size="sm" class="-ml-2" @click="router.back()">
+        <ArrowLeft class="mr-1 size-4" />
+        Volver
       </Button>
-      <h1 class="text-xl font-semibold tracking-tight">Nueva Visita</h1>
     </div>
 
     <!-- Error alert -->
