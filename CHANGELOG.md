@@ -7,6 +7,23 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.15.0] - 2026-04-19
+
+### Added
+- Drizzle schema: `meetings` table with type/status enums (M4.2)
+- Migration 0015: CREATE TYPE meeting_type/meeting_status, CREATE TABLE meetings (additive-only)
+- Shared types: Meeting, CreateMeeting, UpdateMeeting, MeetingType, MeetingStatus, MEETING_TYPES, MEETING_STATUSES
+- API GET /api/meetings: list with filters (type, status, from/to dates), pagination, future-only default
+- API POST /api/meetings: create meeting (admin only), push notification to all
+- API GET /api/meetings/[id]: detail with creator name
+- API PATCH /api/meetings/[id]: update meeting (admin only)
+- API DELETE /api/meetings/[id]: delete meeting (admin only)
+- Composable `useMeetings`: fetch, create, update, delete meetings
+- Page `/admin/reuniones/`: admin management with CRUD, stats, filters, table/cards responsive
+- Page `/mi-chana/reuniones/`: shared calendar view grouped by month with date badges, links Meet/Zoom
+- Navigation: "Reuniones" (Calendar icon) added for all 4 roles
+- Push notification on meeting creation (category 'anuncio')
+
 ## [0.14.0] - 2026-04-19
 
 ### Added

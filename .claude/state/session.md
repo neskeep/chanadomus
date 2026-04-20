@@ -2,38 +2,35 @@
 
 ## Ultima Sesion
 - **Fecha**: 2026-04-19
-- **Sesion #**: 18
+- **Sesion #**: 19
 - **Fase**: Fase 4 — Servicios, Comunidad y Lanzamiento
-- **Version**: v0.14.0
-- **Branch**: feat/directorio-proveedores (merged → dev)
-- **Tag**: v0.14.0 (pushed)
-- **Push**: done
+- **Version**: v0.15.0
+- **Branch**: feat/calendario-reuniones (merged → dev)
+- **Tag**: pendiente
+- **Push**: pendiente
 
-## Resumen Session 18
+## Resumen Session 19
 
-### Cierre S17
-- Commit 11599c0: 5 fixes de Chat WebSocket
-- Merge feat/refinamiento-ux-movil → dev (fast-forward)
-- Tag v0.13.0 creado y pusheado
+### M4.2: Calendario de Reuniones (v0.15.0)
 
-### M4.1: Directorio de Proveedores (v0.14.0)
+#### Schema (server/db/schema/meeting.ts)
+- Tabla `meetings`: title, description, date, endDate, location, meetingLink, type (enum 4 valores), status (enum 4 valores), agenda, minutes, created_by_id, tenant_id
+- Enums: meeting_type (ordinaria, extraordinaria, comite, informativa), meeting_status (programada, en_curso, completada, cancelada)
+- Migration 0015 additive-only aplicada
 
-#### Schema (server/db/schema/provider.ts)
-- Tabla `providers`: name, phone, photo, schedule, address, services (text[]), costs, notes, category (enum 10 valores), status (active/inactive/pending), created_by_id, tenant_id
-- Tabla `provider_reviews`: provider_id, rating (1-5), comment, reviewer_id, tenant_id
-- Enums: provider_category, provider_status
-- Migration 0014 additive-only aplicada
-
-#### API (server/api/providers/ — 8 endpoints)
-- CRUD completo + reviews + sugerencias con role-based access
+#### API (server/api/meetings/ — 5 endpoints)
+- GET / — lista paginada con filtros (tipo, status, fechas), solo futuras por defecto
+- POST / — crear reunion (admin only) + push a todos (categoria anuncio)
+- GET /[id] — detalle con join a usuario creador
+- PATCH /[id] — actualizar (admin only)
+- DELETE /[id] — eliminar (admin only)
 
 #### Frontend
-- Composable useProviders (7 funciones)
-- 3 vistas: directorio compartido, detalle, admin
-- Nav "Proveedores" (Wrench) para 4 roles
+- Composable useMeetings (5 funciones: fetch, fetchOne, create, update, delete)
+- Vista admin /admin/reuniones — CRUD, stats, filtros, tabla/cards responsive, dialogs
+- Vista compartida /mi-chana/reuniones — calendario agrupado por mes, cards con fecha/hora/ubicacion/link
+- Nav "Reuniones" (Calendar) para 4 roles
 
-#### Bug fix
-- reka-ui SelectItem value="" → value="all"
-
-## Pendientes para Session 19
-1. M4.2: Siguiente modulo de Fase 4 (consultar hub)
+## Pendientes para Session 20
+1. Tag v0.15.0 + push
+2. M4.3: Siguiente modulo de Fase 4 (consultar hub)
