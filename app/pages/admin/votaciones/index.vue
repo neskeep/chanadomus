@@ -230,31 +230,27 @@ function participationText(poll: Poll): string {
     </div>
 
     <!-- Stats cards -->
-    <div class="mb-6 grid grid-cols-2 gap-4">
-      <Card>
-        <CardContent class="flex items-center gap-3 p-4">
-          <div class="flex size-10 shrink-0 items-center justify-center rounded-full bg-emerald-100 dark:bg-emerald-900/30">
-            <Vote class="size-5 text-emerald-600" />
-          </div>
-          <div>
-            <p class="text-sm text-muted-foreground">Activas</p>
-            <p v-if="isLoading" class="mt-0.5"><Skeleton class="h-6 w-10" /></p>
-            <p v-else class="text-xl font-bold">{{ totalActive }}</p>
-          </div>
-        </CardContent>
-      </Card>
-      <Card>
-        <CardContent class="flex items-center gap-3 p-4">
-          <div class="flex size-10 shrink-0 items-center justify-center rounded-full bg-zinc-100 dark:bg-zinc-800">
-            <FileText class="size-5 text-zinc-600 dark:text-zinc-400" />
-          </div>
-          <div>
-            <p class="text-sm text-muted-foreground">Borradores</p>
-            <p v-if="isLoading" class="mt-0.5"><Skeleton class="h-6 w-10" /></p>
-            <p v-else class="text-xl font-bold">{{ totalDrafts }}</p>
-          </div>
-        </CardContent>
-      </Card>
+    <div class="mb-6 grid grid-cols-2 gap-2">
+      <div class="flex items-center gap-3 rounded-lg border bg-card p-3">
+        <div class="flex size-8 shrink-0 items-center justify-center rounded-md bg-emerald-100 dark:bg-emerald-900/30">
+          <Vote class="size-4 text-emerald-600" />
+        </div>
+        <div>
+          <p v-if="isLoading"><Skeleton class="h-5 w-8" /></p>
+          <p v-else class="text-lg font-bold leading-none">{{ totalActive }}</p>
+          <p class="mt-0.5 text-[11px] text-muted-foreground">Activas</p>
+        </div>
+      </div>
+      <div class="flex items-center gap-3 rounded-lg border bg-card p-3">
+        <div class="flex size-8 shrink-0 items-center justify-center rounded-md bg-zinc-100 dark:bg-zinc-800">
+          <FileText class="size-4 text-zinc-600 dark:text-zinc-400" />
+        </div>
+        <div>
+          <p v-if="isLoading"><Skeleton class="h-5 w-8" /></p>
+          <p v-else class="text-lg font-bold leading-none">{{ totalDrafts }}</p>
+          <p class="mt-0.5 text-[11px] text-muted-foreground">Borradores</p>
+        </div>
+      </div>
     </div>
 
     <!-- Error -->

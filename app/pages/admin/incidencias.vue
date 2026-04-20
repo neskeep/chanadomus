@@ -117,31 +117,27 @@ function formatDateTime(dateStr: string): string {
 <template>
   <div class="mx-auto max-w-5xl">
     <!-- Stats cards -->
-    <div class="mb-6 grid grid-cols-2 gap-4">
-      <Card>
-        <CardContent class="flex items-center gap-3 p-4">
-          <div class="flex size-10 shrink-0 items-center justify-center rounded-full bg-amber-100 dark:bg-amber-900/30">
-            <AlertTriangle class="size-5 text-amber-600" />
-          </div>
-          <div>
-            <p class="text-sm text-muted-foreground">Abiertas</p>
-            <p v-if="isLoading" class="mt-0.5"><Skeleton class="h-6 w-10" /></p>
-            <p v-else class="text-xl font-bold">{{ totalOpen }}</p>
-          </div>
-        </CardContent>
-      </Card>
-      <Card>
-        <CardContent class="flex items-center gap-3 p-4">
-          <div class="flex size-10 shrink-0 items-center justify-center rounded-full bg-blue-100 dark:bg-blue-900/30">
-            <Clock class="size-5 text-blue-600" />
-          </div>
-          <div>
-            <p class="text-sm text-muted-foreground">En proceso</p>
-            <p v-if="isLoading" class="mt-0.5"><Skeleton class="h-6 w-10" /></p>
-            <p v-else class="text-xl font-bold">{{ totalInProgress }}</p>
-          </div>
-        </CardContent>
-      </Card>
+    <div class="mb-6 grid grid-cols-2 gap-2">
+      <div class="flex items-center gap-3 rounded-lg border bg-card p-3">
+        <div class="flex size-8 shrink-0 items-center justify-center rounded-md bg-amber-100 dark:bg-amber-900/30">
+          <AlertTriangle class="size-4 text-amber-600" />
+        </div>
+        <div>
+          <p v-if="isLoading"><Skeleton class="h-5 w-8" /></p>
+          <p v-else class="text-lg font-bold leading-none">{{ totalOpen }}</p>
+          <p class="mt-0.5 text-[11px] text-muted-foreground">Abiertas</p>
+        </div>
+      </div>
+      <div class="flex items-center gap-3 rounded-lg border bg-card p-3">
+        <div class="flex size-8 shrink-0 items-center justify-center rounded-md bg-blue-100 dark:bg-blue-900/30">
+          <Clock class="size-4 text-blue-600" />
+        </div>
+        <div>
+          <p v-if="isLoading"><Skeleton class="h-5 w-8" /></p>
+          <p v-else class="text-lg font-bold leading-none">{{ totalInProgress }}</p>
+          <p class="mt-0.5 text-[11px] text-muted-foreground">En proceso</p>
+        </div>
+      </div>
     </div>
 
     <!-- Error -->

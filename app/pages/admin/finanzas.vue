@@ -158,40 +158,28 @@ onMounted(async () => {
 <template>
   <div class="mx-auto max-w-5xl">
     <!-- Stats cards -->
-    <div class="mb-6 grid grid-cols-2 gap-4">
-      <Card>
-        <CardContent class="flex items-center gap-3 p-4">
-          <div class="flex size-10 shrink-0 items-center justify-center rounded-full bg-primary/10">
-            <Building2 class="size-5 text-primary" />
-          </div>
-          <div>
-            <p class="text-sm text-muted-foreground">Total unidades</p>
-            <p v-if="isLoading" class="mt-0.5">
-              <Skeleton class="h-6 w-10" />
-            </p>
-            <p v-else class="text-xl font-bold">
-              {{ totalUnits }}
-            </p>
-          </div>
-        </CardContent>
-      </Card>
+    <div class="mb-6 grid grid-cols-2 gap-2">
+      <div class="flex items-center gap-3 rounded-lg border bg-card p-3">
+        <div class="flex size-8 shrink-0 items-center justify-center rounded-md bg-primary/10">
+          <Building2 class="size-4 text-primary" />
+        </div>
+        <div>
+          <p v-if="isLoading"><Skeleton class="h-5 w-8" /></p>
+          <p v-else class="text-lg font-bold leading-none">{{ totalUnits }}</p>
+          <p class="mt-0.5 text-[11px] text-muted-foreground">Total unidades</p>
+        </div>
+      </div>
 
-      <Card>
-        <CardContent class="flex items-center gap-3 p-4">
-          <div class="flex size-10 shrink-0 items-center justify-center rounded-full bg-destructive/10">
-            <AlertTriangle class="size-5 text-destructive" />
-          </div>
-          <div>
-            <p class="text-sm text-muted-foreground">En mora</p>
-            <p v-if="isLoading" class="mt-0.5">
-              <Skeleton class="h-6 w-10" />
-            </p>
-            <p v-else class="text-xl font-bold text-destructive">
-              {{ totalInDebt }}
-            </p>
-          </div>
-        </CardContent>
-      </Card>
+      <div class="flex items-center gap-3 rounded-lg border bg-card p-3">
+        <div class="flex size-8 shrink-0 items-center justify-center rounded-md bg-destructive/10">
+          <AlertTriangle class="size-4 text-destructive" />
+        </div>
+        <div>
+          <p v-if="isLoading"><Skeleton class="h-5 w-8" /></p>
+          <p v-else class="text-lg font-bold leading-none text-destructive">{{ totalInDebt }}</p>
+          <p class="mt-0.5 text-[11px] text-muted-foreground">En mora</p>
+        </div>
+      </div>
     </div>
 
     <!-- Error alert -->

@@ -248,31 +248,27 @@ async function handleDelete() {
     </div>
 
     <!-- Stats cards -->
-    <div class="mb-6 grid grid-cols-2 gap-4">
-      <Card>
-        <CardContent class="flex items-center gap-3 p-4">
-          <div class="flex size-10 shrink-0 items-center justify-center rounded-full bg-blue-100 dark:bg-blue-900/30">
-            <Calendar class="size-5 text-blue-600" />
-          </div>
-          <div>
-            <p class="text-sm text-muted-foreground">Programadas</p>
-            <p v-if="isLoading" class="mt-0.5"><Skeleton class="h-6 w-10" /></p>
-            <p v-else class="text-xl font-bold">{{ totalProgramadas }}</p>
-          </div>
-        </CardContent>
-      </Card>
-      <Card>
-        <CardContent class="flex items-center gap-3 p-4">
-          <div class="flex size-10 shrink-0 items-center justify-center rounded-full bg-emerald-100 dark:bg-emerald-900/30">
-            <CalendarDays class="size-5 text-emerald-600" />
-          </div>
-          <div>
-            <p class="text-sm text-muted-foreground">Este Mes</p>
-            <p v-if="isLoading" class="mt-0.5"><Skeleton class="h-6 w-10" /></p>
-            <p v-else class="text-xl font-bold">{{ totalEsteMes }}</p>
-          </div>
-        </CardContent>
-      </Card>
+    <div class="mb-6 grid grid-cols-2 gap-2">
+      <div class="flex items-center gap-3 rounded-lg border bg-card p-3">
+        <div class="flex size-8 shrink-0 items-center justify-center rounded-md bg-blue-100 dark:bg-blue-900/30">
+          <Calendar class="size-4 text-blue-600" />
+        </div>
+        <div>
+          <p v-if="isLoading"><Skeleton class="h-5 w-8" /></p>
+          <p v-else class="text-lg font-bold leading-none">{{ totalProgramadas }}</p>
+          <p class="mt-0.5 text-[11px] text-muted-foreground">Programadas</p>
+        </div>
+      </div>
+      <div class="flex items-center gap-3 rounded-lg border bg-card p-3">
+        <div class="flex size-8 shrink-0 items-center justify-center rounded-md bg-emerald-100 dark:bg-emerald-900/30">
+          <CalendarDays class="size-4 text-emerald-600" />
+        </div>
+        <div>
+          <p v-if="isLoading"><Skeleton class="h-5 w-8" /></p>
+          <p v-else class="text-lg font-bold leading-none">{{ totalEsteMes }}</p>
+          <p class="mt-0.5 text-[11px] text-muted-foreground">Este Mes</p>
+        </div>
+      </div>
     </div>
 
     <!-- Error -->
