@@ -2,34 +2,34 @@
 
 ## Ultima Sesion
 - **Fecha**: 2026-04-19
-- **Sesion #**: 19
+- **Sesion #**: 20
 - **Fase**: Fase 4 — Servicios, Comunidad y Lanzamiento
-- **Version**: v0.15.0
-- **Branch**: dev (todo mergeado)
-- **Tag**: v0.15.0 (solo cubre meetings, UX fixes sin tag)
+- **Version**: v0.15.0 (sin tag nuevo, UX fixes)
+- **Branch**: dev (mergeado a main)
+- **Tag**: v0.15.0
 - **Push**: pendiente
 
-## Resumen Session 19
+## Resumen Session 20
 
-### M4.2: Calendario de Reuniones (v0.15.0)
-- Schema meetings (15 cols, 2 enums), migration 0015
-- API 5 endpoints CRUD + push al crear
-- Composable useMeetings, vistas admin + compartida
-- Nav "Reuniones" (Calendar) para 4 roles
+### Compactacion global de cards (9/9 archivos)
+- Votaciones, proveedores, reuniones, personal, residentes, residentes/[id], notificaciones, admin/unidades
+- Regla: p-4→p-3, size-10/12→size-8/10, rounded-full→rounded-md/lg, gap-4→gap-3/2.5, icons size-5/6→size-4/5
 
-### UX Fixes (post-M4.2, sin tag)
-- **Nav refactor**: bottom nav agrupado con Sheet "Mas" (admin 10→5 items, propietario 8→5)
-- **Dashboards reales**: API `/api/dashboard/stats` (12 queries paralelas), 4 dashboards con stats
-- **Cards compactas**: size-8 icons, p-3, text-lg, text-[11px] labels — uniforme en TODA la app
-- **Seed actualizado**: 4 usuarios demo (admin/propietario/vigilante/conserje) todos con Yolo2026!
-- **Panic button**: movido de flotante 56px a icono compacto en header
-- **Header dinamico**: muestra route.meta.title, h1 eliminado de 26 paginas
-- **Joilen** sigue existiendo como propietario, Juan eliminado
+### Root cause fix: Card.vue y CardContent.vue
+- Card.vue: removido `py-6`, `gap-6`, `rounded-4xl` → `rounded-xl`, `shadow-sm`, sin padding vertical
+- CardContent.vue: removido `px-6` base → padding controlado por cada uso con `p-3`
+- Afecta TODA la app — todas las cards ahora son compactas
 
-### PENDIENTE CRITICO — Revision visual pre-demo
-Israel necesita ajustar UX visualmente antes de demo del 2026-04-20. Proxima sesion debe comenzar con revision visual de los cambios de esta sesion antes de continuar roadmap.
+### Chat UX refactor
+- Tabs "Canales" | "Mi Rancho" — resuelve scroll de 86 unit rooms
+- Canales = general + vigilancia + admin (acceso inmediato)
+- Mi Rancho = unit rooms (separadas)
+- Estilo flat: divide-y, iconos circulares con color por tipo, sin cards individuales
 
-## Pendientes para Session 20
-1. Revision visual de todos los UX fixes de S19 (demo manana)
-2. Push a remote (git push + tags)
-3. M4.3: Siguiente modulo de Fase 4
+### Hub actualizado
+- M4.2 (Reuniones) marcado como completed
+
+## Pendientes para Session 21
+1. Push a remote (git push + tags)
+2. M4.3: Dashboard Admin — Metricas, Resumen Operacional y Exportes
+3. Luego M4.4 (QA) y M4.5 (Seed 86 propietarios + Lanzamiento)
