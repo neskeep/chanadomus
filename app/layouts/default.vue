@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { LogOut, Home, Wallet, AlertTriangle, Building2, Users, Shield, MessageCircle, Megaphone, Vote, Bell } from 'lucide-vue-next'
+import { LogOut, Home, Wallet, AlertTriangle, Building2, Users, Shield, MessageCircle, Megaphone, Vote, Bell, Wrench } from 'lucide-vue-next'
 import { ROLE_LABELS, ROLE_REDIRECTS } from '~~/shared/types/auth'
 import type { UserRole } from '~~/shared/types/auth'
 
@@ -19,6 +19,7 @@ const navItems = computed(() => {
     base.push({ label: 'Personal', icon: Users, to: '/admin/personal' })
     base.push({ label: 'Cartelera', icon: Megaphone, to: '/admin/cartelera' })
     base.push({ label: 'Votaciones', icon: Vote, to: '/admin/votaciones' })
+    base.push({ label: 'Proveedores', icon: Wrench, to: '/admin/proveedores' })
     base.push({ label: 'Chat', icon: MessageCircle, to: '/mi-chana/chat' })
   }
   if (role.value === 'propietario') {
@@ -26,15 +27,18 @@ const navItems = computed(() => {
     base.push({ label: 'Incidencias', icon: AlertTriangle, to: '/propietario/incidencias' })
     base.push({ label: 'Cartelera', icon: Megaphone, to: '/mi-chana/cartelera' })
     base.push({ label: 'Votaciones', icon: Vote, to: '/mi-chana/votaciones' })
+    base.push({ label: 'Proveedores', icon: Wrench, to: '/mi-chana/proveedores' })
     base.push({ label: 'Chat', icon: MessageCircle, to: '/mi-chana/chat' })
   }
   if (role.value === 'vigilancia') {
     base.push({ label: 'Residentes', icon: Shield, to: '/vigilancia/residentes' })
     base.push({ label: 'Cartelera', icon: Megaphone, to: '/mi-chana/cartelera' })
+    base.push({ label: 'Proveedores', icon: Wrench, to: '/mi-chana/proveedores' })
     base.push({ label: 'Chat', icon: MessageCircle, to: '/mi-chana/chat' })
   }
   if (role.value === 'conserje') {
     base.push({ label: 'Cartelera', icon: Megaphone, to: '/mi-chana/cartelera' })
+    base.push({ label: 'Proveedores', icon: Wrench, to: '/mi-chana/proveedores' })
     base.push({ label: 'Chat', icon: MessageCircle, to: '/mi-chana/chat' })
   }
   return base

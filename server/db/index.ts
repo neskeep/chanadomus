@@ -17,6 +17,7 @@ import * as chatSchema from './schema/chat'
 import * as announcementSchema from './schema/announcement'
 import * as pollSchema from './schema/poll'
 import * as pushPreferencesSchema from './schema/push-preferences'
+import * as providerSchema from './schema/provider'
 
 const connectionString = process.env.DATABASE_URL!
 
@@ -41,5 +42,6 @@ export const db = drizzle(client, {
     ...announcementSchema,
     ...pollSchema,
     ...pushPreferencesSchema,
+    ...providerSchema,
   },
 })
