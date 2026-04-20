@@ -28,7 +28,7 @@ export interface DashboardTrends {
 export function useDashboard() {
   const stats = ref<DashboardStats | null>(null)
   const trends = ref<DashboardTrends | null>(null)
-  const isLoading = ref(false)
+  const isLoading = ref(true)
   const error = ref<string | null>(null)
 
   async function fetchDashboard() {
@@ -63,8 +63,10 @@ export function useDashboard() {
     await fetchDashboard()
   }
 
-  // Auto-fetch on composable creation
-  fetchDashboard()
+  // Fetch client-side only to avoid hydration mismatch
+  if (import.meta.client) {
+    fetchDashboard()
+  }
 
   return {
     stats,
