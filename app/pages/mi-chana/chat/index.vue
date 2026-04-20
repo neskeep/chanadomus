@@ -68,9 +68,9 @@ onMounted(() => {
     <!-- Loading -->
     <div v-if="isLoading" class="space-y-3">
       <Card v-for="i in 4" :key="i">
-        <CardContent class="p-4">
-          <div class="flex items-center gap-3">
-            <Skeleton class="size-10 shrink-0 rounded-full" />
+        <CardContent class="p-3">
+          <div class="flex items-center gap-2.5">
+            <Skeleton class="size-8 shrink-0 rounded-md" />
             <div class="flex-1 space-y-2">
               <Skeleton class="h-4 w-2/3" />
               <Skeleton class="h-5 w-16 rounded-full" />
@@ -88,8 +88,8 @@ onMounted(() => {
         v-if="rooms.length === 0"
         class="flex flex-col items-center gap-4 rounded-lg border border-dashed p-8 text-center"
       >
-        <div class="flex size-12 items-center justify-center rounded-full bg-muted">
-          <MessageCircle class="size-6 text-muted-foreground" />
+        <div class="flex size-10 items-center justify-center rounded-lg bg-muted">
+          <MessageCircle class="size-5 text-muted-foreground" />
         </div>
         <div>
           <p class="font-medium">No hay salas disponibles</p>
@@ -111,10 +111,10 @@ onMounted(() => {
               class="block"
             >
               <Card class="transition-shadow hover:shadow-md">
-                <CardContent class="flex items-center gap-3 p-4">
+                <CardContent class="flex items-center gap-2.5 p-3">
                   <!-- Icon -->
-                  <div class="flex size-10 shrink-0 items-center justify-center rounded-full bg-muted">
-                    <component :is="ROOM_TYPE_CONFIG[room.type].icon" class="size-5 text-muted-foreground" />
+                  <div class="flex size-8 shrink-0 items-center justify-center rounded-md bg-muted">
+                    <component :is="ROOM_TYPE_CONFIG[room.type].icon" class="size-4 text-muted-foreground" />
                   </div>
 
                   <!-- Info -->

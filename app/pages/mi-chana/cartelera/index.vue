@@ -108,8 +108,8 @@ function formatDate(dateStr: string): string {
     <!-- Loading -->
     <div v-if="isLoading" class="space-y-3">
       <Card v-for="i in 3" :key="i">
-        <CardContent class="p-4">
-          <div class="space-y-3">
+        <CardContent class="p-3">
+          <div class="space-y-2.5">
             <div class="flex gap-2">
               <Skeleton class="h-5 w-16 rounded-full" />
               <Skeleton class="h-5 w-20 rounded-full" />
@@ -128,8 +128,8 @@ function formatDate(dateStr: string): string {
         v-if="announcements.length === 0"
         class="flex flex-col items-center gap-4 rounded-lg border border-dashed p-8 text-center"
       >
-        <div class="flex size-12 items-center justify-center rounded-full bg-muted">
-          <Megaphone class="size-6 text-muted-foreground" />
+        <div class="flex size-10 items-center justify-center rounded-lg bg-muted">
+          <Megaphone class="size-5 text-muted-foreground" />
         </div>
         <div>
           <p class="font-medium">No hay anuncios</p>
