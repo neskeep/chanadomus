@@ -199,19 +199,16 @@ const lineChartOptions = {
 
 <template>
   <div class="space-y-3">
-    <!-- 1. Header row -->
-    <div class="flex items-center justify-between">
-      <h1 class="text-lg font-bold md:text-xl">Panel Administrador</h1>
-      <div class="flex gap-2">
-        <Button variant="outline" size="sm" @click="exportCsv">
-          <Download class="mr-1.5 size-3.5" />
-          <span class="hidden sm:inline">CSV</span>
-        </Button>
-        <Button variant="outline" size="sm" @click="exportPdf">
-          <FileText class="mr-1.5 size-3.5" />
-          <span class="hidden sm:inline">PDF</span>
-        </Button>
-      </div>
+    <!-- 1. Export buttons -->
+    <div class="flex justify-end gap-2">
+      <Button variant="outline" size="sm" @click="exportCsv">
+        <Download class="mr-1.5 size-3.5" />
+        <span class="hidden sm:inline">CSV</span>
+      </Button>
+      <Button variant="outline" size="sm" @click="exportPdf">
+        <FileText class="mr-1.5 size-3.5" />
+        <span class="hidden sm:inline">PDF</span>
+      </Button>
     </div>
 
     <!-- 2. Financial KPIs -->
