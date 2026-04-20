@@ -1,13 +1,14 @@
 <script setup lang="ts">
 import {
   AlertTriangle,
+  ArrowDownUp,
   Building2,
   Calendar,
   DollarSign,
   Download,
   FileText,
   Percent,
-  TrendingUp,
+  ShieldAlert,
   Vote,
   Wallet,
 } from 'lucide-vue-next'
@@ -56,48 +57,15 @@ function dayLabel(yyyymmdd: string): string {
   return new Date(yyyymmdd).toLocaleDateString('es-VE', { weekday: 'short' })
 }
 
-// --- KPI cards ---
-
-const kpiCards = computed(() => {
-  const kpis = trends.value?.financialKpis
-  return [
-    {
-      label: 'Cobrado este mes',
-      value: kpis ? formatCurrency(kpis.totalAbonos) : '—',
-      icon: DollarSign,
-      color: 'emerald',
-    },
-    {
-      label: 'Pendiente total',
-      value: kpis ? formatCurrency(kpis.pendingBalance) : '—',
-      icon: Wallet,
-      color: kpis && kpis.pendingBalance > 0 ? 'destructive' : 'slate',
-    },
-    {
-      label: 'Tasa cobranza',
-      value: kpis ? `${kpis.collectionRate.toFixed(1)}%` : '—',
-      icon: Percent,
-      color: 'blue',
-    },
-  ]
-})
-
-const kpiColorMap: Record<string, string> = {
-  emerald: 'bg-emerald-100 text-emerald-600 dark:bg-emerald-900/30',
-  slate: 'bg-slate-100 text-slate-600 dark:bg-slate-900/30',
-  blue: 'bg-blue-100 text-blue-600 dark:bg-blue-900/30',
-  destructive: 'bg-red-100 text-red-600 dark:bg-red-900/30',
-}
-
 // --- Stat cards ---
 
 const statCards = computed(() => [
-  { label: 'Incidencias Abiertas', value: stats.value?.openIncidents ?? 0, icon: AlertTriangle, color: 'amber' },
-  { label: 'En Progreso', value: stats.value?.inProgressIncidents ?? 0, icon: AlertTriangle, color: 'blue' },
+  { label: 'Incidencias', value: stats.value?.openIncidents ?? 0, icon: AlertTriangle, color: 'amber' },
+  { label: 'En Progreso', value: stats.value?.inProgressIncidents ?? 0, icon: ShieldAlert, color: 'blue' },
   { label: 'Unidades', value: stats.value?.totalUnits ?? 0, icon: Building2, color: 'slate' },
   { label: 'En Mora', value: stats.value?.unitsInDebt ?? 0, icon: Wallet, color: 'red' },
-  { label: 'Votaciones Activas', value: stats.value?.activePolls ?? 0, icon: Vote, color: 'purple' },
-  { label: 'Reuniones Proximas', value: stats.value?.upcomingMeetings ?? 0, icon: Calendar, color: 'emerald' },
+  { label: 'Votaciones', value: stats.value?.activePolls ?? 0, icon: Vote, color: 'purple' },
+  { label: 'Reuniones', value: stats.value?.upcomingMeetings ?? 0, icon: Calendar, color: 'emerald' },
 ])
 
 const colorMap: Record<string, string> = {
@@ -115,14 +83,12 @@ const accessChartData = computed(() => {
   const items = trends.value?.accessByDay ?? []
   return {
     labels: items.map(i => dayLabel(i.day)),
-    datasets: [
-      {
-        label: 'Accesos',
-        data: items.map(i => i.count),
-        backgroundColor: '#2d9e9e',
-        borderRadius: 4,
-      },
-    ],
+    datasets: [{
+      label: 'Accesos',
+      data: items.map(i => i.count),
+      backgroundColor: '#2d9e9e',
+      borderRadius: 4,
+    }],
   }
 })
 
@@ -131,18 +97,8 @@ const financeChartData = computed(() => {
   return {
     labels: items.map(i => monthLabel(i.month)),
     datasets: [
-      {
-        label: 'Cargos',
-        data: items.map(i => i.cargos),
-        backgroundColor: '#ef4444',
-        borderRadius: 4,
-      },
-      {
-        label: 'Abonos',
-        data: items.map(i => i.abonos),
-        backgroundColor: '#22c55e',
-        borderRadius: 4,
-      },
+      { label: 'Cargos', data: items.map(i => i.cargos), backgroundColor: '#ef4444', borderRadius: 4 },
+      { label: 'Abonos', data: items.map(i => i.abonos), backgroundColor: '#22c55e', borderRadius: 4 },
     ],
   }
 })
@@ -151,22 +107,20 @@ const incidentsChartData = computed(() => {
   const items = trends.value?.incidentsByMonth ?? []
   return {
     labels: items.map(i => monthLabel(i.month)),
-    datasets: [
-      {
-        label: 'Incidencias',
-        data: items.map(i => i.count),
-        borderColor: '#f59e0b',
-        backgroundColor: 'rgba(245, 158, 11, 0.15)',
-        fill: true,
-        tension: 0.3,
-        pointRadius: 3,
-        pointBackgroundColor: '#f59e0b',
-      },
-    ],
+    datasets: [{
+      label: 'Incidencias',
+      data: items.map(i => i.count),
+      borderColor: '#f59e0b',
+      backgroundColor: 'rgba(245, 158, 11, 0.15)',
+      fill: true,
+      tension: 0.3,
+      pointRadius: 3,
+      pointBackgroundColor: '#f59e0b',
+    }],
   }
 })
 
-const barChartOptions = {
+const chartOpts = {
   responsive: true,
   maintainAspectRatio: false,
   plugins: { legend: { display: false } },
@@ -176,7 +130,7 @@ const barChartOptions = {
   },
 }
 
-const groupedBarChartOptions = {
+const groupedChartOpts = {
   responsive: true,
   maintainAspectRatio: false,
   plugins: { legend: { position: 'bottom' as const, labels: { boxWidth: 12, padding: 8 } } },
@@ -185,21 +139,11 @@ const groupedBarChartOptions = {
     y: { beginAtZero: true },
   },
 }
-
-const lineChartOptions = {
-  responsive: true,
-  maintainAspectRatio: false,
-  plugins: { legend: { display: false } },
-  scales: {
-    x: { grid: { display: false } },
-    y: { beginAtZero: true, ticks: { precision: 0 } },
-  },
-}
 </script>
 
 <template>
   <div class="space-y-3">
-    <!-- 1. Export buttons -->
+    <!-- Export buttons -->
     <div class="flex justify-end gap-2">
       <Button variant="outline" size="sm" @click="exportCsv">
         <Download class="mr-1.5 size-3.5" />
@@ -211,100 +155,194 @@ const lineChartOptions = {
       </Button>
     </div>
 
-    <!-- 2. Financial KPIs -->
-    <div class="grid grid-cols-3 gap-2">
-      <div
-        v-for="(kpi, i) in kpiCards"
-        :key="i"
-        class="rounded-lg border bg-card p-3"
-      >
-        <div class="flex items-center gap-1.5">
+    <!-- Tabs -->
+    <Tabs default-value="resumen">
+      <TabsList class="w-full">
+        <TabsTrigger value="resumen" class="flex-1">Resumen</TabsTrigger>
+        <TabsTrigger value="finanzas" class="flex-1">Finanzas</TabsTrigger>
+        <TabsTrigger value="actividad" class="flex-1">Actividad</TabsTrigger>
+      </TabsList>
+
+      <!-- TAB: Resumen -->
+      <TabsContent value="resumen" class="mt-3 space-y-2">
+        <!-- Stat cards: 3 cols -->
+        <div class="grid grid-cols-3 gap-2">
           <div
-            class="flex size-5 shrink-0 items-center justify-center rounded"
-            :class="kpiColorMap[kpi.color]"
+            v-for="(card, i) in statCards"
+            :key="i"
+            class="rounded-lg border bg-card p-2.5"
           >
-            <component :is="kpi.icon" class="size-3" />
+            <div
+              class="flex size-7 items-center justify-center rounded-md"
+              :class="colorMap[card.color]"
+            >
+              <component :is="card.icon" class="size-3.5" />
+            </div>
+            <div v-if="isLoading" class="mt-1.5">
+              <Skeleton class="h-5 w-6" />
+              <Skeleton class="mt-1 h-3 w-12" />
+            </div>
+            <template v-else>
+              <p class="mt-1.5 text-xl font-bold leading-none">{{ card.value }}</p>
+              <p class="mt-0.5 text-[11px] text-muted-foreground">{{ card.label }}</p>
+            </template>
           </div>
-          <p class="text-[11px] text-muted-foreground">{{ kpi.label }}</p>
         </div>
-        <div v-if="isLoading" class="mt-1.5">
-          <Skeleton class="h-5 w-16" />
-        </div>
-        <p
-          v-else
-          class="mt-1.5 text-sm font-bold leading-none md:text-base"
-          :class="kpi.color === 'destructive' ? 'text-destructive' : ''"
-        >
-          {{ kpi.value }}
-        </p>
-      </div>
-    </div>
 
-    <!-- 3. Stat cards -->
-    <div class="grid grid-cols-2 gap-2 md:grid-cols-3">
-      <div
-        v-for="(card, i) in statCards"
-        :key="i"
-        class="flex items-center gap-3 rounded-lg border bg-card p-3"
-      >
-        <div
-          class="flex size-8 shrink-0 items-center justify-center rounded-md"
-          :class="colorMap[card.color]"
-        >
-          <component :is="card.icon" class="size-4" />
+        <!-- Next meeting -->
+        <div v-if="stats?.nextMeeting" class="rounded-lg border bg-card p-3">
+          <div class="flex items-center gap-2">
+            <div class="flex size-7 items-center justify-center rounded-md bg-emerald-100 text-emerald-600 dark:bg-emerald-900/30">
+              <Calendar class="size-3.5" />
+            </div>
+            <div class="min-w-0">
+              <p class="truncate text-sm font-medium">{{ stats.nextMeeting.title }}</p>
+              <p class="text-[11px] text-muted-foreground">{{ formatDate(stats.nextMeeting.date) }}</p>
+            </div>
+          </div>
         </div>
-        <div v-if="isLoading" class="space-y-1">
-          <Skeleton class="h-5 w-8" />
-          <Skeleton class="h-3 w-16" />
-        </div>
-        <div v-else>
-          <p class="text-lg font-bold leading-none">{{ card.value }}</p>
-          <p class="mt-0.5 text-[11px] text-muted-foreground">{{ card.label }}</p>
-        </div>
-      </div>
-    </div>
 
-    <!-- 4. Charts: Access + Finance side by side -->
-    <div class="grid grid-cols-1 gap-2 md:grid-cols-2">
-      <!-- Chart A: Accesos (7 dias) -->
-      <div class="rounded-lg border bg-card p-3">
-        <p class="mb-2 text-xs font-semibold text-muted-foreground">Accesos (7 dias)</p>
-        <div v-if="isLoading" class="flex h-56 items-center justify-center">
-          <Skeleton class="h-full w-full rounded-md" />
+        <!-- Quick finance snapshot -->
+        <div class="rounded-lg border bg-card p-3">
+          <p class="mb-2 text-xs font-semibold text-muted-foreground">Snapshot financiero</p>
+          <div class="grid grid-cols-3 gap-3">
+            <div>
+              <div class="flex items-center gap-1">
+                <DollarSign class="size-3 text-emerald-500" />
+                <span class="text-[10px] text-muted-foreground">Cobrado</span>
+              </div>
+              <p v-if="isLoading"><Skeleton class="mt-1 h-4 w-14" /></p>
+              <p v-else class="mt-0.5 text-sm font-semibold">
+                {{ trends?.financialKpis ? formatCurrency(trends.financialKpis.totalAbonos) : '—' }}
+              </p>
+            </div>
+            <div>
+              <div class="flex items-center gap-1">
+                <ArrowDownUp class="size-3 text-red-500" />
+                <span class="text-[10px] text-muted-foreground">Pendiente</span>
+              </div>
+              <p v-if="isLoading"><Skeleton class="mt-1 h-4 w-14" /></p>
+              <p v-else class="mt-0.5 text-sm font-semibold" :class="(trends?.financialKpis?.pendingBalance ?? 0) > 0 ? 'text-destructive' : ''">
+                {{ trends?.financialKpis ? formatCurrency(trends.financialKpis.pendingBalance) : '—' }}
+              </p>
+            </div>
+            <div>
+              <div class="flex items-center gap-1">
+                <Percent class="size-3 text-blue-500" />
+                <span class="text-[10px] text-muted-foreground">Cobranza</span>
+              </div>
+              <p v-if="isLoading"><Skeleton class="mt-1 h-4 w-14" /></p>
+              <p v-else class="mt-0.5 text-sm font-semibold">
+                {{ trends?.financialKpis ? `${trends.financialKpis.collectionRate.toFixed(1)}%` : '—' }}
+              </p>
+            </div>
+          </div>
         </div>
-        <div v-else class="h-56">
-          <Bar :data="accessChartData" :options="barChartOptions" />
-        </div>
-      </div>
+      </TabsContent>
 
-      <!-- Chart B: Finanzas (6 meses) -->
-      <div class="rounded-lg border bg-card p-3">
-        <p class="mb-2 text-xs font-semibold text-muted-foreground">Finanzas (6 meses)</p>
-        <div v-if="isLoading" class="flex h-56 items-center justify-center">
-          <Skeleton class="h-full w-full rounded-md" />
+      <!-- TAB: Finanzas -->
+      <TabsContent value="finanzas" class="mt-3 space-y-3">
+        <!-- KPI cards grandes -->
+        <div class="grid grid-cols-2 gap-2">
+          <div class="rounded-lg border bg-card p-3">
+            <p class="text-[11px] text-muted-foreground">Cobrado este mes</p>
+            <p v-if="isLoading"><Skeleton class="mt-1 h-6 w-24" /></p>
+            <p v-else class="mt-1 text-lg font-bold text-emerald-600">
+              {{ trends?.financialKpis ? formatCurrency(trends.financialKpis.totalAbonos) : '—' }}
+            </p>
+          </div>
+          <div class="rounded-lg border bg-card p-3">
+            <p class="text-[11px] text-muted-foreground">Cargos este mes</p>
+            <p v-if="isLoading"><Skeleton class="mt-1 h-6 w-24" /></p>
+            <p v-else class="mt-1 text-lg font-bold">
+              {{ trends?.financialKpis ? formatCurrency(trends.financialKpis.totalCargos) : '—' }}
+            </p>
+          </div>
+          <div class="rounded-lg border bg-card p-3">
+            <p class="text-[11px] text-muted-foreground">Pendiente total</p>
+            <p v-if="isLoading"><Skeleton class="mt-1 h-6 w-24" /></p>
+            <p v-else class="mt-1 text-lg font-bold" :class="(trends?.financialKpis?.pendingBalance ?? 0) > 0 ? 'text-destructive' : ''">
+              {{ trends?.financialKpis ? formatCurrency(trends.financialKpis.pendingBalance) : '—' }}
+            </p>
+          </div>
+          <div class="rounded-lg border bg-card p-3">
+            <p class="text-[11px] text-muted-foreground">Tasa de cobranza</p>
+            <p v-if="isLoading"><Skeleton class="mt-1 h-6 w-24" /></p>
+            <p v-else class="mt-1 text-lg font-bold text-blue-600">
+              {{ trends?.financialKpis ? `${trends.financialKpis.collectionRate.toFixed(1)}%` : '—' }}
+            </p>
+          </div>
         </div>
-        <div v-else class="h-56">
-          <Bar :data="financeChartData" :options="groupedBarChartOptions" />
+
+        <!-- Unidades en mora badge -->
+        <div class="flex items-center gap-2 rounded-lg border bg-card p-3">
+          <div class="flex size-8 items-center justify-center rounded-md bg-red-100 text-red-600 dark:bg-red-900/30">
+            <Wallet class="size-4" />
+          </div>
+          <div>
+            <p class="text-sm font-semibold">{{ stats?.unitsInDebt ?? 0 }} unidades en mora</p>
+            <p class="text-[11px] text-muted-foreground">de {{ stats?.totalUnits ?? 0 }} totales</p>
+          </div>
         </div>
-      </div>
-    </div>
 
-    <!-- 5. Incidents trend: Line chart -->
-    <div class="rounded-lg border bg-card p-3">
-      <p class="mb-2 text-xs font-semibold text-muted-foreground">Incidencias (6 meses)</p>
-      <div v-if="isLoading" class="flex h-56 items-center justify-center">
-        <Skeleton class="h-full w-full rounded-md" />
-      </div>
-      <div v-else class="h-56">
-        <Line :data="incidentsChartData" :options="lineChartOptions" />
-      </div>
-    </div>
+        <!-- Finance chart -->
+        <div class="rounded-lg border bg-card p-3">
+          <p class="mb-2 text-xs font-semibold text-muted-foreground">Cargos vs Abonos (6 meses)</p>
+          <div v-if="isLoading" class="h-52">
+            <Skeleton class="h-full w-full rounded-md" />
+          </div>
+          <div v-else class="h-52">
+            <Bar :data="financeChartData" :options="groupedChartOpts" />
+          </div>
+        </div>
+      </TabsContent>
 
-    <!-- 6. Next meeting -->
-    <div v-if="stats?.nextMeeting" class="rounded-lg border bg-card p-3">
-      <p class="text-[11px] font-medium text-muted-foreground">Proxima reunion</p>
-      <p class="mt-0.5 text-sm font-medium">{{ stats.nextMeeting.title }}</p>
-      <p class="text-[11px] text-muted-foreground">{{ formatDate(stats.nextMeeting.date) }}</p>
-    </div>
+      <!-- TAB: Actividad -->
+      <TabsContent value="actividad" class="mt-3 space-y-3">
+        <!-- Access chart -->
+        <div class="rounded-lg border bg-card p-3">
+          <p class="mb-2 text-xs font-semibold text-muted-foreground">Accesos (ultimos 7 dias)</p>
+          <div v-if="isLoading" class="h-48">
+            <Skeleton class="h-full w-full rounded-md" />
+          </div>
+          <div v-else class="h-48">
+            <Bar :data="accessChartData" :options="chartOpts" />
+          </div>
+        </div>
+
+        <!-- Incidents chart -->
+        <div class="rounded-lg border bg-card p-3">
+          <p class="mb-2 text-xs font-semibold text-muted-foreground">Incidencias (6 meses)</p>
+          <div v-if="isLoading" class="h-48">
+            <Skeleton class="h-full w-full rounded-md" />
+          </div>
+          <div v-else class="h-48">
+            <Line :data="incidentsChartData" :options="chartOpts" />
+          </div>
+        </div>
+
+        <!-- Quick incident stats -->
+        <div class="grid grid-cols-2 gap-2">
+          <div class="flex items-center gap-2.5 rounded-lg border bg-card p-3">
+            <div class="flex size-8 items-center justify-center rounded-md bg-amber-100 text-amber-600 dark:bg-amber-900/30">
+              <AlertTriangle class="size-4" />
+            </div>
+            <div>
+              <p class="text-lg font-bold leading-none">{{ stats?.openIncidents ?? 0 }}</p>
+              <p class="mt-0.5 text-[11px] text-muted-foreground">Abiertas</p>
+            </div>
+          </div>
+          <div class="flex items-center gap-2.5 rounded-lg border bg-card p-3">
+            <div class="flex size-8 items-center justify-center rounded-md bg-blue-100 text-blue-600 dark:bg-blue-900/30">
+              <ShieldAlert class="size-4" />
+            </div>
+            <div>
+              <p class="text-lg font-bold leading-none">{{ stats?.inProgressIncidents ?? 0 }}</p>
+              <p class="mt-0.5 text-[11px] text-muted-foreground">En progreso</p>
+            </div>
+          </div>
+        </div>
+      </TabsContent>
+    </Tabs>
   </div>
 </template>
