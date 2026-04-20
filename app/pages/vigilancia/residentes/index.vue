@@ -106,8 +106,8 @@ onMounted(() => {
             @click="navigateTo(`/vigilancia/residentes/${vehicle.unitId}`)"
           >
             <CardContent class="flex items-center gap-3 p-3">
-              <div class="flex size-10 shrink-0 items-center justify-center rounded-full bg-primary/10">
-                <Car class="size-5 text-primary" />
+              <div class="flex size-8 shrink-0 items-center justify-center rounded-md bg-primary/10">
+                <Car class="size-4 text-primary" />
               </div>
               <div class="min-w-0 flex-1">
                 <p class="text-sm font-semibold uppercase tracking-wider">{{ vehicle.plate }}</p>
@@ -162,8 +162,8 @@ onMounted(() => {
       v-else-if="filteredUnits.length === 0"
       class="flex flex-col items-center gap-4 rounded-lg border border-dashed p-8 text-center"
     >
-      <div class="flex size-12 items-center justify-center rounded-full bg-muted">
-        <Home class="size-6 text-muted-foreground" />
+      <div class="flex size-10 items-center justify-center rounded-lg bg-muted">
+        <Home class="size-5 text-muted-foreground" />
       </div>
       <div>
         <p class="font-medium">No se encontraron unidades</p>
@@ -181,11 +181,11 @@ onMounted(() => {
         class="cursor-pointer transition-shadow hover:shadow-md"
         @click="navigateTo(`/vigilancia/residentes/${unit.id}`)"
       >
-        <CardContent class="flex flex-col items-center justify-center p-4 text-center">
-          <div class="flex size-10 items-center justify-center rounded-full bg-primary/10">
-            <Home class="size-5 text-primary" />
+        <CardContent class="flex flex-col items-center justify-center p-3 text-center">
+          <div class="flex size-8 items-center justify-center rounded-md bg-primary/10">
+            <Home class="size-4 text-primary" />
           </div>
-          <p class="mt-2 text-lg font-bold">{{ unit.number }}</p>
+          <p class="mt-1.5 text-base font-bold">{{ unit.number }}</p>
           <p v-if="unit.label" class="mt-0.5 text-xs text-muted-foreground line-clamp-1">
             {{ unit.label }}
           </p>

@@ -35,11 +35,11 @@ function handleToggle(category: PushCategory, enabled: boolean) {
       <div class="flex items-center justify-between gap-4">
         <div class="flex items-center gap-3">
           <div :class="[
-            'flex size-10 items-center justify-center rounded-full',
+            'flex size-8 items-center justify-center rounded-md',
             isSubscribed ? 'bg-primary/10 text-primary' : 'bg-muted text-muted-foreground',
           ]">
-            <Bell v-if="isSubscribed" class="size-5" />
-            <BellOff v-else class="size-5" />
+            <Bell v-if="isSubscribed" class="size-4" />
+            <BellOff v-else class="size-4" />
           </div>
           <div>
             <p class="text-sm font-medium">

@@ -185,10 +185,10 @@ function renderStars(rating: number | undefined): number[] {
     </div>
 
     <!-- Loading -->
-    <div v-if="isLoading" class="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+    <div v-if="isLoading" class="grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-3">
       <Card v-for="i in 6" :key="i">
-        <CardContent class="p-4">
-          <div class="space-y-3">
+        <CardContent class="p-3">
+          <div class="space-y-2.5">
             <Skeleton class="h-5 w-3/4" />
             <Skeleton class="h-5 w-20 rounded-full" />
             <Skeleton class="h-4 w-1/2" />
@@ -203,8 +203,8 @@ function renderStars(rating: number | undefined): number[] {
       v-else-if="filteredProviders.length === 0"
       class="flex flex-col items-center gap-4 rounded-lg border border-dashed p-8 text-center"
     >
-      <div class="flex size-12 items-center justify-center rounded-full bg-muted">
-        <Wrench class="size-6 text-muted-foreground" />
+      <div class="flex size-10 items-center justify-center rounded-lg bg-muted">
+        <Wrench class="size-5 text-muted-foreground" />
       </div>
       <div>
         <p class="font-medium">No hay proveedores</p>
@@ -219,7 +219,7 @@ function renderStars(rating: number | undefined): number[] {
 
     <!-- Provider grid -->
     <div v-else>
-      <div class="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+      <div class="grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-3">
         <NuxtLink
           v-for="provider in filteredProviders"
           :key="provider.id"
@@ -227,7 +227,7 @@ function renderStars(rating: number | undefined): number[] {
           class="block"
         >
           <Card class="h-full transition-shadow hover:shadow-md">
-            <CardContent class="p-4">
+            <CardContent class="p-3">
               <!-- Name -->
               <p class="text-sm font-semibold leading-snug">{{ provider.name }}</p>
 

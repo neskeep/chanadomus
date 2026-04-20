@@ -200,8 +200,8 @@ onMounted(() => {
       v-else-if="filteredStaff.length === 0"
       class="flex flex-col items-center gap-4 rounded-lg border border-dashed p-8 text-center"
     >
-      <div class="flex size-12 items-center justify-center rounded-full bg-muted">
-        <Users class="size-6 text-muted-foreground" />
+      <div class="flex size-10 items-center justify-center rounded-lg bg-muted">
+        <Users class="size-5 text-muted-foreground" />
       </div>
       <div>
         <p class="font-medium">No hay personal registrado</p>
@@ -267,7 +267,7 @@ onMounted(() => {
       <!-- Mobile cards -->
       <div class="space-y-3 md:hidden">
         <Card v-for="member in filteredStaff" :key="member.id">
-          <CardContent class="p-4">
+          <CardContent class="p-3">
             <div class="flex items-start justify-between gap-2">
               <div class="min-w-0 flex-1">
                 <p class="text-sm font-medium">{{ member.name }}</p>

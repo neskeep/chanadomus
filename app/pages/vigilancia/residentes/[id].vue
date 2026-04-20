@@ -71,8 +71,8 @@ onMounted(async () => {
     </div>
     <div v-else-if="unit" class="mb-6">
       <div class="flex items-center gap-3">
-        <div class="flex size-12 items-center justify-center rounded-full bg-primary/10">
-          <Home class="size-6 text-primary" />
+        <div class="flex size-10 items-center justify-center rounded-md bg-primary/10">
+          <Home class="size-5 text-primary" />
         </div>
         <div>
           <h1 class="text-xl font-semibold tracking-tight">Unidad {{ unit.number }}</h1>
@@ -106,7 +106,7 @@ onMounted(async () => {
 
       <div v-else class="space-y-2">
         <Card v-for="member in members" :key="member.id">
-          <CardContent class="p-4">
+          <CardContent class="p-3">
             <div class="flex items-start justify-between gap-2">
               <div class="min-w-0 flex-1">
                 <p class="text-sm font-medium">{{ member.name }}</p>
@@ -147,9 +147,9 @@ onMounted(async () => {
 
       <div v-else class="space-y-2">
         <Card v-for="vehicle in vehicles" :key="vehicle.id">
-          <CardContent class="flex items-center gap-3 p-4">
-            <div class="flex size-10 shrink-0 items-center justify-center rounded-full bg-muted">
-              <Car class="size-5 text-muted-foreground" />
+          <CardContent class="flex items-center gap-2.5 p-3">
+            <div class="flex size-8 shrink-0 items-center justify-center rounded-md bg-muted">
+              <Car class="size-4 text-muted-foreground" />
             </div>
             <div class="min-w-0 flex-1">
               <p class="text-sm font-semibold uppercase tracking-wider">{{ vehicle.plate }}</p>

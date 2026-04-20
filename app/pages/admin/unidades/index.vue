@@ -78,8 +78,8 @@ onMounted(() => {
       v-else-if="filteredUnits.length === 0"
       class="flex flex-col items-center gap-4 rounded-lg border border-dashed p-8 text-center"
     >
-      <div class="flex size-12 items-center justify-center rounded-full bg-muted">
-        <Home class="size-6 text-muted-foreground" />
+      <div class="flex size-10 items-center justify-center rounded-lg bg-muted">
+        <Home class="size-5 text-muted-foreground" />
       </div>
       <div>
         <p class="font-medium">No se encontraron unidades</p>
@@ -97,10 +97,10 @@ onMounted(() => {
         class="cursor-pointer transition-shadow hover:shadow-md"
         @click="navigateTo(`/admin/unidades/${unit.id}`)"
       >
-        <CardContent class="p-4">
-          <p class="text-lg font-semibold">{{ unit.number }}</p>
-          <p v-if="unit.label" class="mt-0.5 text-sm text-muted-foreground">{{ unit.label }}</p>
-          <div class="mt-3 flex items-center gap-3">
+        <CardContent class="p-3">
+          <p class="text-base font-semibold">{{ unit.number }}</p>
+          <p v-if="unit.label" class="mt-0.5 text-xs text-muted-foreground">{{ unit.label }}</p>
+          <div class="mt-2 flex items-center gap-2.5">
             <span class="inline-flex items-center gap-1 text-xs text-muted-foreground">
               <Users class="size-3.5" />
               {{ unit.memberCount }}

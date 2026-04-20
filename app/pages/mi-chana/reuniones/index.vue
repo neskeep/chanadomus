@@ -93,8 +93,8 @@ onMounted(() => {
     <!-- Loading -->
     <div v-if="isLoading" class="space-y-3">
       <Card v-for="i in 3" :key="i">
-        <CardContent class="flex gap-4 p-4">
-          <Skeleton class="size-14 shrink-0 rounded-lg" />
+        <CardContent class="flex gap-2.5 p-3">
+          <Skeleton class="size-12 shrink-0 rounded-lg" />
           <div class="flex-1 space-y-2">
             <Skeleton class="h-4 w-3/4" />
             <Skeleton class="h-3.5 w-1/2" />
@@ -111,8 +111,8 @@ onMounted(() => {
         v-if="meetings.length === 0"
         class="flex flex-col items-center gap-4 rounded-lg border border-dashed p-8 text-center"
       >
-        <div class="flex size-12 items-center justify-center rounded-full bg-muted">
-          <Calendar class="size-6 text-muted-foreground" />
+        <div class="flex size-10 items-center justify-center rounded-lg bg-muted">
+          <Calendar class="size-5 text-muted-foreground" />
         </div>
         <div>
           <p class="font-medium">No hay reuniones programadas</p>
@@ -133,9 +133,9 @@ onMounted(() => {
           <!-- Meeting cards -->
           <div class="space-y-3">
             <Card v-for="m in group.meetings" :key="m.id">
-              <CardContent class="flex gap-4 p-4">
+              <CardContent class="flex gap-2.5 p-3">
                 <!-- Date badge -->
-                <div class="flex size-14 shrink-0 flex-col items-center justify-center rounded-lg bg-primary/10 text-primary">
+                <div class="flex size-12 shrink-0 flex-col items-center justify-center rounded-lg bg-primary/10 text-primary">
                   <span class="text-lg font-bold leading-none">{{ formatDay(m.date) }}</span>
                   <span class="text-xs capitalize">{{ formatMonthShort(m.date) }}</span>
                 </div>

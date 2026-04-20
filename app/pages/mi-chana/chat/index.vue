@@ -110,7 +110,7 @@ onMounted(() => {
               :to="`/mi-chana/chat/${room.id}`"
               class="block"
             >
-              <Card class="transition-shadow hover:shadow-md">
+              <Card class="py-0 transition-shadow hover:shadow-md">
                 <CardContent class="flex items-center gap-2.5 p-3">
                   <!-- Icon -->
                   <div class="flex size-8 shrink-0 items-center justify-center rounded-md bg-muted">

@@ -121,8 +121,8 @@ function getParticipation(poll: Poll): string {
     <!-- Loading -->
     <div v-if="isLoading" class="space-y-3">
       <Card v-for="i in 3" :key="i">
-        <CardContent class="p-4">
-          <div class="space-y-3">
+        <CardContent class="p-3">
+          <div class="space-y-2.5">
             <Skeleton class="h-5 w-3/4" />
             <Skeleton class="h-4 w-1/2" />
             <Skeleton class="h-8 w-full" />
@@ -139,8 +139,8 @@ function getParticipation(poll: Poll): string {
         v-if="filteredPolls.length === 0"
         class="flex flex-col items-center gap-4 rounded-lg border border-dashed p-8 text-center"
       >
-        <div class="flex size-12 items-center justify-center rounded-full bg-muted">
-          <Vote class="size-6 text-muted-foreground" />
+        <div class="flex size-10 items-center justify-center rounded-lg bg-muted">
+          <Vote class="size-5 text-muted-foreground" />
         </div>
         <div>
           <p class="font-medium">
@@ -159,7 +159,7 @@ function getParticipation(poll: Poll): string {
           :key="poll.id"
           :class="{ 'border-primary/30': poll.status === 'active' && !hasVoted(poll) }"
         >
-          <CardContent class="p-4">
+          <CardContent class="p-3">
             <!-- Header -->
             <div class="flex items-start justify-between gap-2">
               <div class="min-w-0 flex-1">
