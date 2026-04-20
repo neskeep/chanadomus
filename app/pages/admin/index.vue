@@ -3,52 +3,216 @@ import {
   AlertTriangle,
   Building2,
   Calendar,
-  Megaphone,
-  MessageCircle,
-  Users,
   Vote,
   Wallet,
-  Wrench,
 } from 'lucide-vue-next'
 
 definePageMeta({ layout: 'default' })
 
 const { user } = useAuth()
 
-const modules = [
-  { label: 'Finanzas', description: 'Cuotas, pagos y reportes', icon: Wallet, to: '/admin/finanzas' },
-  { label: 'Incidencias', description: 'Reportes y seguimiento', icon: AlertTriangle, to: '/admin/incidencias' },
-  { label: 'Unidades', description: 'Fichas y residentes', icon: Building2, to: '/admin/unidades' },
-  { label: 'Personal', description: 'Equipo de trabajo', icon: Users, to: '/admin/personal' },
-  { label: 'Cartelera', description: 'Anuncios y comunicados', icon: Megaphone, to: '/admin/cartelera' },
-  { label: 'Votaciones', description: 'Encuestas comunitarias', icon: Vote, to: '/admin/votaciones' },
-  { label: 'Proveedores', description: 'Directorio de servicios', icon: Wrench, to: '/admin/proveedores' },
-  { label: 'Reuniones', description: 'Calendario y convocatorias', icon: Calendar, to: '/admin/reuniones' },
-  { label: 'Chat', description: 'Mensajeria en tiempo real', icon: MessageCircle, to: '/mi-chana/chat' },
-]
+interface DashboardStats {
+  openIncidents: number
+  inProgressIncidents: number
+  activePolls: number
+  upcomingMeetings: number
+  nextMeeting: { title: string; date: string } | null
+  publishedAnnouncements: number
+  activeProviders: number
+  totalUnits: number
+  unitsInDebt: number
+  pendingProviders: number
+  myOpenIncidents: number
+  todayAccessCount: number
+}
+
+const stats = ref<DashboardStats | null>(null)
+const isLoading = ref(true)
+
+function formatDate(iso: string): string {
+  return new Date(iso).toLocaleDateString('es-VE', {
+    weekday: 'long',
+    day: 'numeric',
+    month: 'long',
+    hour: '2-digit',
+    minute: '2-digit',
+  })
+}
+
+onMounted(async () => {
+  try {
+    const res = await $fetch<{ data: DashboardStats }>('/api/dashboard/stats')
+    stats.value = res.data
+  } catch {
+    // silent fail, stats stay null
+  } finally {
+    isLoading.value = false
+  }
+})
 </script>
 
 <template>
   <div>
     <h1 class="text-xl font-semibold tracking-tight">Panel Administrador</h1>
     <p class="mt-1 text-sm text-muted-foreground">
-      Hola, {{ user?.name }} — Gestiona tu comunidad
+      Hola, {{ user?.name }}
     </p>
 
-    <div class="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-2">
-      <NuxtLink v-for="mod in modules" :key="mod.to" :to="mod.to" class="block">
-        <Card class="transition-colors hover:bg-muted/50">
-          <CardContent class="flex items-center gap-3 p-4">
-            <div class="flex size-10 shrink-0 items-center justify-center rounded-lg bg-primary/10">
-              <component :is="mod.icon" class="size-5 text-primary" />
+    <div class="mt-6 grid grid-cols-2 gap-3">
+      <!-- Incidencias Abiertas -->
+      <Card>
+        <CardContent class="p-4">
+          <template v-if="isLoading">
+            <div class="flex items-center justify-between">
+              <div class="space-y-2">
+                <Skeleton class="h-7 w-10" />
+                <Skeleton class="h-3 w-24" />
+              </div>
+              <Skeleton class="size-10 rounded-lg" />
             </div>
+          </template>
+          <div v-else class="flex items-center justify-between">
             <div>
-              <p class="text-sm font-medium">{{ mod.label }}</p>
-              <p class="text-xs text-muted-foreground">{{ mod.description }}</p>
+              <p class="text-2xl font-bold">{{ stats?.openIncidents ?? 0 }}</p>
+              <p class="text-xs text-muted-foreground">Incidencias Abiertas</p>
             </div>
-          </CardContent>
-        </Card>
-      </NuxtLink>
+            <div class="flex size-10 items-center justify-center rounded-lg bg-amber-100 dark:bg-amber-900/30">
+              <AlertTriangle class="size-5 text-amber-600" />
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      <!-- En Progreso -->
+      <Card>
+        <CardContent class="p-4">
+          <template v-if="isLoading">
+            <div class="flex items-center justify-between">
+              <div class="space-y-2">
+                <Skeleton class="h-7 w-10" />
+                <Skeleton class="h-3 w-24" />
+              </div>
+              <Skeleton class="size-10 rounded-lg" />
+            </div>
+          </template>
+          <div v-else class="flex items-center justify-between">
+            <div>
+              <p class="text-2xl font-bold">{{ stats?.inProgressIncidents ?? 0 }}</p>
+              <p class="text-xs text-muted-foreground">En Progreso</p>
+            </div>
+            <div class="flex size-10 items-center justify-center rounded-lg bg-blue-100 dark:bg-blue-900/30">
+              <AlertTriangle class="size-5 text-blue-600" />
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      <!-- Unidades -->
+      <Card>
+        <CardContent class="p-4">
+          <template v-if="isLoading">
+            <div class="flex items-center justify-between">
+              <div class="space-y-2">
+                <Skeleton class="h-7 w-10" />
+                <Skeleton class="h-3 w-24" />
+              </div>
+              <Skeleton class="size-10 rounded-lg" />
+            </div>
+          </template>
+          <div v-else class="flex items-center justify-between">
+            <div>
+              <p class="text-2xl font-bold">{{ stats?.totalUnits ?? 0 }}</p>
+              <p class="text-xs text-muted-foreground">Unidades</p>
+            </div>
+            <div class="flex size-10 items-center justify-center rounded-lg bg-slate-100 dark:bg-slate-900/30">
+              <Building2 class="size-5 text-slate-600" />
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      <!-- En Mora -->
+      <Card>
+        <CardContent class="p-4">
+          <template v-if="isLoading">
+            <div class="flex items-center justify-between">
+              <div class="space-y-2">
+                <Skeleton class="h-7 w-10" />
+                <Skeleton class="h-3 w-24" />
+              </div>
+              <Skeleton class="size-10 rounded-lg" />
+            </div>
+          </template>
+          <div v-else class="flex items-center justify-between">
+            <div>
+              <p class="text-2xl font-bold">{{ stats?.unitsInDebt ?? 0 }}</p>
+              <p class="text-xs text-muted-foreground">En Mora</p>
+            </div>
+            <div class="flex size-10 items-center justify-center rounded-lg bg-red-100 dark:bg-red-900/30">
+              <Wallet class="size-5 text-red-600" />
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      <!-- Votaciones Activas -->
+      <Card>
+        <CardContent class="p-4">
+          <template v-if="isLoading">
+            <div class="flex items-center justify-between">
+              <div class="space-y-2">
+                <Skeleton class="h-7 w-10" />
+                <Skeleton class="h-3 w-24" />
+              </div>
+              <Skeleton class="size-10 rounded-lg" />
+            </div>
+          </template>
+          <div v-else class="flex items-center justify-between">
+            <div>
+              <p class="text-2xl font-bold">{{ stats?.activePolls ?? 0 }}</p>
+              <p class="text-xs text-muted-foreground">Votaciones Activas</p>
+            </div>
+            <div class="flex size-10 items-center justify-center rounded-lg bg-purple-100 dark:bg-purple-900/30">
+              <Vote class="size-5 text-purple-600" />
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      <!-- Reuniones Proximas -->
+      <Card>
+        <CardContent class="p-4">
+          <template v-if="isLoading">
+            <div class="flex items-center justify-between">
+              <div class="space-y-2">
+                <Skeleton class="h-7 w-10" />
+                <Skeleton class="h-3 w-24" />
+              </div>
+              <Skeleton class="size-10 rounded-lg" />
+            </div>
+          </template>
+          <div v-else class="flex items-center justify-between">
+            <div>
+              <p class="text-2xl font-bold">{{ stats?.upcomingMeetings ?? 0 }}</p>
+              <p class="text-xs text-muted-foreground">Reuniones Proximas</p>
+            </div>
+            <div class="flex size-10 items-center justify-center rounded-lg bg-emerald-100 dark:bg-emerald-900/30">
+              <Calendar class="size-5 text-emerald-600" />
+            </div>
+          </div>
+        </CardContent>
+      </Card>
     </div>
+
+    <!-- Next Meeting -->
+    <Card v-if="stats?.nextMeeting" class="mt-4">
+      <CardContent class="p-4">
+        <p class="text-xs font-medium text-muted-foreground">Proxima reunion</p>
+        <p class="mt-1 text-sm font-medium">{{ stats.nextMeeting.title }}</p>
+        <p class="mt-0.5 text-xs text-muted-foreground">
+          {{ formatDate(stats.nextMeeting.date) }}
+        </p>
+      </CardContent>
+    </Card>
   </div>
 </template>
