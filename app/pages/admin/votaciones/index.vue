@@ -214,7 +214,7 @@ function formatDate(dateStr: string): string {
 
 function participationText(poll: Poll): string {
   const votes = poll.totalVotes ?? 0
-  const units = poll.totalUnits ?? 86
+  const units = poll.totalUnits ?? 0
   return `${votes}/${units} votos`
 }
 </script>

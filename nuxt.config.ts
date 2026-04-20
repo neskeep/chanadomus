@@ -28,6 +28,12 @@ export default defineNuxtConfig({
     plugins: [
       (await import('@tailwindcss/vite')).default(),
     ],
+    server: {
+      hmr: {
+        protocol: 'ws',
+        port: 24678,
+      },
+    },
   },
 
   components: [

@@ -285,7 +285,7 @@ const groupedChartOpts = {
             <Wallet class="size-4" />
           </div>
           <div>
-            <p class="text-sm font-semibold">{{ stats?.unitsInDebt ?? 0 }} unidades en mora</p>
+            <p class="text-sm font-semibold">{{ stats?.unitsInDebt ?? 0 }} {{ (stats?.unitsInDebt ?? 0) === 1 ? 'unidad' : 'unidades' }} en mora</p>
             <p class="text-[11px] text-muted-foreground">de {{ stats?.totalUnits ?? 0 }} totales</p>
           </div>
         </div>

@@ -34,8 +34,12 @@ async function loadPolls() {
   await fetchPolls({ page: currentPage.value, status: activeTab.value })
 }
 
-watch([currentPage, activeTab], () => {
-  currentPage.value = activeTab.value ? 1 : currentPage.value
+watch(activeTab, () => {
+  currentPage.value = 1
+  loadPolls()
+})
+
+watch(currentPage, () => {
   loadPolls()
 })
 
