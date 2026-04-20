@@ -216,27 +216,27 @@ const lineChartOptions = {
       <div
         v-for="(kpi, i) in kpiCards"
         :key="i"
-        class="flex items-center gap-2 rounded-lg border bg-card p-3 md:gap-3"
+        class="rounded-lg border bg-card p-3"
       >
-        <div
-          class="flex size-9 shrink-0 items-center justify-center rounded-md"
-          :class="kpiColorMap[kpi.color]"
-        >
-          <component :is="kpi.icon" class="size-4" />
-        </div>
-        <div v-if="isLoading" class="space-y-1">
-          <Skeleton class="h-5 w-12" />
-          <Skeleton class="h-3 w-16" />
-        </div>
-        <div v-else class="min-w-0">
-          <p
-            class="truncate text-sm font-bold leading-none md:text-base"
-            :class="kpi.color === 'destructive' ? 'text-destructive' : ''"
+        <div class="flex items-center gap-1.5">
+          <div
+            class="flex size-5 shrink-0 items-center justify-center rounded"
+            :class="kpiColorMap[kpi.color]"
           >
-            {{ kpi.value }}
-          </p>
-          <p class="mt-0.5 truncate text-[11px] text-muted-foreground">{{ kpi.label }}</p>
+            <component :is="kpi.icon" class="size-3" />
+          </div>
+          <p class="text-[11px] text-muted-foreground">{{ kpi.label }}</p>
         </div>
+        <div v-if="isLoading" class="mt-1.5">
+          <Skeleton class="h-5 w-16" />
+        </div>
+        <p
+          v-else
+          class="mt-1.5 text-sm font-bold leading-none md:text-base"
+          :class="kpi.color === 'destructive' ? 'text-destructive' : ''"
+        >
+          {{ kpi.value }}
+        </p>
       </div>
     </div>
 
