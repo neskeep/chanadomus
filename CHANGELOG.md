@@ -7,6 +7,26 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.14.0] - 2026-04-19
+
+### Added
+- Drizzle schema: `providers` + `provider_reviews` tables with category/status enums (M4.1)
+- Migration 0014: CREATE TYPE provider_category/provider_status, CREATE TABLE providers/provider_reviews (additive-only)
+- Shared types: Provider, ProviderReview, CreateProvider, UpdateProvider, CreateReview, PROVIDER_CATEGORIES
+- API GET /api/providers: list with filters (category, status, search), pagination, avg rating
+- API POST /api/providers: create provider (admin, conserje)
+- API GET /api/providers/[id]: detail with reviews and avg rating
+- API PATCH /api/providers/[id]: update provider (admin, conserje)
+- API DELETE /api/providers/[id]: delete with cascade (admin only)
+- API GET /api/providers/[id]/reviews: paginated reviews for a provider
+- API POST /api/providers/[id]/reviews: create review (propietario, 1 per user per provider)
+- API POST /api/providers/suggestions: propietario suggests provider (status 'pending'), push to admins
+- Composable `useProviders`: 7 functions (fetchProviders, fetchProvider, create, update, delete, submitReview, suggestProvider)
+- Page `/mi-chana/proveedores/`: shared provider directory with search, category filter, cards with ratings
+- Page `/mi-chana/proveedores/[id]`: provider detail with reviews, star rating selector, edit/delete for admin
+- Page `/admin/proveedores/`: admin management with table/cards, stats, pending suggestions, status toggle
+- Navigation: "Proveedores" (Wrench icon) added for all 4 roles
+
 ## [0.13.0] - 2026-04-19
 
 ### Added
