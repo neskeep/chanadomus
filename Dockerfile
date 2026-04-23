@@ -8,6 +8,8 @@ COPY package.json pnpm-lock.yaml ./
 RUN pnpm install
 
 COPY . .
+
+ENV NODE_OPTIONS="--max-old-space-size=512"
 RUN pnpm build
 
 FROM node:22-alpine AS runner
