@@ -102,7 +102,19 @@ async function handleShare() {
 
 async function copyToClipboard(text: string) {
   try {
-    await navigator.clipboard.writeText(text)
+    if (navigator.clipboard?.writeText) {
+      await navigator.clipboard.writeText(text)
+    }
+    else {
+      const textarea = document.createElement('textarea')
+      textarea.value = text
+      textarea.style.position = 'fixed'
+      textarea.style.opacity = '0'
+      document.body.appendChild(textarea)
+      textarea.select()
+      document.execCommand('copy')
+      document.body.removeChild(textarea)
+    }
     shareSuccess.value = 'Enlace copiado al portapapeles'
     setTimeout(() => { shareSuccess.value = null }, 3000)
   }
@@ -154,9 +166,9 @@ function formatDate(dateStr: string): string {
 
     <!-- Form (hidden after generation) -->
     <Card v-if="!generatedToken">
-      <CardContent class="space-y-4 pt-6">
+      <CardContent class="space-y-5 p-5">
         <!-- Nombre del visitante -->
-        <div class="space-y-2">
+        <div class="space-y-1.5">
           <Label for="visitor-name">Nombre del visitante <span class="text-destructive">*</span></Label>
           <Input
             id="visitor-name"
@@ -167,7 +179,7 @@ function formatDate(dateStr: string): string {
         </div>
 
         <!-- Cédula -->
-        <div class="space-y-2">
+        <div class="space-y-1.5">
           <Label for="visitor-document">Cedula <span class="text-xs text-muted-foreground">(opcional)</span></Label>
           <Input
             id="visitor-document"
@@ -177,7 +189,7 @@ function formatDate(dateStr: string): string {
         </div>
 
         <!-- Tipo de visitante -->
-        <div class="space-y-2">
+        <div class="space-y-1.5">
           <Label for="visitor-type">Tipo de visitante</Label>
           <Select v-model="visitorType">
             <SelectTrigger id="visitor-type" class="w-full">
@@ -191,7 +203,7 @@ function formatDate(dateStr: string): string {
         </div>
 
         <!-- Unidad destino -->
-        <div class="space-y-2">
+        <div class="space-y-1.5">
           <Label for="unit-select">Unidad destino <span class="text-destructive">*</span></Label>
           <Select v-model="selectedUnitId">
             <SelectTrigger id="unit-select" class="w-full">
@@ -206,7 +218,7 @@ function formatDate(dateStr: string): string {
         </div>
 
         <!-- Fecha y hora límite -->
-        <div class="space-y-2">
+        <div class="space-y-1.5">
           <Label for="expires-at">Valido hasta <span class="text-destructive">*</span></Label>
           <Input
             id="expires-at"
@@ -217,7 +229,7 @@ function formatDate(dateStr: string): string {
 
         <!-- Submit -->
         <Button
-          class="w-full"
+          class="mt-2 w-full"
           :disabled="!isFormValid || isGenerating"
           @click="handleGenerate"
         >
@@ -231,7 +243,7 @@ function formatDate(dateStr: string): string {
     <!-- Result -->
     <div v-else class="space-y-4">
       <Card>
-        <CardContent class="flex flex-col items-center space-y-4 pt-6">
+        <CardContent class="flex flex-col items-center space-y-4 p-5">
           <!-- QR Image -->
           <img
             v-if="qrDataUrl"
