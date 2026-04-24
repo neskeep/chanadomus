@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { Calendar, Megaphone, Shield, Wrench } from 'lucide-vue-next'
 
-definePageMeta({ layout: 'default', title: 'Panel Conserjeria' })
+useHead({ title: 'Panel Conserjeria' })
 
 const { user } = useAuth()
 

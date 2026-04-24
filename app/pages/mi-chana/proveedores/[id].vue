@@ -9,6 +9,7 @@ import {
   Trash2,
   Loader2,
 } from 'lucide-vue-next'
+import { buttonVariants } from '~/components/ui/button'
 import { toast } from 'vue-sonner'
 import type { Provider, ProviderCategory, ProviderReview, UpdateProvider } from '~~/shared/types/provider'
 import { PROVIDER_CATEGORIES } from '~~/shared/types/provider'
@@ -201,12 +202,10 @@ async function handleReview() {
   <div class="mx-auto max-w-lg">
     <!-- Back button -->
     <div class="mb-4">
-      <Button variant="ghost" size="sm" class="-ml-2" as-child>
-        <NuxtLink to="/mi-chana/proveedores">
-          <ArrowLeft class="mr-1 size-4" />
-          Volver
-        </NuxtLink>
-      </Button>
+      <NuxtLink to="/mi-chana/proveedores" :class="buttonVariants({ variant: 'ghost', size: 'sm' })" class="-ml-2">
+        <ArrowLeft class="mr-1 size-4" />
+        Volver
+      </NuxtLink>
     </div>
 
     <!-- Loading -->
@@ -227,9 +226,7 @@ async function handleReview() {
       class="flex flex-col items-center gap-4 rounded-lg border border-dashed p-8 text-center"
     >
       <p class="text-sm text-destructive">{{ error }}</p>
-      <Button size="sm" variant="outline" as-child>
-        <NuxtLink to="/mi-chana/proveedores">Volver al directorio</NuxtLink>
-      </Button>
+      <NuxtLink to="/mi-chana/proveedores" :class="buttonVariants({ size: 'sm', variant: 'outline' })">Volver al directorio</NuxtLink>
     </div>
 
     <!-- Provider detail -->

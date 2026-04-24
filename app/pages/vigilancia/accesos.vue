@@ -2,7 +2,7 @@
 import { Shield, CheckCircle2, XCircle, AlertTriangle } from 'lucide-vue-next'
 import type { AccessResult, EntryType } from '~~/shared/types/access'
 
-definePageMeta({ layout: 'default', title: 'Panel de Accesos' })
+useHead({ title: 'Panel de Accesos' })
 
 const { events, isConnected, loadInitialEvents } = useAccessStream()
 

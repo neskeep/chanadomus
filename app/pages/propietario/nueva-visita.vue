@@ -3,7 +3,7 @@ import { ArrowLeft, Loader2, Share2, Copy, Plus, QrCode } from 'lucide-vue-next'
 import type { VisitorType } from '~~/shared/types/qr'
 import QRCode from 'qrcode'
 
-definePageMeta({ layout: 'default', title: 'Nueva Visita' })
+useHead({ title: 'Nueva Visita' })
 
 const router = useRouter()
 const { generateQr, units, fetchUnits, isGenerating, error } = useQr()

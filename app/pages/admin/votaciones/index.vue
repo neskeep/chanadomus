@@ -18,7 +18,7 @@ import {
 import { toast } from 'vue-sonner'
 import type { Poll, PollStatus } from '~~/shared/types/poll'
 
-definePageMeta({ layout: 'default', title: 'Gestion de Votaciones' })
+useHead({ title: 'Gestion de Votaciones' })
 
 const {
   polls,

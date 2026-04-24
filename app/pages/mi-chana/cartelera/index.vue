@@ -10,7 +10,7 @@ import {
 } from 'lucide-vue-next'
 import type { AnnouncementCategory } from '~~/shared/types/announcement'
 
-definePageMeta({ layout: 'default', title: 'Cartelera' })
+useHead({ title: 'Cartelera' })
 
 const { announcements, meta, isLoading, error, totalPages, fetchAnnouncements } = useAnnouncements()
 

@@ -7,7 +7,7 @@ import {
   X,
 } from 'lucide-vue-next'
 
-definePageMeta({ layout: 'default', title: 'Directorio de Residentes' })
+useHead({ title: 'Directorio de Residentes' })
 
 // Vehicle search
 const { results: vehicleResults, isLoading: vehicleSearchLoading, query: vehicleQuery, searchByPlate, clearSearch } = useVehicleSearch()

@@ -2,7 +2,7 @@
 import { SwitchCamera, CheckCircle2, XCircle, AlertTriangle, Camera } from 'lucide-vue-next'
 import type { ValidationStatus } from '~~/shared/types/qr'
 
-definePageMeta({ layout: 'default', title: 'Escanear QR' })
+useHead({ title: 'Escanear QR' })
 
 const {
   isScanning,

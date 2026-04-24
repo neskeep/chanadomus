@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { AlertTriangle, Calendar, Megaphone, Shield } from 'lucide-vue-next'
 
-definePageMeta({ layout: 'default', title: 'Panel Vigilancia' })
+useHead({ title: 'Panel Vigilancia' })
 
 const { user } = useAuth()
 

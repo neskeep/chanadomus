@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ChevronLeft, Plus, Pencil, Trash2, Users, Car, Loader2 } from 'lucide-vue-next'
+import { buttonVariants } from '~/components/ui/button'
 import { toast } from 'vue-sonner'
 import type { HouseholdMember, HouseholdRelationship } from '~~/shared/types/household'
 import type { Vehicle } from '~~/shared/types/vehicle'
@@ -225,12 +226,10 @@ onMounted(() => {
   <div class="mx-auto max-w-5xl">
     <!-- Header -->
     <div class="mb-6">
-      <Button variant="ghost" size="sm" class="-ml-2 mb-2" as-child>
-        <NuxtLink to="/admin/unidades">
-          <ChevronLeft class="mr-1 size-4" />
-          Unidades
-        </NuxtLink>
-      </Button>
+      <NuxtLink to="/admin/unidades" :class="buttonVariants({ variant: 'ghost', size: 'sm' })" class="-ml-2 mb-2">
+        <ChevronLeft class="mr-1 size-4" />
+        Unidades
+      </NuxtLink>
 
       <div v-if="unitLoading" class="space-y-2">
         <Skeleton class="h-7 w-32" />

@@ -2,7 +2,7 @@
 import { CheckCircle2, XCircle, Loader2 } from 'lucide-vue-next'
 import type { AccessResult } from '~~/shared/types/access'
 
-definePageMeta({ layout: 'default', title: 'Registrar Entrada' })
+useHead({ title: 'Registrar Entrada' })
 
 interface Unit {
   id: string

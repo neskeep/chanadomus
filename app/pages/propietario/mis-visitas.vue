@@ -1,9 +1,10 @@
 <script setup lang="ts">
 import { Share2, Plus, ChevronDown, ChevronUp, CalendarClock, User, Loader2 } from 'lucide-vue-next'
+import { buttonVariants } from '~/components/ui/button'
 import type { QrStatus } from '~~/shared/types/qr'
 import QRCode from 'qrcode'
 
-definePageMeta({ layout: 'default', title: 'Mis Visitas' })
+useHead({ title: 'Mis Visitas' })
 
 const { myCodes, fetchMyCodes, isLoading, error } = useQr()
 
@@ -107,12 +108,10 @@ const statusConfig: Record<QrStatus, { label: string; variant: 'default' | 'seco
   <div class="mx-auto max-w-lg">
     <!-- Header -->
     <div class="mb-6 flex justify-end">
-      <Button size="sm" as-child>
-        <NuxtLink to="/propietario/nueva-visita">
-          <Plus class="size-4" />
-          Nueva Visita
-        </NuxtLink>
-      </Button>
+      <NuxtLink to="/propietario/nueva-visita" :class="buttonVariants({ size: 'sm' })">
+        <Plus class="size-4" />
+        Nueva Visita
+      </NuxtLink>
     </div>
 
     <!-- Filters -->
@@ -173,12 +172,10 @@ const statusConfig: Record<QrStatus, { label: string; variant: 'default' | 'seco
         <p class="font-medium">Aún no has registrado visitas</p>
         <p class="mt-1 text-sm text-muted-foreground">Crea un pase de acceso para tu primer visitante</p>
       </div>
-      <Button as-child>
-        <NuxtLink to="/propietario/nueva-visita">
-          <Plus class="size-4" />
-          Nueva Visita
-        </NuxtLink>
-      </Button>
+      <NuxtLink to="/propietario/nueva-visita" :class="buttonVariants()">
+        <Plus class="size-4" />
+        Nueva Visita
+      </NuxtLink>
     </div>
 
     <!-- Codes list -->

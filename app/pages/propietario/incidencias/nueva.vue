@@ -1,9 +1,10 @@
 <script setup lang="ts">
 import { ArrowLeft, Camera, X, Loader2 } from 'lucide-vue-next'
+import { buttonVariants } from '~/components/ui/button'
 import { toast } from 'vue-sonner'
 import type { IncidentPriority } from '~~/shared/types/incident'
 
-definePageMeta({ layout: 'default', title: 'Reportar Incidencia' })
+useHead({ title: 'Reportar Incidencia' })
 
 const router = useRouter()
 const { isCreating, error, createIncident } = useIncidents()
@@ -83,12 +84,10 @@ onUnmounted(() => {
   <div class="mx-auto max-w-lg">
     <!-- Header -->
     <div class="mb-6">
-      <Button variant="ghost" size="sm" class="-ml-2" as-child>
-        <NuxtLink to="/propietario/incidencias">
-          <ArrowLeft class="mr-1 size-4" />
-          Volver
-        </NuxtLink>
-      </Button>
+      <NuxtLink to="/propietario/incidencias" :class="buttonVariants({ variant: 'ghost', size: 'sm' })" class="-ml-2">
+        <ArrowLeft class="mr-1 size-4" />
+        Volver
+      </NuxtLink>
     </div>
 
     <form class="space-y-5" @submit.prevent="handleSubmit">

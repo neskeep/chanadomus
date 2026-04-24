@@ -23,7 +23,7 @@ import {
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, BarElement, Title, Tooltip, Legend, Filler)
 
-definePageMeta({ layout: 'default', title: 'Panel Administrador' })
+useHead({ title: 'Panel Administrador' })
 
 const { stats, trends, isLoading, exportCsv, exportPdf } = useDashboard()
 

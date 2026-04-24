@@ -14,7 +14,7 @@ import { toast } from 'vue-sonner'
 import type { ProviderCategory } from '~~/shared/types/provider'
 import { PROVIDER_CATEGORIES } from '~~/shared/types/provider'
 
-definePageMeta({ layout: 'default', title: 'Directorio de Proveedores' })
+useHead({ title: 'Directorio de Proveedores' })
 
 const { role } = useAuth()
 const {

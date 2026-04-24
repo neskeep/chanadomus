@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { Search, Users, Car, Home } from 'lucide-vue-next'
 
-definePageMeta({ layout: 'default', title: 'Unidades' })
+useHead({ title: 'Unidades' })
 
 interface UnitDirectory {
   id: string

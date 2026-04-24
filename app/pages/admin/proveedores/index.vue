@@ -23,7 +23,7 @@ import type {
 } from '~~/shared/types/provider'
 import { PROVIDER_CATEGORIES } from '~~/shared/types/provider'
 
-definePageMeta({ layout: 'default', title: 'Gestion de Proveedores' })
+useHead({ title: 'Gestion de Proveedores' })
 
 const {
   providers,

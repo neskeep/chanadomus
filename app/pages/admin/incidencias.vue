@@ -14,7 +14,7 @@ import {
 import { toast } from 'vue-sonner'
 import type { Incident, IncidentStatus, IncidentPriority } from '~~/shared/types/incident'
 
-definePageMeta({ layout: 'default', title: 'Gestion de Incidencias' })
+useHead({ title: 'Gestion de Incidencias' })
 
 const { incidents, meta, isLoading, error, totalPages, fetchIncidents } = useIncidents()
 const detail = useIncidentDetail()

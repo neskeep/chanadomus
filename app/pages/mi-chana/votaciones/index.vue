@@ -12,7 +12,7 @@ import {
 import { toast } from 'vue-sonner'
 import type { Poll, PollStatus } from '~~/shared/types/poll'
 
-definePageMeta({ layout: 'default', title: 'Votaciones' })
+useHead({ title: 'Votaciones' })
 
 const { polls, meta, isLoading, isSubmitting, error, totalPages, fetchPolls, vote } = usePolls()
 

@@ -14,7 +14,7 @@ import {
 import { toast } from 'vue-sonner'
 import type { RecordType } from '~~/shared/types/financial'
 
-definePageMeta({ layout: 'default', title: 'Panel Financiero' })
+useHead({ title: 'Panel Financiero' })
 
 // --- Composables ---
 const { summaries, isLoading, error, totalUnits, totalInDebt, fetchSummary } = useFinanceSummary()

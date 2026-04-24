@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ChevronLeft, ChevronRight, FileText } from 'lucide-vue-next'
 
-definePageMeta({ layout: 'default', title: 'Informes Financieros' })
+useHead({ title: 'Informes Financieros' })
 
 const MONTHS = [
   'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',

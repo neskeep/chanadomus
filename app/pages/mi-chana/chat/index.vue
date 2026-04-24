@@ -9,7 +9,7 @@ import {
 } from 'lucide-vue-next'
 import type { ChatRoomType } from '~~/shared/types/chat'
 
-definePageMeta({ layout: 'default', title: 'Chat' })
+useHead({ title: 'Chat' })
 
 const { rooms, isLoading, error, fetchRooms } = useChatRooms()
 

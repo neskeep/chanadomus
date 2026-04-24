@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { AlertTriangle, Calendar, Megaphone, Vote } from 'lucide-vue-next'
 
-definePageMeta({ layout: 'default', title: 'Mi Vivienda' })
+useHead({ title: 'Mi Vivienda' })
 
 const { user } = useAuth()
 

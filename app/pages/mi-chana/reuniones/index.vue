@@ -9,7 +9,7 @@ import {
 import type { Meeting, MeetingType, MeetingStatus } from '~~/shared/types/meeting'
 import { MEETING_TYPES, MEETING_STATUSES } from '~~/shared/types/meeting'
 
-definePageMeta({ layout: 'default', title: 'Reuniones' })
+useHead({ title: 'Reuniones' })
 
 const { meetings, isLoading, error, fetchMeetings } = useMeetings()
 

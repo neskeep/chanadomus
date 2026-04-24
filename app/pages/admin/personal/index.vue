@@ -16,7 +16,7 @@ import {
 import { toast } from 'vue-sonner'
 import type { StaffRole, Staff } from '~~/shared/types/staff'
 
-definePageMeta({ layout: 'default', title: 'Personal' })
+useHead({ title: 'Personal' })
 
 const { staffList, isLoading, isSubmitting, error, fetchStaff, createStaffMember, updateStaffMember, deleteStaffMember } = useStaff()
 

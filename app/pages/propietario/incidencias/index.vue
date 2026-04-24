@@ -12,9 +12,10 @@ import {
   ChevronDown,
   ChevronUp,
 } from 'lucide-vue-next'
+import { buttonVariants } from '~/components/ui/button'
 import type { Incident, IncidentStatus, IncidentPriority } from '~~/shared/types/incident'
 
-definePageMeta({ layout: 'default', title: 'Mis Incidencias' })
+useHead({ title: 'Mis Incidencias' })
 
 const { incidents, meta, isLoading, error, totalPages, fetchIncidents } = useIncidents()
 const currentPage = ref(1)
@@ -73,12 +74,10 @@ function formatDateTime(dateStr: string): string {
   <div class="mx-auto max-w-lg">
     <!-- Header -->
     <div class="mb-6 flex justify-end">
-      <Button size="sm" as-child>
-        <NuxtLink to="/propietario/incidencias/nueva">
-          <Plus class="mr-1.5 size-4" />
-          Reportar
-        </NuxtLink>
-      </Button>
+      <NuxtLink to="/propietario/incidencias/nueva" :class="buttonVariants({ size: 'sm' })">
+        <Plus class="mr-1.5 size-4" />
+        Reportar
+      </NuxtLink>
     </div>
 
     <!-- Error -->
@@ -120,12 +119,10 @@ function formatDateTime(dateStr: string): string {
           <p class="font-medium">No tienes incidencias</p>
           <p class="mt-1 text-sm text-muted-foreground">Reporta un problema y le daremos seguimiento</p>
         </div>
-        <Button size="sm" as-child>
-          <NuxtLink to="/propietario/incidencias/nueva">
-            <Plus class="mr-1.5 size-4" />
-            Reportar incidencia
-          </NuxtLink>
-        </Button>
+        <NuxtLink to="/propietario/incidencias/nueva" :class="buttonVariants({ size: 'sm' })">
+          <Plus class="mr-1.5 size-4" />
+          Reportar incidencia
+        </NuxtLink>
       </div>
 
       <!-- Incident cards -->

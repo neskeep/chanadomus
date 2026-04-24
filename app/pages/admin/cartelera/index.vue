@@ -18,7 +18,7 @@ import {
 import { toast } from 'vue-sonner'
 import type { Announcement, AnnouncementCategory, AnnouncementStatus } from '~~/shared/types/announcement'
 
-definePageMeta({ layout: 'default', title: 'Gestion de Anuncios' })
+useHead({ title: 'Gestion de Anuncios' })
 
 const {
   announcements,

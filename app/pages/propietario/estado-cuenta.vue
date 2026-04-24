@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { Wallet } from 'lucide-vue-next'
 
-definePageMeta({ layout: 'default', title: 'Estado de Cuenta' })
+useHead({ title: 'Estado de Cuenta' })
 
 const { balance, records, isInDebt, isLoading, error, fetchStatement } = useMyAccount()
 

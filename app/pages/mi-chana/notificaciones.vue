@@ -3,7 +3,7 @@ import { Bell, BellOff, Loader2 } from 'lucide-vue-next'
 import { PUSH_CATEGORIES } from '~~/shared/types/push-preferences'
 import type { PushCategory } from '~~/shared/types/push-preferences'
 
-definePageMeta({ title: 'Notificaciones' })
+useHead({ title: 'Notificaciones' })
 
 const { preferences, isLoading, isSaving, error, fetchPreferences, toggleCategory } = usePushPreferences()
 const { isSupported, permission, isSubscribed, subscribe, checkSubscription } = usePushNotifications()

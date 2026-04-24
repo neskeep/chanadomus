@@ -21,7 +21,7 @@ import type {
 } from '~~/shared/types/meeting'
 import { MEETING_TYPES, MEETING_STATUSES } from '~~/shared/types/meeting'
 
-definePageMeta({ layout: 'default', title: 'Gestion de Reuniones' })
+useHead({ title: 'Gestion de Reuniones' })
 
 const {
   meetings,
