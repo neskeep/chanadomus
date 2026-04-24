@@ -74,7 +74,7 @@ function openReport(filePath: string): void {
         </div>
         <div>
           <p class="font-medium">No hay informes publicados</p>
-          <p class="mt-1 text-sm text-muted-foreground">Los reportes financieros aparecerán aquí</p>
+          <p class="mt-1 text-sm text-muted-foreground">Los informes financieros aparecerán aquí</p>
         </div>
       </div>
 
@@ -87,7 +87,6 @@ function openReport(filePath: string): void {
             <div class="mt-3">
               <Button
                 variant="outline"
-                size="sm"
                 aria-label="Descargar PDF"
                 @click="openReport(report.filePath)"
               >
@@ -105,7 +104,6 @@ function openReport(filePath: string): void {
         <div v-if="totalPages > 1" class="flex items-center justify-between pt-4">
           <Button
             variant="outline"
-            size="sm"
             :disabled="currentPage <= 1"
             aria-label="Página anterior"
             @click="currentPage--"
@@ -118,7 +116,6 @@ function openReport(filePath: string): void {
           </span>
           <Button
             variant="outline"
-            size="sm"
             :disabled="currentPage >= totalPages"
             aria-label="Página siguiente"
             @click="currentPage++"

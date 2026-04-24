@@ -76,7 +76,7 @@ function formatDateTime(dateStr: string): string {
       <Button size="sm" as-child>
         <NuxtLink to="/propietario/incidencias/nueva">
           <Plus class="mr-1.5 size-4" />
-          Nueva
+          Reportar
         </NuxtLink>
       </Button>
     </div>
@@ -230,7 +230,6 @@ function formatDateTime(dateStr: string): string {
         <div v-if="totalPages > 1" class="flex items-center justify-between pt-4">
           <Button
             variant="outline"
-            size="sm"
             :disabled="currentPage <= 1"
             @click="currentPage--"
           >
@@ -238,11 +237,10 @@ function formatDateTime(dateStr: string): string {
             Anterior
           </Button>
           <span class="text-sm text-muted-foreground">
-            {{ currentPage }} / {{ totalPages }}
+            Página {{ currentPage }} de {{ totalPages }}
           </span>
           <Button
             variant="outline"
-            size="sm"
             :disabled="currentPage >= totalPages"
             @click="currentPage++"
           >

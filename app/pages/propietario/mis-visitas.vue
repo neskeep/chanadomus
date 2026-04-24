@@ -110,7 +110,7 @@ const statusConfig: Record<QrStatus, { label: string; variant: 'default' | 'seco
       <Button size="sm" as-child>
         <NuxtLink to="/propietario/nueva-visita">
           <Plus class="size-4" />
-          Nueva
+          Nueva Visita
         </NuxtLink>
       </Button>
     </div>
@@ -120,7 +120,7 @@ const statusConfig: Record<QrStatus, { label: string; variant: 'default' | 'seco
       <button
         v-for="filter in filters"
         :key="filter.value"
-        class="shrink-0 rounded-full border px-3 py-1.5 text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+        class="shrink-0 rounded-full border px-4 py-2.5 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
         :class="activeFilter === filter.value
           ? 'border-primary bg-primary text-primary-foreground'
           : 'border-border bg-background text-muted-foreground hover:bg-muted'"
@@ -170,8 +170,8 @@ const statusConfig: Record<QrStatus, { label: string; variant: 'default' | 'seco
         <User class="size-6 text-muted-foreground" />
       </div>
       <div>
-        <p class="font-medium">No tienes visitas registradas</p>
-        <p class="mt-1 text-sm text-muted-foreground">Genera tu primer codigo QR para una visita</p>
+        <p class="font-medium">Aún no has registrado visitas</p>
+        <p class="mt-1 text-sm text-muted-foreground">Crea un pase de acceso para tu primer visitante</p>
       </div>
       <Button as-child>
         <NuxtLink to="/propietario/nueva-visita">
@@ -232,7 +232,7 @@ const statusConfig: Record<QrStatus, { label: string; variant: 'default' | 'seco
               alt="Codigo QR de acceso"
               class="size-48 rounded-lg"
             />
-            <Button size="sm" variant="outline" @click.stop="handleShare(code.token)">
+            <Button variant="outline" @click.stop="handleShare(code.token)">
               <Share2 class="size-4" />
               Compartir
             </Button>

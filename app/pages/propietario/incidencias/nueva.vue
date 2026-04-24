@@ -98,7 +98,8 @@ onUnmounted(() => {
         <Input
           id="title"
           v-model="title"
-          placeholder="Ej: Tubería rota en pasillo"
+          placeholder="Ej: Tubería rota en el pasillo principal"
+          class="h-12 text-base"
           maxlength="200"
           required
         />
@@ -113,6 +114,7 @@ onUnmounted(() => {
           v-model="description"
           placeholder="Describe el problema con detalle: ubicación, desde cuándo ocurre, etc."
           rows="4"
+          class="text-base"
           required
         />
       </div>
@@ -121,7 +123,7 @@ onUnmounted(() => {
       <div class="space-y-2">
         <Label for="priority">Prioridad</Label>
         <Select v-model="priority">
-          <SelectTrigger id="priority">
+          <SelectTrigger id="priority" class="h-12">
             <SelectValue placeholder="Selecciona prioridad" />
           </SelectTrigger>
           <SelectContent>
@@ -163,8 +165,8 @@ onUnmounted(() => {
           <label
             class="flex cursor-pointer flex-col items-center gap-2 rounded-lg border-2 border-dashed p-6 transition-colors hover:border-primary/50 hover:bg-muted/50"
           >
-            <Camera class="size-8 text-muted-foreground" />
-            <span class="text-sm text-muted-foreground">Toca para agregar foto</span>
+            <Camera class="size-10 text-muted-foreground" />
+            <span class="text-base text-muted-foreground">Toca para agregar foto</span>
             <input
               type="file"
               accept="image/jpeg,image/png,image/webp"
@@ -179,7 +181,7 @@ onUnmounted(() => {
       <Separator />
 
       <!-- Submit -->
-      <Button type="submit" class="w-full" :disabled="!canSubmit">
+      <Button type="submit" class="h-12 w-full text-base font-semibold" :disabled="!canSubmit">
         <Loader2 v-if="isCreating" class="mr-2 size-4 animate-spin" />
         {{ isCreating ? 'Enviando...' : 'Reportar incidencia' }}
       </Button>

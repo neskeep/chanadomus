@@ -66,7 +66,7 @@ function formatDate(dateStr: string): string {
             {{ formattedBalance }}
           </p>
           <Badge :variant="isInDebt ? 'destructive' : 'default'" class="mt-3">
-            {{ isInDebt ? 'En mora' : 'Al dia' }}
+            {{ isInDebt ? 'En mora' : 'Al día' }}
           </Badge>
         </CardContent>
       </Card>
@@ -85,8 +85,8 @@ function formatDate(dateStr: string): string {
             <Wallet class="size-6 text-muted-foreground" />
           </div>
           <div>
-            <p class="font-medium">No hay movimientos registrados</p>
-            <p class="mt-1 text-sm text-muted-foreground">Los cargos y abonos apareceran aqui</p>
+            <p class="font-medium">Sin movimientos por ahora</p>
+            <p class="mt-1 text-sm text-muted-foreground">Tus cargos y pagos aparecerán aquí</p>
           </div>
         </div>
 

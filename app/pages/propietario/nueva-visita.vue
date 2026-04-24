@@ -175,24 +175,26 @@ function formatDate(dateStr: string): string {
             v-model="visitorName"
             placeholder="Nombre completo"
             required
+            class="h-12 text-base"
           />
         </div>
 
         <!-- Cédula -->
         <div class="space-y-1.5">
-          <Label for="visitor-document">Cedula <span class="text-xs text-muted-foreground">(opcional)</span></Label>
+          <Label for="visitor-document">Cédula <span class="text-xs text-muted-foreground">(opcional)</span></Label>
           <Input
             id="visitor-document"
             v-model="visitorDocument"
             placeholder="V-12345678"
+            class="h-12 text-base"
           />
         </div>
 
         <!-- Tipo de visitante -->
         <div class="space-y-1.5">
-          <Label for="visitor-type">Tipo de visitante</Label>
+          <Label for="visitor-type">Tipo de visita</Label>
           <Select v-model="visitorType">
-            <SelectTrigger id="visitor-type" class="w-full">
+            <SelectTrigger id="visitor-type" class="h-12 w-full text-base">
               <SelectValue placeholder="Seleccionar tipo" />
             </SelectTrigger>
             <SelectContent>
@@ -204,9 +206,9 @@ function formatDate(dateStr: string): string {
 
         <!-- Unidad destino -->
         <div class="space-y-1.5">
-          <Label for="unit-select">Unidad destino <span class="text-destructive">*</span></Label>
+          <Label for="unit-select">Tu vivienda <span class="text-destructive">*</span></Label>
           <Select v-model="selectedUnitId">
-            <SelectTrigger id="unit-select" class="w-full">
+            <SelectTrigger id="unit-select" class="h-12 w-full text-base">
               <SelectValue placeholder="Seleccionar unidad" />
             </SelectTrigger>
             <SelectContent>
@@ -219,23 +221,24 @@ function formatDate(dateStr: string): string {
 
         <!-- Fecha y hora límite -->
         <div class="space-y-1.5">
-          <Label for="expires-at">Valido hasta <span class="text-destructive">*</span></Label>
+          <Label for="expires-at">Válido hasta <span class="text-destructive">*</span></Label>
           <Input
             id="expires-at"
             v-model="expiresAt"
             type="datetime-local"
+            class="h-12 text-base"
           />
         </div>
 
         <!-- Submit -->
         <Button
-          class="mt-2 w-full"
+          class="mt-3 h-12 w-full text-base font-semibold"
           :disabled="!isFormValid || isGenerating"
           @click="handleGenerate"
         >
           <Loader2 v-if="isGenerating" class="size-4 animate-spin" />
           <QrCode v-else class="size-4" />
-          {{ isGenerating ? 'Generando...' : 'Generar Codigo QR' }}
+          {{ isGenerating ? 'Creando...' : 'Crear pase de acceso' }}
         </Button>
       </CardContent>
     </Card>
@@ -248,7 +251,7 @@ function formatDate(dateStr: string): string {
           <img
             v-if="qrDataUrl"
             :src="qrDataUrl"
-            alt="Codigo QR de acceso"
+            alt="Pase de acceso"
             class="size-64 rounded-lg"
           />
 
@@ -267,7 +270,7 @@ function formatDate(dateStr: string): string {
               </Badge>
             </div>
             <div class="flex justify-between">
-              <span class="text-muted-foreground">Valido hasta</span>
+              <span class="text-muted-foreground">Válido hasta</span>
               <span class="text-xs">{{ generatedData ? formatDate(generatedData.expiresAt) : '' }}</span>
             </div>
           </div>
@@ -285,13 +288,13 @@ function formatDate(dateStr: string): string {
 
       <!-- Actions -->
       <div class="space-y-3">
-        <Button class="w-full" @click="handleShare">
+        <Button class="h-12 w-full text-base" @click="handleShare">
           <Share2 class="size-4" />
-          Compartir por WhatsApp
+          Compartir con tu visitante
         </Button>
-        <Button variant="outline" class="w-full" @click="handleReset">
+        <Button variant="outline" class="h-12 w-full text-base" @click="handleReset">
           <Plus class="size-4" />
-          Generar otra visita
+          Crear otro pase
         </Button>
       </div>
     </div>
