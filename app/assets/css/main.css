@@ -110,3 +110,52 @@
     @apply font-sans;
     }
 }
+
+/* Page transitions — subtle fade for route changes */
+.page-enter-active,
+.page-leave-active {
+  transition: opacity 200ms ease, transform 200ms ease;
+}
+.page-enter-from {
+  opacity: 0;
+  transform: translateY(6px);
+}
+.page-leave-to {
+  opacity: 0;
+}
+
+/* Button active press feedback — tactile confirmation */
+button:active:not(:disabled),
+[role="button"]:active:not(:disabled),
+a[data-slot="button"]:active {
+  transform: scale(0.97);
+  transition: transform 100ms ease;
+}
+
+/* Clickable card lift on hover, press on click */
+.cursor-pointer[class*="rounded"] {
+  transition: box-shadow 200ms ease, transform 150ms ease;
+}
+.cursor-pointer[class*="rounded"]:hover {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+.cursor-pointer[class*="rounded"]:active {
+  transform: scale(0.98);
+}
+
+/* Respect reduced motion preferences */
+@media (prefers-reduced-motion: reduce) {
+  .page-enter-active,
+  .page-leave-active {
+    transition-duration: 0.01ms !important;
+  }
+  button:active:not(:disabled),
+  [role="button"]:active:not(:disabled),
+  a[data-slot="button"]:active,
+  .cursor-pointer[class*="rounded"]:active {
+    transform: none !important;
+  }
+  .cursor-pointer[class*="rounded"]:hover {
+    box-shadow: none !important;
+  }
+}
