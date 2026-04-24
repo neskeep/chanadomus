@@ -97,17 +97,20 @@ const isSecondaryActive = computed(() =>
 <template>
   <div class="flex min-h-dvh flex-col bg-background">
     <!-- Top bar -->
-    <header class="sticky top-0 z-40 flex h-14 items-center justify-between border-b bg-background/95 px-4 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      <span class="text-sm font-semibold tracking-tight">{{ pageTitle }}</span>
-      <div class="flex items-center gap-1">
+    <header class="sticky top-0 z-40 flex h-16 items-center justify-between border-b bg-background/95 px-4 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+      <div class="min-w-0">
+        <p class="text-xs text-muted-foreground">{{ roleLabel }}</p>
+        <p class="text-base font-semibold tracking-tight truncate">{{ pageTitle }}</p>
+      </div>
+      <div class="flex items-center gap-2">
         <PanicButton />
         <NuxtLink to="/mi-chana/notificaciones">
-          <Button variant="ghost" size="icon" class="size-8">
-            <Bell class="size-4" />
+          <Button variant="ghost" size="icon" class="size-10">
+            <Bell class="size-5" />
           </Button>
         </NuxtLink>
-        <Button variant="ghost" size="icon" class="size-8" @click="signOut">
-          <LogOut class="size-4" />
+        <Button variant="ghost" size="icon" class="size-10" @click="signOut">
+          <LogOut class="size-5" />
         </Button>
       </div>
     </header>
@@ -118,25 +121,25 @@ const isSecondaryActive = computed(() =>
     </main>
 
     <!-- Bottom nav (mobile) -->
-    <nav class="fixed bottom-0 left-0 right-0 z-40 flex h-16 items-center justify-around border-t bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 md:hidden">
+    <nav class="fixed bottom-0 left-0 right-0 z-40 flex h-[4.5rem] items-center justify-around border-t bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 md:hidden">
       <NuxtLink
         v-for="item in primaryItems"
         :key="item.to"
         :to="item.to"
-        class="flex flex-col items-center gap-1 text-muted-foreground transition-colors [&.router-link-active]:text-primary"
+        class="flex min-w-[3rem] flex-col items-center gap-1 py-2 text-muted-foreground transition-colors [&.router-link-active]:text-primary"
       >
-        <component :is="item.icon" class="size-5" />
+        <component :is="item.icon" class="size-6" />
         <span class="text-xs font-medium">{{ item.label }}</span>
       </NuxtLink>
 
       <!-- "Más" button -->
       <button
         v-if="hasMore"
-        class="flex flex-col items-center gap-1 transition-colors"
+        class="flex min-w-[3rem] flex-col items-center gap-1 py-2 transition-colors"
         :class="isSecondaryActive ? 'text-primary' : 'text-muted-foreground'"
         @click="moreOpen = true"
       >
-        <MoreHorizontal class="size-5" />
+        <MoreHorizontal class="size-6" />
         <span class="text-xs font-medium">Más</span>
       </button>
     </nav>
@@ -153,9 +156,9 @@ const isSecondaryActive = computed(() =>
             v-for="item in secondaryItems"
             :key="item.to"
             :to="item.to"
-            class="flex flex-col items-center gap-2 rounded-xl p-3 text-muted-foreground transition-colors hover:bg-muted [&.router-link-active]:bg-primary/10 [&.router-link-active]:text-primary"
+            class="flex flex-col items-center gap-2 rounded-xl p-4 text-muted-foreground transition-colors hover:bg-muted [&.router-link-active]:bg-primary/10 [&.router-link-active]:text-primary"
           >
-            <component :is="item.icon" class="size-6" />
+            <component :is="item.icon" class="size-7" />
             <span class="text-xs font-medium">{{ item.label }}</span>
           </NuxtLink>
         </div>
@@ -163,6 +166,6 @@ const isSecondaryActive = computed(() =>
     </Sheet>
 
     <!-- Bottom nav spacer on mobile -->
-    <div class="h-16 md:hidden" />
+    <div class="h-[4.5rem] md:hidden" />
   </div>
 </template>

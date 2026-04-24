@@ -50,29 +50,42 @@ onMounted(async () => {
 
 <template>
   <div>
-    <div class="mt-4 grid grid-cols-2 gap-2">
+    <!-- Greeting -->
+    <div class="mb-6">
+      <h1 class="text-2xl font-bold text-foreground">
+        Hola, {{ user?.name?.split(' ')[0] || 'Operador' }}
+      </h1>
+      <p class="mt-1 text-sm text-muted-foreground">
+        Aqui tienes el resumen del dia
+      </p>
+    </div>
+
+    <div class="grid grid-cols-2 gap-3">
       <div
         v-for="(card, i) in statCards"
         :key="i"
-        class="flex items-center gap-3 rounded-lg border bg-card p-3"
+        class="flex items-center gap-3 rounded-lg border bg-card p-4"
       >
-        <div class="flex size-8 shrink-0 items-center justify-center rounded-md" :class="colorMap[card.color]">
-          <component :is="card.icon" class="size-4" />
+        <div class="flex size-10 shrink-0 items-center justify-center rounded-md" :class="colorMap[card.color]">
+          <component :is="card.icon" class="size-5" />
         </div>
         <div v-if="isLoading" class="space-y-1">
           <Skeleton class="h-5 w-8" />
           <Skeleton class="h-3 w-16" />
         </div>
         <div v-else>
-          <p class="text-lg font-bold leading-none">{{ card.value }}</p>
+          <p class="text-2xl font-bold leading-none">{{ card.value }}</p>
           <p class="mt-0.5 text-xs text-muted-foreground">{{ card.label }}</p>
         </div>
       </div>
     </div>
 
-    <div v-if="stats?.nextMeeting" class="mt-3 rounded-lg border bg-card p-3">
-      <p class="text-xs font-medium text-muted-foreground">Proxima reunion</p>
-      <p class="mt-0.5 text-sm font-medium">{{ stats.nextMeeting.title }}</p>
+    <div v-if="stats?.nextMeeting" class="mt-4 rounded-lg border border-l-4 border-l-primary bg-card p-4">
+      <div class="flex items-center gap-1.5">
+        <Calendar class="size-4 text-muted-foreground" />
+        <p class="text-xs text-muted-foreground">Proxima reunion</p>
+      </div>
+      <p class="mt-0.5 text-base font-semibold">{{ stats.nextMeeting.title }}</p>
       <p class="text-xs text-muted-foreground">{{ formatDate(stats.nextMeeting.date) }}</p>
     </div>
   </div>

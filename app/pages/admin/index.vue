@@ -61,7 +61,7 @@ const accessChartData = computed(() => {
     datasets: [{
       label: 'Accesos',
       data: items.map(i => i.count),
-      backgroundColor: '#2d9e9e',
+      backgroundColor: '#3b9b8f',
       borderRadius: 4,
     }],
   }
@@ -72,8 +72,8 @@ const financeChartData = computed(() => {
   return {
     labels: items.map(i => monthLabel(i.month)),
     datasets: [
-      { label: 'Cargos', data: items.map(i => i.cargos), backgroundColor: '#ef4444', borderRadius: 4 },
-      { label: 'Abonos', data: items.map(i => i.abonos), backgroundColor: '#22c55e', borderRadius: 4 },
+      { label: 'Cargos', data: items.map(i => i.cargos), backgroundColor: '#e85d5d', borderRadius: 4 },
+      { label: 'Abonos', data: items.map(i => i.abonos), backgroundColor: '#3b9b8f', borderRadius: 4 },
     ],
   }
 })
@@ -85,12 +85,12 @@ const incidentsChartData = computed(() => {
     datasets: [{
       label: 'Incidencias',
       data: items.map(i => i.count),
-      borderColor: '#f59e0b',
-      backgroundColor: 'rgba(245, 158, 11, 0.15)',
+      borderColor: '#e09945',
+      backgroundColor: 'rgba(224, 153, 69, 0.15)',
       fill: true,
       tension: 0.3,
       pointRadius: 3,
-      pointBackgroundColor: '#f59e0b',
+      pointBackgroundColor: '#e09945',
     }],
   }
 })
