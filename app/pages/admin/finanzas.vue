@@ -86,7 +86,7 @@ async function handleCreateRecord() {
     await fetchSummary()
   }
   catch {
-    // error is already set in composable
+    toast.error(recordError.value ?? 'Error al registrar movimiento')
   }
 }
 
@@ -125,7 +125,7 @@ async function handleUploadReport() {
     await fetchReports(1)
   }
   catch {
-    // error is already set in composable
+    toast.error(reportsError.value ?? 'Error al subir informe')
   }
 }
 
@@ -166,7 +166,7 @@ onMounted(async () => {
         <div>
           <p v-if="isLoading"><Skeleton class="h-5 w-8" /></p>
           <p v-else class="text-lg font-bold leading-none">{{ totalUnits }}</p>
-          <p class="mt-0.5 text-[11px] text-muted-foreground">Total unidades</p>
+          <p class="mt-0.5 text-xs text-muted-foreground">Total unidades</p>
         </div>
       </div>
 
@@ -177,7 +177,7 @@ onMounted(async () => {
         <div>
           <p v-if="isLoading"><Skeleton class="h-5 w-8" /></p>
           <p v-else class="text-lg font-bold leading-none text-destructive">{{ totalInDebt }}</p>
-          <p class="mt-0.5 text-[11px] text-muted-foreground">En mora</p>
+          <p class="mt-0.5 text-xs text-muted-foreground">En mora</p>
         </div>
       </div>
     </div>

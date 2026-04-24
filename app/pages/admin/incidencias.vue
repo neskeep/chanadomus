@@ -32,16 +32,16 @@ const newStatus = ref<IncidentStatus | ''>('')
 const statusNote = ref('')
 
 const STATUS_CONFIG: Record<IncidentStatus, { label: string, class: string, icon: typeof Clock }> = {
-  open: { label: 'Abierta', class: 'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400', icon: AlertTriangle },
-  in_progress: { label: 'En proceso', class: 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400', icon: Loader2 },
-  resolved: { label: 'Resuelta', class: 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-400', icon: CheckCircle2 },
-  closed: { label: 'Cerrada', class: 'bg-zinc-100 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400', icon: XCircle },
+  open: { label: 'Abierta', class: 'bg-amber-100 text-amber-800', icon: AlertTriangle },
+  in_progress: { label: 'En proceso', class: 'bg-blue-100 text-blue-800', icon: Loader2 },
+  resolved: { label: 'Resuelta', class: 'bg-emerald-100 text-emerald-800', icon: CheckCircle2 },
+  closed: { label: 'Cerrada', class: 'bg-zinc-100 text-zinc-600', icon: XCircle },
 }
 
 const PRIORITY_CONFIG: Record<IncidentPriority, { label: string, class: string }> = {
-  low: { label: 'Baja', class: 'bg-zinc-100 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400' },
-  medium: { label: 'Media', class: 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400' },
-  high: { label: 'Alta', class: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400' },
+  low: { label: 'Baja', class: 'bg-zinc-100 text-zinc-600' },
+  medium: { label: 'Media', class: 'bg-amber-100 text-amber-700' },
+  high: { label: 'Alta', class: 'bg-red-100 text-red-700' },
 }
 
 // Stats
@@ -119,23 +119,23 @@ function formatDateTime(dateStr: string): string {
     <!-- Stats cards -->
     <div class="mb-6 grid grid-cols-2 gap-2">
       <div class="flex items-center gap-3 rounded-lg border bg-card p-3">
-        <div class="flex size-8 shrink-0 items-center justify-center rounded-md bg-amber-100 dark:bg-amber-900/30">
+        <div class="flex size-8 shrink-0 items-center justify-center rounded-md bg-amber-100">
           <AlertTriangle class="size-4 text-amber-600" />
         </div>
         <div>
           <p v-if="isLoading"><Skeleton class="h-5 w-8" /></p>
           <p v-else class="text-lg font-bold leading-none">{{ totalOpen }}</p>
-          <p class="mt-0.5 text-[11px] text-muted-foreground">Abiertas</p>
+          <p class="mt-0.5 text-xs text-muted-foreground">Abiertas</p>
         </div>
       </div>
       <div class="flex items-center gap-3 rounded-lg border bg-card p-3">
-        <div class="flex size-8 shrink-0 items-center justify-center rounded-md bg-blue-100 dark:bg-blue-900/30">
+        <div class="flex size-8 shrink-0 items-center justify-center rounded-md bg-blue-100">
           <Clock class="size-4 text-blue-600" />
         </div>
         <div>
           <p v-if="isLoading"><Skeleton class="h-5 w-8" /></p>
           <p v-else class="text-lg font-bold leading-none">{{ totalInProgress }}</p>
-          <p class="mt-0.5 text-[11px] text-muted-foreground">En proceso</p>
+          <p class="mt-0.5 text-xs text-muted-foreground">En proceso</p>
         </div>
       </div>
     </div>
@@ -442,7 +442,7 @@ function formatDateTime(dateStr: string): string {
                     </span>
                   </div>
                   <p v-if="update.note" class="ml-3.5 mt-1 text-xs text-muted-foreground">{{ update.note }}</p>
-                  <p class="ml-3.5 mt-1 text-[10px] text-muted-foreground">
+                  <p class="ml-3.5 mt-1 text-xs text-muted-foreground">
                     {{ update.updatedByName ?? 'Admin' }} · {{ formatDateTime(update.createdAt) }}
                   </p>
                 </div>

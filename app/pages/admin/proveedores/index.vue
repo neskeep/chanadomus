@@ -62,16 +62,16 @@ const deleteId = ref<string | null>(null)
 const deleteDialogOpen = ref(false)
 
 const CATEGORY_COLORS: Record<ProviderCategory, string> = {
-  plomeria: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400',
-  electricidad: 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400',
-  jardineria: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400',
-  cerrajeria: 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-400',
-  limpieza: 'bg-cyan-100 text-cyan-700 dark:bg-cyan-900/30 dark:text-cyan-400',
-  pintura: 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400',
-  albanileria: 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400',
-  seguridad: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400',
-  fumigacion: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400',
-  otro: 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-400',
+  plomeria: 'bg-blue-100 text-blue-700',
+  electricidad: 'bg-yellow-100 text-yellow-700',
+  jardineria: 'bg-green-100 text-green-700',
+  cerrajeria: 'bg-gray-100 text-gray-700',
+  limpieza: 'bg-cyan-100 text-cyan-700',
+  pintura: 'bg-purple-100 text-purple-700',
+  albanileria: 'bg-orange-100 text-orange-700',
+  seguridad: 'bg-red-100 text-red-700',
+  fumigacion: 'bg-emerald-100 text-emerald-700',
+  otro: 'bg-slate-100 text-slate-700',
 }
 
 const CATEGORY_LABELS: Record<ProviderCategory, string> = {
@@ -88,9 +88,9 @@ const CATEGORY_LABELS: Record<ProviderCategory, string> = {
 }
 
 const STATUS_CONFIG: Record<ProviderStatus, { label: string; class: string }> = {
-  active: { label: 'Activo', class: 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-400' },
-  inactive: { label: 'Inactivo', class: 'bg-zinc-100 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400' },
-  pending: { label: 'Pendiente', class: 'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400' },
+  active: { label: 'Activo', class: 'bg-emerald-100 text-emerald-800' },
+  inactive: { label: 'Inactivo', class: 'bg-zinc-100 text-zinc-600' },
+  pending: { label: 'Pendiente', class: 'bg-amber-100 text-amber-800' },
 }
 
 // Stats
@@ -279,23 +279,23 @@ function renderStars(rating: number | undefined): number[] {
     <!-- Stats cards -->
     <div class="mb-6 grid grid-cols-2 gap-2">
       <div class="flex items-center gap-3 rounded-lg border bg-card p-3">
-        <div class="flex size-8 shrink-0 items-center justify-center rounded-md bg-emerald-100 dark:bg-emerald-900/30">
+        <div class="flex size-8 shrink-0 items-center justify-center rounded-md bg-emerald-100">
           <Wrench class="size-4 text-emerald-600" />
         </div>
         <div>
           <p v-if="isLoading"><Skeleton class="h-5 w-8" /></p>
           <p v-else class="text-lg font-bold leading-none">{{ totalActive }}</p>
-          <p class="mt-0.5 text-[11px] text-muted-foreground">Activos</p>
+          <p class="mt-0.5 text-xs text-muted-foreground">Activos</p>
         </div>
       </div>
       <div class="flex items-center gap-3 rounded-lg border bg-card p-3">
-        <div class="flex size-8 shrink-0 items-center justify-center rounded-md bg-amber-100 dark:bg-amber-900/30">
+        <div class="flex size-8 shrink-0 items-center justify-center rounded-md bg-amber-100">
           <CheckCircle2 class="size-4 text-amber-600" />
         </div>
         <div>
           <p v-if="isLoading"><Skeleton class="h-5 w-8" /></p>
           <p v-else class="text-lg font-bold leading-none">{{ totalPending }}</p>
-          <p class="mt-0.5 text-[11px] text-muted-foreground">Pendientes</p>
+          <p class="mt-0.5 text-xs text-muted-foreground">Pendientes</p>
         </div>
       </div>
     </div>

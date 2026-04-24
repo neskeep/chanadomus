@@ -24,10 +24,10 @@ const statCards = computed(() => [
 ])
 
 const colorMap: Record<string, string> = {
-  amber: 'bg-amber-100 text-amber-600 dark:bg-amber-900/30',
-  purple: 'bg-purple-100 text-purple-600 dark:bg-purple-900/30',
-  blue: 'bg-blue-100 text-blue-600 dark:bg-blue-900/30',
-  emerald: 'bg-emerald-100 text-emerald-600 dark:bg-emerald-900/30',
+  amber: 'bg-amber-100 text-amber-600',
+  purple: 'bg-purple-100 text-purple-600',
+  blue: 'bg-blue-100 text-blue-600',
+  emerald: 'bg-emerald-100 text-emerald-600',
 }
 
 function formatDate(iso: string): string {
@@ -65,15 +65,15 @@ onMounted(async () => {
         </div>
         <div v-else>
           <p class="text-lg font-bold leading-none">{{ card.value }}</p>
-          <p class="mt-0.5 text-[11px] text-muted-foreground">{{ card.label }}</p>
+          <p class="mt-0.5 text-xs text-muted-foreground">{{ card.label }}</p>
         </div>
       </div>
     </div>
 
     <div v-if="stats?.nextMeeting" class="mt-3 rounded-lg border bg-card p-3">
-      <p class="text-[11px] font-medium text-muted-foreground">Proxima reunion</p>
+      <p class="text-xs font-medium text-muted-foreground">Proxima reunion</p>
       <p class="mt-0.5 text-sm font-medium">{{ stats.nextMeeting.title }}</p>
-      <p class="text-[11px] text-muted-foreground">{{ formatDate(stats.nextMeeting.date) }}</p>
+      <p class="text-xs text-muted-foreground">{{ formatDate(stats.nextMeeting.date) }}</p>
     </div>
   </div>
 </template>

@@ -151,12 +151,12 @@ function openVehicleDialog(vehicle?: Vehicle) {
       brand: vehicle.brand,
       model: vehicle.model,
       color: vehicle.color,
-      ownerMemberId: vehicle.ownerMemberId ?? '',
+      ownerMemberId: vehicle.ownerMemberId ?? 'none',
     }
   }
   else {
     editingVehicle.value = null
-    vehicleForm.value = { plate: '', brand: '', model: '', color: '', ownerMemberId: '' }
+    vehicleForm.value = { plate: '', brand: '', model: '', color: '', ownerMemberId: 'none' }
   }
   vehicleDialogOpen.value = true
 }
@@ -167,7 +167,7 @@ async function handleSaveVehicle() {
     brand: vehicleForm.value.brand.trim(),
     model: vehicleForm.value.model.trim(),
     color: vehicleForm.value.color.trim(),
-    ownerMemberId: vehicleForm.value.ownerMemberId || undefined,
+    ownerMemberId: vehicleForm.value.ownerMemberId === 'none' ? undefined : vehicleForm.value.ownerMemberId || undefined,
   }
 
   try {
@@ -610,7 +610,7 @@ onMounted(() => {
                 <SelectValue placeholder="Seleccionar miembro (opcional)" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Sin asignar</SelectItem>
+                <SelectItem value="none">Sin asignar</SelectItem>
                 <SelectItem v-for="member in members" :key="member.id" :value="member.id">
                   {{ member.name }}
                 </SelectItem>

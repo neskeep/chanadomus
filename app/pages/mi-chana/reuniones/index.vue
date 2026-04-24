@@ -35,17 +35,17 @@ function formatMonthYear(iso: string): string {
 // --- Type / Status helpers ---
 
 const TYPE_COLORS: Record<MeetingType, string> = {
-  ordinaria: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400',
-  extraordinaria: 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400',
-  comite: 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400',
-  informativa: 'bg-cyan-100 text-cyan-700 dark:bg-cyan-900/30 dark:text-cyan-400',
+  ordinaria: 'bg-blue-100 text-blue-700',
+  extraordinaria: 'bg-amber-100 text-amber-700',
+  comite: 'bg-purple-100 text-purple-700',
+  informativa: 'bg-cyan-100 text-cyan-700',
 }
 
 const STATUS_COLORS: Record<MeetingStatus, string> = {
-  programada: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400',
-  en_curso: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400',
-  completada: 'bg-zinc-100 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400',
-  cancelada: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400',
+  programada: 'bg-blue-100 text-blue-700',
+  en_curso: 'bg-emerald-100 text-emerald-700',
+  completada: 'bg-zinc-100 text-zinc-600',
+  cancelada: 'bg-red-100 text-red-700',
 }
 
 function typeLabel(key: MeetingType): string {
@@ -177,14 +177,14 @@ onMounted(() => {
                   <!-- Badges -->
                   <div class="mt-2 flex flex-wrap gap-1.5">
                     <span
-                      class="inline-flex rounded-full px-2 py-0.5 text-[10px] font-medium"
+                      class="inline-flex rounded-full px-2 py-0.5 text-xs font-medium"
                       :class="TYPE_COLORS[m.type]"
                     >
                       {{ typeLabel(m.type) }}
                     </span>
                     <span
                       v-if="m.status !== 'programada'"
-                      class="inline-flex rounded-full px-2 py-0.5 text-[10px] font-medium"
+                      class="inline-flex rounded-full px-2 py-0.5 text-xs font-medium"
                       :class="STATUS_COLORS[m.status]"
                     >
                       {{ statusLabel(m.status) }}

@@ -21,9 +21,9 @@ const activeTab = ref<'active' | 'closed'>('active')
 const selectedOption = ref<Record<string, string>>({})
 
 const STATUS_CONFIG: Record<PollStatus, { label: string; class: string }> = {
-  draft: { label: 'Borrador', class: 'bg-zinc-100 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400' },
-  active: { label: 'Activa', class: 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-400' },
-  closed: { label: 'Cerrada', class: 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400' },
+  draft: { label: 'Borrador', class: 'bg-zinc-100 text-zinc-600' },
+  active: { label: 'Activa', class: 'bg-emerald-100 text-emerald-800' },
+  closed: { label: 'Cerrada', class: 'bg-blue-100 text-blue-800' },
 }
 
 const filteredPolls = computed(() => {
@@ -173,7 +173,7 @@ function getParticipation(poll: Poll): string {
                 </p>
               </div>
               <span
-                class="inline-flex shrink-0 rounded-full px-2 py-0.5 text-[10px] font-medium"
+                class="inline-flex shrink-0 rounded-full px-2 py-0.5 text-xs font-medium"
                 :class="STATUS_CONFIG[poll.status].class"
               >
                 {{ STATUS_CONFIG[poll.status].label }}
@@ -195,7 +195,7 @@ function getParticipation(poll: Poll): string {
             <!-- Voted badge -->
             <div
               v-if="hasVoted(poll)"
-              class="mt-3 inline-flex items-center gap-1.5 rounded-full bg-emerald-100 px-2.5 py-1 text-xs font-medium text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-400"
+              class="mt-3 inline-flex items-center gap-1.5 rounded-full bg-emerald-100 px-2.5 py-1 text-xs font-medium text-emerald-800"
             >
               <CheckCircle2 class="size-3.5" />
               Ya votaste
@@ -204,7 +204,7 @@ function getParticipation(poll: Poll): string {
             <!-- Expired badge (active but deadline passed) -->
             <div
               v-else-if="poll.status === 'active' && isExpired(poll)"
-              class="mt-3 inline-flex items-center gap-1.5 rounded-full bg-amber-100 px-2.5 py-1 text-xs font-medium text-amber-800 dark:bg-amber-900/30 dark:text-amber-400"
+              class="mt-3 inline-flex items-center gap-1.5 rounded-full bg-amber-100 px-2.5 py-1 text-xs font-medium text-amber-800"
             >
               <Clock class="size-3.5" />
               Plazo vencido
@@ -270,7 +270,7 @@ function getParticipation(poll: Poll): string {
             </div>
 
             <!-- Closed at info -->
-            <p v-if="poll.closedAt" class="mt-3 text-[10px] text-muted-foreground">
+            <p v-if="poll.closedAt" class="mt-3 text-xs text-muted-foreground">
               Cerrada el {{ formatDate(poll.closedAt) }}
             </p>
           </CardContent>

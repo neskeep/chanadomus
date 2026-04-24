@@ -228,7 +228,7 @@ onBeforeUnmount(() => {
               </div>
               <p
                 v-if="mi === group.messages.length - 1"
-                class="mt-0.5 text-right text-[10px] text-muted-foreground"
+                class="mt-0.5 text-right text-xs text-muted-foreground"
               >
                 {{ formatTime(msg.createdAt) }}
               </p>
@@ -259,7 +259,7 @@ onBeforeUnmount(() => {
                 </div>
                 <p
                   v-if="mi === group.messages.length - 1"
-                  class="mt-0.5 text-[10px] text-muted-foreground"
+                  class="mt-0.5 text-xs text-muted-foreground"
                 >
                   {{ formatTime(msg.createdAt) }}
                 </p>

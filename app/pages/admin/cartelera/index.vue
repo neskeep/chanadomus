@@ -57,18 +57,18 @@ const deleteId = ref<string | null>(null)
 const deleteDialogOpen = ref(false)
 
 const CATEGORY_CONFIG: Record<AnnouncementCategory, { label: string, class: string }> = {
-  general: { label: 'General', class: 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400' },
-  mantenimiento: { label: 'Mantenimiento', class: 'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400' },
-  seguridad: { label: 'Seguridad', class: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400' },
-  financiero: { label: 'Financiero', class: 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-400' },
-  evento: { label: 'Evento', class: 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-400' },
-  urgente: { label: 'Urgente', class: 'bg-red-200 text-red-900 dark:bg-red-900/50 dark:text-red-300' },
+  general: { label: 'General', class: 'bg-blue-100 text-blue-800' },
+  mantenimiento: { label: 'Mantenimiento', class: 'bg-amber-100 text-amber-800' },
+  seguridad: { label: 'Seguridad', class: 'bg-red-100 text-red-800' },
+  financiero: { label: 'Financiero', class: 'bg-emerald-100 text-emerald-800' },
+  evento: { label: 'Evento', class: 'bg-purple-100 text-purple-800' },
+  urgente: { label: 'Urgente', class: 'bg-red-200 text-red-900' },
 }
 
 const STATUS_CONFIG: Record<AnnouncementStatus, { label: string, class: string }> = {
-  draft: { label: 'Borrador', class: 'bg-zinc-100 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400' },
-  published: { label: 'Publicado', class: 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-400' },
-  archived: { label: 'Archivado', class: 'bg-zinc-100 text-zinc-500 dark:bg-zinc-800 dark:text-zinc-500' },
+  draft: { label: 'Borrador', class: 'bg-zinc-100 text-zinc-600' },
+  published: { label: 'Publicado', class: 'bg-emerald-100 text-emerald-800' },
+  archived: { label: 'Archivado', class: 'bg-zinc-100 text-zinc-500' },
 }
 
 // Stats
@@ -226,23 +226,23 @@ function formatDate(dateStr: string): string {
     <!-- Stats cards -->
     <div class="mb-6 grid grid-cols-2 gap-2">
       <div class="flex items-center gap-3 rounded-lg border bg-card p-3">
-        <div class="flex size-8 shrink-0 items-center justify-center rounded-md bg-emerald-100 dark:bg-emerald-900/30">
+        <div class="flex size-8 shrink-0 items-center justify-center rounded-md bg-emerald-100">
           <Megaphone class="size-4 text-emerald-600" />
         </div>
         <div>
           <p v-if="isLoading"><Skeleton class="h-5 w-8" /></p>
           <p v-else class="text-lg font-bold leading-none">{{ totalPublished }}</p>
-          <p class="mt-0.5 text-[11px] text-muted-foreground">Publicados</p>
+          <p class="mt-0.5 text-xs text-muted-foreground">Publicados</p>
         </div>
       </div>
       <div class="flex items-center gap-3 rounded-lg border bg-card p-3">
-        <div class="flex size-8 shrink-0 items-center justify-center rounded-md bg-zinc-100 dark:bg-zinc-800">
-          <FileText class="size-4 text-zinc-600 dark:text-zinc-400" />
+        <div class="flex size-8 shrink-0 items-center justify-center rounded-md bg-zinc-100">
+          <FileText class="size-4 text-zinc-600" />
         </div>
         <div>
           <p v-if="isLoading"><Skeleton class="h-5 w-8" /></p>
           <p v-else class="text-lg font-bold leading-none">{{ totalDrafts }}</p>
-          <p class="mt-0.5 text-[11px] text-muted-foreground">Borradores</p>
+          <p class="mt-0.5 text-xs text-muted-foreground">Borradores</p>
         </div>
       </div>
     </div>

@@ -59,10 +59,10 @@ const deleteId = ref<string | null>(null)
 const deleteDialogOpen = ref(false)
 
 const TYPE_COLORS: Record<MeetingType, string> = {
-  ordinaria: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400',
-  extraordinaria: 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400',
-  comite: 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400',
-  informativa: 'bg-cyan-100 text-cyan-700 dark:bg-cyan-900/30 dark:text-cyan-400',
+  ordinaria: 'bg-blue-100 text-blue-700',
+  extraordinaria: 'bg-amber-100 text-amber-700',
+  comite: 'bg-purple-100 text-purple-700',
+  informativa: 'bg-cyan-100 text-cyan-700',
 }
 
 const TYPE_LABELS: Record<MeetingType, string> = {
@@ -73,10 +73,10 @@ const TYPE_LABELS: Record<MeetingType, string> = {
 }
 
 const STATUS_COLORS: Record<MeetingStatus, string> = {
-  programada: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400',
-  en_curso: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400',
-  completada: 'bg-zinc-100 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400',
-  cancelada: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400',
+  programada: 'bg-blue-100 text-blue-700',
+  en_curso: 'bg-emerald-100 text-emerald-700',
+  completada: 'bg-zinc-100 text-zinc-600',
+  cancelada: 'bg-red-100 text-red-700',
 }
 
 const STATUS_LABELS: Record<MeetingStatus, string> = {
@@ -250,23 +250,23 @@ async function handleDelete() {
     <!-- Stats cards -->
     <div class="mb-6 grid grid-cols-2 gap-2">
       <div class="flex items-center gap-3 rounded-lg border bg-card p-3">
-        <div class="flex size-8 shrink-0 items-center justify-center rounded-md bg-blue-100 dark:bg-blue-900/30">
+        <div class="flex size-8 shrink-0 items-center justify-center rounded-md bg-blue-100">
           <Calendar class="size-4 text-blue-600" />
         </div>
         <div>
           <p v-if="isLoading"><Skeleton class="h-5 w-8" /></p>
           <p v-else class="text-lg font-bold leading-none">{{ totalProgramadas }}</p>
-          <p class="mt-0.5 text-[11px] text-muted-foreground">Programadas</p>
+          <p class="mt-0.5 text-xs text-muted-foreground">Programadas</p>
         </div>
       </div>
       <div class="flex items-center gap-3 rounded-lg border bg-card p-3">
-        <div class="flex size-8 shrink-0 items-center justify-center rounded-md bg-emerald-100 dark:bg-emerald-900/30">
+        <div class="flex size-8 shrink-0 items-center justify-center rounded-md bg-emerald-100">
           <CalendarDays class="size-4 text-emerald-600" />
         </div>
         <div>
           <p v-if="isLoading"><Skeleton class="h-5 w-8" /></p>
           <p v-else class="text-lg font-bold leading-none">{{ totalEsteMes }}</p>
-          <p class="mt-0.5 text-[11px] text-muted-foreground">Este Mes</p>
+          <p class="mt-0.5 text-xs text-muted-foreground">Este Mes</p>
         </div>
       </div>
     </div>

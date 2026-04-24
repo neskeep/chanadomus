@@ -22,16 +22,16 @@ const expandedId = ref<string | null>(null)
 const detail = useIncidentDetail()
 
 const STATUS_CONFIG: Record<IncidentStatus, { label: string, class: string, icon: typeof Clock }> = {
-  open: { label: 'Abierta', class: 'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400', icon: AlertTriangle },
-  in_progress: { label: 'En proceso', class: 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400', icon: Loader2 },
-  resolved: { label: 'Resuelta', class: 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-400', icon: CheckCircle2 },
-  closed: { label: 'Cerrada', class: 'bg-zinc-100 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400', icon: XCircle },
+  open: { label: 'Abierta', class: 'bg-amber-100 text-amber-800', icon: AlertTriangle },
+  in_progress: { label: 'En proceso', class: 'bg-blue-100 text-blue-800', icon: Loader2 },
+  resolved: { label: 'Resuelta', class: 'bg-emerald-100 text-emerald-800', icon: CheckCircle2 },
+  closed: { label: 'Cerrada', class: 'bg-zinc-100 text-zinc-600', icon: XCircle },
 }
 
 const PRIORITY_CONFIG: Record<IncidentPriority, { label: string, class: string }> = {
-  low: { label: 'Baja', class: 'bg-zinc-100 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400' },
-  medium: { label: 'Media', class: 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400' },
-  high: { label: 'Alta', class: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400' },
+  low: { label: 'Baja', class: 'bg-zinc-100 text-zinc-600' },
+  medium: { label: 'Media', class: 'bg-amber-100 text-amber-700' },
+  high: { label: 'Alta', class: 'bg-red-100 text-red-700' },
 }
 
 watch(currentPage, (page) => {
@@ -216,7 +216,7 @@ function formatDateTime(dateStr: string): string {
                           <span class="font-medium">{{ STATUS_CONFIG[update.newStatus].label }}</span>
                         </p>
                         <p v-if="update.note" class="mt-0.5 text-xs text-muted-foreground">{{ update.note }}</p>
-                        <p class="mt-0.5 text-[10px] text-muted-foreground">{{ formatDateTime(update.createdAt) }}</p>
+                        <p class="mt-0.5 text-xs text-muted-foreground">{{ formatDateTime(update.createdAt) }}</p>
                       </div>
                     </div>
                   </div>

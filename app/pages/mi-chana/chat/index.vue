@@ -23,20 +23,20 @@ const ROOM_TYPE_CONFIG: Record<ChatRoomType, { label: string; icon: typeof Globe
   unit: {
     label: 'Mi Rancho',
     icon: Home,
-    iconBg: 'bg-amber-100 dark:bg-amber-900/30',
-    iconColor: 'text-amber-700 dark:text-amber-400',
+    iconBg: 'bg-amber-100',
+    iconColor: 'text-amber-700',
   },
   vigilancia: {
     label: 'Vigilancia',
     icon: Shield,
-    iconBg: 'bg-blue-100 dark:bg-blue-900/30',
-    iconColor: 'text-blue-700 dark:text-blue-400',
+    iconBg: 'bg-blue-100',
+    iconColor: 'text-blue-700',
   },
   admin: {
     label: 'Admin',
     icon: Settings,
-    iconBg: 'bg-emerald-100 dark:bg-emerald-900/30',
-    iconColor: 'text-emerald-700 dark:text-emerald-400',
+    iconBg: 'bg-emerald-100',
+    iconColor: 'text-emerald-700',
   },
 }
 

@@ -55,9 +55,9 @@ const deleteId = ref<string | null>(null)
 const deleteDialogOpen = ref(false)
 
 const STATUS_CONFIG: Record<PollStatus, { label: string; class: string }> = {
-  draft: { label: 'Borrador', class: 'bg-zinc-100 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400' },
-  active: { label: 'Activa', class: 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-400' },
-  closed: { label: 'Cerrada', class: 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400' },
+  draft: { label: 'Borrador', class: 'bg-zinc-100 text-zinc-600' },
+  active: { label: 'Activa', class: 'bg-emerald-100 text-emerald-800' },
+  closed: { label: 'Cerrada', class: 'bg-blue-100 text-blue-800' },
 }
 
 // Stats
@@ -232,23 +232,23 @@ function participationText(poll: Poll): string {
     <!-- Stats cards -->
     <div class="mb-6 grid grid-cols-2 gap-2">
       <div class="flex items-center gap-3 rounded-lg border bg-card p-3">
-        <div class="flex size-8 shrink-0 items-center justify-center rounded-md bg-emerald-100 dark:bg-emerald-900/30">
+        <div class="flex size-8 shrink-0 items-center justify-center rounded-md bg-emerald-100">
           <Vote class="size-4 text-emerald-600" />
         </div>
         <div>
           <p v-if="isLoading"><Skeleton class="h-5 w-8" /></p>
           <p v-else class="text-lg font-bold leading-none">{{ totalActive }}</p>
-          <p class="mt-0.5 text-[11px] text-muted-foreground">Activas</p>
+          <p class="mt-0.5 text-xs text-muted-foreground">Activas</p>
         </div>
       </div>
       <div class="flex items-center gap-3 rounded-lg border bg-card p-3">
-        <div class="flex size-8 shrink-0 items-center justify-center rounded-md bg-zinc-100 dark:bg-zinc-800">
-          <FileText class="size-4 text-zinc-600 dark:text-zinc-400" />
+        <div class="flex size-8 shrink-0 items-center justify-center rounded-md bg-zinc-100">
+          <FileText class="size-4 text-zinc-600" />
         </div>
         <div>
           <p v-if="isLoading"><Skeleton class="h-5 w-8" /></p>
           <p v-else class="text-lg font-bold leading-none">{{ totalDrafts }}</p>
-          <p class="mt-0.5 text-[11px] text-muted-foreground">Borradores</p>
+          <p class="mt-0.5 text-xs text-muted-foreground">Borradores</p>
         </div>
       </div>
     </div>

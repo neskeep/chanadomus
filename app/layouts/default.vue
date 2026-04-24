@@ -2,6 +2,7 @@
 import {
   LogOut, Home, Wallet, AlertTriangle, Building2, Users, Shield,
   MessageCircle, Megaphone, Vote, Bell, Wrench, Calendar, MoreHorizontal,
+  ScanLine, ClipboardList, QrCode, DoorOpen,
 } from 'lucide-vue-next'
 import { ROLE_LABELS, ROLE_REDIRECTS } from '~~/shared/types/auth'
 
@@ -30,19 +31,20 @@ const primaryItems = computed(() => {
     base.push({ label: 'Chat', icon: MessageCircle, to: '/mi-chana/chat' })
   }
   if (role.value === 'propietario') {
+    base.push({ label: 'Visitas', icon: QrCode, to: '/propietario/mis-visitas' })
     base.push({ label: 'Informes', icon: Wallet, to: '/propietario/informes' })
     base.push({ label: 'Incidencias', icon: AlertTriangle, to: '/propietario/incidencias' })
-    base.push({ label: 'Chat', icon: MessageCircle, to: '/mi-chana/chat' })
   }
   if (role.value === 'vigilancia') {
+    base.push({ label: 'Escanear', icon: ScanLine, to: '/vigilancia/escanear' })
+    base.push({ label: 'Accesos', icon: ClipboardList, to: '/vigilancia/accesos' })
     base.push({ label: 'Residentes', icon: Shield, to: '/vigilancia/residentes' })
     base.push({ label: 'Chat', icon: MessageCircle, to: '/mi-chana/chat' })
-    base.push({ label: 'Reuniones', icon: Calendar, to: '/mi-chana/reuniones' })
   }
   if (role.value === 'conserje') {
+    base.push({ label: 'Entrada', icon: DoorOpen, to: '/conserje/nueva-entrada' })
     base.push({ label: 'Cartelera', icon: Megaphone, to: '/mi-chana/cartelera' })
     base.push({ label: 'Proveedores', icon: Wrench, to: '/mi-chana/proveedores' })
-    base.push({ label: 'Reuniones', icon: Calendar, to: '/mi-chana/reuniones' })
     base.push({ label: 'Chat', icon: MessageCircle, to: '/mi-chana/chat' })
   }
   return base
@@ -62,6 +64,7 @@ const secondaryItems = computed(() => {
   }
   if (role.value === 'propietario') {
     return [
+      { label: 'Chat', icon: MessageCircle, to: '/mi-chana/chat' },
       { label: 'Cartelera', icon: Megaphone, to: '/mi-chana/cartelera' },
       { label: 'Votaciones', icon: Vote, to: '/mi-chana/votaciones' },
       { label: 'Proveedores', icon: Wrench, to: '/mi-chana/proveedores' },
@@ -70,8 +73,14 @@ const secondaryItems = computed(() => {
   }
   if (role.value === 'vigilancia') {
     return [
+      { label: 'Reuniones', icon: Calendar, to: '/mi-chana/reuniones' },
       { label: 'Cartelera', icon: Megaphone, to: '/mi-chana/cartelera' },
       { label: 'Proveedores', icon: Wrench, to: '/mi-chana/proveedores' },
+    ]
+  }
+  if (role.value === 'conserje') {
+    return [
+      { label: 'Reuniones', icon: Calendar, to: '/mi-chana/reuniones' },
     ]
   }
   return []
@@ -117,7 +126,7 @@ const isSecondaryActive = computed(() =>
         class="flex flex-col items-center gap-1 text-muted-foreground transition-colors [&.router-link-active]:text-primary"
       >
         <component :is="item.icon" class="size-5" />
-        <span class="text-[10px] font-medium">{{ item.label }}</span>
+        <span class="text-xs font-medium">{{ item.label }}</span>
       </NuxtLink>
 
       <!-- "Más" button -->
@@ -128,7 +137,7 @@ const isSecondaryActive = computed(() =>
         @click="moreOpen = true"
       >
         <MoreHorizontal class="size-5" />
-        <span class="text-[10px] font-medium">Más</span>
+        <span class="text-xs font-medium">Más</span>
       </button>
     </nav>
 
@@ -137,6 +146,7 @@ const isSecondaryActive = computed(() =>
       <SheetContent side="bottom" class="rounded-t-2xl">
         <SheetHeader>
           <SheetTitle>Más opciones</SheetTitle>
+          <SheetDescription class="sr-only">Navegación adicional</SheetDescription>
         </SheetHeader>
         <div class="grid grid-cols-3 gap-4 py-6">
           <NuxtLink
