@@ -117,10 +117,10 @@ function formatDateTime(dateStr: string): string {
 <template>
   <div class="mx-auto max-w-5xl">
     <!-- Stats cards -->
-    <div class="mb-6 grid grid-cols-2 gap-2">
-      <div class="flex items-center gap-3 rounded-lg border bg-card p-3">
-        <div class="flex size-8 shrink-0 items-center justify-center rounded-md bg-amber-100">
-          <AlertTriangle class="size-4 text-amber-600" />
+    <div class="mb-6 grid grid-cols-2 gap-3">
+      <div class="flex items-center gap-3 rounded-lg border bg-card p-4">
+        <div class="flex size-10 shrink-0 items-center justify-center rounded-md bg-amber-100">
+          <AlertTriangle class="size-5 text-amber-600" />
         </div>
         <div>
           <p v-if="isLoading"><Skeleton class="h-5 w-8" /></p>
@@ -128,9 +128,9 @@ function formatDateTime(dateStr: string): string {
           <p class="mt-0.5 text-xs text-muted-foreground">Abiertas</p>
         </div>
       </div>
-      <div class="flex items-center gap-3 rounded-lg border bg-card p-3">
-        <div class="flex size-8 shrink-0 items-center justify-center rounded-md bg-blue-100">
-          <Clock class="size-4 text-blue-600" />
+      <div class="flex items-center gap-3 rounded-lg border bg-card p-4">
+        <div class="flex size-10 shrink-0 items-center justify-center rounded-md bg-blue-100">
+          <Clock class="size-5 text-blue-600" />
         </div>
         <div>
           <p v-if="isLoading"><Skeleton class="h-5 w-8" /></p>
@@ -157,12 +157,13 @@ function formatDateTime(dateStr: string): string {
           <Input
             v-model="searchQuery"
             placeholder="Buscar por título, unidad o propietario..."
-            class="pl-9"
+            class="h-12 pl-9"
           />
         </div>
         <Button
           variant="outline"
           size="icon"
+          class="size-12"
           :class="{ 'border-primary text-primary': showFilters }"
           @click="showFilters = !showFilters"
         >
@@ -173,7 +174,7 @@ function formatDateTime(dateStr: string): string {
       <!-- Filter selects -->
       <div v-if="showFilters" class="grid grid-cols-2 gap-3">
         <Select v-model="filterStatus">
-          <SelectTrigger>
+          <SelectTrigger class="h-12">
             <SelectValue placeholder="Estado" />
           </SelectTrigger>
           <SelectContent>
@@ -186,7 +187,7 @@ function formatDateTime(dateStr: string): string {
         </Select>
 
         <Select v-model="filterPriority">
-          <SelectTrigger>
+          <SelectTrigger class="h-12">
             <SelectValue placeholder="Prioridad" />
           </SelectTrigger>
           <SelectContent>
@@ -309,7 +310,6 @@ function formatDateTime(dateStr: string): string {
       <div v-if="totalPages > 1" class="mt-4 flex items-center justify-between">
         <Button
           variant="outline"
-          size="sm"
           :disabled="currentPage <= 1"
           @click="currentPage--"
         >
@@ -321,7 +321,6 @@ function formatDateTime(dateStr: string): string {
         </span>
         <Button
           variant="outline"
-          size="sm"
           :disabled="currentPage >= totalPages"
           @click="currentPage++"
         >
@@ -398,7 +397,7 @@ function formatDateTime(dateStr: string): string {
             <div class="space-y-3">
               <p class="text-sm font-medium">Cambiar estado</p>
               <Select v-model="newStatus">
-                <SelectTrigger>
+                <SelectTrigger class="h-12">
                   <SelectValue placeholder="Seleccionar nuevo estado" />
                 </SelectTrigger>
                 <SelectContent>
@@ -416,7 +415,7 @@ function formatDateTime(dateStr: string): string {
               />
 
               <Button
-                class="w-full"
+                class="h-12 w-full"
                 :disabled="!newStatus || detail.isUpdating.value"
                 @click="handleUpdateStatus"
               >

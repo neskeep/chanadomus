@@ -270,7 +270,7 @@ function renderStars(rating: number | undefined): number[] {
   <div class="mx-auto max-w-5xl">
     <!-- Header -->
     <div class="mb-6 flex justify-end">
-      <Button size="sm" @click="openCreateDialog">
+      <Button @click="openCreateDialog">
         <Plus class="mr-1.5 size-4" />
         Nuevo Proveedor
       </Button>
@@ -314,7 +314,7 @@ function renderStars(rating: number | undefined): number[] {
       <h2 class="mb-3 text-sm font-semibold">Sugerencias pendientes</h2>
       <div class="space-y-2">
         <Card v-for="sug in pendingSuggestions" :key="sug.id">
-          <CardContent class="flex items-center justify-between gap-3 p-3">
+          <CardContent class="flex items-center justify-between gap-3 p-4">
             <div class="min-w-0 flex-1">
               <p class="text-sm font-medium">{{ sug.name }}</p>
               <div class="mt-1 flex flex-wrap items-center gap-1.5">
@@ -335,7 +335,7 @@ function renderStars(rating: number | undefined): number[] {
               <Button
                 variant="ghost"
                 size="icon"
-                class="size-8 text-emerald-600"
+                class="size-10 text-emerald-600"
                 title="Aprobar"
                 @click="handleApprove(sug.id)"
               >
@@ -344,7 +344,7 @@ function renderStars(rating: number | undefined): number[] {
               <Button
                 variant="ghost"
                 size="icon"
-                class="size-8 text-destructive hover:text-destructive"
+                class="size-10 text-destructive hover:text-destructive"
                 title="Rechazar"
                 @click="handleReject(sug.id)"
               >
@@ -364,7 +364,7 @@ function renderStars(rating: number | undefined): number[] {
           <Input
             v-model="searchQuery"
             placeholder="Buscar por nombre, telefono..."
-            class="pl-9"
+            class="h-12 pl-9"
           />
         </div>
         <Button
@@ -380,7 +380,7 @@ function renderStars(rating: number | undefined): number[] {
       <!-- Filter selects -->
       <div v-if="showFilters" class="grid grid-cols-2 gap-3">
         <Select v-model="filterCategory">
-          <SelectTrigger>
+          <SelectTrigger class="h-12">
             <SelectValue placeholder="Categoria" />
           </SelectTrigger>
           <SelectContent>
@@ -392,7 +392,7 @@ function renderStars(rating: number | undefined): number[] {
         </Select>
 
         <Select v-model="filterStatus">
-          <SelectTrigger>
+          <SelectTrigger class="h-12">
             <SelectValue placeholder="Estado" />
           </SelectTrigger>
           <SelectContent>
@@ -424,7 +424,7 @@ function renderStars(rating: number | undefined): number[] {
           {{ filterCategory !== 'all' || filterStatus !== 'all' ? 'Prueba cambiando los filtros' : 'Crea el primer proveedor del directorio' }}
         </p>
       </div>
-      <Button size="sm" @click="openCreateDialog">
+      <Button @click="openCreateDialog">
         <Plus class="mr-1.5 size-4" />
         Nuevo Proveedor
       </Button>
@@ -490,7 +490,7 @@ function renderStars(rating: number | undefined): number[] {
                   <Button
                     variant="ghost"
                     size="icon"
-                    class="size-8"
+                    class="size-10"
                     :title="item.status === 'active' ? 'Desactivar' : 'Activar'"
                     @click="handleToggleStatus(item)"
                   >
@@ -502,7 +502,7 @@ function renderStars(rating: number | undefined): number[] {
                   <Button
                     variant="ghost"
                     size="icon"
-                    class="size-8"
+                    class="size-10"
                     title="Editar"
                     @click="openEditDialog(item)"
                   >
@@ -511,7 +511,7 @@ function renderStars(rating: number | undefined): number[] {
                   <Button
                     variant="ghost"
                     size="icon"
-                    class="size-8 text-destructive hover:text-destructive"
+                    class="size-10 text-destructive hover:text-destructive"
                     title="Eliminar"
                     @click="confirmDelete(item.id)"
                   >
@@ -569,7 +569,7 @@ function renderStars(rating: number | undefined): number[] {
               <Button
                 variant="ghost"
                 size="icon"
-                class="size-8"
+                class="size-10"
                 :title="item.status === 'active' ? 'Desactivar' : 'Activar'"
                 @click="handleToggleStatus(item)"
               >
@@ -581,7 +581,7 @@ function renderStars(rating: number | undefined): number[] {
               <Button
                 variant="ghost"
                 size="icon"
-                class="size-8"
+                class="size-10"
                 title="Editar"
                 @click="openEditDialog(item)"
               >
@@ -590,7 +590,7 @@ function renderStars(rating: number | undefined): number[] {
               <Button
                 variant="ghost"
                 size="icon"
-                class="size-8 text-destructive hover:text-destructive"
+                class="size-10 text-destructive hover:text-destructive"
                 title="Eliminar"
                 @click="confirmDelete(item.id)"
               >
@@ -605,7 +605,6 @@ function renderStars(rating: number | undefined): number[] {
       <div v-if="totalPages > 1" class="mt-4 flex items-center justify-between">
         <Button
           variant="outline"
-          size="sm"
           :disabled="currentPage <= 1"
           @click="currentPage--"
         >
@@ -617,7 +616,6 @@ function renderStars(rating: number | undefined): number[] {
         </span>
         <Button
           variant="outline"
-          size="sm"
           :disabled="currentPage >= totalPages"
           @click="currentPage++"
         >
@@ -640,18 +638,18 @@ function renderStars(rating: number | undefined): number[] {
         <form class="space-y-4 py-2" @submit.prevent="handleSubmit">
           <div class="space-y-2">
             <Label for="prov-name">Nombre</Label>
-            <Input id="prov-name" v-model="formName" placeholder="Nombre del proveedor" required />
+            <Input id="prov-name" v-model="formName" placeholder="Nombre del proveedor" class="h-12" required />
           </div>
 
           <div class="space-y-2">
             <Label for="prov-phone">Telefono</Label>
-            <Input id="prov-phone" v-model="formPhone" placeholder="0412-1234567" />
+            <Input id="prov-phone" v-model="formPhone" placeholder="0412-1234567" class="h-12" />
           </div>
 
           <div class="space-y-2">
             <Label for="prov-category">Categoria</Label>
             <Select v-model="formCategory">
-              <SelectTrigger id="prov-category">
+              <SelectTrigger id="prov-category" class="h-12">
                 <SelectValue placeholder="Seleccionar categoria" />
               </SelectTrigger>
               <SelectContent>
@@ -664,12 +662,12 @@ function renderStars(rating: number | undefined): number[] {
 
           <div class="space-y-2">
             <Label for="prov-address">Direccion</Label>
-            <Input id="prov-address" v-model="formAddress" placeholder="Direccion del proveedor" />
+            <Input id="prov-address" v-model="formAddress" placeholder="Direccion del proveedor" class="h-12" />
           </div>
 
           <div class="space-y-2">
             <Label for="prov-schedule">Horario</Label>
-            <Input id="prov-schedule" v-model="formSchedule" placeholder="Lun-Vie 8:00-17:00" />
+            <Input id="prov-schedule" v-model="formSchedule" placeholder="Lun-Vie 8:00-17:00" class="h-12" />
           </div>
 
           <div class="space-y-2">

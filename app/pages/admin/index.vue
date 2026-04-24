@@ -117,15 +117,15 @@ const groupedChartOpts = {
 </script>
 
 <template>
-  <div class="space-y-3">
+  <div class="space-y-4">
     <!-- Export buttons -->
     <div class="flex justify-end gap-2">
-      <Button variant="outline" size="sm" @click="exportCsv">
-        <Download class="mr-1.5 size-3.5" />
+      <Button variant="outline" @click="exportCsv">
+        <Download class="mr-1.5 size-4" />
         <span class="hidden sm:inline">CSV</span>
       </Button>
-      <Button variant="outline" size="sm" @click="exportPdf">
-        <FileText class="mr-1.5 size-3.5" />
+      <Button variant="outline" @click="exportPdf">
+        <FileText class="mr-1.5 size-4" />
         <span class="hidden sm:inline">PDF</span>
       </Button>
     </div>
@@ -139,33 +139,33 @@ const groupedChartOpts = {
       </TabsList>
 
       <!-- TAB: Resumen -->
-      <TabsContent value="resumen" class="mt-3 space-y-3">
+      <TabsContent value="resumen" class="mt-4 space-y-5">
         <!-- Next meeting (most time-sensitive first) -->
-        <div v-if="stats?.nextMeeting" class="flex items-center gap-2.5 rounded-lg border bg-card p-3">
-          <div class="flex size-8 items-center justify-center rounded-md bg-emerald-100 text-emerald-600">
-            <Calendar class="size-4" />
+        <div v-if="stats?.nextMeeting" class="flex items-center gap-3 rounded-lg border bg-card p-4">
+          <div class="flex size-10 items-center justify-center rounded-md bg-emerald-100 text-emerald-600">
+            <Calendar class="size-5" />
           </div>
           <div class="min-w-0">
-            <p class="truncate text-sm font-medium">{{ stats.nextMeeting.title }}</p>
-            <p class="text-xs text-muted-foreground">{{ formatDate(stats.nextMeeting.date) }}</p>
+            <p class="truncate text-base font-medium">{{ stats.nextMeeting.title }}</p>
+            <p class="text-sm text-muted-foreground">{{ formatDate(stats.nextMeeting.date) }}</p>
           </div>
         </div>
 
         <!-- Operaciones -->
-        <div class="space-y-1.5">
-          <p class="text-xs font-medium uppercase tracking-wider text-muted-foreground/70">Operaciones</p>
-          <div class="grid grid-cols-2 gap-2">
-            <div class="rounded-lg border bg-card p-3">
-              <p class="text-xs text-muted-foreground">Incidencias abiertas</p>
+        <div class="space-y-2">
+          <p class="text-sm font-medium uppercase tracking-wider text-muted-foreground/70">Operaciones</p>
+          <div class="grid grid-cols-2 gap-3">
+            <div class="rounded-lg border bg-card p-4">
+              <p class="text-sm text-muted-foreground">Incidencias abiertas</p>
               <p v-if="isLoading"><Skeleton class="mt-1 h-6 w-8" /></p>
-              <p v-else class="mt-1 text-lg font-bold" :class="(stats?.openIncidents ?? 0) > 0 ? 'text-amber-600' : ''">
+              <p v-else class="mt-1 text-2xl font-bold" :class="(stats?.openIncidents ?? 0) > 0 ? 'text-amber-600' : ''">
                 {{ stats?.openIncidents ?? 0 }}
               </p>
             </div>
-            <div class="rounded-lg border bg-card p-3">
-              <p class="text-xs text-muted-foreground">En progreso</p>
+            <div class="rounded-lg border bg-card p-4">
+              <p class="text-sm text-muted-foreground">En progreso</p>
               <p v-if="isLoading"><Skeleton class="mt-1 h-6 w-8" /></p>
-              <p v-else class="mt-1 text-lg font-bold" :class="(stats?.inProgressIncidents ?? 0) > 0 ? 'text-blue-600' : ''">
+              <p v-else class="mt-1 text-2xl font-bold" :class="(stats?.inProgressIncidents ?? 0) > 0 ? 'text-blue-600' : ''">
                 {{ stats?.inProgressIncidents ?? 0 }}
               </p>
             </div>
@@ -175,20 +175,20 @@ const groupedChartOpts = {
         <Separator class="opacity-40" />
 
         <!-- Comunidad -->
-        <div class="space-y-1.5">
-          <p class="text-xs font-medium uppercase tracking-wider text-muted-foreground/70">Comunidad</p>
-          <div class="grid grid-cols-2 gap-2">
-            <div class="rounded-lg border bg-card p-3">
-              <p class="text-xs text-muted-foreground">Votaciones activas</p>
+        <div class="space-y-2">
+          <p class="text-sm font-medium uppercase tracking-wider text-muted-foreground/70">Comunidad</p>
+          <div class="grid grid-cols-2 gap-3">
+            <div class="rounded-lg border bg-card p-4">
+              <p class="text-sm text-muted-foreground">Votaciones activas</p>
               <p v-if="isLoading"><Skeleton class="mt-1 h-6 w-8" /></p>
-              <p v-else class="mt-1 text-lg font-bold" :class="(stats?.activePolls ?? 0) > 0 ? 'text-purple-600' : ''">
+              <p v-else class="mt-1 text-2xl font-bold" :class="(stats?.activePolls ?? 0) > 0 ? 'text-purple-600' : ''">
                 {{ stats?.activePolls ?? 0 }}
               </p>
             </div>
-            <div class="rounded-lg border bg-card p-3">
-              <p class="text-xs text-muted-foreground">Reuniones proximas</p>
+            <div class="rounded-lg border bg-card p-4">
+              <p class="text-sm text-muted-foreground">Reuniones proximas</p>
               <p v-if="isLoading"><Skeleton class="mt-1 h-6 w-8" /></p>
-              <p v-else class="mt-1 text-lg font-bold">{{ stats?.upcomingMeetings ?? 0 }}</p>
+              <p v-else class="mt-1 text-2xl font-bold">{{ stats?.upcomingMeetings ?? 0 }}</p>
             </div>
           </div>
         </div>
@@ -196,18 +196,18 @@ const groupedChartOpts = {
         <Separator class="opacity-40" />
 
         <!-- Condominio -->
-        <div class="space-y-1.5">
-          <p class="text-xs font-medium uppercase tracking-wider text-muted-foreground/70">Condominio</p>
-          <div class="grid grid-cols-2 gap-2">
-            <div class="rounded-lg border bg-card p-3">
-              <p class="text-xs text-muted-foreground">Unidades</p>
+        <div class="space-y-2">
+          <p class="text-sm font-medium uppercase tracking-wider text-muted-foreground/70">Condominio</p>
+          <div class="grid grid-cols-2 gap-3">
+            <div class="rounded-lg border bg-card p-4">
+              <p class="text-sm text-muted-foreground">Unidades</p>
               <p v-if="isLoading"><Skeleton class="mt-1 h-6 w-8" /></p>
-              <p v-else class="mt-1 text-lg font-bold">{{ stats?.totalUnits ?? 0 }}</p>
+              <p v-else class="mt-1 text-2xl font-bold">{{ stats?.totalUnits ?? 0 }}</p>
             </div>
-            <div class="rounded-lg border bg-card p-3">
-              <p class="text-xs text-muted-foreground">En mora</p>
+            <div class="rounded-lg border bg-card p-4">
+              <p class="text-sm text-muted-foreground">En mora</p>
               <p v-if="isLoading"><Skeleton class="mt-1 h-6 w-8" /></p>
-              <p v-else class="mt-1 text-lg font-bold" :class="(stats?.unitsInDebt ?? 0) > 0 ? 'text-destructive' : ''">
+              <p v-else class="mt-1 text-2xl font-bold" :class="(stats?.unitsInDebt ?? 0) > 0 ? 'text-destructive' : ''">
                 {{ stats?.unitsInDebt ?? 0 }}
               </p>
             </div>
@@ -217,27 +217,27 @@ const groupedChartOpts = {
         <Separator class="opacity-40" />
 
         <!-- Finance snapshot -->
-        <div class="space-y-1.5">
-          <p class="text-xs font-medium uppercase tracking-wider text-muted-foreground/70">Finanzas del mes</p>
-          <div class="grid grid-cols-3 gap-2">
-          <div class="rounded-lg border bg-card p-3">
-            <p class="text-xs text-muted-foreground">Cobrado</p>
+        <div class="space-y-2">
+          <p class="text-sm font-medium uppercase tracking-wider text-muted-foreground/70">Finanzas del mes</p>
+          <div class="grid grid-cols-3 gap-3">
+          <div class="rounded-lg border bg-card p-4">
+            <p class="text-sm text-muted-foreground">Cobrado</p>
             <p v-if="isLoading"><Skeleton class="mt-1 h-5 w-14" /></p>
-            <p v-else class="mt-1 text-sm font-bold text-emerald-600">
+            <p v-else class="mt-1 text-base font-bold text-emerald-600">
               {{ trends?.financialKpis ? formatCurrency(trends.financialKpis.totalAbonos) : '—' }}
             </p>
           </div>
-          <div class="rounded-lg border bg-card p-3">
-            <p class="text-xs text-muted-foreground">Pendiente</p>
+          <div class="rounded-lg border bg-card p-4">
+            <p class="text-sm text-muted-foreground">Pendiente</p>
             <p v-if="isLoading"><Skeleton class="mt-1 h-5 w-14" /></p>
-            <p v-else class="mt-1 text-sm font-bold" :class="(trends?.financialKpis?.pendingBalance ?? 0) > 0 ? 'text-destructive' : ''">
+            <p v-else class="mt-1 text-base font-bold" :class="(trends?.financialKpis?.pendingBalance ?? 0) > 0 ? 'text-destructive' : ''">
               {{ trends?.financialKpis ? formatCurrency(trends.financialKpis.pendingBalance) : '—' }}
             </p>
           </div>
-          <div class="rounded-lg border bg-card p-3">
-            <p class="text-xs text-muted-foreground">Cobranza</p>
+          <div class="rounded-lg border bg-card p-4">
+            <p class="text-sm text-muted-foreground">Cobranza</p>
             <p v-if="isLoading"><Skeleton class="mt-1 h-5 w-14" /></p>
-            <p v-else class="mt-1 text-sm font-bold text-blue-600">
+            <p v-else class="mt-1 text-base font-bold text-blue-600">
               {{ trends?.financialKpis ? `${trends.financialKpis.collectionRate.toFixed(1)}%` : '—' }}
             </p>
           </div>
@@ -246,104 +246,104 @@ const groupedChartOpts = {
       </TabsContent>
 
       <!-- TAB: Finanzas -->
-      <TabsContent value="finanzas" class="mt-3 space-y-3">
+      <TabsContent value="finanzas" class="mt-4 space-y-5">
         <!-- KPI cards grandes -->
-        <div class="grid grid-cols-2 gap-2">
-          <div class="rounded-lg border bg-card p-3">
-            <p class="text-xs text-muted-foreground">Cobrado este mes</p>
+        <div class="grid grid-cols-2 gap-3">
+          <div class="rounded-lg border bg-card p-4">
+            <p class="text-sm text-muted-foreground">Cobrado este mes</p>
             <p v-if="isLoading"><Skeleton class="mt-1 h-6 w-24" /></p>
-            <p v-else class="mt-1 text-lg font-bold text-emerald-600">
+            <p v-else class="mt-1 text-2xl font-bold text-emerald-600">
               {{ trends?.financialKpis ? formatCurrency(trends.financialKpis.totalAbonos) : '—' }}
             </p>
           </div>
-          <div class="rounded-lg border bg-card p-3">
-            <p class="text-xs text-muted-foreground">Cargos este mes</p>
+          <div class="rounded-lg border bg-card p-4">
+            <p class="text-sm text-muted-foreground">Cargos este mes</p>
             <p v-if="isLoading"><Skeleton class="mt-1 h-6 w-24" /></p>
-            <p v-else class="mt-1 text-lg font-bold">
+            <p v-else class="mt-1 text-2xl font-bold">
               {{ trends?.financialKpis ? formatCurrency(trends.financialKpis.totalCargos) : '—' }}
             </p>
           </div>
-          <div class="rounded-lg border bg-card p-3">
-            <p class="text-xs text-muted-foreground">Pendiente total</p>
+          <div class="rounded-lg border bg-card p-4">
+            <p class="text-sm text-muted-foreground">Pendiente total</p>
             <p v-if="isLoading"><Skeleton class="mt-1 h-6 w-24" /></p>
-            <p v-else class="mt-1 text-lg font-bold" :class="(trends?.financialKpis?.pendingBalance ?? 0) > 0 ? 'text-destructive' : ''">
+            <p v-else class="mt-1 text-2xl font-bold" :class="(trends?.financialKpis?.pendingBalance ?? 0) > 0 ? 'text-destructive' : ''">
               {{ trends?.financialKpis ? formatCurrency(trends.financialKpis.pendingBalance) : '—' }}
             </p>
           </div>
-          <div class="rounded-lg border bg-card p-3">
-            <p class="text-xs text-muted-foreground">Tasa de cobranza</p>
+          <div class="rounded-lg border bg-card p-4">
+            <p class="text-sm text-muted-foreground">Tasa de cobranza</p>
             <p v-if="isLoading"><Skeleton class="mt-1 h-6 w-24" /></p>
-            <p v-else class="mt-1 text-lg font-bold text-blue-600">
+            <p v-else class="mt-1 text-2xl font-bold text-blue-600">
               {{ trends?.financialKpis ? `${trends.financialKpis.collectionRate.toFixed(1)}%` : '—' }}
             </p>
           </div>
         </div>
 
         <!-- Unidades en mora badge -->
-        <div class="flex items-center gap-2 rounded-lg border bg-card p-3">
-          <div class="flex size-8 items-center justify-center rounded-md bg-red-100 text-red-600">
-            <Wallet class="size-4" />
+        <div class="flex items-center gap-3 rounded-lg border bg-card p-4">
+          <div class="flex size-10 items-center justify-center rounded-md bg-red-100 text-red-600">
+            <Wallet class="size-5" />
           </div>
           <div>
             <p class="text-sm font-semibold">{{ stats?.unitsInDebt ?? 0 }} {{ (stats?.unitsInDebt ?? 0) === 1 ? 'unidad' : 'unidades' }} en mora</p>
-            <p class="text-xs text-muted-foreground">de {{ stats?.totalUnits ?? 0 }} totales</p>
+            <p class="text-sm text-muted-foreground">de {{ stats?.totalUnits ?? 0 }} totales</p>
           </div>
         </div>
 
         <!-- Finance chart -->
-        <div class="rounded-lg border bg-card p-3">
-          <p class="mb-2 text-xs font-semibold text-muted-foreground">Cargos vs Abonos (6 meses)</p>
-          <div v-if="isLoading" class="h-52">
+        <div class="rounded-lg border bg-card p-4">
+          <p class="mb-2 text-sm font-semibold text-muted-foreground">Cargos vs Abonos (6 meses)</p>
+          <div v-if="isLoading" class="h-56">
             <Skeleton class="h-full w-full rounded-md" />
           </div>
-          <div v-else class="h-52">
+          <div v-else class="h-56">
             <Bar :data="financeChartData" :options="groupedChartOpts" />
           </div>
         </div>
       </TabsContent>
 
       <!-- TAB: Actividad -->
-      <TabsContent value="actividad" class="mt-3 space-y-3">
+      <TabsContent value="actividad" class="mt-4 space-y-5">
         <!-- Access chart -->
-        <div class="rounded-lg border bg-card p-3">
-          <p class="mb-2 text-xs font-semibold text-muted-foreground">Accesos (ultimos 7 dias)</p>
-          <div v-if="isLoading" class="h-48">
+        <div class="rounded-lg border bg-card p-4">
+          <p class="mb-2 text-sm font-semibold text-muted-foreground">Accesos (ultimos 7 dias)</p>
+          <div v-if="isLoading" class="h-56">
             <Skeleton class="h-full w-full rounded-md" />
           </div>
-          <div v-else class="h-48">
+          <div v-else class="h-56">
             <Bar :data="accessChartData" :options="chartOpts" />
           </div>
         </div>
 
         <!-- Incidents chart -->
-        <div class="rounded-lg border bg-card p-3">
-          <p class="mb-2 text-xs font-semibold text-muted-foreground">Incidencias (6 meses)</p>
-          <div v-if="isLoading" class="h-48">
+        <div class="rounded-lg border bg-card p-4">
+          <p class="mb-2 text-sm font-semibold text-muted-foreground">Incidencias (6 meses)</p>
+          <div v-if="isLoading" class="h-56">
             <Skeleton class="h-full w-full rounded-md" />
           </div>
-          <div v-else class="h-48">
+          <div v-else class="h-56">
             <Line :data="incidentsChartData" :options="chartOpts" />
           </div>
         </div>
 
         <!-- Quick incident stats -->
-        <div class="grid grid-cols-2 gap-2">
-          <div class="flex items-center gap-2.5 rounded-lg border bg-card p-3">
-            <div class="flex size-8 items-center justify-center rounded-md bg-amber-100 text-amber-600">
-              <AlertTriangle class="size-4" />
+        <div class="grid grid-cols-2 gap-3">
+          <div class="flex items-center gap-3 rounded-lg border bg-card p-4">
+            <div class="flex size-10 items-center justify-center rounded-md bg-amber-100 text-amber-600">
+              <AlertTriangle class="size-5" />
             </div>
             <div>
-              <p class="text-lg font-bold leading-none">{{ stats?.openIncidents ?? 0 }}</p>
-              <p class="mt-0.5 text-xs text-muted-foreground">Abiertas</p>
+              <p class="text-2xl font-bold leading-none">{{ stats?.openIncidents ?? 0 }}</p>
+              <p class="mt-0.5 text-sm text-muted-foreground">Abiertas</p>
             </div>
           </div>
-          <div class="flex items-center gap-2.5 rounded-lg border bg-card p-3">
-            <div class="flex size-8 items-center justify-center rounded-md bg-blue-100 text-blue-600">
-              <ShieldAlert class="size-4" />
+          <div class="flex items-center gap-3 rounded-lg border bg-card p-4">
+            <div class="flex size-10 items-center justify-center rounded-md bg-blue-100 text-blue-600">
+              <ShieldAlert class="size-5" />
             </div>
             <div>
-              <p class="text-lg font-bold leading-none">{{ stats?.inProgressIncidents ?? 0 }}</p>
-              <p class="mt-0.5 text-xs text-muted-foreground">En progreso</p>
+              <p class="text-2xl font-bold leading-none">{{ stats?.inProgressIncidents ?? 0 }}</p>
+              <p class="mt-0.5 text-sm text-muted-foreground">En progreso</p>
             </div>
           </div>
         </div>

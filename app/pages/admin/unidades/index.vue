@@ -63,7 +63,7 @@ onMounted(() => {
         <Input
           v-model="searchQuery"
           placeholder="Buscar por numero o nombre..."
-          class="pl-9"
+          class="h-12 pl-9"
         />
       </div>
     </div>
@@ -97,16 +97,16 @@ onMounted(() => {
         class="cursor-pointer transition-shadow hover:shadow-md"
         @click="navigateTo(`/admin/unidades/${unit.id}`)"
       >
-        <CardContent class="p-3">
-          <p class="text-base font-semibold">{{ unit.number }}</p>
-          <p v-if="unit.label" class="mt-0.5 text-xs text-muted-foreground">{{ unit.label }}</p>
+        <CardContent class="p-4">
+          <p class="text-lg font-semibold">{{ unit.number }}</p>
+          <p v-if="unit.label" class="mt-0.5 text-sm text-muted-foreground">{{ unit.label }}</p>
           <div class="mt-2 flex items-center gap-2.5">
-            <span class="inline-flex items-center gap-1 text-xs text-muted-foreground">
-              <Users class="size-3.5" />
+            <span class="inline-flex items-center gap-1 text-sm text-muted-foreground">
+              <Users class="size-4" />
               {{ unit.memberCount }}
             </span>
-            <span class="inline-flex items-center gap-1 text-xs text-muted-foreground">
-              <Car class="size-3.5" />
+            <span class="inline-flex items-center gap-1 text-sm text-muted-foreground">
+              <Car class="size-4" />
               {{ unit.vehicleCount }}
             </span>
           </div>

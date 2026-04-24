@@ -149,7 +149,7 @@ onMounted(() => {
   <div class="mx-auto max-w-5xl">
     <!-- Header -->
     <div class="mb-6 flex justify-end">
-      <Button size="sm" @click="openCreateDialog">
+      <Button @click="openCreateDialog">
         <Plus class="mr-1.5 size-4" />
         Agregar
       </Button>
@@ -172,11 +172,11 @@ onMounted(() => {
           <Input
             v-model="searchQuery"
             placeholder="Buscar por nombre, teléfono o email..."
-            class="pl-9"
+            class="h-12 pl-9"
           />
         </div>
         <Select v-model="selectedRole">
-          <SelectTrigger class="w-[160px]">
+          <SelectTrigger class="h-12 w-[160px]">
             <SelectValue placeholder="Todos los roles" />
           </SelectTrigger>
           <SelectContent>
@@ -242,7 +242,7 @@ onMounted(() => {
                   <Button
                     variant="ghost"
                     size="icon"
-                    class="size-8"
+                    class="size-10"
                     aria-label="Editar personal"
                     @click="openEditDialog(member)"
                   >
@@ -251,7 +251,7 @@ onMounted(() => {
                   <Button
                     variant="ghost"
                     size="icon"
-                    class="size-8 text-destructive hover:text-destructive"
+                    class="size-10 text-destructive hover:text-destructive"
                     aria-label="Desactivar personal"
                     @click="openDeleteDialog(member)"
                   >
@@ -267,7 +267,7 @@ onMounted(() => {
       <!-- Mobile cards -->
       <div class="space-y-3 md:hidden">
         <Card v-for="member in filteredStaff" :key="member.id">
-          <CardContent class="p-3">
+          <CardContent class="p-4">
             <div class="flex items-start justify-between gap-2">
               <div class="min-w-0 flex-1">
                 <p class="text-sm font-medium">{{ member.name }}</p>
@@ -284,7 +284,7 @@ onMounted(() => {
                 <Button
                   variant="ghost"
                   size="icon"
-                  class="size-8"
+                  class="size-10"
                   aria-label="Editar personal"
                   @click="openEditDialog(member)"
                 >
@@ -293,7 +293,7 @@ onMounted(() => {
                 <Button
                   variant="ghost"
                   size="icon"
-                  class="size-8 text-destructive hover:text-destructive"
+                  class="size-10 text-destructive hover:text-destructive"
                   aria-label="Desactivar personal"
                   @click="openDeleteDialog(member)"
                 >
@@ -333,6 +333,7 @@ onMounted(() => {
               id="staff-name"
               v-model="formName"
               placeholder="Nombre completo"
+              class="h-12"
               required
             />
           </div>
@@ -340,7 +341,7 @@ onMounted(() => {
           <div class="space-y-2">
             <Label for="staff-role">Rol *</Label>
             <Select v-model="formRole">
-              <SelectTrigger id="staff-role">
+              <SelectTrigger id="staff-role" class="h-12">
                 <SelectValue placeholder="Seleccionar rol" />
               </SelectTrigger>
               <SelectContent>
@@ -358,6 +359,7 @@ onMounted(() => {
               id="staff-document"
               v-model="formDocument"
               placeholder="Cédula o pasaporte"
+              class="h-12"
             />
           </div>
 
@@ -368,6 +370,7 @@ onMounted(() => {
                 id="staff-phone"
                 v-model="formPhone"
                 placeholder="0412-1234567"
+                class="h-12"
               />
             </div>
 
@@ -378,6 +381,7 @@ onMounted(() => {
                 v-model="formEmail"
                 type="email"
                 placeholder="correo@ejemplo.com"
+                class="h-12"
               />
             </div>
           </div>
@@ -385,7 +389,7 @@ onMounted(() => {
           <div class="space-y-2">
             <Label for="staff-shift">Turno</Label>
             <Select v-model="formShift">
-              <SelectTrigger id="staff-shift">
+              <SelectTrigger id="staff-shift" class="h-12">
                 <SelectValue placeholder="Seleccionar turno" />
               </SelectTrigger>
               <SelectContent>

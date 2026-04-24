@@ -265,7 +265,7 @@ onMounted(() => {
         <!-- Action bar -->
         <div class="mb-4 flex items-center justify-between">
           <p class="text-sm text-muted-foreground">{{ members.length }} miembro{{ members.length !== 1 ? 's' : '' }}</p>
-          <Button size="sm" @click="openMemberDialog()">
+          <Button @click="openMemberDialog()">
             <Plus class="mr-1 size-4" />
             Agregar
           </Button>
@@ -314,11 +314,11 @@ onMounted(() => {
                 <TableCell class="text-muted-foreground">{{ member.idDocument ?? '—' }}</TableCell>
                 <TableCell>
                   <div class="flex items-center gap-1">
-                    <Button variant="ghost" size="icon" class="size-8" @click="openMemberDialog(member)">
+                    <Button variant="ghost" size="icon" class="size-10" @click="openMemberDialog(member)">
                       <Pencil class="size-3.5" />
                       <span class="sr-only">Editar</span>
                     </Button>
-                    <Button variant="ghost" size="icon" class="size-8 text-destructive hover:text-destructive" @click="confirmDeleteMember(member)">
+                    <Button variant="ghost" size="icon" class="size-10 text-destructive hover:text-destructive" @click="confirmDeleteMember(member)">
                       <Trash2 class="size-3.5" />
                       <span class="sr-only">Eliminar</span>
                     </Button>
@@ -347,11 +347,11 @@ onMounted(() => {
                   </div>
                 </div>
                 <div class="flex items-center gap-1">
-                  <Button variant="ghost" size="icon" class="size-8" @click="openMemberDialog(member)">
+                  <Button variant="ghost" size="icon" class="size-10" @click="openMemberDialog(member)">
                     <Pencil class="size-3.5" />
                     <span class="sr-only">Editar</span>
                   </Button>
-                  <Button variant="ghost" size="icon" class="size-8 text-destructive hover:text-destructive" @click="confirmDeleteMember(member)">
+                  <Button variant="ghost" size="icon" class="size-10 text-destructive hover:text-destructive" @click="confirmDeleteMember(member)">
                     <Trash2 class="size-3.5" />
                     <span class="sr-only">Eliminar</span>
                   </Button>
@@ -367,7 +367,7 @@ onMounted(() => {
         <!-- Action bar -->
         <div class="mb-4 flex items-center justify-between">
           <p class="text-sm text-muted-foreground">{{ vehicles.length }} vehiculo{{ vehicles.length !== 1 ? 's' : '' }}</p>
-          <Button size="sm" @click="openVehicleDialog()">
+          <Button @click="openVehicleDialog()">
             <Plus class="mr-1 size-4" />
             Agregar
           </Button>
@@ -412,11 +412,11 @@ onMounted(() => {
                 <TableCell class="text-muted-foreground">{{ getMemberName(vehicle.ownerMemberId) }}</TableCell>
                 <TableCell>
                   <div class="flex items-center gap-1">
-                    <Button variant="ghost" size="icon" class="size-8" @click="openVehicleDialog(vehicle)">
+                    <Button variant="ghost" size="icon" class="size-10" @click="openVehicleDialog(vehicle)">
                       <Pencil class="size-3.5" />
                       <span class="sr-only">Editar</span>
                     </Button>
-                    <Button variant="ghost" size="icon" class="size-8 text-destructive hover:text-destructive" @click="confirmDeleteVehicle(vehicle)">
+                    <Button variant="ghost" size="icon" class="size-10 text-destructive hover:text-destructive" @click="confirmDeleteVehicle(vehicle)">
                       <Trash2 class="size-3.5" />
                       <span class="sr-only">Eliminar</span>
                     </Button>
@@ -441,11 +441,11 @@ onMounted(() => {
                   </div>
                 </div>
                 <div class="flex items-center gap-1">
-                  <Button variant="ghost" size="icon" class="size-8" @click="openVehicleDialog(vehicle)">
+                  <Button variant="ghost" size="icon" class="size-10" @click="openVehicleDialog(vehicle)">
                     <Pencil class="size-3.5" />
                     <span class="sr-only">Editar</span>
                   </Button>
-                  <Button variant="ghost" size="icon" class="size-8 text-destructive hover:text-destructive" @click="confirmDeleteVehicle(vehicle)">
+                  <Button variant="ghost" size="icon" class="size-10 text-destructive hover:text-destructive" @click="confirmDeleteVehicle(vehicle)">
                     <Trash2 class="size-3.5" />
                     <span class="sr-only">Eliminar</span>
                   </Button>
@@ -475,13 +475,14 @@ onMounted(() => {
               v-model="memberForm.name"
               placeholder="Nombre completo"
               required
+              class="h-12"
             />
           </div>
 
           <div class="space-y-2">
             <Label for="member-relationship">Parentesco</Label>
             <Select v-model="memberForm.relationship">
-              <SelectTrigger id="member-relationship">
+              <SelectTrigger id="member-relationship" class="h-12">
                 <SelectValue placeholder="Seleccionar parentesco" />
               </SelectTrigger>
               <SelectContent>
@@ -500,6 +501,7 @@ onMounted(() => {
               id="member-id-document"
               v-model="memberForm.idDocument"
               placeholder="Opcional"
+              class="h-12"
             />
           </div>
 
@@ -510,14 +512,15 @@ onMounted(() => {
               v-model="memberForm.phone"
               placeholder="Opcional"
               type="tel"
+              class="h-12"
             />
           </div>
 
           <DialogFooter class="gap-2 sm:gap-0">
-            <Button type="button" variant="outline" @click="memberDialogOpen = false">
+            <Button type="button" variant="outline" class="h-12" @click="memberDialogOpen = false">
               Cancelar
             </Button>
-            <Button type="submit" :disabled="!memberForm.name.trim() || membersSubmitting">
+            <Button type="submit" class="h-12" :disabled="!memberForm.name.trim() || membersSubmitting">
               <Loader2 v-if="membersSubmitting" class="mr-2 size-4 animate-spin" />
               {{ membersSubmitting ? 'Guardando...' : 'Guardar' }}
             </Button>
@@ -566,7 +569,7 @@ onMounted(() => {
               id="vehicle-plate"
               v-model="vehicleForm.plate"
               placeholder="Ej: ABC123"
-              class="uppercase"
+              class="h-12 uppercase"
               required
             />
           </div>
@@ -579,6 +582,7 @@ onMounted(() => {
                 v-model="vehicleForm.brand"
                 placeholder="Ej: Toyota"
                 required
+                class="h-12"
               />
             </div>
             <div class="space-y-2">
@@ -588,6 +592,7 @@ onMounted(() => {
                 v-model="vehicleForm.model"
                 placeholder="Ej: Corolla"
                 required
+                class="h-12"
               />
             </div>
           </div>
@@ -599,13 +604,14 @@ onMounted(() => {
               v-model="vehicleForm.color"
               placeholder="Ej: Blanco"
               required
+              class="h-12"
             />
           </div>
 
           <div class="space-y-2">
             <Label for="vehicle-owner">Propietario</Label>
             <Select v-model="vehicleForm.ownerMemberId">
-              <SelectTrigger id="vehicle-owner">
+              <SelectTrigger id="vehicle-owner" class="h-12">
                 <SelectValue placeholder="Seleccionar miembro (opcional)" />
               </SelectTrigger>
               <SelectContent>
@@ -618,11 +624,12 @@ onMounted(() => {
           </div>
 
           <DialogFooter class="gap-2 sm:gap-0">
-            <Button type="button" variant="outline" @click="vehicleDialogOpen = false">
+            <Button type="button" variant="outline" class="h-12" @click="vehicleDialogOpen = false">
               Cancelar
             </Button>
             <Button
               type="submit"
+              class="h-12"
               :disabled="!vehicleForm.plate.trim() || !vehicleForm.brand.trim() || !vehicleForm.model.trim() || !vehicleForm.color.trim() || vehiclesSubmitting"
             >
               <Loader2 v-if="vehiclesSubmitting" class="mr-2 size-4 animate-spin" />

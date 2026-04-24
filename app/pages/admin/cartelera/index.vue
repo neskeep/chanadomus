@@ -217,7 +217,7 @@ function formatDate(dateStr: string): string {
   <div class="mx-auto max-w-5xl">
     <!-- Header -->
     <div class="mb-6 flex justify-end">
-      <Button size="sm" @click="openCreateDialog">
+      <Button @click="openCreateDialog">
         <Plus class="mr-1.5 size-4" />
         Nuevo Anuncio
       </Button>
@@ -225,9 +225,9 @@ function formatDate(dateStr: string): string {
 
     <!-- Stats cards -->
     <div class="mb-6 grid grid-cols-2 gap-2">
-      <div class="flex items-center gap-3 rounded-lg border bg-card p-3">
-        <div class="flex size-8 shrink-0 items-center justify-center rounded-md bg-emerald-100">
-          <Megaphone class="size-4 text-emerald-600" />
+      <div class="flex items-center gap-3 rounded-lg border bg-card p-4">
+        <div class="flex size-10 shrink-0 items-center justify-center rounded-md bg-emerald-100">
+          <Megaphone class="size-5 text-emerald-600" />
         </div>
         <div>
           <p v-if="isLoading"><Skeleton class="h-5 w-8" /></p>
@@ -235,9 +235,9 @@ function formatDate(dateStr: string): string {
           <p class="mt-0.5 text-xs text-muted-foreground">Publicados</p>
         </div>
       </div>
-      <div class="flex items-center gap-3 rounded-lg border bg-card p-3">
-        <div class="flex size-8 shrink-0 items-center justify-center rounded-md bg-zinc-100">
-          <FileText class="size-4 text-zinc-600" />
+      <div class="flex items-center gap-3 rounded-lg border bg-card p-4">
+        <div class="flex size-10 shrink-0 items-center justify-center rounded-md bg-zinc-100">
+          <FileText class="size-5 text-zinc-600" />
         </div>
         <div>
           <p v-if="isLoading"><Skeleton class="h-5 w-8" /></p>
@@ -264,7 +264,7 @@ function formatDate(dateStr: string): string {
           <Input
             v-model="searchQuery"
             placeholder="Buscar por título o autor..."
-            class="pl-9"
+            class="h-12 pl-9"
           />
         </div>
         <Button
@@ -280,7 +280,7 @@ function formatDate(dateStr: string): string {
       <!-- Filter selects -->
       <div v-if="showFilters" class="grid grid-cols-1 gap-3">
         <Select v-model="filterCategory">
-          <SelectTrigger>
+          <SelectTrigger class="h-12">
             <SelectValue placeholder="Categoría" />
           </SelectTrigger>
           <SelectContent>
@@ -359,7 +359,7 @@ function formatDate(dateStr: string): string {
                     v-if="item.status === 'draft'"
                     variant="ghost"
                     size="icon"
-                    class="size-8"
+                    class="size-10"
                     title="Publicar"
                     @click="handlePublish(item.id)"
                   >
@@ -368,7 +368,7 @@ function formatDate(dateStr: string): string {
                   <Button
                     variant="ghost"
                     size="icon"
-                    class="size-8"
+                    class="size-10"
                     title="Editar"
                     @click="openEditDialog(item)"
                   >
@@ -378,7 +378,7 @@ function formatDate(dateStr: string): string {
                     v-if="item.status === 'published'"
                     variant="ghost"
                     size="icon"
-                    class="size-8"
+                    class="size-10"
                     title="Archivar"
                     @click="handleArchive(item.id)"
                   >
@@ -387,7 +387,7 @@ function formatDate(dateStr: string): string {
                   <Button
                     variant="ghost"
                     size="icon"
-                    class="size-8 text-destructive hover:text-destructive"
+                    class="size-10 text-destructive hover:text-destructive"
                     title="Eliminar"
                     @click="confirmDelete(item.id)"
                   >
@@ -474,7 +474,6 @@ function formatDate(dateStr: string): string {
       <div v-if="totalPages > 1" class="mt-4 flex items-center justify-between">
         <Button
           variant="outline"
-          size="sm"
           :disabled="currentPage <= 1"
           @click="currentPage--"
         >
@@ -486,7 +485,6 @@ function formatDate(dateStr: string): string {
         </span>
         <Button
           variant="outline"
-          size="sm"
           :disabled="currentPage >= totalPages"
           @click="currentPage++"
         >
@@ -513,7 +511,7 @@ function formatDate(dateStr: string): string {
               id="ann-title"
               v-model="formTitle"
               placeholder="Título del anuncio"
-              class="mt-1.5"
+              class="h-12 mt-1.5"
               required
             />
           </div>
@@ -533,7 +531,7 @@ function formatDate(dateStr: string): string {
           <div>
             <label for="ann-category" class="text-sm font-medium">Categoría</label>
             <Select v-model="formCategory">
-              <SelectTrigger id="ann-category" class="mt-1.5">
+              <SelectTrigger id="ann-category" class="h-12 mt-1.5">
                 <SelectValue placeholder="Seleccionar categoría" />
               </SelectTrigger>
               <SelectContent>
@@ -550,7 +548,7 @@ function formatDate(dateStr: string): string {
           <div>
             <label for="ann-status" class="text-sm font-medium">Estado</label>
             <Select v-model="formStatus">
-              <SelectTrigger id="ann-status" class="mt-1.5">
+              <SelectTrigger id="ann-status" class="h-12 mt-1.5">
                 <SelectValue placeholder="Seleccionar estado" />
               </SelectTrigger>
               <SelectContent>
@@ -563,7 +561,7 @@ function formatDate(dateStr: string): string {
           <div v-if="!editingId">
             <label class="text-sm font-medium">Adjunto PDF</label>
             <div class="mt-1.5 flex items-center gap-2">
-              <Button type="button" variant="outline" size="sm" @click="pdfInputRef?.click()">
+              <Button type="button" variant="outline" @click="pdfInputRef?.click()">
                 <Paperclip class="mr-1.5 size-4" />
                 {{ formPdfFile ? formPdfFile.name : 'Seleccionar PDF' }}
               </Button>
@@ -588,7 +586,7 @@ function formatDate(dateStr: string): string {
                 id="ann-expires"
                 v-model="formExpiresAt"
                 type="date"
-                class="pl-9"
+                class="h-12 pl-9"
               />
             </div>
           </div>

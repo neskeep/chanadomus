@@ -241,7 +241,7 @@ async function handleDelete() {
   <div class="mx-auto max-w-5xl">
     <!-- Header -->
     <div class="mb-6 flex justify-end">
-      <Button size="sm" @click="openCreateDialog">
+      <Button @click="openCreateDialog">
         <Plus class="mr-1.5 size-4" />
         Nueva Reunion
       </Button>
@@ -249,9 +249,9 @@ async function handleDelete() {
 
     <!-- Stats cards -->
     <div class="mb-6 grid grid-cols-2 gap-2">
-      <div class="flex items-center gap-3 rounded-lg border bg-card p-3">
-        <div class="flex size-8 shrink-0 items-center justify-center rounded-md bg-blue-100">
-          <Calendar class="size-4 text-blue-600" />
+      <div class="flex items-center gap-3 rounded-lg border bg-card p-4">
+        <div class="flex size-10 shrink-0 items-center justify-center rounded-md bg-blue-100">
+          <Calendar class="size-5 text-blue-600" />
         </div>
         <div>
           <p v-if="isLoading"><Skeleton class="h-5 w-8" /></p>
@@ -259,9 +259,9 @@ async function handleDelete() {
           <p class="mt-0.5 text-xs text-muted-foreground">Programadas</p>
         </div>
       </div>
-      <div class="flex items-center gap-3 rounded-lg border bg-card p-3">
-        <div class="flex size-8 shrink-0 items-center justify-center rounded-md bg-emerald-100">
-          <CalendarDays class="size-4 text-emerald-600" />
+      <div class="flex items-center gap-3 rounded-lg border bg-card p-4">
+        <div class="flex size-10 shrink-0 items-center justify-center rounded-md bg-emerald-100">
+          <CalendarDays class="size-5 text-emerald-600" />
         </div>
         <div>
           <p v-if="isLoading"><Skeleton class="h-5 w-8" /></p>
@@ -296,7 +296,7 @@ async function handleDelete() {
       <!-- Filter selects -->
       <div v-if="showFilters" class="grid grid-cols-2 gap-3">
         <Select v-model="filterType">
-          <SelectTrigger>
+          <SelectTrigger class="h-12">
             <SelectValue placeholder="Tipo" />
           </SelectTrigger>
           <SelectContent>
@@ -308,7 +308,7 @@ async function handleDelete() {
         </Select>
 
         <Select v-model="filterStatus">
-          <SelectTrigger>
+          <SelectTrigger class="h-12">
             <SelectValue placeholder="Estado" />
           </SelectTrigger>
           <SelectContent>
@@ -340,7 +340,7 @@ async function handleDelete() {
           {{ filterType !== 'all' || filterStatus !== 'all' ? 'Prueba cambiando los filtros' : 'Crea la primera reunion del condominio' }}
         </p>
       </div>
-      <Button size="sm" @click="openCreateDialog">
+      <Button @click="openCreateDialog">
         <Plus class="mr-1.5 size-4" />
         Nueva Reunion
       </Button>
@@ -410,7 +410,7 @@ async function handleDelete() {
                   <Button
                     variant="ghost"
                     size="icon"
-                    class="size-8"
+                    class="size-10"
                     title="Editar"
                     @click="openEditDialog(item)"
                   >
@@ -419,7 +419,7 @@ async function handleDelete() {
                   <Button
                     variant="ghost"
                     size="icon"
-                    class="size-8 text-destructive hover:text-destructive"
+                    class="size-10 text-destructive hover:text-destructive"
                     title="Eliminar"
                     @click="confirmDelete(item.id)"
                   >
@@ -511,7 +511,7 @@ async function handleDelete() {
         <form class="space-y-4 py-2" @submit.prevent="handleSubmit">
           <div class="space-y-2">
             <Label for="meet-title">Titulo</Label>
-            <Input id="meet-title" v-model="formTitle" placeholder="Titulo de la reunion" required />
+            <Input id="meet-title" v-model="formTitle" placeholder="Titulo de la reunion" class="h-12" required />
           </div>
 
           <div class="space-y-2">
@@ -522,28 +522,28 @@ async function handleDelete() {
           <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div class="space-y-2">
               <Label for="meet-date">Fecha y Hora</Label>
-              <Input id="meet-date" v-model="formDate" type="datetime-local" required />
+              <Input id="meet-date" v-model="formDate" type="datetime-local" class="h-12" required />
             </div>
             <div class="space-y-2">
               <Label for="meet-end-date">Hora de Fin</Label>
-              <Input id="meet-end-date" v-model="formEndDate" type="datetime-local" />
+              <Input id="meet-end-date" v-model="formEndDate" type="datetime-local" class="h-12" />
             </div>
           </div>
 
           <div class="space-y-2">
             <Label for="meet-location">Ubicacion</Label>
-            <Input id="meet-location" v-model="formLocation" placeholder="Salon de usos multiples" />
+            <Input id="meet-location" v-model="formLocation" placeholder="Salon de usos multiples" class="h-12" />
           </div>
 
           <div class="space-y-2">
             <Label for="meet-link">Link de Reunion</Label>
-            <Input id="meet-link" v-model="formMeetingLink" placeholder="https://meet.google.com/..." />
+            <Input id="meet-link" v-model="formMeetingLink" placeholder="https://meet.google.com/..." class="h-12" />
           </div>
 
           <div class="space-y-2">
             <Label for="meet-type">Tipo</Label>
             <Select v-model="formType">
-              <SelectTrigger id="meet-type">
+              <SelectTrigger id="meet-type" class="h-12">
                 <SelectValue placeholder="Seleccionar tipo" />
               </SelectTrigger>
               <SelectContent>
@@ -569,7 +569,7 @@ async function handleDelete() {
             <div class="space-y-2">
               <Label for="meet-status">Estado</Label>
               <Select v-model="formStatus">
-                <SelectTrigger id="meet-status">
+                <SelectTrigger id="meet-status" class="h-12">
                   <SelectValue placeholder="Seleccionar estado" />
                 </SelectTrigger>
                 <SelectContent>

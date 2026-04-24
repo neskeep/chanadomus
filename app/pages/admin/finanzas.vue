@@ -158,26 +158,26 @@ onMounted(async () => {
 <template>
   <div class="mx-auto max-w-5xl">
     <!-- Stats cards -->
-    <div class="mb-6 grid grid-cols-2 gap-2">
-      <div class="flex items-center gap-3 rounded-lg border bg-card p-3">
-        <div class="flex size-8 shrink-0 items-center justify-center rounded-md bg-primary/10">
-          <Building2 class="size-4 text-primary" />
+    <div class="mb-6 grid grid-cols-2 gap-3">
+      <div class="flex items-center gap-3 rounded-lg border bg-card p-4">
+        <div class="flex size-10 shrink-0 items-center justify-center rounded-md bg-primary/10">
+          <Building2 class="size-5 text-primary" />
         </div>
         <div>
           <p v-if="isLoading"><Skeleton class="h-5 w-8" /></p>
           <p v-else class="text-lg font-bold leading-none">{{ totalUnits }}</p>
-          <p class="mt-0.5 text-xs text-muted-foreground">Total unidades</p>
+          <p class="mt-0.5 text-sm text-muted-foreground">Total unidades</p>
         </div>
       </div>
 
-      <div class="flex items-center gap-3 rounded-lg border bg-card p-3">
-        <div class="flex size-8 shrink-0 items-center justify-center rounded-md bg-destructive/10">
-          <AlertTriangle class="size-4 text-destructive" />
+      <div class="flex items-center gap-3 rounded-lg border bg-card p-4">
+        <div class="flex size-10 shrink-0 items-center justify-center rounded-md bg-destructive/10">
+          <AlertTriangle class="size-5 text-destructive" />
         </div>
         <div>
           <p v-if="isLoading"><Skeleton class="h-5 w-8" /></p>
           <p v-else class="text-lg font-bold leading-none text-destructive">{{ totalInDebt }}</p>
-          <p class="mt-0.5 text-xs text-muted-foreground">En mora</p>
+          <p class="mt-0.5 text-sm text-muted-foreground">En mora</p>
         </div>
       </div>
     </div>
@@ -214,12 +214,11 @@ onMounted(async () => {
             <Input
               v-model="searchQuery"
               placeholder="Buscar por numero de unidad..."
-              class="pl-9"
+              class="h-12 pl-9"
             />
           </div>
           <Button
             variant="outline"
-            size="sm"
             class="shrink-0"
             @click="sortAsc = !sortAsc"
           >
@@ -342,7 +341,7 @@ onMounted(async () => {
             <div class="space-y-2">
               <Label for="unit-select">Unidad</Label>
               <Select v-model="formUnit">
-                <SelectTrigger id="unit-select">
+                <SelectTrigger id="unit-select" class="h-12">
                   <SelectValue placeholder="Selecciona una unidad" />
                 </SelectTrigger>
                 <SelectContent>
@@ -361,7 +360,7 @@ onMounted(async () => {
             <div class="space-y-2">
               <Label for="type-select">Tipo</Label>
               <Select v-model="formType">
-                <SelectTrigger id="type-select">
+                <SelectTrigger id="type-select" class="h-12">
                   <SelectValue placeholder="Selecciona tipo" />
                 </SelectTrigger>
                 <SelectContent>
@@ -385,6 +384,7 @@ onMounted(async () => {
                 placeholder="0.00"
                 min="0"
                 step="0.01"
+                class="h-12"
               />
             </div>
 
@@ -396,6 +396,7 @@ onMounted(async () => {
                 v-model="formDescription"
                 type="text"
                 placeholder="Ej: Cuota de condominio marzo 2026"
+                class="h-12"
               />
             </div>
 
@@ -406,6 +407,7 @@ onMounted(async () => {
                 id="date-input"
                 v-model="formDate"
                 type="date"
+                class="h-12"
               />
             </div>
 
@@ -455,6 +457,7 @@ onMounted(async () => {
                 v-model="reportTitle"
                 type="text"
                 placeholder="Ej: Informe financiero mensual"
+                class="h-12"
               />
             </div>
 
@@ -463,7 +466,7 @@ onMounted(async () => {
               <div class="space-y-2">
                 <Label for="report-month">Mes</Label>
                 <Select v-model="reportMonth">
-                  <SelectTrigger id="report-month">
+                  <SelectTrigger id="report-month" class="h-12">
                     <SelectValue placeholder="Mes" />
                   </SelectTrigger>
                   <SelectContent>
@@ -487,6 +490,7 @@ onMounted(async () => {
                   type="number"
                   :min="2020"
                   :max="2030"
+                  class="h-12"
                 />
               </div>
             </div>
@@ -499,7 +503,7 @@ onMounted(async () => {
                 ref="fileInputRef"
                 type="file"
                 accept=".pdf"
-                class="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                class="flex h-12 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
               >
             </div>
 
@@ -559,7 +563,6 @@ onMounted(async () => {
                 </div>
                 <Button
                   variant="outline"
-                  size="sm"
                   as="a"
                   :href="`/api/finance/reports/${report.filePath}`"
                   target="_blank"
@@ -578,7 +581,6 @@ onMounted(async () => {
             >
               <Button
                 variant="outline"
-                size="sm"
                 :disabled="currentReportsPage <= 1"
                 @click="goToReportsPage(currentReportsPage - 1)"
               >
@@ -590,7 +592,6 @@ onMounted(async () => {
               </span>
               <Button
                 variant="outline"
-                size="sm"
                 :disabled="currentReportsPage >= totalPages"
                 @click="goToReportsPage(currentReportsPage + 1)"
               >
