@@ -14,7 +14,7 @@ const props = withDefaults(defineProps<{
   <div
     data-slot="card"
     :data-size="size"
-    :class="cn('bg-card text-card-foreground ring-foreground/5 overflow-hidden rounded-xl text-sm shadow-sm ring-1 has-[>img:first-child]:pt-0 group/card flex flex-col', props.class)"
+    :class="cn('bg-card text-card-foreground ring-foreground/5 overflow-hidden rounded-lg text-sm shadow-sm ring-1 has-[>img:first-child]:pt-0 group/card flex flex-col', props.class)"
   >
     <slot />
   </div>

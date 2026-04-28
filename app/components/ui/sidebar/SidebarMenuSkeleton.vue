@@ -19,11 +19,11 @@ onMounted(() => {
   <div
     data-slot="sidebar-menu-skeleton"
     data-sidebar="menu-skeleton"
-    :class="cn('h-8 gap-2 rounded-xl px-2 flex items-center', props.class)"
+    :class="cn('h-8 gap-2 rounded-lg px-2 flex items-center', props.class)"
   >
     <Skeleton
       v-if="showIcon"
-      class="size-4 rounded-xl"
+      class="size-4 rounded-lg"
       data-sidebar="menu-skeleton-icon"
     />
 

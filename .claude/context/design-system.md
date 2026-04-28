@@ -10,6 +10,11 @@
 - **Border radius**: 0.625rem (--radius)
 - **RTL**: deshabilitado
 
+## Border Radius (Estandarizado)
+- **Todo**: `rounded-lg` — Valor unico para buttons, inputs, selects, dialogs, popovers, dropdowns, badges, avatares, cards, tabs, skeletons, toasts
+- **Dots/Indicadores**: `rounded-full` — SOLO para status dots, ping animations, radio buttons, switches
+- **NO usar**: `rounded-xl`, `rounded-2xl`, `rounded-3xl`, `rounded-4xl` (eliminados del sistema)
+
 ## Paleta de Colores (Light)
 - **Primary**: oklch(0.511 0.096 186.391) — teal/verde azulado
 - **Secondary**: oklch(0.967 0.001 286.375)
