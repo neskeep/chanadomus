@@ -24,13 +24,7 @@ function formatMonth(month: number, year: number): string {
   return `${MONTHS[month - 1]} ${year}`
 }
 
-function formatDate(dateStr: string): string {
-  return new Date(dateStr).toLocaleDateString('es-VE', {
-    day: '2-digit',
-    month: 'short',
-    year: 'numeric',
-  })
-}
+const { formatDate } = useFormatDate()
 
 function openReport(filePath: string): void {
   window.open(`/api/finance/reports/${filePath}`, '_blank')

@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import {
-  Search,
   Plus,
   Pencil,
   Trash2,
@@ -20,9 +19,19 @@ useHead({ title: 'Personal' })
 
 const { staffList, isLoading, isSubmitting, error, fetchStaff, createStaffMember, updateStaffMember, deleteStaffMember } = useStaff()
 
+const { target, isMounted } = useTopbarPortal()
+
 // Filters
 const selectedRole = ref<StaffRole | 'all'>('all')
 const searchQuery = ref('')
+
+const roleOptions = [
+  { value: 'all', label: 'Todos los roles' },
+  { value: 'conserje', label: 'Conserje' },
+  { value: 'vigilancia', label: 'Vigilancia' },
+  { value: 'mantenimiento', label: 'Mantenimiento' },
+  { value: 'otro', label: 'Otro' },
+]
 
 // Dialog state
 const dialogOpen = ref(false)
@@ -147,13 +156,14 @@ onMounted(() => {
 
 <template>
   <div class="mx-auto max-w-5xl">
-    <!-- Header -->
-    <div class="mb-6 flex justify-end">
-      <Button @click="openCreateDialog">
-        <Plus class="mr-1.5 size-4" />
+    <Teleport :to="target" defer v-if="isMounted">
+      <TopbarSearch v-model="searchQuery" placeholder="Buscar personal..." />
+      <TopbarSelect v-model="selectedRole" :options="roleOptions" placeholder="Rol" />
+      <Button size="sm" @click="openCreateDialog">
+        <Plus class="mr-1.5 size-3.5" />
         Agregar
       </Button>
-    </div>
+    </Teleport>
 
     <!-- Error -->
     <div
@@ -162,32 +172,6 @@ onMounted(() => {
       class="mb-4 rounded-lg border border-destructive/50 bg-destructive/10 p-3 text-sm text-destructive"
     >
       {{ error }}
-    </div>
-
-    <!-- Filter bar -->
-    <div class="mb-4 space-y-3">
-      <div class="flex gap-2">
-        <div class="relative flex-1">
-          <Search class="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-          <Input
-            v-model="searchQuery"
-            placeholder="Buscar por nombre, teléfono o email..."
-            class="h-12 pl-9"
-          />
-        </div>
-        <Select v-model="selectedRole">
-          <SelectTrigger class="h-12 w-[160px]">
-            <SelectValue placeholder="Todos los roles" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">Todos</SelectItem>
-            <SelectItem value="conserje">Conserje</SelectItem>
-            <SelectItem value="vigilancia">Vigilancia</SelectItem>
-            <SelectItem value="mantenimiento">Mantenimiento</SelectItem>
-            <SelectItem value="otro">Otro</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
     </div>
 
     <!-- Loading -->
@@ -316,15 +300,15 @@ onMounted(() => {
       </div>
     </div>
 
-    <!-- Create/Edit Dialog -->
-    <Dialog v-model:open="dialogOpen">
-      <DialogContent class="sm:max-w-md">
-        <DialogHeader>
-          <DialogTitle>{{ editingStaff ? 'Editar personal' : 'Agregar personal' }}</DialogTitle>
-          <DialogDescription>
+    <!-- Create/Edit Sheet -->
+    <Sheet v-model:open="dialogOpen">
+      <SheetContent side="right">
+        <SheetHeader>
+          <SheetTitle>{{ editingStaff ? 'Editar personal' : 'Agregar personal' }}</SheetTitle>
+          <SheetDescription>
             {{ editingStaff ? 'Actualiza la información del miembro del personal' : 'Registra un nuevo miembro del personal del condominio' }}
-          </DialogDescription>
-        </DialogHeader>
+          </SheetDescription>
+        </SheetHeader>
 
         <form class="space-y-4 py-2" @submit.prevent="handleSubmit">
           <div class="space-y-2">
@@ -401,7 +385,7 @@ onMounted(() => {
             </Select>
           </div>
 
-          <DialogFooter class="gap-2 sm:gap-0">
+          <SheetFooter class="gap-2 sm:gap-0">
             <Button type="button" variant="outline" @click="dialogOpen = false">
               Cancelar
             </Button>
@@ -412,10 +396,10 @@ onMounted(() => {
               <Loader2 v-if="isSubmitting" class="mr-2 size-4 animate-spin" />
               {{ isSubmitting ? 'Guardando...' : 'Guardar' }}
             </Button>
-          </DialogFooter>
+          </SheetFooter>
         </form>
-      </DialogContent>
-    </Dialog>
+      </SheetContent>
+    </Sheet>
 
     <!-- Delete AlertDialog -->
     <AlertDialog v-model:open="deleteDialogOpen">

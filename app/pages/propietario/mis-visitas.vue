@@ -1,11 +1,11 @@
 <script setup lang="ts">
 import { Share2, Plus, ChevronDown, ChevronUp, CalendarClock, User, Loader2 } from 'lucide-vue-next'
-import { buttonVariants } from '~/components/ui/button'
 import type { QrStatus } from '~~/shared/types/qr'
 import QRCode from 'qrcode'
 
 useHead({ title: 'Mis Visitas' })
 
+const { target, isMounted } = useTopbarPortal()
 const { myCodes, fetchMyCodes, isLoading, error } = useQr()
 
 const activeFilter = ref<QrStatus | 'all'>('all')
@@ -13,23 +13,22 @@ const expandedId = ref<string | null>(null)
 const expandedQrUrl = ref<string | null>(null)
 const shareSuccess = ref<string | null>(null)
 
-const filters: { label: string; value: QrStatus | 'all' }[] = [
-  { label: 'Todos', value: 'all' },
-  { label: 'Activos', value: 'active' },
-  { label: 'Usados', value: 'used' },
-  { label: 'Expirados', value: 'expired' },
+const filterOptions: Array<{ value: QrStatus | 'all'; label: string }> = [
+  { value: 'all', label: 'Todos' },
+  { value: 'active', label: 'Activos' },
+  { value: 'used', label: 'Usados' },
+  { value: 'expired', label: 'Expirados' },
 ]
 
 onMounted(() => {
   fetchMyCodes('all')
 })
 
-async function handleFilterChange(status: QrStatus | 'all') {
-  activeFilter.value = status
+watch(activeFilter, (status) => {
   expandedId.value = null
   expandedQrUrl.value = null
-  await fetchMyCodes(status)
-}
+  fetchMyCodes(status)
+})
 
 async function toggleExpand(id: string, token: string) {
   if (expandedId.value === id) {
@@ -90,12 +89,7 @@ async function copyToClipboard(text: string) {
   }
 }
 
-function formatDate(dateStr: string): string {
-  return new Date(dateStr).toLocaleString('es-VE', {
-    dateStyle: 'medium',
-    timeStyle: 'short',
-  })
-}
+const { formatDateTime } = useFormatDate()
 
 const statusConfig: Record<QrStatus, { label: string; variant: 'default' | 'secondary' | 'outline' }> = {
   active: { label: 'Activo', variant: 'default' },
@@ -106,28 +100,14 @@ const statusConfig: Record<QrStatus, { label: string; variant: 'default' | 'seco
 
 <template>
   <div class="mx-auto max-w-lg">
-    <!-- Header -->
-    <div class="mb-6 flex justify-end">
-      <NuxtLink to="/propietario/nueva-visita" :class="buttonVariants({ size: 'sm' })">
-        <Plus class="size-4" />
+    <!-- Topbar actions -->
+    <Teleport :to="target" defer v-if="isMounted">
+      <TopbarSelect v-model="activeFilter" :options="filterOptions" placeholder="Estado" />
+      <Button size="sm" @click="navigateTo('/propietario/nueva-visita')">
+        <Plus class="mr-1.5 size-3.5" />
         Nueva Visita
-      </NuxtLink>
-    </div>
-
-    <!-- Filters -->
-    <div class="mb-4 flex gap-2 overflow-x-auto pb-1">
-      <button
-        v-for="filter in filters"
-        :key="filter.value"
-        class="shrink-0 rounded-full border px-4 py-2.5 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-        :class="activeFilter === filter.value
-          ? 'border-primary bg-primary text-primary-foreground'
-          : 'border-border bg-background text-muted-foreground hover:bg-muted'"
-        @click="handleFilterChange(filter.value)"
-      >
-        {{ filter.label }}
-      </button>
-    </div>
+      </Button>
+    </Teleport>
 
     <!-- Error alert -->
     <div
@@ -172,10 +152,10 @@ const statusConfig: Record<QrStatus, { label: string; variant: 'default' | 'seco
         <p class="font-medium">Aún no has registrado visitas</p>
         <p class="mt-1 text-sm text-muted-foreground">Crea un pase de acceso para tu primer visitante</p>
       </div>
-      <NuxtLink to="/propietario/nueva-visita" :class="buttonVariants()">
-        <Plus class="size-4" />
+      <Button @click="navigateTo('/propietario/nueva-visita')">
+        <Plus class="mr-1.5 size-4" />
         Nueva Visita
-      </NuxtLink>
+      </Button>
     </div>
 
     <!-- Codes list -->
@@ -213,7 +193,7 @@ const statusConfig: Record<QrStatus, { label: string; variant: 'default' | 'seco
             <span>{{ code.unitNumber }}{{ code.unitLabel ? ` — ${code.unitLabel}` : '' }}</span>
             <span class="flex items-center gap-1">
               <CalendarClock class="size-3" />
-              {{ code.usedAt ? formatDate(code.usedAt) : formatDate(code.expiresAt) }}
+              {{ code.usedAt ? formatDateTime(code.usedAt) : formatDateTime(code.expiresAt) }}
             </span>
           </div>
 

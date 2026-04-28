@@ -1,9 +1,10 @@
 <script setup lang="ts">
-import { AlertTriangle, Calendar, Megaphone, Shield } from 'lucide-vue-next'
+import { AlertTriangle, Calendar, DoorOpen, Megaphone, QrCode, Shield, Users } from 'lucide-vue-next'
 
 useHead({ title: 'Panel Vigilancia' })
 
 const { user } = useAuth()
+const { formatDate, formatDateTime } = useFormatDate()
 
 interface DashboardStats {
   openIncidents: number
@@ -16,27 +17,16 @@ interface DashboardStats {
 const stats = ref<DashboardStats | null>(null)
 const isLoading = ref(true)
 
-const statCards = computed(() => [
-  { label: 'Accesos Hoy', value: stats.value?.todayAccessCount ?? 0, icon: Shield, color: 'blue' },
-  { label: 'Incidencias Abiertas', value: stats.value?.openIncidents ?? 0, icon: AlertTriangle, color: 'amber' },
-  { label: 'Anuncios', value: stats.value?.publishedAnnouncements ?? 0, icon: Megaphone, color: 'cyan' },
-  { label: 'Reuniones Proximas', value: stats.value?.upcomingMeetings ?? 0, icon: Calendar, color: 'emerald' },
-])
+const today = ref('')
 
-const colorMap: Record<string, string> = {
-  blue: 'bg-blue-100 text-blue-600',
-  amber: 'bg-amber-100 text-amber-600',
-  cyan: 'bg-cyan-100 text-cyan-600',
-  emerald: 'bg-emerald-100 text-emerald-600',
-}
-
-function formatDate(iso: string): string {
-  return new Date(iso).toLocaleDateString('es-VE', {
-    weekday: 'long', day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit',
-  })
-}
+const quickActions = [
+  { label: 'Registrar Acceso', icon: DoorOpen, to: '/vigilancia/accesos' },
+  { label: 'Escanear QR', icon: QrCode, to: '/vigilancia/escanear' },
+  { label: 'Residentes', icon: Users, to: '/vigilancia/residentes' },
+] as const
 
 onMounted(async () => {
+  today.value = formatDate(new Date())
   try {
     const res = await $fetch<{ data: DashboardStats }>('/api/dashboard/stats')
     stats.value = res.data
@@ -56,37 +46,91 @@ onMounted(async () => {
         Hola, {{ user?.name?.split(' ')[0] || 'Operador' }}
       </h1>
       <p class="mt-1 text-sm text-muted-foreground">
-        Aqui tienes el resumen del dia
+        {{ today }}
       </p>
     </div>
 
+    <!-- Hero stat: Accesos Hoy -->
+    <Card class="mb-4 p-6">
+      <div class="flex items-center justify-between">
+        <div>
+          <p class="text-sm text-muted-foreground">Accesos Hoy</p>
+          <template v-if="isLoading">
+            <Skeleton class="mt-2 h-10 w-20" />
+          </template>
+          <p v-else class="mt-1 text-4xl font-bold tracking-tight">
+            {{ stats?.todayAccessCount ?? 0 }}
+          </p>
+        </div>
+        <div class="flex flex-col items-end gap-2">
+          <div class="flex size-12 items-center justify-center rounded-lg bg-blue-100 text-blue-600">
+            <Shield class="size-6" />
+          </div>
+          <Badge variant="secondary" class="gap-1.5">
+            <span class="relative flex size-2">
+              <span class="absolute inline-flex size-full animate-ping rounded-full bg-emerald-400 opacity-75" />
+              <span class="relative inline-flex size-2 rounded-full bg-emerald-500" />
+            </span>
+            En vivo
+          </Badge>
+        </div>
+      </div>
+    </Card>
+
+    <!-- Stats grid -->
     <div class="grid grid-cols-2 gap-3">
-      <div
-        v-for="(card, i) in statCards"
-        :key="i"
-        class="flex items-center gap-3 rounded-lg border bg-card p-4"
-      >
-        <div class="flex size-10 shrink-0 items-center justify-center rounded-md" :class="colorMap[card.color]">
-          <component :is="card.icon" class="size-5" />
-        </div>
-        <div v-if="isLoading" class="space-y-1">
-          <Skeleton class="h-5 w-8" />
-          <Skeleton class="h-3 w-16" />
-        </div>
-        <div v-else>
-          <p class="text-2xl font-bold leading-none">{{ card.value }}</p>
-          <p class="mt-0.5 text-xs text-muted-foreground">{{ card.label }}</p>
-        </div>
+      <StatCard
+        label="Incidencias Abiertas"
+        :value="stats?.openIncidents ?? 0"
+        :icon="AlertTriangle"
+        icon-bg-class="bg-amber-100 text-amber-600"
+        :is-loading="isLoading"
+      />
+      <StatCard
+        label="Anuncios"
+        :value="stats?.publishedAnnouncements ?? 0"
+        :icon="Megaphone"
+        icon-bg-class="bg-cyan-100 text-cyan-600"
+        :is-loading="isLoading"
+      />
+      <StatCard
+        label="Reuniones Proximas"
+        :value="stats?.upcomingMeetings ?? 0"
+        :icon="Calendar"
+        icon-bg-class="bg-emerald-100 text-emerald-600"
+        :is-loading="isLoading"
+      />
+    </div>
+
+    <!-- Quick actions -->
+    <div class="mt-6">
+      <h2 class="mb-3 text-base font-semibold text-foreground">Acciones rapidas</h2>
+      <div class="grid grid-cols-3 gap-3">
+        <NuxtLink
+          v-for="action in quickActions"
+          :key="action.to"
+          :to="action.to"
+        >
+          <Button
+            variant="outline"
+            size="lg"
+            class="flex h-auto min-h-14 w-full flex-col gap-1.5 py-3"
+          >
+            <component :is="action.icon" class="size-5" />
+            <span class="text-xs leading-tight">{{ action.label }}</span>
+          </Button>
+        </NuxtLink>
       </div>
     </div>
 
+    <!-- Next meeting -->
     <div v-if="stats?.nextMeeting" class="mt-4 rounded-lg border border-l-4 border-l-primary bg-card p-4">
       <div class="flex items-center gap-1.5">
         <Calendar class="size-4 text-muted-foreground" />
         <p class="text-xs text-muted-foreground">Proxima reunion</p>
       </div>
       <p class="mt-0.5 text-base font-semibold">{{ stats.nextMeeting.title }}</p>
-      <p class="text-xs text-muted-foreground">{{ formatDate(stats.nextMeeting.date) }}</p>
+      <p class="text-xs text-muted-foreground">{{ formatDateTime(stats.nextMeeting.date) }}</p>
     </div>
   </div>
 </template>

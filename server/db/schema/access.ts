@@ -42,6 +42,7 @@ export const accessLogs = pgTable('access_logs', {
   visitorDocument: text('visitor_document'), // cedula para entries manuales
   unitId: uuid('unit_id').references(() => units.id), // unidad destino para entries manuales
   deviceId: uuid('device_id').references(() => devices.id), // dispositivo que origino el webhook
+  exitAt: timestamp('exit_at'), // hora de salida del visitante, null = aun dentro
   createdAt: timestamp('created_at').notNull().defaultNow(),
 }, (table) => [
   index('access_log_tenant_idx').on(table.tenantId),

@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import {
-  Search,
   AlertTriangle,
   Clock,
   CheckCircle2,
@@ -9,7 +8,6 @@ import {
   ChevronLeft,
   ChevronRight,
   Camera,
-  Filter,
 } from 'lucide-vue-next'
 import { toast } from 'vue-sonner'
 import type { Incident, IncidentStatus, IncidentPriority } from '~~/shared/types/incident'
@@ -19,11 +17,26 @@ useHead({ title: 'Gestion de Incidencias' })
 const { incidents, meta, isLoading, error, totalPages, fetchIncidents } = useIncidents()
 const detail = useIncidentDetail()
 
+const { target, isMounted } = useTopbarPortal()
+
 const currentPage = ref(1)
 const searchQuery = ref('')
 const filterStatus = ref<IncidentStatus | ''>('')
 const filterPriority = ref<IncidentPriority | ''>('')
-const showFilters = ref(false)
+
+const statusOptions = [
+  { value: '', label: 'Todos los estados' },
+  { value: 'open', label: 'Abierta' },
+  { value: 'in_progress', label: 'En proceso' },
+  { value: 'resolved', label: 'Resuelta' },
+  { value: 'closed', label: 'Cerrada' },
+]
+const priorityOptions = [
+  { value: '', label: 'Todas las prioridades' },
+  { value: 'low', label: 'Baja' },
+  { value: 'medium', label: 'Media' },
+  { value: 'high', label: 'Alta' },
+]
 
 // Dialog state
 const selectedIncident = ref<Incident | null>(null)
@@ -96,22 +109,7 @@ async function handleUpdateStatus() {
   }
 }
 
-function formatDate(dateStr: string): string {
-  return new Date(dateStr).toLocaleDateString('es-VE', {
-    day: '2-digit',
-    month: 'short',
-    year: 'numeric',
-  })
-}
-
-function formatDateTime(dateStr: string): string {
-  return new Date(dateStr).toLocaleString('es-VE', {
-    day: '2-digit',
-    month: 'short',
-    hour: '2-digit',
-    minute: '2-digit',
-  })
-}
+const { formatDate, formatDateTime } = useFormatDate()
 </script>
 
 <template>
@@ -149,56 +147,11 @@ function formatDateTime(dateStr: string): string {
       {{ error }}
     </div>
 
-    <!-- Search & filters -->
-    <div class="mb-4 space-y-3">
-      <div class="flex gap-2">
-        <div class="relative flex-1">
-          <Search class="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-          <Input
-            v-model="searchQuery"
-            placeholder="Buscar por título, unidad o propietario..."
-            class="h-12 pl-9"
-          />
-        </div>
-        <Button
-          variant="outline"
-          size="icon"
-          class="size-12"
-          :class="{ 'border-primary text-primary': showFilters }"
-          @click="showFilters = !showFilters"
-        >
-          <Filter class="size-4" />
-        </Button>
-      </div>
-
-      <!-- Filter selects -->
-      <div v-if="showFilters" class="grid grid-cols-2 gap-3">
-        <Select v-model="filterStatus">
-          <SelectTrigger class="h-12">
-            <SelectValue placeholder="Estado" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="">Todos</SelectItem>
-            <SelectItem value="open">Abierta</SelectItem>
-            <SelectItem value="in_progress">En proceso</SelectItem>
-            <SelectItem value="resolved">Resuelta</SelectItem>
-            <SelectItem value="closed">Cerrada</SelectItem>
-          </SelectContent>
-        </Select>
-
-        <Select v-model="filterPriority">
-          <SelectTrigger class="h-12">
-            <SelectValue placeholder="Prioridad" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="">Todas</SelectItem>
-            <SelectItem value="low">Baja</SelectItem>
-            <SelectItem value="medium">Media</SelectItem>
-            <SelectItem value="high">Alta</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
-    </div>
+    <Teleport :to="target" defer v-if="isMounted">
+      <TopbarSearch v-model="searchQuery" placeholder="Buscar incidencia..." />
+      <TopbarSelect v-model="filterStatus" :options="statusOptions" placeholder="Estado" />
+      <TopbarSelect v-model="filterPriority" :options="priorityOptions" placeholder="Prioridad" />
+    </Teleport>
 
     <!-- Loading -->
     <div v-if="isLoading" class="space-y-2">
@@ -330,15 +283,15 @@ function formatDateTime(dateStr: string): string {
       </div>
     </div>
 
-    <!-- Detail Dialog -->
-    <Dialog v-model:open="dialogOpen">
-      <DialogContent class="max-h-[90vh] overflow-y-auto sm:max-w-lg">
-        <DialogHeader>
-          <DialogTitle>{{ selectedIncident?.title }}</DialogTitle>
-          <DialogDescription>
+    <!-- Detail Sheet -->
+    <Sheet v-model:open="dialogOpen">
+      <SheetContent side="right" class="overflow-y-auto">
+        <SheetHeader>
+          <SheetTitle>{{ selectedIncident?.title }}</SheetTitle>
+          <SheetDescription>
             {{ selectedIncident?.unitNumber ?? '—' }} · {{ selectedIncident?.reportedByName ?? '—' }}
-          </DialogDescription>
-        </DialogHeader>
+          </SheetDescription>
+        </SheetHeader>
 
         <div v-if="detail.isLoading.value" class="space-y-3 py-4">
           <Skeleton class="h-4 w-full" />
@@ -457,7 +410,7 @@ function formatDateTime(dateStr: string): string {
             </div>
           </div>
         </template>
-      </DialogContent>
-    </Dialog>
+      </SheetContent>
+    </Sheet>
   </div>
 </template>

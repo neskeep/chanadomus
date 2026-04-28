@@ -9,19 +9,13 @@ onMounted(() => {
   fetchStatement()
 })
 
+const { formatDate, formatCurrency } = useFormatDate()
+
 const formattedBalance = computed(() => {
   const num = parseFloat(balance.value)
-  const abs = Math.abs(num).toLocaleString('es-VE', { minimumFractionDigits: 2 })
-  return `${num < 0 ? '-' : ''} Bs ${abs}`
+  const prefix = num < 0 ? '- ' : ''
+  return `${prefix}${formatCurrency(Math.abs(num))}`
 })
-
-function formatDate(dateStr: string): string {
-  return new Date(dateStr).toLocaleDateString('es-VE', {
-    day: '2-digit',
-    month: 'short',
-    year: 'numeric',
-  })
-}
 </script>
 
 <template>

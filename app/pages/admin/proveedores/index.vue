@@ -1,13 +1,11 @@
 <script setup lang="ts">
 import {
-  Search,
   Star,
   Phone,
   Plus,
   Pencil,
   Trash2,
   Wrench,
-  Filter,
   Loader2,
   ChevronLeft,
   ChevronRight,
@@ -43,7 +41,20 @@ const currentPage = ref(1)
 const searchQuery = ref('')
 const filterCategory = ref<ProviderCategory | 'all'>('all')
 const filterStatus = ref<ProviderStatus | 'all'>('all')
-const showFilters = ref(false)
+
+const { target, isMounted } = useTopbarPortal()
+
+const providerCategoryOptions = [
+  { value: 'all' as const, label: 'Todas las categorias' },
+  ...PROVIDER_CATEGORIES.map(cat => ({ value: cat.key, label: cat.label })),
+]
+
+const providerStatusOptions = [
+  { value: 'all' as const, label: 'Todos los estados' },
+  { value: 'active' as const, label: 'Activo' },
+  { value: 'pending' as const, label: 'Pendiente' },
+  { value: 'inactive' as const, label: 'Inactivo' },
+]
 
 // Create/Edit dialog
 const dialogOpen = ref(false)
@@ -268,13 +279,16 @@ function renderStars(rating: number | undefined): number[] {
 
 <template>
   <div class="mx-auto max-w-5xl">
-    <!-- Header -->
-    <div class="mb-6 flex justify-end">
-      <Button @click="openCreateDialog">
-        <Plus class="mr-1.5 size-4" />
+    <!-- Topbar actions -->
+    <Teleport :to="target" defer v-if="isMounted">
+      <TopbarSearch v-model="searchQuery" placeholder="Buscar proveedor..." />
+      <TopbarSelect v-model="filterCategory" :options="providerCategoryOptions" placeholder="Categoria" />
+      <TopbarSelect v-model="filterStatus" :options="providerStatusOptions" placeholder="Estado" />
+      <Button size="sm" @click="openCreateDialog">
+        <Plus class="mr-1.5 size-3.5" />
         Nuevo Proveedor
       </Button>
-    </div>
+    </Teleport>
 
     <!-- Stats cards -->
     <div class="mb-6 grid grid-cols-2 gap-2">
@@ -353,55 +367,6 @@ function renderStars(rating: number | undefined): number[] {
             </div>
           </CardContent>
         </Card>
-      </div>
-    </div>
-
-    <!-- Search & filters -->
-    <div class="mb-4 space-y-3">
-      <div class="flex gap-2">
-        <div class="relative flex-1">
-          <Search class="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-          <Input
-            v-model="searchQuery"
-            placeholder="Buscar por nombre, telefono..."
-            class="h-12 pl-9"
-          />
-        </div>
-        <Button
-          variant="outline"
-          size="icon"
-          :class="{ 'border-primary text-primary': showFilters }"
-          @click="showFilters = !showFilters"
-        >
-          <Filter class="size-4" />
-        </Button>
-      </div>
-
-      <!-- Filter selects -->
-      <div v-if="showFilters" class="grid grid-cols-2 gap-3">
-        <Select v-model="filterCategory">
-          <SelectTrigger class="h-12">
-            <SelectValue placeholder="Categoria" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">Todas</SelectItem>
-            <SelectItem v-for="cat in PROVIDER_CATEGORIES" :key="cat.key" :value="cat.key">
-              {{ cat.label }}
-            </SelectItem>
-          </SelectContent>
-        </Select>
-
-        <Select v-model="filterStatus">
-          <SelectTrigger class="h-12">
-            <SelectValue placeholder="Estado" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">Todos</SelectItem>
-            <SelectItem value="active">Activo</SelectItem>
-            <SelectItem value="pending">Pendiente</SelectItem>
-            <SelectItem value="inactive">Inactivo</SelectItem>
-          </SelectContent>
-        </Select>
       </div>
     </div>
 

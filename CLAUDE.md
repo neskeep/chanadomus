@@ -19,6 +19,7 @@
 | Convenciones | `.claude/context/conventions.md` |
 | Esquema de datos | `.claude/context/data-schema.md` |
 | Versionado y releases | `.claude/context/versioning.md` |
+| Skills de UI/UX | `.claude/context/skills-ui.md` |
 | Estado de sesion | `.claude/state/session.md` |
 | Componentes instalados | `.claude/state/installed-components.md` |
 | Changelog | `CHANGELOG.md` |
@@ -26,7 +27,7 @@
 ## Reglas de Workflow (No Negociables)
 
 1. **SIEMPRE usar agentes** — Delegar a subagentes especializados (nuxt-ui, nuxt-logic, project-orchestrator, etc.). Nunca implementar directamente sin agentes.
-2. **UI = Skills obligatorios** — Invocar `frontend-design` y/o `ui-ux-pro-max` ANTES de generar cualquier codigo de UI. Sin excepcion.
+2. **UI = Skills obligatorios** — Invocar `frontend-design` ANTES de generar codigo UI. Usar Impeccable (`/critique`, `/audit`, `/polish`, `/animate`, `/adapt`, `/clarify`) para evaluar y refinar. Ver `.claude/context/skills-ui.md`.
 3. **shadcn = Skill shadcn** — Usar el skill `shadcn` para buscar, agregar y gestionar componentes.
 4. **Desarrollo modular** — Un modulo/feature por sesion. Nunca desarrollo masivo de multiples modulos.
 5. **Reuso primero** — SIEMPRE buscar componentes, composables y utilidades existentes antes de crear nuevos. Grep/Glob antes de Write.
@@ -91,11 +92,19 @@
 
 ## Skills Obligatorios para UI
 
+> Detalle completo en `.claude/context/skills-ui.md`
+
 | Skill | Cuando usar |
 |-------|-------------|
-| `frontend-design` | Antes de crear cualquier componente, pagina o layout |
-| `ui-ux-pro-max` | Revision de UX post-implementacion (spacing, responsive, accesibilidad) |
+| `frontend-design` | ANTES de crear cualquier componente, pagina o layout |
 | `shadcn` | Buscar, agregar o gestionar componentes shadcn-vue |
+| `/critique` | Diagnostico UX: heuristics score, anti-patterns, personas |
+| `/audit` | Auditoria tecnica: a11y, performance, responsive, theming |
+| `/polish` | Paso FINAL obligatorio despues de todo cambio de UI |
+| `/animate` | Microinteracciones y motion con proposito |
+| `/adapt` | Adaptacion responsive multi-dispositivo |
+| `/clarify` | Mejora de UX copy, labels, errores, empty states |
+| `ui-ux-pro-max` | Revision general UX post-implementacion |
 
 ---
 

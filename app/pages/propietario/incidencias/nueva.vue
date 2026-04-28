@@ -1,10 +1,11 @@
 <script setup lang="ts">
 import { ArrowLeft, Camera, X, Loader2 } from 'lucide-vue-next'
-import { buttonVariants } from '~/components/ui/button'
 import { toast } from 'vue-sonner'
 import type { IncidentPriority } from '~~/shared/types/incident'
 
 useHead({ title: 'Reportar Incidencia' })
+
+const { target, isMounted } = useTopbarPortal()
 
 const router = useRouter()
 const { isCreating, error, createIncident } = useIncidents()
@@ -82,13 +83,12 @@ onUnmounted(() => {
 
 <template>
   <div class="mx-auto max-w-lg">
-    <!-- Header -->
-    <div class="mb-6">
-      <NuxtLink to="/propietario/incidencias" :class="buttonVariants({ variant: 'ghost', size: 'sm' })" class="-ml-2">
+    <Teleport :to="target" defer v-if="isMounted">
+      <Button variant="ghost" size="sm" @click="navigateTo('/propietario/incidencias')">
         <ArrowLeft class="mr-1 size-4" />
         Volver
-      </NuxtLink>
-    </div>
+      </Button>
+    </Teleport>
 
     <form class="space-y-5" @submit.prevent="handleSubmit">
       <!-- Title -->

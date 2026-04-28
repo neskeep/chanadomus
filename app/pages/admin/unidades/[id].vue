@@ -1,12 +1,12 @@
 <script setup lang="ts">
 import { ChevronLeft, Plus, Pencil, Trash2, Users, Car, Loader2 } from 'lucide-vue-next'
-import { buttonVariants } from '~/components/ui/button'
 import { toast } from 'vue-sonner'
 import type { HouseholdMember, HouseholdRelationship } from '~~/shared/types/household'
 import type { Vehicle } from '~~/shared/types/vehicle'
 
 definePageMeta({ layout: 'default' })
 
+const { target, isMounted } = useTopbarPortal()
 const route = useRoute()
 const unitId = route.params.id as string
 
@@ -224,13 +224,23 @@ onMounted(() => {
 
 <template>
   <div class="mx-auto max-w-5xl">
-    <!-- Header -->
-    <div class="mb-6">
-      <NuxtLink to="/admin/unidades" :class="buttonVariants({ variant: 'ghost', size: 'sm' })" class="-ml-2 mb-2">
+    <Teleport :to="target" defer v-if="isMounted">
+      <Button variant="ghost" size="sm" @click="navigateTo('/admin/unidades')">
         <ChevronLeft class="mr-1 size-4" />
         Unidades
-      </NuxtLink>
+      </Button>
+      <Button v-if="activeTab === 'members'" size="sm" @click="openMemberDialog()">
+        <Plus class="mr-1 size-4" />
+        Agregar miembro
+      </Button>
+      <Button v-else size="sm" @click="openVehicleDialog()">
+        <Plus class="mr-1 size-4" />
+        Agregar vehiculo
+      </Button>
+    </Teleport>
 
+    <!-- Unit header -->
+    <div class="mb-6">
       <div v-if="unitLoading" class="space-y-2">
         <Skeleton class="h-7 w-32" />
         <Skeleton class="h-4 w-48" />
@@ -262,14 +272,7 @@ onMounted(() => {
 
       <!-- Members Tab -->
       <TabsContent value="members" class="mt-4">
-        <!-- Action bar -->
-        <div class="mb-4 flex items-center justify-between">
-          <p class="text-sm text-muted-foreground">{{ members.length }} miembro{{ members.length !== 1 ? 's' : '' }}</p>
-          <Button @click="openMemberDialog()">
-            <Plus class="mr-1 size-4" />
-            Agregar
-          </Button>
-        </div>
+        <p class="mb-4 text-sm text-muted-foreground">{{ members.length }} miembro{{ members.length !== 1 ? 's' : '' }}</p>
 
         <!-- Loading -->
         <div v-if="membersLoading" class="space-y-2">
@@ -364,14 +367,7 @@ onMounted(() => {
 
       <!-- Vehicles Tab -->
       <TabsContent value="vehicles" class="mt-4">
-        <!-- Action bar -->
-        <div class="mb-4 flex items-center justify-between">
-          <p class="text-sm text-muted-foreground">{{ vehicles.length }} vehiculo{{ vehicles.length !== 1 ? 's' : '' }}</p>
-          <Button @click="openVehicleDialog()">
-            <Plus class="mr-1 size-4" />
-            Agregar
-          </Button>
-        </div>
+        <p class="mb-4 text-sm text-muted-foreground">{{ vehicles.length }} vehiculo{{ vehicles.length !== 1 ? 's' : '' }}</p>
 
         <!-- Loading -->
         <div v-if="vehiclesLoading" class="space-y-2">
@@ -457,15 +453,15 @@ onMounted(() => {
       </TabsContent>
     </Tabs>
 
-    <!-- Member Dialog -->
-    <Dialog v-model:open="memberDialogOpen">
-      <DialogContent class="sm:max-w-md">
-        <DialogHeader>
-          <DialogTitle>{{ editingMember ? 'Editar miembro' : 'Agregar miembro' }}</DialogTitle>
-          <DialogDescription>
+    <!-- Member Sheet -->
+    <Sheet v-model:open="memberDialogOpen">
+      <SheetContent side="right">
+        <SheetHeader>
+          <SheetTitle>{{ editingMember ? 'Editar miembro' : 'Agregar miembro' }}</SheetTitle>
+          <SheetDescription>
             {{ editingMember ? 'Modifica los datos del miembro' : 'Registra un nuevo miembro del hogar' }}
-          </DialogDescription>
-        </DialogHeader>
+          </SheetDescription>
+        </SheetHeader>
 
         <form class="space-y-4" @submit.prevent="handleSaveMember">
           <div class="space-y-2">
@@ -516,7 +512,7 @@ onMounted(() => {
             />
           </div>
 
-          <DialogFooter class="gap-2 sm:gap-0">
+          <SheetFooter class="gap-2 sm:gap-0">
             <Button type="button" variant="outline" class="h-12" @click="memberDialogOpen = false">
               Cancelar
             </Button>
@@ -524,10 +520,10 @@ onMounted(() => {
               <Loader2 v-if="membersSubmitting" class="mr-2 size-4 animate-spin" />
               {{ membersSubmitting ? 'Guardando...' : 'Guardar' }}
             </Button>
-          </DialogFooter>
+          </SheetFooter>
         </form>
-      </DialogContent>
-    </Dialog>
+      </SheetContent>
+    </Sheet>
 
     <!-- Delete Member AlertDialog -->
     <AlertDialog v-model:open="deleteMemberDialogOpen">
@@ -552,15 +548,15 @@ onMounted(() => {
       </AlertDialogContent>
     </AlertDialog>
 
-    <!-- Vehicle Dialog -->
-    <Dialog v-model:open="vehicleDialogOpen">
-      <DialogContent class="sm:max-w-md">
-        <DialogHeader>
-          <DialogTitle>{{ editingVehicle ? 'Editar vehiculo' : 'Agregar vehiculo' }}</DialogTitle>
-          <DialogDescription>
+    <!-- Vehicle Sheet -->
+    <Sheet v-model:open="vehicleDialogOpen">
+      <SheetContent side="right">
+        <SheetHeader>
+          <SheetTitle>{{ editingVehicle ? 'Editar vehiculo' : 'Agregar vehiculo' }}</SheetTitle>
+          <SheetDescription>
             {{ editingVehicle ? 'Modifica los datos del vehiculo' : 'Registra un nuevo vehiculo' }}
-          </DialogDescription>
-        </DialogHeader>
+          </SheetDescription>
+        </SheetHeader>
 
         <form class="space-y-4" @submit.prevent="handleSaveVehicle">
           <div class="space-y-2">
@@ -623,7 +619,7 @@ onMounted(() => {
             </Select>
           </div>
 
-          <DialogFooter class="gap-2 sm:gap-0">
+          <SheetFooter class="gap-2 sm:gap-0">
             <Button type="button" variant="outline" class="h-12" @click="vehicleDialogOpen = false">
               Cancelar
             </Button>
@@ -635,10 +631,10 @@ onMounted(() => {
               <Loader2 v-if="vehiclesSubmitting" class="mr-2 size-4 animate-spin" />
               {{ vehiclesSubmitting ? 'Guardando...' : 'Guardar' }}
             </Button>
-          </DialogFooter>
+          </SheetFooter>
         </form>
-      </DialogContent>
-    </Dialog>
+      </SheetContent>
+    </Sheet>
 
     <!-- Delete Vehicle AlertDialog -->
     <AlertDialog v-model:open="deleteVehicleDialogOpen">

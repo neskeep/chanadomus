@@ -17,3 +17,10 @@ export function broadcastAccessEvent(event: AccessEvent) {
     peer.send(message)
   }
 }
+
+export function broadcastAccessMessage(type: string, data: unknown) {
+  const message = JSON.stringify({ type, data })
+  for (const peer of peers) {
+    peer.send(message)
+  }
+}

@@ -9,7 +9,6 @@ import {
   Video,
   MapPin,
   Clock,
-  Filter,
 } from 'lucide-vue-next'
 import { toast } from 'vue-sonner'
 import type {
@@ -22,6 +21,8 @@ import type {
 import { MEETING_TYPES, MEETING_STATUSES } from '~~/shared/types/meeting'
 
 useHead({ title: 'Gestion de Reuniones' })
+
+const { formatDateTime } = useFormatDate()
 
 const {
   meetings,
@@ -38,7 +39,24 @@ const {
 // Filters
 const filterType = ref<MeetingType | 'all'>('all')
 const filterStatus = ref<MeetingStatus | 'all'>('all')
-const showFilters = ref(false)
+
+const { target, isMounted } = useTopbarPortal()
+
+const typeOptions = [
+  { value: 'all' as const, label: 'Todos los tipos' },
+  { value: 'ordinaria' as const, label: 'Ordinaria' },
+  { value: 'extraordinaria' as const, label: 'Extraordinaria' },
+  { value: 'comite' as const, label: 'Comite' },
+  { value: 'informativa' as const, label: 'Informativa' },
+]
+
+const meetingStatusOptions = [
+  { value: 'all' as const, label: 'Todos los estados' },
+  { value: 'programada' as const, label: 'Programada' },
+  { value: 'en_curso' as const, label: 'En Curso' },
+  { value: 'completada' as const, label: 'Completada' },
+  { value: 'cancelada' as const, label: 'Cancelada' },
+]
 
 // Create/Edit dialog
 const dialogOpen = ref(false)
@@ -88,30 +106,18 @@ const STATUS_LABELS: Record<MeetingStatus, string> = {
 
 // Stats
 const totalProgramadas = computed(() => meetings.value.filter(m => m.status === 'programada').length)
+const clientNow = ref<Date | null>(null)
+onMounted(() => { clientNow.value = new Date() })
+
 const totalEsteMes = computed(() => {
-  const now = new Date()
-  const year = now.getFullYear()
-  const month = now.getMonth()
+  if (!clientNow.value) return 0
+  const year = clientNow.value.getFullYear()
+  const month = clientNow.value.getMonth()
   return meetings.value.filter((m) => {
     const d = new Date(m.date)
     return d.getFullYear() === year && d.getMonth() === month
   }).length
 })
-
-// Date formatting
-function formatDate(iso: string): string {
-  const d = new Date(iso)
-  return d.toLocaleDateString('es-VE', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' })
-}
-
-function formatTime(iso: string): string {
-  const d = new Date(iso)
-  return d.toLocaleTimeString('es-VE', { hour: '2-digit', minute: '2-digit' })
-}
-
-function formatDateTime(iso: string): string {
-  return `${formatDate(iso)} ${formatTime(iso)}`
-}
 
 function toLocalInput(iso: string): string {
   const d = new Date(iso)
@@ -239,13 +245,15 @@ async function handleDelete() {
 
 <template>
   <div class="mx-auto max-w-5xl">
-    <!-- Header -->
-    <div class="mb-6 flex justify-end">
-      <Button @click="openCreateDialog">
-        <Plus class="mr-1.5 size-4" />
+    <!-- Topbar actions -->
+    <Teleport :to="target" defer v-if="isMounted">
+      <TopbarSelect v-model="filterType" :options="typeOptions" placeholder="Tipo" />
+      <TopbarSelect v-model="filterStatus" :options="meetingStatusOptions" placeholder="Estado" />
+      <Button size="sm" @click="openCreateDialog">
+        <Plus class="mr-1.5 size-3.5" />
         Nueva Reunion
       </Button>
-    </div>
+    </Teleport>
 
     <!-- Stats cards -->
     <div class="mb-6 grid grid-cols-2 gap-2">
@@ -272,79 +280,25 @@ async function handleDelete() {
     </div>
 
     <!-- Error -->
-    <div
-      v-if="error"
-      role="alert"
-      class="mb-4 rounded-lg border border-destructive/50 bg-destructive/10 p-3 text-sm text-destructive"
-    >
-      {{ error }}
-    </div>
-
-    <!-- Filters -->
-    <div class="mb-4 space-y-3">
-      <div class="flex justify-end">
-        <Button
-          variant="outline"
-          size="icon"
-          :class="{ 'border-primary text-primary': showFilters }"
-          @click="showFilters = !showFilters"
-        >
-          <Filter class="size-4" />
-        </Button>
-      </div>
-
-      <!-- Filter selects -->
-      <div v-if="showFilters" class="grid grid-cols-2 gap-3">
-        <Select v-model="filterType">
-          <SelectTrigger class="h-12">
-            <SelectValue placeholder="Tipo" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">Todos los tipos</SelectItem>
-            <SelectItem v-for="t in MEETING_TYPES" :key="t.key" :value="t.key">
-              {{ t.label }}
-            </SelectItem>
-          </SelectContent>
-        </Select>
-
-        <Select v-model="filterStatus">
-          <SelectTrigger class="h-12">
-            <SelectValue placeholder="Estado" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">Todos los estados</SelectItem>
-            <SelectItem v-for="s in MEETING_STATUSES" :key="s.key" :value="s.key">
-              {{ s.label }}
-            </SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
-    </div>
+    <ErrorAlert v-if="error" :message="error" class="mb-4" />
 
     <!-- Loading -->
-    <div v-if="isLoading" class="space-y-2">
-      <Skeleton v-for="i in 5" :key="i" class="h-16 w-full rounded-lg" />
-    </div>
+    <ListSkeleton v-if="isLoading" :count="5" variant="row" />
 
     <!-- Empty state -->
-    <div
+    <EmptyState
       v-else-if="meetings.length === 0"
-      class="flex flex-col items-center gap-4 rounded-lg border border-dashed p-8 text-center"
+      :icon="Calendar"
+      title="No hay reuniones"
+      :description="filterType !== 'all' || filterStatus !== 'all' ? 'Prueba cambiando los filtros' : 'Crea la primera reunion del condominio'"
     >
-      <div class="flex size-12 items-center justify-center rounded-full bg-muted">
-        <Calendar class="size-6 text-muted-foreground" />
-      </div>
-      <div>
-        <p class="font-medium">No hay reuniones</p>
-        <p class="mt-1 text-sm text-muted-foreground">
-          {{ filterType !== 'all' || filterStatus !== 'all' ? 'Prueba cambiando los filtros' : 'Crea la primera reunion del condominio' }}
-        </p>
-      </div>
-      <Button @click="openCreateDialog">
-        <Plus class="mr-1.5 size-4" />
-        Nueva Reunion
-      </Button>
-    </div>
+      <template #action>
+        <Button @click="openCreateDialog">
+          <Plus class="mr-1.5 size-4" />
+          Nueva Reunion
+        </Button>
+      </template>
+    </EmptyState>
 
     <!-- Table (desktop) / Cards (mobile) -->
     <div v-else>
@@ -498,15 +452,15 @@ async function handleDelete() {
       </div>
     </div>
 
-    <!-- Create/Edit Dialog -->
-    <Dialog v-model:open="dialogOpen">
-      <DialogContent class="max-h-[90vh] overflow-y-auto sm:max-w-lg">
-        <DialogHeader>
-          <DialogTitle>{{ editingId ? 'Editar Reunion' : 'Nueva Reunion' }}</DialogTitle>
-          <DialogDescription>
+    <!-- Create/Edit Sheet -->
+    <Sheet v-model:open="dialogOpen">
+      <SheetContent side="right" class="overflow-y-auto sm:max-w-lg">
+        <SheetHeader>
+          <SheetTitle>{{ editingId ? 'Editar Reunion' : 'Nueva Reunion' }}</SheetTitle>
+          <SheetDescription>
             {{ editingId ? 'Modifica los datos de la reunion' : 'Completa los datos para programar una reunion' }}
-          </DialogDescription>
-        </DialogHeader>
+          </SheetDescription>
+        </SheetHeader>
 
         <form class="space-y-4 py-2" @submit.prevent="handleSubmit">
           <div class="space-y-2">
@@ -591,8 +545,8 @@ async function handleDelete() {
             </Button>
           </div>
         </form>
-      </DialogContent>
-    </Dialog>
+      </SheetContent>
+    </Sheet>
 
     <!-- Delete AlertDialog -->
     <AlertDialog v-model:open="deleteDialogOpen">

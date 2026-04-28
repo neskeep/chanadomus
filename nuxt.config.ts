@@ -29,11 +29,18 @@ export default defineNuxtConfig({
     plugins: [
       (await import('@tailwindcss/vite')).default(),
     ],
-    server: {
-      hmr: {
-        protocol: 'ws',
-        port: 24678,
-      },
+    optimizeDeps: {
+      include: [
+        'lucide-vue-next',
+        'vue-sonner',
+        'clsx',
+        'tailwind-merge',
+        'reka-ui',
+        'better-auth/vue',
+        'better-auth/client/plugins',
+        'class-variance-authority',
+        'better-auth/plugins/access',
+      ],
     },
   },
 
@@ -49,6 +56,15 @@ export default defineNuxtConfig({
   nitro: {
     experimental: {
       websocket: true,
+    },
+    imports: {
+      imports: [
+        {
+          name: 'useAppConfig',
+          from: '#app-config',
+          priority: 10,
+        },
+      ],
     },
   },
 })

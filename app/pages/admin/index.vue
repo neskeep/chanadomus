@@ -2,9 +2,14 @@
 import {
   AlertTriangle,
   Calendar,
+  ClipboardCheck,
   Download,
   FileText,
+  Home,
+  Percent,
   ShieldAlert,
+  Users,
+  Vote,
   Wallet,
 } from 'lucide-vue-next'
 import { Bar, Line } from 'vue-chartjs'
@@ -25,23 +30,11 @@ ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, BarEleme
 
 useHead({ title: 'Panel Administrador' })
 
+const { target, isMounted } = useTopbarPortal()
 const { stats, trends, isLoading, exportCsv, exportPdf } = useDashboard()
+const { formatCurrency, formatDateTime } = useFormatDate()
 
-// --- Formatting helpers ---
-
-function formatCurrency(n: number): string {
-  return `Bs. ${n.toLocaleString('es-VE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
-}
-
-function formatDate(iso: string): string {
-  return new Date(iso).toLocaleDateString('es-VE', {
-    weekday: 'long',
-    day: 'numeric',
-    month: 'long',
-    hour: '2-digit',
-    minute: '2-digit',
-  })
-}
+// --- Chart label helpers (local, chart-specific) ---
 
 function monthLabel(yyyymm: string): string {
   const [y, m] = yyyymm.split('-')
@@ -118,17 +111,16 @@ const groupedChartOpts = {
 
 <template>
   <div class="space-y-4">
-    <!-- Export buttons -->
-    <div class="flex justify-end gap-2">
-      <Button variant="outline" @click="exportCsv">
-        <Download class="mr-1.5 size-4" />
+    <Teleport :to="target" defer v-if="isMounted">
+      <Button size="sm" variant="outline" @click="exportCsv">
+        <Download class="mr-1.5 size-3.5" />
         <span class="hidden sm:inline">CSV</span>
       </Button>
-      <Button variant="outline" @click="exportPdf">
-        <FileText class="mr-1.5 size-4" />
+      <Button size="sm" variant="outline" @click="exportPdf">
+        <FileText class="mr-1.5 size-3.5" />
         <span class="hidden sm:inline">PDF</span>
       </Button>
-    </div>
+    </Teleport>
 
     <!-- Tabs -->
     <Tabs default-value="resumen">
@@ -147,7 +139,7 @@ const groupedChartOpts = {
           </div>
           <div class="min-w-0">
             <p class="truncate text-base font-medium">{{ stats.nextMeeting.title }}</p>
-            <p class="text-sm text-muted-foreground">{{ formatDate(stats.nextMeeting.date) }}</p>
+            <p class="text-sm text-muted-foreground">{{ formatDateTime(stats.nextMeeting.date) }}</p>
           </div>
         </div>
 
@@ -155,20 +147,20 @@ const groupedChartOpts = {
         <div class="space-y-2">
           <p class="text-sm font-medium uppercase tracking-wider text-muted-foreground/70">Operaciones</p>
           <div class="grid grid-cols-2 gap-3">
-            <div class="rounded-lg border bg-card p-4">
-              <p class="text-sm text-muted-foreground">Incidencias abiertas</p>
-              <p v-if="isLoading"><Skeleton class="mt-1 h-6 w-8" /></p>
-              <p v-else class="mt-1 text-2xl font-bold" :class="(stats?.openIncidents ?? 0) > 0 ? 'text-amber-600' : ''">
-                {{ stats?.openIncidents ?? 0 }}
-              </p>
-            </div>
-            <div class="rounded-lg border bg-card p-4">
-              <p class="text-sm text-muted-foreground">En progreso</p>
-              <p v-if="isLoading"><Skeleton class="mt-1 h-6 w-8" /></p>
-              <p v-else class="mt-1 text-2xl font-bold" :class="(stats?.inProgressIncidents ?? 0) > 0 ? 'text-blue-600' : ''">
-                {{ stats?.inProgressIncidents ?? 0 }}
-              </p>
-            </div>
+            <StatCard
+              label="Incidencias abiertas"
+              :value="stats?.openIncidents ?? 0"
+              :icon="AlertTriangle"
+              icon-bg-class="bg-amber-100 text-amber-600"
+              :is-loading="isLoading"
+            />
+            <StatCard
+              label="En progreso"
+              :value="stats?.inProgressIncidents ?? 0"
+              :icon="ShieldAlert"
+              icon-bg-class="bg-blue-100 text-blue-600"
+              :is-loading="isLoading"
+            />
           </div>
         </div>
 
@@ -178,18 +170,20 @@ const groupedChartOpts = {
         <div class="space-y-2">
           <p class="text-sm font-medium uppercase tracking-wider text-muted-foreground/70">Comunidad</p>
           <div class="grid grid-cols-2 gap-3">
-            <div class="rounded-lg border bg-card p-4">
-              <p class="text-sm text-muted-foreground">Votaciones activas</p>
-              <p v-if="isLoading"><Skeleton class="mt-1 h-6 w-8" /></p>
-              <p v-else class="mt-1 text-2xl font-bold" :class="(stats?.activePolls ?? 0) > 0 ? 'text-purple-600' : ''">
-                {{ stats?.activePolls ?? 0 }}
-              </p>
-            </div>
-            <div class="rounded-lg border bg-card p-4">
-              <p class="text-sm text-muted-foreground">Reuniones proximas</p>
-              <p v-if="isLoading"><Skeleton class="mt-1 h-6 w-8" /></p>
-              <p v-else class="mt-1 text-2xl font-bold">{{ stats?.upcomingMeetings ?? 0 }}</p>
-            </div>
+            <StatCard
+              label="Votaciones activas"
+              :value="stats?.activePolls ?? 0"
+              :icon="Vote"
+              icon-bg-class="bg-purple-100 text-purple-600"
+              :is-loading="isLoading"
+            />
+            <StatCard
+              label="Reuniones proximas"
+              :value="stats?.upcomingMeetings ?? 0"
+              :icon="Users"
+              icon-bg-class="bg-emerald-100 text-emerald-600"
+              :is-loading="isLoading"
+            />
           </div>
         </div>
 
@@ -199,18 +193,20 @@ const groupedChartOpts = {
         <div class="space-y-2">
           <p class="text-sm font-medium uppercase tracking-wider text-muted-foreground/70">Condominio</p>
           <div class="grid grid-cols-2 gap-3">
-            <div class="rounded-lg border bg-card p-4">
-              <p class="text-sm text-muted-foreground">Unidades</p>
-              <p v-if="isLoading"><Skeleton class="mt-1 h-6 w-8" /></p>
-              <p v-else class="mt-1 text-2xl font-bold">{{ stats?.totalUnits ?? 0 }}</p>
-            </div>
-            <div class="rounded-lg border bg-card p-4">
-              <p class="text-sm text-muted-foreground">En mora</p>
-              <p v-if="isLoading"><Skeleton class="mt-1 h-6 w-8" /></p>
-              <p v-else class="mt-1 text-2xl font-bold" :class="(stats?.unitsInDebt ?? 0) > 0 ? 'text-destructive' : ''">
-                {{ stats?.unitsInDebt ?? 0 }}
-              </p>
-            </div>
+            <StatCard
+              label="Unidades"
+              :value="stats?.totalUnits ?? 0"
+              :icon="Home"
+              icon-bg-class="bg-blue-100 text-blue-600"
+              :is-loading="isLoading"
+            />
+            <StatCard
+              label="En mora"
+              :value="stats?.unitsInDebt ?? 0"
+              :icon="Wallet"
+              icon-bg-class="bg-red-100 text-red-600"
+              :is-loading="isLoading"
+            />
           </div>
         </div>
 
@@ -220,63 +216,63 @@ const groupedChartOpts = {
         <div class="space-y-2">
           <p class="text-sm font-medium uppercase tracking-wider text-muted-foreground/70">Finanzas del mes</p>
           <div class="grid grid-cols-3 gap-3">
-          <div class="rounded-lg border bg-card p-4">
-            <p class="text-sm text-muted-foreground">Cobrado</p>
-            <p v-if="isLoading"><Skeleton class="mt-1 h-5 w-14" /></p>
-            <p v-else class="mt-1 text-base font-bold text-emerald-600">
-              {{ trends?.financialKpis ? formatCurrency(trends.financialKpis.totalAbonos) : '—' }}
-            </p>
+            <StatCard
+              label="Cobrado"
+              :value="trends?.financialKpis ? formatCurrency(trends.financialKpis.totalAbonos) : '—'"
+              :icon="ClipboardCheck"
+              icon-bg-class="bg-emerald-100 text-emerald-600"
+              :is-loading="isLoading"
+            />
+            <StatCard
+              label="Pendiente"
+              :value="trends?.financialKpis ? formatCurrency(trends.financialKpis.pendingBalance) : '—'"
+              :icon="Wallet"
+              icon-bg-class="bg-red-100 text-red-600"
+              :is-loading="isLoading"
+            />
+            <StatCard
+              label="Cobranza"
+              :value="trends?.financialKpis ? `${trends.financialKpis.collectionRate.toFixed(1)}%` : '—'"
+              :icon="Percent"
+              icon-bg-class="bg-blue-100 text-blue-600"
+              :is-loading="isLoading"
+            />
           </div>
-          <div class="rounded-lg border bg-card p-4">
-            <p class="text-sm text-muted-foreground">Pendiente</p>
-            <p v-if="isLoading"><Skeleton class="mt-1 h-5 w-14" /></p>
-            <p v-else class="mt-1 text-base font-bold" :class="(trends?.financialKpis?.pendingBalance ?? 0) > 0 ? 'text-destructive' : ''">
-              {{ trends?.financialKpis ? formatCurrency(trends.financialKpis.pendingBalance) : '—' }}
-            </p>
-          </div>
-          <div class="rounded-lg border bg-card p-4">
-            <p class="text-sm text-muted-foreground">Cobranza</p>
-            <p v-if="isLoading"><Skeleton class="mt-1 h-5 w-14" /></p>
-            <p v-else class="mt-1 text-base font-bold text-blue-600">
-              {{ trends?.financialKpis ? `${trends.financialKpis.collectionRate.toFixed(1)}%` : '—' }}
-            </p>
-          </div>
-        </div>
         </div>
       </TabsContent>
 
       <!-- TAB: Finanzas -->
       <TabsContent value="finanzas" class="mt-4 space-y-5">
-        <!-- KPI cards grandes -->
+        <!-- KPI cards -->
         <div class="grid grid-cols-2 gap-3">
-          <div class="rounded-lg border bg-card p-4">
-            <p class="text-sm text-muted-foreground">Cobrado este mes</p>
-            <p v-if="isLoading"><Skeleton class="mt-1 h-6 w-24" /></p>
-            <p v-else class="mt-1 text-2xl font-bold text-emerald-600">
-              {{ trends?.financialKpis ? formatCurrency(trends.financialKpis.totalAbonos) : '—' }}
-            </p>
-          </div>
-          <div class="rounded-lg border bg-card p-4">
-            <p class="text-sm text-muted-foreground">Cargos este mes</p>
-            <p v-if="isLoading"><Skeleton class="mt-1 h-6 w-24" /></p>
-            <p v-else class="mt-1 text-2xl font-bold">
-              {{ trends?.financialKpis ? formatCurrency(trends.financialKpis.totalCargos) : '—' }}
-            </p>
-          </div>
-          <div class="rounded-lg border bg-card p-4">
-            <p class="text-sm text-muted-foreground">Pendiente total</p>
-            <p v-if="isLoading"><Skeleton class="mt-1 h-6 w-24" /></p>
-            <p v-else class="mt-1 text-2xl font-bold" :class="(trends?.financialKpis?.pendingBalance ?? 0) > 0 ? 'text-destructive' : ''">
-              {{ trends?.financialKpis ? formatCurrency(trends.financialKpis.pendingBalance) : '—' }}
-            </p>
-          </div>
-          <div class="rounded-lg border bg-card p-4">
-            <p class="text-sm text-muted-foreground">Tasa de cobranza</p>
-            <p v-if="isLoading"><Skeleton class="mt-1 h-6 w-24" /></p>
-            <p v-else class="mt-1 text-2xl font-bold text-blue-600">
-              {{ trends?.financialKpis ? `${trends.financialKpis.collectionRate.toFixed(1)}%` : '—' }}
-            </p>
-          </div>
+          <StatCard
+            label="Cobrado este mes"
+            :value="trends?.financialKpis ? formatCurrency(trends.financialKpis.totalAbonos) : '—'"
+            :icon="ClipboardCheck"
+            icon-bg-class="bg-emerald-100 text-emerald-600"
+            :is-loading="isLoading"
+          />
+          <StatCard
+            label="Cargos este mes"
+            :value="trends?.financialKpis ? formatCurrency(trends.financialKpis.totalCargos) : '—'"
+            :icon="Wallet"
+            icon-bg-class="bg-muted text-muted-foreground"
+            :is-loading="isLoading"
+          />
+          <StatCard
+            label="Pendiente total"
+            :value="trends?.financialKpis ? formatCurrency(trends.financialKpis.pendingBalance) : '—'"
+            :icon="AlertTriangle"
+            icon-bg-class="bg-red-100 text-red-600"
+            :is-loading="isLoading"
+          />
+          <StatCard
+            label="Tasa de cobranza"
+            :value="trends?.financialKpis ? `${trends.financialKpis.collectionRate.toFixed(1)}%` : '—'"
+            :icon="Percent"
+            icon-bg-class="bg-blue-100 text-blue-600"
+            :is-loading="isLoading"
+          />
         </div>
 
         <!-- Unidades en mora badge -->
@@ -328,24 +324,20 @@ const groupedChartOpts = {
 
         <!-- Quick incident stats -->
         <div class="grid grid-cols-2 gap-3">
-          <div class="flex items-center gap-3 rounded-lg border bg-card p-4">
-            <div class="flex size-10 items-center justify-center rounded-md bg-amber-100 text-amber-600">
-              <AlertTriangle class="size-5" />
-            </div>
-            <div>
-              <p class="text-2xl font-bold leading-none">{{ stats?.openIncidents ?? 0 }}</p>
-              <p class="mt-0.5 text-sm text-muted-foreground">Abiertas</p>
-            </div>
-          </div>
-          <div class="flex items-center gap-3 rounded-lg border bg-card p-4">
-            <div class="flex size-10 items-center justify-center rounded-md bg-blue-100 text-blue-600">
-              <ShieldAlert class="size-5" />
-            </div>
-            <div>
-              <p class="text-2xl font-bold leading-none">{{ stats?.inProgressIncidents ?? 0 }}</p>
-              <p class="mt-0.5 text-sm text-muted-foreground">En progreso</p>
-            </div>
-          </div>
+          <StatCard
+            label="Abiertas"
+            :value="stats?.openIncidents ?? 0"
+            :icon="AlertTriangle"
+            icon-bg-class="bg-amber-100 text-amber-600"
+            :is-loading="isLoading"
+          />
+          <StatCard
+            label="En progreso"
+            :value="stats?.inProgressIncidents ?? 0"
+            :icon="ShieldAlert"
+            icon-bg-class="bg-blue-100 text-blue-600"
+            :is-loading="isLoading"
+          />
         </div>
       </TabsContent>
     </Tabs>

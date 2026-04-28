@@ -1,31 +1,44 @@
 # Estado de Sesion — ChanaDomus
 
 ## Ultima Sesion
-- **Fecha**: 2026-04-20
-- **Sesion #**: 23
-- **Fase**: Fase 4 — Servicios, Comunidad y Lanzamiento
-- **Version**: v0.16.1 (QA Integral)
+- **Fecha**: 2026-04-27
+- **Sesion #**: 27
+- **Fase**: Fase 5 — Rediseno UI (M5.3 Dashboards + M5.4 Listados/Formularios)
+- **Version**: v0.16.1 (sin tag nuevo, cambios en dev)
 - **Branch**: dev
 - **Tag**: v0.16.1
-- **Push**: completado
+- **Push**: pendiente
 
-## Resumen Session 23
+## Resumen Session 27
 
-### M4.4: QA Integral
-- **API Testing**: 68 endpoints verificados por rol (admin/propietario/vigilancia/conserje), todos responden correctamente
-- **Visual QA (Playwright)**: Dashboard, Finanzas, Incidencias, Votaciones, Cartelera, Reuniones, Chat — todos renderizando correctamente
-- **Responsive 375px**: Todas las vistas admin verificadas en mobile, bottom nav funcional, sheet "Más" correcto
-- **Code Review**: 3 agentes paralelos revisaron 35 páginas Vue, identificaron bugs reales vs falsos positivos
-- **Bugs corregidos**:
-  1. Pluralización "1 unidades en mora" → "1 unidad en mora"
-  2. Hardcoded `totalUnits ?? 86` → `0` en votaciones admin
-  3. Watch pagination bug en votaciones propietario (reseteaba currentPage)
-  4. Vite HMR WebSocket conflicto con Nitro (puerto 24678)
-  5. Login page UI polish (icono, spacing)
-- **Known dev-only issue**: Vite CSS MIME type en Playwright Chromium (no afecta producción)
+### Fase 3: Dashboards Modernizados (4 paginas)
+- **Admin dashboard**: 9+ StatCards en 3 tabs, useFormatDate reemplaza helpers locales
+- **Propietario dashboard**: StatCard + 4 quick actions + greeting con fecha
+- **Vigilancia dashboard**: Hero card "Accesos Hoy" con badge En Vivo + 3 StatCards + 3 quick actions
+- **Conserje dashboard**: StatCard + 3 quick actions + greeting con fecha
 
-## Pendientes para Session 24
-1. M4.4: Marcar completed en hub de Zunami
-2. M4.5: Seed 86 propietarios con datos reales
-3. M4.5: Merge dev → main + deploy + v1.0.0
-4. Deadline: v1.0.0 para 2026-04-30
+### Fase 4a: Patrones duplicados reemplazados (5 paginas admin + propietario)
+- EmptyState, ErrorAlert, ListPagination, ListSkeleton, FilterTabs aplicados en:
+  - admin/cartelera, admin/reuniones, admin/votaciones
+  - mi-chana/cartelera, mi-chana/votaciones
+
+### Fase 4b: Dialog migrado a Sheet (3 paginas admin)
+- admin/cartelera, admin/reuniones, admin/votaciones: Dialog → Sheet side="right"
+
+### Fase 4c: Vista accesos modernizada
+- vigilancia/accesos: EmptyState, cleanup min-h-screen, sticky top-0
+
+### Bugs corregidos
+1. **useSidebar not defined** — Faltaba import en AppSidebar.vue
+2. **Hydration mismatch x3** — `new Date()` en computed/template movido a `ref('') + onMounted()` en propietario, vigilancia, conserje
+
+### Metricas
+- 20 archivos modificados, -223 lineas netas
+- Build: PASSING
+
+## Pendientes para Session 28
+1. **F5**: Reemplazar formatDate/formatTime locales en paginas restantes (incidencias, visitas, estado-cuenta, chat, proveedores, reuniones propietario, acceso/[token])
+2. **F6**: Migrar Dialog → Sheet en admin/incidencias, admin/unidades, admin/personal
+3. **F7**: Polish final — /polish, /audit, /adapt en todas las vistas
+4. **Button circular dep warning**: button/index.ts ↔ Button.vue (preexistente, no critico)
+5. **Merge dev → main** cuando rediseno este completo

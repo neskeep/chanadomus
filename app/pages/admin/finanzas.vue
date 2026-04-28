@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import {
-  Search,
   ArrowUpDown,
   Wallet,
   AlertTriangle,
@@ -34,6 +33,8 @@ const { units, fetchUnits } = useUnits()
 // --- Tab state ---
 const activeTab = ref('resumen')
 
+const { target, isMounted } = useTopbarPortal()
+
 // --- Resumen: search & sort ---
 const searchQuery = ref('')
 const sortAsc = ref(true)
@@ -59,7 +60,7 @@ const formUnit = ref('')
 const formType = ref<RecordType | ''>('')
 const formAmount = ref('')
 const formDescription = ref('')
-const formDate = ref(new Date().toISOString().split('T')[0])
+const formDate = ref('')
 
 async function handleCreateRecord() {
   if (!formUnit.value || !formType.value || !formAmount.value || !formDescription.value || !formDate.value) {
@@ -93,7 +94,7 @@ async function handleCreateRecord() {
 // --- Informes form ---
 const reportTitle = ref('')
 const reportMonth = ref('')
-const reportYear = ref(new Date().getFullYear().toString())
+const reportYear = ref('')
 const fileInputRef = ref<HTMLInputElement | null>(null)
 
 const meses = [
@@ -143,20 +144,36 @@ function getReportMonthLabel(month: number): string {
 }
 
 // --- Money formatting ---
+const { formatCurrency } = useFormatDate()
+
 function formatBalance(balance: string): string {
   const num = parseFloat(balance)
-  const abs = Math.abs(num).toLocaleString('es-VE', { minimumFractionDigits: 2 })
-  return `${num < 0 ? '-' : ''} Bs ${abs}`
+  const prefix = num < 0 ? '- ' : ''
+  return `${prefix}${formatCurrency(Math.abs(num))}`
 }
 
 // --- Init ---
 onMounted(async () => {
+  const today = new Date().toISOString().split('T')[0]
+  if (!formDate.value) formDate.value = today
+  if (!reportYear.value) reportYear.value = new Date().getFullYear().toString()
   await Promise.all([fetchSummary(), fetchUnits(), fetchReports(1)])
 })
 </script>
 
 <template>
   <div class="mx-auto max-w-5xl">
+    <!-- Topbar actions -->
+    <Teleport :to="target" defer v-if="isMounted">
+      <template v-if="activeTab === 'resumen'">
+        <TopbarSearch v-model="searchQuery" placeholder="Buscar unidad..." />
+        <Button size="sm" variant="outline" @click="sortAsc = !sortAsc">
+          <ArrowUpDown class="mr-1.5 size-3.5" />
+          {{ sortAsc ? 'Saldo asc' : 'Saldo desc' }}
+        </Button>
+      </template>
+    </Teleport>
+
     <!-- Stats cards -->
     <div class="mb-6 grid grid-cols-2 gap-3">
       <div class="flex items-center gap-3 rounded-lg border bg-card p-4">
@@ -207,26 +224,6 @@ onMounted(async () => {
 
       <!-- Tab 1: Resumen -->
       <TabsContent value="resumen" class="mt-4">
-        <!-- Search & sort controls -->
-        <div class="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center">
-          <div class="relative flex-1">
-            <Search class="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-            <Input
-              v-model="searchQuery"
-              placeholder="Buscar por numero de unidad..."
-              class="h-12 pl-9"
-            />
-          </div>
-          <Button
-            variant="outline"
-            class="shrink-0"
-            @click="sortAsc = !sortAsc"
-          >
-            <ArrowUpDown class="mr-2 size-4" />
-            Saldo {{ sortAsc ? 'asc' : 'desc' }}
-          </Button>
-        </div>
-
         <!-- Loading skeletons -->
         <div v-if="isLoading" class="overflow-x-auto rounded-lg border">
           <Table>

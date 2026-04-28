@@ -6,22 +6,34 @@ interface SessionUser {
 }
 
 export default defineNuxtRouteMiddleware(async (to) => {
-  let session: SessionUser | null = null
+  // Use useState to transfer session from SSR to client — avoids re-fetch during hydration
+  const sessionState = useState<SessionUser | null>('auth-session', () => null)
 
-  try {
-    if (import.meta.server) {
+  // On server: always fetch (with cookies)
+  // On client: fetch only on navigation (not during hydration if we already have state)
+  const nuxtApp = useNuxtApp()
+  const isHydrating = import.meta.client && nuxtApp.isHydrating
+
+  if (import.meta.server) {
+    try {
       const event = useRequestEvent()
       const cookie = event?.headers.get('cookie') ?? ''
-      session = await $fetch<SessionUser>('/api/auth/get-session', {
+      sessionState.value = await $fetch<SessionUser>('/api/auth/get-session', {
         headers: { cookie },
       })
-    } else {
-      session = await $fetch<SessionUser>('/api/auth/get-session')
+    } catch {
+      sessionState.value = null
     }
-  } catch {
-    session = null
+  } else if (!isHydrating) {
+    // Client-side navigation (not hydration) — re-check session
+    try {
+      sessionState.value = await $fetch<SessionUser>('/api/auth/get-session')
+    } catch {
+      sessionState.value = null
+    }
   }
 
+  const session = sessionState.value
   const isPublic = PUBLIC_ROUTES.some((route) => to.path === route || to.path.startsWith(route + '/'))
 
   // Not authenticated -> redirect to login

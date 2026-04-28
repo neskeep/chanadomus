@@ -5,14 +5,15 @@ import QRCode from 'qrcode'
 
 useHead({ title: 'Nueva Visita' })
 
+const { target, isMounted } = useTopbarPortal()
 const router = useRouter()
-const { generateQr, units, fetchUnits, isGenerating, error } = useQr()
+const { user } = useAuth()
+const { generateQr, isGenerating, error } = useQr()
 
 // Form state
 const visitorName = ref('')
 const visitorDocument = ref('')
 const visitorType = ref<VisitorType>('invitado')
-const selectedUnitId = ref('')
 const expiresAt = ref('')
 
 // Result state
@@ -34,14 +35,15 @@ function getDefault24h(): string {
   return local.toISOString().slice(0, 16)
 }
 
-onMounted(async () => {
+onMounted(() => {
   expiresAt.value = getDefault24h()
-  await fetchUnits()
 })
+
+const userUnitId = computed(() => (user.value as Record<string, unknown> | null)?.unitId as string | undefined)
 
 const isFormValid = computed(() => {
   return visitorName.value.trim() !== ''
-    && selectedUnitId.value !== ''
+    && !!userUnitId.value
     && expiresAt.value !== ''
 })
 
@@ -55,7 +57,7 @@ async function handleGenerate() {
       visitorName: visitorName.value.trim(),
       visitorDocument: visitorDocument.value.trim() || undefined,
       visitorType: visitorType.value,
-      unitId: selectedUnitId.value,
+      unitId: userUnitId.value!,
       expiresAt: new Date(expiresAt.value).toISOString(),
     })
 
@@ -128,7 +130,6 @@ function handleReset() {
   visitorName.value = ''
   visitorDocument.value = ''
   visitorType.value = 'invitado'
-  selectedUnitId.value = ''
   expiresAt.value = getDefault24h()
   generatedToken.value = null
   generatedData.value = null
@@ -137,23 +138,17 @@ function handleReset() {
   error.value = null
 }
 
-function formatDate(dateStr: string): string {
-  return new Date(dateStr).toLocaleString('es-VE', {
-    dateStyle: 'medium',
-    timeStyle: 'short',
-  })
-}
+const { formatDateTime } = useFormatDate()
 </script>
 
 <template>
   <div class="mx-auto max-w-lg">
-    <!-- Header -->
-    <div class="mb-6">
-      <Button variant="ghost" size="sm" class="-ml-2" @click="router.back()">
+    <Teleport :to="target" defer v-if="isMounted">
+      <Button variant="ghost" size="sm" @click="router.back()">
         <ArrowLeft class="mr-1 size-4" />
         Volver
       </Button>
-    </div>
+    </Teleport>
 
     <!-- Error alert -->
     <div
@@ -200,21 +195,6 @@ function formatDate(dateStr: string): string {
             <SelectContent>
               <SelectItem value="invitado">Invitado</SelectItem>
               <SelectItem value="proveedor">Proveedor</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-
-        <!-- Unidad destino -->
-        <div class="space-y-1.5">
-          <Label for="unit-select">Tu vivienda <span class="text-destructive">*</span></Label>
-          <Select v-model="selectedUnitId">
-            <SelectTrigger id="unit-select" class="h-12 w-full text-base">
-              <SelectValue placeholder="Seleccionar unidad" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem v-for="unit in units" :key="unit.id" :value="unit.id">
-                {{ unit.number }}{{ unit.label ? ` — ${unit.label}` : '' }}
-              </SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -271,7 +251,7 @@ function formatDate(dateStr: string): string {
             </div>
             <div class="flex justify-between">
               <span class="text-muted-foreground">Válido hasta</span>
-              <span class="text-xs">{{ generatedData ? formatDate(generatedData.expiresAt) : '' }}</span>
+              <span class="text-xs">{{ generatedData ? formatDateTime(generatedData.expiresAt) : '' }}</span>
             </div>
           </div>
         </CardContent>

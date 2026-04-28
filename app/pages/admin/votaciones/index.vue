@@ -2,16 +2,12 @@
 import {
   Vote,
   Plus,
-  Search,
-  Filter,
   Pencil,
   Trash2,
   Send,
   Lock,
   Loader2,
   Calendar,
-  ChevronLeft,
-  ChevronRight,
   FileText,
   X,
 } from 'lucide-vue-next'
@@ -19,6 +15,8 @@ import { toast } from 'vue-sonner'
 import type { Poll, PollStatus } from '~~/shared/types/poll'
 
 useHead({ title: 'Gestion de Votaciones' })
+
+const { formatDate } = useFormatDate()
 
 const {
   polls,
@@ -39,7 +37,15 @@ const {
 const currentPage = ref(1)
 const searchQuery = ref('')
 const filterStatus = ref<PollStatus | 'all'>('all')
-const showFilters = ref(false)
+
+const { target, isMounted } = useTopbarPortal()
+
+const statusOptions = [
+  { value: 'all' as const, label: 'Todos los estados' },
+  { value: 'draft' as const, label: 'Borrador' },
+  { value: 'active' as const, label: 'Activa' },
+  { value: 'closed' as const, label: 'Cerrada' },
+]
 
 // Create/Edit dialog
 const dialogOpen = ref(false)
@@ -204,14 +210,6 @@ async function handleDelete() {
   }
 }
 
-function formatDate(dateStr: string): string {
-  return new Date(dateStr).toLocaleDateString('es-VE', {
-    day: '2-digit',
-    month: 'short',
-    year: 'numeric',
-  })
-}
-
 function participationText(poll: Poll): string {
   const votes = poll.totalVotes ?? 0
   const units = poll.totalUnits ?? 0
@@ -221,13 +219,15 @@ function participationText(poll: Poll): string {
 
 <template>
   <div class="mx-auto max-w-5xl">
-    <!-- Header -->
-    <div class="mb-6 flex justify-end">
-      <Button @click="openCreateDialog">
-        <Plus class="mr-1.5 size-4" />
-        Nueva Votación
+    <!-- Topbar actions -->
+    <Teleport :to="target" defer v-if="isMounted">
+      <TopbarSearch v-model="searchQuery" placeholder="Buscar votacion..." />
+      <TopbarSelect v-model="filterStatus" :options="statusOptions" placeholder="Estado" />
+      <Button size="sm" @click="openCreateDialog">
+        <Plus class="mr-1.5 size-3.5" />
+        Nueva Votacion
       </Button>
-    </div>
+    </Teleport>
 
     <!-- Stats cards -->
     <div class="mb-6 grid grid-cols-2 gap-2">
@@ -254,71 +254,18 @@ function participationText(poll: Poll): string {
     </div>
 
     <!-- Error -->
-    <div
-      v-if="error"
-      role="alert"
-      class="mb-4 rounded-lg border border-destructive/50 bg-destructive/10 p-3 text-sm text-destructive"
-    >
-      {{ error }}
-    </div>
-
-    <!-- Search & filters -->
-    <div class="mb-4 space-y-3">
-      <div class="flex gap-2">
-        <div class="relative flex-1">
-          <Search class="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-          <Input
-            v-model="searchQuery"
-            placeholder="Buscar por título o autor..."
-            class="h-12 pl-9"
-          />
-        </div>
-        <Button
-          variant="outline"
-          size="icon"
-          :class="{ 'border-primary text-primary': showFilters }"
-          @click="showFilters = !showFilters"
-        >
-          <Filter class="size-4" />
-        </Button>
-      </div>
-
-      <!-- Filter selects -->
-      <div v-if="showFilters" class="grid grid-cols-1 gap-3">
-        <Select v-model="filterStatus">
-          <SelectTrigger class="h-12">
-            <SelectValue placeholder="Estado" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">Todos</SelectItem>
-            <SelectItem value="draft">Borrador</SelectItem>
-            <SelectItem value="active">Activa</SelectItem>
-            <SelectItem value="closed">Cerrada</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
-    </div>
+    <ErrorAlert v-if="error" :message="error" class="mb-4" />
 
     <!-- Loading -->
-    <div v-if="isLoading" class="space-y-2">
-      <Skeleton v-for="i in 5" :key="i" class="h-16 w-full rounded-lg" />
-    </div>
+    <ListSkeleton v-if="isLoading" :count="5" variant="row" />
 
     <!-- Empty state -->
-    <div
+    <EmptyState
       v-else-if="filteredPolls.length === 0"
-      class="flex flex-col items-center gap-4 rounded-lg border border-dashed p-8 text-center"
-    >
-      <div class="flex size-12 items-center justify-center rounded-full bg-muted">
-        <Vote class="size-6 text-muted-foreground" />
-      </div>
-      <div>
-        <p class="font-medium">No hay votaciones</p>
-        <p class="mt-1 text-sm text-muted-foreground">
-          {{ filterStatus !== 'all' ? 'Prueba cambiando los filtros' : 'Las votaciones aparecerán aquí' }}
-        </p>
-      </div>
-    </div>
+      :icon="Vote"
+      title="No hay votaciones"
+      :description="filterStatus !== 'all' ? 'Prueba cambiando los filtros' : 'Las votaciones aparecerán aquí'"
+    />
 
     <!-- Table (desktop) / Cards (mobile) -->
     <div v-else>
@@ -493,38 +440,18 @@ function participationText(poll: Poll): string {
       </div>
 
       <!-- Pagination -->
-      <div v-if="totalPages > 1" class="mt-4 flex items-center justify-between">
-        <Button
-          variant="outline"
-          :disabled="currentPage <= 1"
-          @click="currentPage--"
-        >
-          <ChevronLeft class="mr-1 size-4" />
-          Anterior
-        </Button>
-        <span class="text-sm text-muted-foreground">
-          {{ currentPage }} / {{ totalPages }}
-        </span>
-        <Button
-          variant="outline"
-          :disabled="currentPage >= totalPages"
-          @click="currentPage++"
-        >
-          Siguiente
-          <ChevronRight class="ml-1 size-4" />
-        </Button>
-      </div>
+      <ListPagination v-model:current-page="currentPage" :total-pages="totalPages" class="mt-4" />
     </div>
 
-    <!-- Create/Edit Dialog -->
-    <Dialog v-model:open="dialogOpen">
-      <DialogContent class="max-h-[90vh] overflow-y-auto sm:max-w-lg">
-        <DialogHeader>
-          <DialogTitle>{{ editingId ? 'Editar Votación' : 'Nueva Votación' }}</DialogTitle>
-          <DialogDescription>
+    <!-- Create/Edit Sheet -->
+    <Sheet v-model:open="dialogOpen">
+      <SheetContent side="right" class="overflow-y-auto sm:max-w-lg">
+        <SheetHeader>
+          <SheetTitle>{{ editingId ? 'Editar Votación' : 'Nueva Votación' }}</SheetTitle>
+          <SheetDescription>
             {{ editingId ? 'Modifica los datos de la votación' : 'Completa los datos para crear una nueva votación' }}
-          </DialogDescription>
-        </DialogHeader>
+          </SheetDescription>
+        </SheetHeader>
 
         <form class="space-y-4 py-2" @submit.prevent="handleSubmit">
           <div>
@@ -619,8 +546,8 @@ function participationText(poll: Poll): string {
             </Button>
           </div>
         </form>
-      </DialogContent>
-    </Dialog>
+      </SheetContent>
+    </Sheet>
 
     <!-- Delete AlertDialog -->
     <AlertDialog v-model:open="deleteDialogOpen">

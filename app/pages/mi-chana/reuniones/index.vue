@@ -27,10 +27,7 @@ function formatTime(iso: string): string {
   return new Date(iso).toLocaleTimeString('es-VE', { hour: '2-digit', minute: '2-digit' })
 }
 
-function formatMonthYear(iso: string): string {
-  const d = new Date(iso)
-  return d.toLocaleDateString('es-VE', { month: 'long', year: 'numeric' })
-}
+const { formatMonthYear } = useFormatDate()
 
 // --- Type / Status helpers ---
 

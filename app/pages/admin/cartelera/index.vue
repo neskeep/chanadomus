@@ -1,7 +1,5 @@
 <script setup lang="ts">
 import {
-  Search,
-  Filter,
   Plus,
   Megaphone,
   FileText,
@@ -10,8 +8,6 @@ import {
   Pencil,
   Trash2,
   Loader2,
-  ChevronLeft,
-  ChevronRight,
   Paperclip,
   Calendar,
 } from 'lucide-vue-next'
@@ -19,6 +15,8 @@ import { toast } from 'vue-sonner'
 import type { Announcement, AnnouncementCategory, AnnouncementStatus } from '~~/shared/types/announcement'
 
 useHead({ title: 'Gestion de Anuncios' })
+
+const { formatDate } = useFormatDate()
 
 const {
   announcements,
@@ -39,7 +37,18 @@ const {
 const currentPage = ref(1)
 const searchQuery = ref('')
 const filterCategory = ref<AnnouncementCategory | 'all'>('all')
-const showFilters = ref(false)
+
+const { target, isMounted } = useTopbarPortal()
+
+const categoryOptions = [
+  { value: 'all' as const, label: 'Todas las categorias' },
+  { value: 'general' as const, label: 'General' },
+  { value: 'mantenimiento' as const, label: 'Mantenimiento' },
+  { value: 'seguridad' as const, label: 'Seguridad' },
+  { value: 'financiero' as const, label: 'Financiero' },
+  { value: 'evento' as const, label: 'Evento' },
+  { value: 'urgente' as const, label: 'Urgente' },
+]
 
 // Create/Edit dialog
 const dialogOpen = ref(false)
@@ -203,25 +212,19 @@ function handlePdfSelect(event: Event) {
   const file = target.files?.[0]
   if (file) formPdfFile.value = file
 }
-
-function formatDate(dateStr: string): string {
-  return new Date(dateStr).toLocaleDateString('es-VE', {
-    day: '2-digit',
-    month: 'short',
-    year: 'numeric',
-  })
-}
 </script>
 
 <template>
   <div class="mx-auto max-w-5xl">
-    <!-- Header -->
-    <div class="mb-6 flex justify-end">
-      <Button @click="openCreateDialog">
-        <Plus class="mr-1.5 size-4" />
+    <!-- Topbar actions -->
+    <Teleport :to="target" defer v-if="isMounted">
+      <TopbarSearch v-model="searchQuery" placeholder="Buscar anuncio..." />
+      <TopbarSelect v-model="filterCategory" :options="categoryOptions" placeholder="Categoria" />
+      <Button size="sm" @click="openCreateDialog">
+        <Plus class="mr-1.5 size-3.5" />
         Nuevo Anuncio
       </Button>
-    </div>
+    </Teleport>
 
     <!-- Stats cards -->
     <div class="mb-6 grid grid-cols-2 gap-2">
@@ -248,74 +251,18 @@ function formatDate(dateStr: string): string {
     </div>
 
     <!-- Error -->
-    <div
-      v-if="error"
-      role="alert"
-      class="mb-4 rounded-lg border border-destructive/50 bg-destructive/10 p-3 text-sm text-destructive"
-    >
-      {{ error }}
-    </div>
-
-    <!-- Search & filters -->
-    <div class="mb-4 space-y-3">
-      <div class="flex gap-2">
-        <div class="relative flex-1">
-          <Search class="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-          <Input
-            v-model="searchQuery"
-            placeholder="Buscar por título o autor..."
-            class="h-12 pl-9"
-          />
-        </div>
-        <Button
-          variant="outline"
-          size="icon"
-          :class="{ 'border-primary text-primary': showFilters }"
-          @click="showFilters = !showFilters"
-        >
-          <Filter class="size-4" />
-        </Button>
-      </div>
-
-      <!-- Filter selects -->
-      <div v-if="showFilters" class="grid grid-cols-1 gap-3">
-        <Select v-model="filterCategory">
-          <SelectTrigger class="h-12">
-            <SelectValue placeholder="Categoría" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">Todas</SelectItem>
-            <SelectItem value="general">General</SelectItem>
-            <SelectItem value="mantenimiento">Mantenimiento</SelectItem>
-            <SelectItem value="seguridad">Seguridad</SelectItem>
-            <SelectItem value="financiero">Financiero</SelectItem>
-            <SelectItem value="evento">Evento</SelectItem>
-            <SelectItem value="urgente">Urgente</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
-    </div>
+    <ErrorAlert v-if="error" :message="error" class="mb-4" />
 
     <!-- Loading -->
-    <div v-if="isLoading" class="space-y-2">
-      <Skeleton v-for="i in 5" :key="i" class="h-16 w-full rounded-lg" />
-    </div>
+    <ListSkeleton v-if="isLoading" :count="5" variant="row" />
 
     <!-- Empty state -->
-    <div
+    <EmptyState
       v-else-if="filteredAnnouncements.length === 0"
-      class="flex flex-col items-center gap-4 rounded-lg border border-dashed p-8 text-center"
-    >
-      <div class="flex size-12 items-center justify-center rounded-full bg-muted">
-        <Megaphone class="size-6 text-muted-foreground" />
-      </div>
-      <div>
-        <p class="font-medium">No hay anuncios</p>
-        <p class="mt-1 text-sm text-muted-foreground">
-          {{ filterCategory !== 'all' ? 'Prueba cambiando los filtros' : 'Los anuncios de la cartelera aparecerán aquí' }}
-        </p>
-      </div>
-    </div>
+      :icon="Megaphone"
+      title="No hay anuncios"
+      :description="filterCategory !== 'all' ? 'Prueba cambiando los filtros' : 'Los anuncios de la cartelera aparecerán aquí'"
+    />
 
     <!-- Table (desktop) / Cards (mobile) -->
     <div v-else>
@@ -471,38 +418,18 @@ function formatDate(dateStr: string): string {
       </div>
 
       <!-- Pagination -->
-      <div v-if="totalPages > 1" class="mt-4 flex items-center justify-between">
-        <Button
-          variant="outline"
-          :disabled="currentPage <= 1"
-          @click="currentPage--"
-        >
-          <ChevronLeft class="mr-1 size-4" />
-          Anterior
-        </Button>
-        <span class="text-sm text-muted-foreground">
-          {{ currentPage }} / {{ totalPages }}
-        </span>
-        <Button
-          variant="outline"
-          :disabled="currentPage >= totalPages"
-          @click="currentPage++"
-        >
-          Siguiente
-          <ChevronRight class="ml-1 size-4" />
-        </Button>
-      </div>
+      <ListPagination v-model:current-page="currentPage" :total-pages="totalPages" class="mt-4" />
     </div>
 
-    <!-- Create/Edit Dialog -->
-    <Dialog v-model:open="dialogOpen">
-      <DialogContent class="max-h-[90vh] overflow-y-auto sm:max-w-lg">
-        <DialogHeader>
-          <DialogTitle>{{ editingId ? 'Editar Anuncio' : 'Nuevo Anuncio' }}</DialogTitle>
-          <DialogDescription>
+    <!-- Create/Edit Sheet -->
+    <Sheet v-model:open="dialogOpen">
+      <SheetContent side="right" class="overflow-y-auto sm:max-w-lg">
+        <SheetHeader>
+          <SheetTitle>{{ editingId ? 'Editar Anuncio' : 'Nuevo Anuncio' }}</SheetTitle>
+          <SheetDescription>
             {{ editingId ? 'Modifica los datos del anuncio' : 'Completa los datos para crear un nuevo anuncio' }}
-          </DialogDescription>
-        </DialogHeader>
+          </SheetDescription>
+        </SheetHeader>
 
         <form class="space-y-4 py-2" @submit.prevent="handleSubmit">
           <div>
@@ -601,8 +528,8 @@ function formatDate(dateStr: string): string {
             </Button>
           </div>
         </form>
-      </DialogContent>
-    </Dialog>
+      </SheetContent>
+    </Sheet>
 
     <!-- Delete AlertDialog -->
     <AlertDialog v-model:open="deleteDialogOpen">

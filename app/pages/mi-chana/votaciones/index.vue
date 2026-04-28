@@ -1,11 +1,8 @@
 <script setup lang="ts">
 import {
   Vote,
-  ChevronLeft,
-  ChevronRight,
   CheckCircle2,
   Clock,
-  Lock,
   Users,
   Loader2,
 } from 'lucide-vue-next'
@@ -14,7 +11,10 @@ import type { Poll, PollStatus } from '~~/shared/types/poll'
 
 useHead({ title: 'Votaciones' })
 
+const { formatDate } = useFormatDate()
 const { polls, meta, isLoading, isSubmitting, error, totalPages, fetchPolls, vote } = usePolls()
+
+const { target, isMounted } = useTopbarPortal()
 
 const currentPage = ref(1)
 const activeTab = ref<'active' | 'closed'>('active')
@@ -26,9 +26,22 @@ const STATUS_CONFIG: Record<PollStatus, { label: string; class: string }> = {
   closed: { label: 'Cerrada', class: 'bg-blue-100 text-blue-800' },
 }
 
+const statusOptions: Array<{ value: 'active' | 'closed'; label: string }> = [
+  { value: 'active', label: 'Activas' },
+  { value: 'closed', label: 'Cerradas' },
+]
+
 const filteredPolls = computed(() => {
   return polls.value.filter(p => p.status === activeTab.value)
 })
+
+const emptyTitle = computed(() =>
+  activeTab.value === 'active' ? 'No hay votaciones activas' : 'No hay votaciones cerradas',
+)
+
+const emptyDescription = computed(() =>
+  activeTab.value === 'active' ? 'Las nuevas votaciones apareceran aqui' : 'Las votaciones cerradas apareceran aqui',
+)
 
 async function loadPolls() {
   await fetchPolls({ page: currentPage.value, status: activeTab.value })
@@ -51,9 +64,12 @@ function hasVoted(poll: Poll): boolean {
   return !!poll.userVote
 }
 
+const clientNow = ref<Date | null>(null)
+onMounted(() => { clientNow.value = new Date() })
+
 function isExpired(poll: Poll): boolean {
-  if (!poll.deadline) return false
-  return new Date() > new Date(poll.deadline)
+  if (!poll.deadline || !clientNow.value) return false
+  return clientNow.value > new Date(poll.deadline)
 }
 
 function canVote(poll: Poll): boolean {
@@ -63,7 +79,7 @@ function canVote(poll: Poll): boolean {
 async function handleVote(poll: Poll) {
   const optionId = selectedOption.value[poll.id]
   if (!optionId) {
-    toast.error('Selecciona una opción')
+    toast.error('Selecciona una opcion')
     return
   }
 
@@ -77,14 +93,6 @@ async function handleVote(poll: Poll) {
   }
 }
 
-function formatDate(dateStr: string): string {
-  return new Date(dateStr).toLocaleDateString('es-VE', {
-    day: '2-digit',
-    month: 'short',
-    year: 'numeric',
-  })
-}
-
 function getParticipation(poll: Poll): string {
   const total = poll.totalUnits ?? 0
   const votes = poll.totalVotes ?? 0
@@ -95,66 +103,26 @@ function getParticipation(poll: Poll): string {
 
 <template>
   <div class="mx-auto max-w-lg">
-    <!-- Tabs -->
-    <div class="mb-4 flex gap-2">
-      <Button
-        :variant="activeTab === 'active' ? 'default' : 'outline'"
-        size="sm"
-        @click="activeTab = 'active'"
-      >
-        Activas
-      </Button>
-      <Button
-        :variant="activeTab === 'closed' ? 'default' : 'outline'"
-        size="sm"
-        @click="activeTab = 'closed'"
-      >
-        Cerradas
-      </Button>
-    </div>
+    <!-- Topbar actions -->
+    <Teleport :to="target" defer v-if="isMounted">
+      <TopbarSelect v-model="activeTab" :options="statusOptions" placeholder="Estado" />
+    </Teleport>
 
     <!-- Error -->
-    <div
-      v-if="error"
-      role="alert"
-      class="mb-4 rounded-lg border border-destructive/50 bg-destructive/10 p-3 text-sm text-destructive"
-    >
-      {{ error }}
-    </div>
+    <ErrorAlert v-if="error" :message="error" class="mb-4" />
 
     <!-- Loading -->
-    <div v-if="isLoading" class="space-y-3">
-      <Card v-for="i in 3" :key="i">
-        <CardContent class="p-3">
-          <div class="space-y-2.5">
-            <Skeleton class="h-5 w-3/4" />
-            <Skeleton class="h-4 w-1/2" />
-            <Skeleton class="h-8 w-full" />
-            <Skeleton class="h-8 w-full" />
-          </div>
-        </CardContent>
-      </Card>
-    </div>
+    <ListSkeleton v-if="isLoading" :count="3" variant="card" />
 
     <!-- Content -->
     <template v-else-if="!error">
       <!-- Empty state -->
-      <div
+      <EmptyState
         v-if="filteredPolls.length === 0"
-        class="flex flex-col items-center gap-4 rounded-lg border border-dashed p-8 text-center"
-      >
-        <div class="flex size-10 items-center justify-center rounded-lg bg-muted">
-          <Vote class="size-5 text-muted-foreground" />
-        </div>
-        <div>
-          <p class="font-medium">
-            {{ activeTab === 'active' ? 'No hay votaciones activas' : 'No hay votaciones cerradas' }}
-          </p>
-          <p class="mt-1 text-sm text-muted-foreground">
-            {{ activeTab === 'active' ? 'Las nuevas votaciones aparecerán aquí' : 'Las votaciones cerradas aparecerán aquí' }}
-          </p>
-        </div>
-      </div>
+        :icon="Vote"
+        :title="emptyTitle"
+        :description="emptyDescription"
+      />
 
       <!-- Poll cards -->
       <div v-else class="space-y-3">
@@ -215,7 +183,7 @@ function getParticipation(poll: Poll): string {
               <Separator class="mb-4" />
               <RadioGroup
                 :model-value="selectedOption[poll.id] ?? ''"
-                @update:model-value="(val: string) => selectedOption[poll.id] = val"
+                @update:model-value="(val) => selectedOption[poll.id] = String(val)"
               >
                 <div
                   v-for="opt in poll.options"
@@ -277,29 +245,7 @@ function getParticipation(poll: Poll): string {
         </Card>
 
         <!-- Pagination -->
-        <div v-if="totalPages > 1" class="flex items-center justify-between pt-4">
-          <Button
-            variant="outline"
-            size="sm"
-            :disabled="currentPage <= 1"
-            @click="currentPage--"
-          >
-            <ChevronLeft class="mr-1 size-4" />
-            Anterior
-          </Button>
-          <span class="text-sm text-muted-foreground">
-            {{ currentPage }} / {{ totalPages }}
-          </span>
-          <Button
-            variant="outline"
-            size="sm"
-            :disabled="currentPage >= totalPages"
-            @click="currentPage++"
-          >
-            Siguiente
-            <ChevronRight class="ml-1 size-4" />
-          </Button>
-        </div>
+        <ListPagination v-model:current-page="currentPage" :total-pages="totalPages" />
       </div>
     </template>
   </div>

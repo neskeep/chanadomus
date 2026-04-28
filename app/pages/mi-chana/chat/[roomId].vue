@@ -8,8 +8,8 @@ import type { ChatMessage } from '~~/shared/types/chat'
 
 definePageMeta({ layout: 'default' })
 
+const { target, isMounted } = useTopbarPortal()
 const route = useRoute()
-const router = useRouter()
 const { user } = useAuth()
 
 const roomId = computed(() => route.params.roomId as string)
@@ -154,25 +154,19 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <div class="-mx-4 -mt-6 -mb-6 flex flex-col h-[calc(100dvh-7.5rem)] md:h-[calc(100dvh-3.5rem)]">
-    <!-- Chat header -->
-    <div class="flex shrink-0 items-center gap-3 border-b bg-background px-4 py-3">
-      <button
-        type="button"
-        class="flex size-8 items-center justify-center rounded-lg transition-colors hover:bg-muted"
-        aria-label="Volver a salas de chat"
-        @click="router.push('/mi-chana/chat')"
-      >
-        <ChevronLeft class="size-5" />
-      </button>
-      <h1 class="min-w-0 flex-1 truncate text-sm font-semibold">{{ roomName }}</h1>
+  <div class="absolute inset-0 flex flex-col pb-[4.5rem] md:pb-0">
+    <Teleport :to="target" defer v-if="isMounted">
+      <Button variant="ghost" size="sm" @click="navigateTo('/mi-chana/chat')">
+        <ChevronLeft class="mr-1 size-4" />
+        {{ roomName }}
+      </Button>
       <span
         class="size-2 shrink-0 rounded-full"
         :class="connected ? 'bg-emerald-500' : 'bg-red-500'"
         :aria-label="connected ? 'Conectado' : 'Desconectado'"
         role="status"
       />
-    </div>
+    </Teleport>
 
     <!-- Messages area -->
     <div

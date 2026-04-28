@@ -16,6 +16,7 @@ import { PROVIDER_CATEGORIES } from '~~/shared/types/provider'
 
 useHead({ title: 'Directorio de Proveedores' })
 
+const { target, isMounted } = useTopbarPortal()
 const { role } = useAuth()
 const {
   providers,
@@ -34,7 +35,15 @@ const canCreate = computed(() => role.value === 'admin' || role.value === 'conse
 const currentPage = ref(1)
 const searchQuery = ref('')
 const filterCategory = ref<ProviderCategory | 'all'>('all')
-const showFilters = ref(false)
+
+const categoryOptions = computed(() => [
+  { value: '' as ProviderCategory | '', label: 'Todas' },
+  ...PROVIDER_CATEGORIES.map(c => ({ value: c.key as ProviderCategory | '', label: c.label })),
+])
+const filterCategoryModel = computed({
+  get: () => filterCategory.value === 'all' ? '' : filterCategory.value,
+  set: (v: string) => { filterCategory.value = (v || 'all') as ProviderCategory | 'all' },
+})
 
 // Suggest dialog
 const suggestOpen = ref(false)
@@ -138,6 +147,19 @@ function renderStars(rating: number | undefined): number[] {
 
 <template>
   <div class="mx-auto max-w-5xl">
+    <Teleport :to="target" defer v-if="isMounted">
+      <TopbarSearch v-model="searchQuery" placeholder="Buscar proveedor..." />
+      <TopbarSelect v-model="filterCategoryModel" :options="categoryOptions" placeholder="Categoria" />
+      <Button v-if="role === 'propietario'" size="sm" variant="outline" @click="openSuggestDialog">
+        <Plus class="mr-1.5 size-3.5" />
+        Sugerir
+      </Button>
+      <Button v-if="canCreate" size="sm" @click="navigateTo('/admin/proveedores')">
+        <Plus class="mr-1.5 size-3.5" />
+        Gestionar
+      </Button>
+    </Teleport>
+
     <!-- Error -->
     <div
       v-if="error"
@@ -145,43 +167,6 @@ function renderStars(rating: number | undefined): number[] {
       class="mb-4 rounded-lg border border-destructive/50 bg-destructive/10 p-3 text-sm text-destructive"
     >
       {{ error }}
-    </div>
-
-    <!-- Search & filters -->
-    <div class="mb-4 space-y-3">
-      <div class="flex gap-2">
-        <div class="relative flex-1">
-          <Search class="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-          <Input
-            v-model="searchQuery"
-            placeholder="Buscar por nombre o servicio..."
-            class="pl-9"
-          />
-        </div>
-        <Button
-          variant="outline"
-          size="icon"
-          :class="{ 'border-primary text-primary': showFilters }"
-          @click="showFilters = !showFilters"
-        >
-          <Filter class="size-4" />
-        </Button>
-      </div>
-
-      <!-- Filter selects -->
-      <div v-if="showFilters" class="grid grid-cols-1 gap-3">
-        <Select v-model="filterCategory">
-          <SelectTrigger>
-            <SelectValue placeholder="Categoria" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">Todas</SelectItem>
-            <SelectItem v-for="cat in PROVIDER_CATEGORIES" :key="cat.key" :value="cat.key">
-              {{ cat.label }}
-            </SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
     </div>
 
     <!-- Loading -->
@@ -297,24 +282,6 @@ function renderStars(rating: number | undefined): number[] {
         </Button>
       </div>
     </div>
-
-    <!-- Suggest button for propietarios -->
-    <div v-if="role === 'propietario' && !isLoading && filteredProviders.length > 0" class="mt-6 text-center">
-      <Button variant="outline" size="sm" @click="openSuggestDialog">
-        <Plus class="mr-1.5 size-4" />
-        Sugerir Proveedor
-      </Button>
-    </div>
-
-    <!-- FAB for admin/conserje -->
-    <NuxtLink
-      v-if="canCreate"
-      to="/admin/proveedores"
-      class="fixed bottom-20 left-4 z-50 flex size-12 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg transition-transform hover:scale-105 active:scale-95 md:bottom-6"
-      aria-label="Gestionar proveedores"
-    >
-      <Plus class="size-5" />
-    </NuxtLink>
 
     <!-- Suggest Dialog -->
     <Dialog v-model:open="suggestOpen">

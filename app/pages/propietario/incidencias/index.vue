@@ -12,10 +12,11 @@ import {
   ChevronDown,
   ChevronUp,
 } from 'lucide-vue-next'
-import { buttonVariants } from '~/components/ui/button'
 import type { Incident, IncidentStatus, IncidentPriority } from '~~/shared/types/incident'
 
 useHead({ title: 'Mis Incidencias' })
+
+const { target, isMounted } = useTopbarPortal()
 
 const { incidents, meta, isLoading, error, totalPages, fetchIncidents } = useIncidents()
 const currentPage = ref(1)
@@ -52,33 +53,18 @@ function toggleDetail(incident: Incident) {
   }
 }
 
-function formatDate(dateStr: string): string {
-  return new Date(dateStr).toLocaleDateString('es-VE', {
-    day: '2-digit',
-    month: 'short',
-    year: 'numeric',
-  })
-}
-
-function formatDateTime(dateStr: string): string {
-  return new Date(dateStr).toLocaleString('es-VE', {
-    day: '2-digit',
-    month: 'short',
-    hour: '2-digit',
-    minute: '2-digit',
-  })
-}
+const { formatDate, formatDateTime } = useFormatDate()
 </script>
 
 <template>
   <div class="mx-auto max-w-lg">
-    <!-- Header -->
-    <div class="mb-6 flex justify-end">
-      <NuxtLink to="/propietario/incidencias/nueva" :class="buttonVariants({ size: 'sm' })">
-        <Plus class="mr-1.5 size-4" />
+    <!-- Topbar actions -->
+    <Teleport :to="target" defer v-if="isMounted">
+      <Button size="sm" @click="navigateTo('/propietario/incidencias/nueva')">
+        <Plus class="mr-1.5 size-3.5" />
         Reportar
-      </NuxtLink>
-    </div>
+      </Button>
+    </Teleport>
 
     <!-- Error -->
     <div
@@ -119,10 +105,10 @@ function formatDateTime(dateStr: string): string {
           <p class="font-medium">No tienes incidencias</p>
           <p class="mt-1 text-sm text-muted-foreground">Reporta un problema y le daremos seguimiento</p>
         </div>
-        <NuxtLink to="/propietario/incidencias/nueva" :class="buttonVariants({ size: 'sm' })">
-          <Plus class="mr-1.5 size-4" />
+        <Button size="sm" @click="navigateTo('/propietario/incidencias/nueva')">
+          <Plus class="mr-1.5 size-3.5" />
           Reportar incidencia
-        </NuxtLink>
+        </Button>
       </div>
 
       <!-- Incident cards -->

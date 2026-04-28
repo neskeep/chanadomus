@@ -1,9 +1,10 @@
 <script setup lang="ts">
-import { SwitchCamera, CheckCircle2, XCircle, AlertTriangle, Camera } from 'lucide-vue-next'
+import { SwitchCamera, CheckCircle2, XCircle, AlertTriangle, Camera, ScanLine, User, Home, Clock, RotateCcw } from 'lucide-vue-next'
 import type { ValidationStatus } from '~~/shared/types/qr'
 
 useHead({ title: 'Escanear QR' })
 
+const { target, isMounted } = useTopbarPortal()
 const {
   isScanning,
   scanResult,
@@ -11,7 +12,6 @@ const {
   error,
   videoRef,
   canvasRef,
-  facingMode,
   startScanning,
   stopScanning,
   toggleCamera,
@@ -26,129 +26,184 @@ onUnmounted(() => {
   stopScanning()
 })
 
-function statusLabel(status: ValidationStatus): string {
-  const map: Record<ValidationStatus, string> = {
-    valid: 'Acceso autorizado',
-    expired: 'Código expirado',
-    already_used: 'Código ya utilizado',
-    invalid: 'Código inválido',
-  }
-  return map[status]
-}
-
-function resultBorderClass(status: ValidationStatus): string {
-  const map: Record<ValidationStatus, string> = {
-    valid: 'border-l-green-500',
-    expired: 'border-l-amber-500',
-    already_used: 'border-l-amber-500',
-    invalid: 'border-l-red-500',
-  }
-  return map[status]
-}
-
-function resultIconBgClass(status: ValidationStatus): string {
-  const map: Record<ValidationStatus, string> = {
-    valid: 'bg-green-100 text-green-600',
-    expired: 'bg-amber-100 text-amber-600',
-    already_used: 'bg-amber-100 text-amber-600',
-    invalid: 'bg-red-100 text-red-600',
-  }
-  return map[status]
+const statusConfig: Record<ValidationStatus, { label: string; bg: string; icon: string; accent: string }> = {
+  valid: { label: 'Acceso autorizado', bg: 'bg-green-500', icon: 'text-green-500', accent: 'ring-green-500/30' },
+  expired: { label: 'Código expirado', bg: 'bg-amber-500', icon: 'text-amber-500', accent: 'ring-amber-500/30' },
+  already_used: { label: 'Código ya utilizado', bg: 'bg-amber-500', icon: 'text-amber-500', accent: 'ring-amber-500/30' },
+  invalid: { label: 'Código inválido', bg: 'bg-red-500', icon: 'text-red-500', accent: 'ring-red-500/30' },
 }
 </script>
 
 <template>
-  <div class="-mx-4 -my-6 flex min-h-[calc(100dvh-3.5rem-4rem)] flex-col bg-background">
-    <!-- Header -->
-    <div class="flex items-center justify-end border-b px-4 py-3">
-      <Button variant="ghost" size="icon" class="size-9" @click="toggleCamera">
-        <SwitchCamera class="size-5" />
-        <span class="sr-only">Cambiar cámara</span>
+  <div class="-mx-4 -my-6 lg:-mx-6 flex h-[calc(100dvh-3rem-4.5rem)] md:h-[calc(100dvh-3.5rem)] flex-col overflow-hidden bg-black">
+    <Teleport :to="target" defer v-if="isMounted">
+      <Button variant="ghost" size="sm" @click="toggleCamera">
+        <SwitchCamera class="mr-1 size-4" />
+        Cámara
       </Button>
-    </div>
+    </Teleport>
 
-    <!-- Error message -->
-    <div
-      v-if="error"
-      role="alert"
-      class="mx-4 mt-4 rounded-lg border border-destructive/50 bg-destructive/10 p-3 text-sm text-destructive"
-    >
-      {{ error }}
-    </div>
-
-    <!-- Camera area -->
-    <div class="relative flex flex-1 items-center justify-center overflow-hidden bg-black">
+    <!-- Full viewport camera -->
+    <div class="relative flex-1 overflow-hidden">
       <video
         ref="videoRef"
-        class="h-full w-full object-cover"
+        class="absolute inset-0 h-full w-full -scale-x-100 object-cover"
         autoplay
         playsinline
         muted
       />
       <canvas ref="canvasRef" class="hidden" />
 
-      <!-- Scanning overlay with corner accents -->
+      <!-- Scanning viewfinder -->
       <div
         v-if="isScanning && !scanResult && !isProcessing"
-        class="absolute inset-0 flex items-center justify-center"
+        class="absolute inset-0 flex flex-col items-center justify-center"
       >
-        <div class="relative size-64">
-          <!-- Top-left corner -->
-          <div class="absolute left-0 top-0 h-8 w-8 border-l-3 border-t-3 border-white rounded-tl-lg" />
-          <!-- Top-right corner -->
-          <div class="absolute right-0 top-0 h-8 w-8 border-r-3 border-t-3 border-white rounded-tr-lg" />
-          <!-- Bottom-left corner -->
-          <div class="absolute bottom-0 left-0 h-8 w-8 border-b-3 border-l-3 border-white rounded-bl-lg" />
-          <!-- Bottom-right corner -->
-          <div class="absolute bottom-0 right-0 h-8 w-8 border-b-3 border-r-3 border-white rounded-br-lg" />
+        <!-- Dimmed edges around viewfinder -->
+        <div class="absolute inset-0 bg-black/40" />
+
+        <div class="relative z-10 flex flex-col items-center gap-6">
+          <!-- Viewfinder frame -->
+          <div class="relative size-56 sm:size-64">
+            <!-- Cut-out effect -->
+            <div class="absolute -inset-[2000px] bg-black/40 [clip-path:polygon(0_0,100%_0,100%_100%,0_100%,0_0,calc(50%-7rem)_calc(50%-7rem),calc(50%-7rem)_calc(50%+7rem),calc(50%+7rem)_calc(50%+7rem),calc(50%+7rem)_calc(50%-7rem),calc(50%-7rem)_calc(50%-7rem))] sm:[clip-path:polygon(0_0,100%_0,100%_100%,0_100%,0_0,calc(50%-8rem)_calc(50%-8rem),calc(50%-8rem)_calc(50%+8rem),calc(50%+8rem)_calc(50%+8rem),calc(50%+8rem)_calc(50%-8rem),calc(50%-8rem)_calc(50%-8rem))]" />
+
+            <!-- Corner brackets -->
+            <div class="absolute left-0 top-0 h-10 w-10 border-l-[3px] border-t-[3px] border-white rounded-tl-xl" />
+            <div class="absolute right-0 top-0 h-10 w-10 border-r-[3px] border-t-[3px] border-white rounded-tr-xl" />
+            <div class="absolute bottom-0 left-0 h-10 w-10 border-b-[3px] border-l-[3px] border-white rounded-bl-xl" />
+            <div class="absolute bottom-0 right-0 h-10 w-10 border-b-[3px] border-r-[3px] border-white rounded-br-xl" />
+
+            <!-- Scan line animation -->
+            <div class="absolute inset-x-3 top-3 h-0.5 animate-[scan_2s_ease-in-out_infinite] rounded-full bg-white/80 shadow-[0_0_8px_rgba(255,255,255,0.5)]" />
+          </div>
+
+          <!-- Hint text -->
+          <p class="relative z-10 text-sm font-medium text-white/80">
+            Apunta al código QR del visitante
+          </p>
         </div>
       </div>
 
-      <!-- Processing indicator -->
+      <!-- Processing overlay -->
       <div
         v-if="isProcessing"
-        class="absolute inset-0 flex flex-col items-center justify-center bg-black/60"
+        class="absolute inset-0 flex flex-col items-center justify-center bg-black/70 backdrop-blur-sm"
       >
-        <div class="size-12 animate-spin rounded-full border-4 border-white/30 border-t-white" />
-        <p class="mt-4 text-lg font-medium text-white">Validando...</p>
+        <div class="size-14 animate-spin rounded-full border-[3px] border-white/20 border-t-white" />
+        <p class="mt-5 text-lg font-medium text-white">Validando código...</p>
       </div>
+
+      <!-- Result overlay (replaces camera view) -->
+      <Transition
+        enter-active-class="transition-all duration-300 ease-out"
+        enter-from-class="opacity-0 scale-95"
+        enter-to-class="opacity-100 scale-100"
+      >
+        <div
+          v-if="scanResult"
+          class="absolute inset-0 flex flex-col items-center justify-center bg-black/80 backdrop-blur-md px-6"
+        >
+          <!-- Status icon -->
+          <div
+            :class="[statusConfig[scanResult.status].accent]"
+            class="flex size-24 items-center justify-center rounded-full bg-white/10 ring-4 backdrop-blur-sm"
+          >
+            <CheckCircle2
+              v-if="scanResult.status === 'valid'"
+              :class="statusConfig[scanResult.status].icon"
+              class="size-12"
+            />
+            <AlertTriangle
+              v-else-if="scanResult.status === 'expired' || scanResult.status === 'already_used'"
+              :class="statusConfig[scanResult.status].icon"
+              class="size-12"
+            />
+            <XCircle
+              v-else
+              :class="statusConfig[scanResult.status].icon"
+              class="size-12"
+            />
+          </div>
+
+          <!-- Status label -->
+          <div
+            :class="statusConfig[scanResult.status].bg"
+            class="mt-5 rounded-full px-5 py-1.5 text-sm font-semibold text-white"
+          >
+            {{ statusConfig[scanResult.status].label }}
+          </div>
+
+          <!-- Visitor details -->
+          <div
+            v-if="scanResult.visitorName || scanResult.unitNumber"
+            class="mt-6 w-full max-w-xs space-y-3 rounded-2xl bg-white/10 p-4 backdrop-blur-sm"
+          >
+            <div v-if="scanResult.visitorName" class="flex items-center gap-3">
+              <User class="size-4 shrink-0 text-white/50" />
+              <span class="text-base font-medium text-white">{{ scanResult.visitorName }}</span>
+            </div>
+            <div v-if="scanResult.unitNumber" class="flex items-center gap-3">
+              <Home class="size-4 shrink-0 text-white/50" />
+              <span class="text-sm text-white/80">
+                {{ scanResult.unitNumber }}{{ scanResult.unitLabel ? ` — ${scanResult.unitLabel}` : '' }}
+              </span>
+            </div>
+            <div v-if="scanResult.visitorType" class="flex items-center gap-3">
+              <Clock class="size-4 shrink-0 text-white/50" />
+              <span class="text-sm text-white/80">
+                {{ scanResult.visitorType === 'invitado' ? 'Invitado' : 'Proveedor' }}
+              </span>
+            </div>
+          </div>
+
+          <!-- Scan again button -->
+          <Button
+            class="mt-8 h-12 gap-2 rounded-full px-8 text-base"
+            @click="resetScan"
+          >
+            <RotateCcw class="size-4" />
+            Escanear otro
+          </Button>
+        </div>
+      </Transition>
+
+      <!-- Error toast overlay -->
+      <Transition
+        enter-active-class="transition-all duration-200 ease-out"
+        enter-from-class="opacity-0 translate-y-2"
+        enter-to-class="opacity-100 translate-y-0"
+        leave-active-class="transition-all duration-150 ease-in"
+        leave-from-class="opacity-100 translate-y-0"
+        leave-to-class="opacity-0 translate-y-2"
+      >
+        <div
+          v-if="error"
+          role="alert"
+          class="absolute inset-x-4 top-4 rounded-xl border border-red-500/30 bg-red-950/80 p-3 text-sm text-red-200 backdrop-blur-sm"
+        >
+          {{ error }}
+        </div>
+      </Transition>
 
       <!-- Start scanning prompt -->
       <button
         v-if="!isScanning && !error"
-        class="absolute inset-0 flex flex-col items-center justify-center gap-4 bg-black/80"
+        class="absolute inset-0 flex flex-col items-center justify-center gap-5 bg-black/80"
         @click="startScanning"
       >
-        <Camera class="size-16 text-white/70" />
-        <p class="text-lg text-white">Toque para iniciar la cámara</p>
+        <div class="flex size-20 items-center justify-center rounded-full bg-white/10 ring-1 ring-white/20">
+          <Camera class="size-10 text-white/70" />
+        </div>
+        <p class="text-lg font-medium text-white/80">Toque para iniciar</p>
       </button>
-    </div>
-
-    <!-- Result card -->
-    <div v-if="scanResult" class="p-4">
-      <Card :class="resultBorderClass(scanResult.status)" class="border-l-4">
-        <CardContent class="p-4">
-          <div class="flex items-center gap-3">
-            <div :class="resultIconBgClass(scanResult.status)" class="rounded-full p-2.5">
-              <CheckCircle2 v-if="scanResult.status === 'valid'" class="size-6" />
-              <AlertTriangle v-if="scanResult.status === 'expired' || scanResult.status === 'already_used'" class="size-6" />
-              <XCircle v-if="scanResult.status === 'invalid'" class="size-6" />
-            </div>
-            <div class="min-w-0 flex-1">
-              <p class="text-lg font-semibold">{{ statusLabel(scanResult.status) }}</p>
-              <p v-if="scanResult.visitorName" class="text-sm text-muted-foreground">
-                {{ scanResult.visitorName }}
-              </p>
-              <p v-if="scanResult.unitNumber" class="text-xs text-muted-foreground">
-                → {{ scanResult.unitNumber }}{{ scanResult.unitLabel ? ` — ${scanResult.unitLabel}` : '' }}
-              </p>
-            </div>
-          </div>
-          <Button class="mt-3 w-full" @click="resetScan">
-            Escanear otro
-          </Button>
-        </CardContent>
-      </Card>
     </div>
   </div>
 </template>
+
+<style>
+@keyframes scan {
+  0%, 100% { top: 0.75rem; }
+  50% { top: calc(100% - 0.75rem); }
+}
+</style>

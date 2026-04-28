@@ -24,16 +24,7 @@ const loading = ref(true)
 const result = ref<ValidationResult | null>(null)
 const errorOccurred = ref(false)
 
-function formatDate(dateString: string): string {
-  const date = new Date(dateString)
-  return date.toLocaleDateString('es-VE', {
-    day: 'numeric',
-    month: 'short',
-    year: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-  })
-}
+const { formatDateTime } = useFormatDate()
 
 const visitorTypeLabel = computed(() => {
   if (!result.value?.visitorType) return ''
@@ -168,7 +159,7 @@ onMounted(async () => {
 
             <div class="flex items-center justify-between">
               <span class="text-sm text-muted-foreground">Valido hasta</span>
-              <span class="font-medium">{{ result.expiresAt ? formatDate(result.expiresAt) : '-' }}</span>
+              <span class="font-medium">{{ result.expiresAt ? formatDateTime(result.expiresAt) : '-' }}</span>
             </div>
           </div>
         </template>
@@ -192,7 +183,7 @@ onMounted(async () => {
               {{ result.visitorName }}
             </p>
             <p class="text-sm text-muted-foreground">
-              Usado el: {{ result.usedAt ? formatDate(result.usedAt) : '-' }}
+              Usado el: {{ result.usedAt ? formatDateTime(result.usedAt) : '-' }}
             </p>
           </div>
         </template>

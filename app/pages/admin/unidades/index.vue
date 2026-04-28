@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Search, Users, Car, Home } from 'lucide-vue-next'
+import { Users, Car, Home } from 'lucide-vue-next'
 
 useHead({ title: 'Unidades' })
 
@@ -10,6 +10,8 @@ interface UnitDirectory {
   memberCount: number
   vehicleCount: number
 }
+
+const { target, isMounted } = useTopbarPortal()
 
 const searchQuery = ref('')
 const isLoading = ref(true)
@@ -47,6 +49,10 @@ onMounted(() => {
 
 <template>
   <div class="mx-auto max-w-5xl">
+    <Teleport :to="target" defer v-if="isMounted">
+      <TopbarSearch v-model="searchQuery" placeholder="Buscar unidad..." />
+    </Teleport>
+
     <!-- Error -->
     <div
       v-if="error"
@@ -54,18 +60,6 @@ onMounted(() => {
       class="mb-4 rounded-lg border border-destructive/50 bg-destructive/10 p-3 text-sm text-destructive"
     >
       {{ error }}
-    </div>
-
-    <!-- Search -->
-    <div class="mb-4">
-      <div class="relative">
-        <Search class="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-        <Input
-          v-model="searchQuery"
-          placeholder="Buscar por numero o nombre..."
-          class="h-12 pl-9"
-        />
-      </div>
     </div>
 
     <!-- Loading -->

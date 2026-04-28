@@ -19,11 +19,11 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 400, message: 'type debe ser "cargo" o "abono"' })
   }
 
-  if (!amount || typeof amount !== 'string') {
-    throw createError({ statusCode: 400, message: 'amount es requerido y debe ser un string' })
+  if (amount === undefined || amount === null || amount === '') {
+    throw createError({ statusCode: 400, message: 'amount es requerido' })
   }
 
-  const parsedAmount = parseFloat(amount)
+  const parsedAmount = parseFloat(String(amount))
   if (isNaN(parsedAmount) || parsedAmount <= 0) {
     throw createError({ statusCode: 400, message: 'amount debe ser un numero mayor a 0' })
   }
@@ -47,7 +47,7 @@ export default defineEventHandler(async (event) => {
     .values({
       unitId,
       type,
-      amount,
+      amount: String(parsedAmount),
       description: description.trim(),
       date: parsedDate,
       createdById: session.user.id,
