@@ -24,38 +24,28 @@ onMounted(async () => {
 
 const RESULT_CONFIG: Record<AccessResult, {
   label: string
-  dotClass: string
-  bgClass: string
   textClass: string
-  badgeClass: string
+  dotClass: string
 }> = {
   allowed: {
     label: 'Permitido',
-    dotClass: 'bg-primary',
-    bgClass: '',
     textClass: 'text-primary',
-    badgeClass: 'bg-primary/10 text-primary border-primary/20',
+    dotClass: 'bg-primary',
   },
   denied: {
     label: 'Denegado',
-    dotClass: 'bg-destructive',
-    bgClass: 'bg-destructive/5 border-destructive/20',
     textClass: 'text-destructive',
-    badgeClass: 'bg-destructive/10 text-destructive border-destructive/20',
+    dotClass: 'bg-destructive',
   },
   expired: {
     label: 'Expirado',
-    dotClass: 'bg-amber-500',
-    bgClass: 'bg-amber-50 border-amber-200/50',
     textClass: 'text-amber-600',
-    badgeClass: 'bg-amber-100 text-amber-700 border-amber-200',
+    dotClass: 'bg-amber-500',
   },
   already_used: {
     label: 'Ya usado',
-    dotClass: 'bg-amber-500',
-    bgClass: 'bg-amber-50 border-amber-200/50',
     textClass: 'text-amber-600',
-    badgeClass: 'bg-amber-100 text-amber-700 border-amber-200',
+    dotClass: 'bg-amber-500',
   },
 }
 
@@ -140,88 +130,67 @@ function formatDuration(entryDate: string, exitDate: string): string {
     />
 
     <!-- Timeline feed -->
-    <div v-else class="relative">
-      <!-- Vertical timeline line -->
-      <div class="absolute left-[27px] top-0 bottom-0 w-px bg-border" aria-hidden="true" />
+    <div v-else class="relative pl-5">
+      <!-- Vertical line -->
+      <div class="absolute left-[5px] top-1 bottom-1 w-px bg-border" aria-hidden="true" />
 
-      <!-- Event items -->
-      <div class="space-y-1">
+      <div class="space-y-2">
         <div
-          v-for="(event, index) in events"
+          v-for="event in events"
           :key="event.id"
-          class="group relative flex gap-3 py-2"
+          class="relative"
         >
-          <!-- Timeline dot -->
-          <div class="relative z-10 flex w-[54px] shrink-0 flex-col items-center pt-1">
-            <div
-              class="flex size-5 items-center justify-center rounded-full ring-4 ring-background"
-              :class="RESULT_CONFIG[event.result].dotClass"
-            >
-              <CheckCircle2 v-if="event.result === 'allowed'" class="size-3 text-white" />
-              <XCircle v-if="event.result === 'denied'" class="size-3 text-white" />
-              <AlertTriangle v-if="event.result === 'expired' || event.result === 'already_used'" class="size-3 text-white" />
-            </div>
-            <!-- Time below dot -->
-            <span class="mt-1.5 text-[11px] font-medium tabular-nums text-muted-foreground">
-              {{ formatAbsoluteTime(event.createdAt) }}
-            </span>
-          </div>
+          <!-- Dot -->
+          <div
+            class="absolute -left-5 top-3.5 z-10 size-2.5 rounded-full ring-2 ring-background"
+            :class="RESULT_CONFIG[event.result].dotClass"
+          />
 
-          <!-- Event card -->
-          <Card
-            class="min-w-0 flex-1 transition-colors"
-            :class="RESULT_CONFIG[event.result].bgClass"
-          >
-            <CardContent class="p-3">
-              <!-- Row 1: Name + Unit badge -->
-              <div class="flex items-center justify-between gap-2">
-                <div class="min-w-0 flex-1">
-                  <p class="truncate text-sm font-semibold leading-tight">
-                    {{ event.visitorName || 'Visitante' }}
-                  </p>
-                </div>
-                <Badge v-if="event.unitNumber" variant="secondary" class="shrink-0 font-semibold">
+          <!-- Card -->
+          <Card class="min-w-0">
+            <CardContent class="px-3 py-2.5">
+              <!-- Row 1: Name + Unit + Time -->
+              <div class="flex items-center gap-1.5">
+                <p class="min-w-0 flex-1 truncate text-sm font-semibold">
+                  {{ event.visitorName || 'Visitante' }}
+                </p>
+                <Badge v-if="event.unitNumber" variant="secondary" class="shrink-0 text-[11px] font-semibold">
                   {{ event.unitNumber }}
                 </Badge>
+                <span class="shrink-0 text-[11px] tabular-nums text-muted-foreground">
+                  {{ formatAbsoluteTime(event.createdAt) }}
+                </span>
               </div>
 
-              <!-- Row 2: Meta line — status · type · document · relative time -->
-              <div class="mt-1.5 flex flex-wrap items-center gap-x-1.5 gap-y-0.5 text-xs">
-                <span :class="RESULT_CONFIG[event.result].textClass" class="font-semibold">
+              <!-- Row 2: Status · Type · Doc · Relative time | Exit button -->
+              <div class="mt-0.5 flex items-center gap-x-1 text-[11px] text-muted-foreground">
+                <span :class="RESULT_CONFIG[event.result].textClass" class="font-medium">
                   {{ RESULT_CONFIG[event.result].label }}
                 </span>
-                <span class="text-muted-foreground/40">·</span>
-                <span class="flex items-center gap-1 text-muted-foreground">
-                  <component :is="ENTRY_TYPE_CONFIG[event.entryType].icon" class="size-3" />
-                  {{ ENTRY_TYPE_CONFIG[event.entryType].label }}
-                </span>
+                <span class="opacity-30">·</span>
+                <component :is="ENTRY_TYPE_CONFIG[event.entryType].icon" class="size-3 shrink-0" />
+                <span class="shrink-0">{{ ENTRY_TYPE_CONFIG[event.entryType].label }}</span>
                 <template v-if="event.visitorDocument">
-                  <span class="text-muted-foreground/40">·</span>
-                  <span class="text-muted-foreground">{{ event.visitorDocument }}</span>
+                  <span class="opacity-30">·</span>
+                  <span class="truncate">{{ event.visitorDocument }}</span>
                 </template>
-                <span class="ml-auto tabular-nums text-muted-foreground">
-                  {{ formatRelativeTime(event.createdAt) }}
-                </span>
-              </div>
+                <span class="ml-auto shrink-0 tabular-nums">{{ formatRelativeTime(event.createdAt) }}</span>
 
-              <!-- Exit tracking: mark exit button -->
-              <div v-if="event.result === 'allowed' && !event.exitAt" class="mt-2 flex items-center justify-end">
+                <!-- Inline exit button or exit info (same slot) -->
                 <Button
+                  v-if="event.result === 'allowed' && !event.exitAt"
                   size="sm"
-                  variant="outline"
-                  class="h-8 gap-1.5 text-xs"
+                  variant="ghost"
+                  class="ml-1 h-6 shrink-0 gap-1 px-2 text-[11px] text-muted-foreground hover:text-foreground"
                   :disabled="exitingId === event.id"
                   @click="handleMarkExit(event.id)"
                 >
-                  <LogOut class="size-3.5" />
-                  {{ exitingId === event.id ? 'Marcando...' : 'Marcar salida' }}
+                  <LogOut class="size-3" />
+                  {{ exitingId === event.id ? '...' : 'Salida' }}
                 </Button>
-              </div>
-
-              <!-- Exit tracking: exit recorded -->
-              <div v-if="event.result === 'allowed' && event.exitAt" class="mt-2 text-xs text-muted-foreground">
-                <span>Entrada {{ formatAbsoluteTime(event.createdAt) }} → Salida {{ formatAbsoluteTime(event.exitAt) }}</span>
-                <span class="ml-1.5 font-medium text-foreground/70">({{ formatDuration(event.createdAt, event.exitAt) }})</span>
+                <span v-else-if="event.result === 'allowed' && event.exitAt" class="ml-1 shrink-0 tabular-nums">
+                  → {{ formatAbsoluteTime(event.exitAt) }} <span class="font-medium text-foreground/70">({{ formatDuration(event.createdAt, event.exitAt) }})</span>
+                </span>
               </div>
             </CardContent>
           </Card>
