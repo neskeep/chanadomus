@@ -32,7 +32,7 @@ function openReport(filePath: string): void {
 </script>
 
 <template>
-  <div class="mx-auto max-w-lg">
+  <div>
     <!-- Error alert -->
     <div
       v-if="error"
@@ -48,7 +48,7 @@ function openReport(filePath: string): void {
         <CardContent class="p-4">
           <div class="space-y-3">
             <Skeleton class="h-4 w-3/4" />
-            <Skeleton class="h-5 w-24 rounded-full" />
+            <Skeleton class="h-5 w-24 rounded-lg" />
             <Skeleton class="h-8 w-32" />
             <Skeleton class="h-3 w-28" />
           </div>

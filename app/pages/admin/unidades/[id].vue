@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ChevronLeft, Plus, Pencil, Trash2, Users, Car, Loader2 } from 'lucide-vue-next'
+import { Plus, Pencil, Trash2, Users, Car, Loader2 } from 'lucide-vue-next'
 import { toast } from 'vue-sonner'
 import type { HouseholdMember, HouseholdRelationship } from '~~/shared/types/household'
 import type { Vehicle } from '~~/shared/types/vehicle'
@@ -48,6 +48,17 @@ const {
   updateVehicle,
   deleteVehicle,
 } = useUnitVehicles(unitId)
+
+// Breadcrumb navigation
+const pageOverride = computed(() => {
+  if (unitLoading.value) return null
+  if (!unit.value) return { title: 'Unidad no encontrada' }
+  return {
+    title: `Unidad ${unit.value.number}`,
+    breadcrumbs: [{ label: 'Unidades', to: '/admin/unidades' }],
+  }
+})
+usePageInfoOverride(pageOverride)
 
 // Tabs
 const activeTab = ref('members')
@@ -223,19 +234,15 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="mx-auto max-w-5xl">
+  <div>
     <Teleport :to="target" defer v-if="isMounted">
-      <Button variant="ghost" size="sm" @click="navigateTo('/admin/unidades')">
-        <ChevronLeft class="mr-1 size-4" />
-        Unidades
-      </Button>
       <Button v-if="activeTab === 'members'" size="sm" @click="openMemberDialog()">
         <Plus class="mr-1 size-4" />
-        Agregar miembro
+        Agregar
       </Button>
       <Button v-else size="sm" @click="openVehicleDialog()">
         <Plus class="mr-1 size-4" />
-        Agregar vehiculo
+        Agregar
       </Button>
     </Teleport>
 

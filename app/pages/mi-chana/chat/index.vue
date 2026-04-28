@@ -60,7 +60,7 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="mx-auto max-w-lg">
+  <div>
     <!-- Tabs -->
     <div class="mb-4 flex gap-2">
       <Button

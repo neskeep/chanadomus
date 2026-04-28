@@ -1,12 +1,14 @@
 <script setup lang="ts">
-import { ArrowLeft, Loader2, Share2, Copy, Plus, QrCode } from 'lucide-vue-next'
+import { Loader2, Share2, Copy, Plus, QrCode } from 'lucide-vue-next'
 import type { VisitorType } from '~~/shared/types/qr'
 import QRCode from 'qrcode'
 
 useHead({ title: 'Nueva Visita' })
 
-const { target, isMounted } = useTopbarPortal()
-const router = useRouter()
+const pageOverride = computed(() => ({
+  breadcrumbs: [{ label: 'Mis Visitas', to: '/propietario/mis-visitas' }],
+}))
+usePageInfoOverride(pageOverride)
 const { user } = useAuth()
 const { generateQr, isGenerating, error } = useQr()
 
@@ -142,14 +144,7 @@ const { formatDateTime } = useFormatDate()
 </script>
 
 <template>
-  <div class="mx-auto max-w-lg">
-    <Teleport :to="target" defer v-if="isMounted">
-      <Button variant="ghost" size="sm" @click="router.back()">
-        <ArrowLeft class="mr-1 size-4" />
-        Volver
-      </Button>
-    </Teleport>
-
+  <div>
     <!-- Error alert -->
     <div
       v-if="error"

@@ -22,11 +22,10 @@ const { staffList, isLoading, isSubmitting, error, fetchStaff, createStaffMember
 const { target, isMounted } = useTopbarPortal()
 
 // Filters
-const selectedRole = ref<StaffRole | 'all'>('all')
+const selectedRole = ref<StaffRole | ''>('')
 const searchQuery = ref('')
 
 const roleOptions = [
-  { value: 'all', label: 'Todos los roles' },
   { value: 'conserje', label: 'Conserje' },
   { value: 'vigilancia', label: 'Vigilancia' },
   { value: 'mantenimiento', label: 'Mantenimiento' },
@@ -146,7 +145,7 @@ async function handleDelete() {
 }
 
 watch(selectedRole, (role) => {
-  fetchStaff(role === 'all' ? undefined : role)
+  fetchStaff(role || undefined)
 })
 
 onMounted(() => {
@@ -155,13 +154,16 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="mx-auto max-w-5xl">
+  <div>
     <Teleport :to="target" defer v-if="isMounted">
-      <TopbarSearch v-model="searchQuery" placeholder="Buscar personal..." />
-      <TopbarSelect v-model="selectedRole" :options="roleOptions" placeholder="Rol" />
+      <TopbarSearch v-model="searchQuery" placeholder="Buscar personal...">
+        <TopbarFilters :active="selectedRole !== ''" @clear="selectedRole = ''">
+          <TopbarFilterGroup v-model="selectedRole" label="Rol" :options="roleOptions" />
+        </TopbarFilters>
+      </TopbarSearch>
       <Button size="sm" @click="openCreateDialog">
         <Plus class="mr-1.5 size-3.5" />
-        Agregar
+        Nuevo
       </Button>
     </Teleport>
 
@@ -190,7 +192,7 @@ onMounted(() => {
       <div>
         <p class="font-medium">No hay personal registrado</p>
         <p class="mt-1 text-sm text-muted-foreground">
-          {{ selectedRole !== 'all' ? 'Prueba cambiando el filtro de rol' : 'Agrega miembros del personal del condominio' }}
+          {{ selectedRole ? 'Prueba cambiando el filtro de rol' : 'Agrega miembros del personal del condominio' }}
         </p>
       </div>
     </div>

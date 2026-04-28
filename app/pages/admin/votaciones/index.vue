@@ -36,12 +36,11 @@ const {
 // Filters & pagination
 const currentPage = ref(1)
 const searchQuery = ref('')
-const filterStatus = ref<PollStatus | 'all'>('all')
+const filterStatus = ref<PollStatus | ''>('')
 
 const { target, isMounted } = useTopbarPortal()
 
 const statusOptions = [
-  { value: 'all' as const, label: 'Todos los estados' },
   { value: 'draft' as const, label: 'Borrador' },
   { value: 'active' as const, label: 'Activa' },
   { value: 'closed' as const, label: 'Cerrada' },
@@ -82,7 +81,7 @@ const filteredPolls = computed(() => {
 
 async function loadPolls() {
   const params: FetchParams = { page: currentPage.value }
-  if (filterStatus.value && filterStatus.value !== 'all') params.status = filterStatus.value
+  if (filterStatus.value) params.status = filterStatus.value
   await fetchPolls(params)
 }
 
@@ -218,14 +217,17 @@ function participationText(poll: Poll): string {
 </script>
 
 <template>
-  <div class="mx-auto max-w-5xl">
+  <div>
     <!-- Topbar actions -->
     <Teleport :to="target" defer v-if="isMounted">
-      <TopbarSearch v-model="searchQuery" placeholder="Buscar votacion..." />
-      <TopbarSelect v-model="filterStatus" :options="statusOptions" placeholder="Estado" />
+      <TopbarSearch v-model="searchQuery" placeholder="Buscar votacion...">
+        <TopbarFilters :active="filterStatus !== ''" @clear="filterStatus = ''">
+          <TopbarFilterGroup v-model="filterStatus" label="Estado" :options="statusOptions" />
+        </TopbarFilters>
+      </TopbarSearch>
       <Button size="sm" @click="openCreateDialog">
         <Plus class="mr-1.5 size-3.5" />
-        Nueva Votacion
+        Nuevo
       </Button>
     </Teleport>
 
@@ -264,7 +266,7 @@ function participationText(poll: Poll): string {
       v-else-if="filteredPolls.length === 0"
       :icon="Vote"
       title="No hay votaciones"
-      :description="filterStatus !== 'all' ? 'Prueba cambiando los filtros' : 'Las votaciones aparecerán aquí'"
+      :description="filterStatus ? 'Prueba cambiando los filtros' : 'Las votaciones aparecerán aquí'"
     />
 
     <!-- Table (desktop) / Cards (mobile) -->
@@ -297,7 +299,7 @@ function participationText(poll: Poll): string {
               </TableCell>
               <TableCell>
                 <span
-                  class="inline-flex rounded-full px-2 py-0.5 text-xs font-medium"
+                  class="inline-flex rounded-lg px-2 py-0.5 text-xs font-medium"
                   :class="STATUS_CONFIG[poll.status].class"
                 >
                   {{ STATUS_CONFIG[poll.status].label }}
@@ -373,7 +375,7 @@ function participationText(poll: Poll): string {
             </div>
             <div class="mt-2 flex flex-wrap items-center gap-1.5">
               <span
-                class="inline-flex rounded-full px-2 py-0.5 text-xs font-medium"
+                class="inline-flex rounded-lg px-2 py-0.5 text-xs font-medium"
                 :class="STATUS_CONFIG[poll.status].class"
               >
                 {{ STATUS_CONFIG[poll.status].label }}

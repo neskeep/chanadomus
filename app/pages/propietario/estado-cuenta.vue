@@ -19,7 +19,7 @@ const formattedBalance = computed(() => {
 </script>
 
 <template>
-  <div class="mx-auto max-w-lg">
+  <div>
     <!-- Error alert -->
     <div
       v-if="error"

@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import {
-  ChevronLeft,
   Send,
   Loader2,
 } from 'lucide-vue-next'
@@ -35,6 +34,13 @@ const roomName = computed(() => {
   const room = rooms.value.find(r => r.id === roomId.value)
   return room?.name ?? 'Chat'
 })
+
+// Breadcrumb navigation
+const chatPageOverride = computed(() => ({
+  title: roomName.value,
+  breadcrumbs: [{ label: 'Chat', to: '/mi-chana/chat' }],
+}))
+usePageInfoOverride(chatPageOverride)
 
 // Group consecutive messages from the same sender
 interface MessageGroup {
@@ -156,16 +162,25 @@ onBeforeUnmount(() => {
 <template>
   <div class="absolute inset-0 flex flex-col pb-[4.5rem] md:pb-0">
     <Teleport :to="target" defer v-if="isMounted">
-      <Button variant="ghost" size="sm" @click="navigateTo('/mi-chana/chat')">
-        <ChevronLeft class="mr-1 size-4" />
-        {{ roomName }}
-      </Button>
-      <span
-        class="size-2 shrink-0 rounded-full"
-        :class="connected ? 'bg-emerald-500' : 'bg-red-500'"
-        :aria-label="connected ? 'Conectado' : 'Desconectado'"
-        role="status"
-      />
+      <Badge
+        variant="outline"
+        :class="connected ? 'border-primary text-primary' : 'border-destructive text-destructive'"
+        class="gap-1.5"
+      >
+        <span
+          class="relative flex size-2"
+        >
+          <span
+            v-if="connected"
+            class="absolute inline-flex size-full animate-ping rounded-full bg-primary opacity-75"
+          />
+          <span
+            class="relative inline-flex size-2 rounded-full"
+            :class="connected ? 'bg-primary' : 'bg-destructive'"
+          />
+        </span>
+        {{ connected ? 'Conectado' : 'Desconectado' }}
+      </Badge>
     </Teleport>
 
     <!-- Messages area -->

@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import {
-  ArrowLeft,
   Star,
   Phone,
   MapPin,
@@ -18,6 +17,16 @@ definePageMeta({ layout: 'default' })
 const { target, isMounted } = useTopbarPortal()
 const route = useRoute()
 const router = useRouter()
+
+// Breadcrumb navigation
+const providerPageOverride = computed(() => {
+  if (!provider.value) return null
+  return {
+    title: provider.value.name,
+    breadcrumbs: [{ label: 'Proveedores', to: '/mi-chana/proveedores' }],
+  }
+})
+usePageInfoOverride(providerPageOverride)
 const { role } = useAuth()
 const {
   isLoading,
@@ -193,12 +202,8 @@ async function handleReview() {
 </script>
 
 <template>
-  <div class="mx-auto max-w-lg">
+  <div>
     <Teleport :to="target" defer v-if="isMounted">
-      <Button variant="ghost" size="sm" @click="navigateTo('/mi-chana/proveedores')">
-        <ArrowLeft class="mr-1 size-4" />
-        Volver
-      </Button>
       <template v-if="canManage && provider">
         <Button variant="outline" size="sm" @click="openEditDialog">
           <Pencil class="mr-1.5 size-3.5" />
@@ -215,8 +220,8 @@ async function handleReview() {
     <div v-if="isLoading" class="space-y-4">
       <Skeleton class="h-6 w-3/4" />
       <div class="flex gap-2">
-        <Skeleton class="h-5 w-20 rounded-full" />
-        <Skeleton class="h-5 w-16 rounded-full" />
+        <Skeleton class="h-5 w-20 rounded-lg" />
+        <Skeleton class="h-5 w-16 rounded-lg" />
       </div>
       <Skeleton class="h-4 w-1/2" />
       <Skeleton class="h-4 w-2/3" />
@@ -243,13 +248,13 @@ async function handleReview() {
           <!-- Badges -->
           <div class="flex flex-wrap gap-2">
             <span
-              class="inline-flex rounded-full px-2 py-0.5 text-xs font-medium"
+              class="inline-flex rounded-lg px-2 py-0.5 text-xs font-medium"
               :class="CATEGORY_COLORS[provider.category]"
             >
               {{ CATEGORY_LABELS[provider.category] }}
             </span>
             <span
-              class="inline-flex rounded-full px-2 py-0.5 text-xs font-medium"
+              class="inline-flex rounded-lg px-2 py-0.5 text-xs font-medium"
               :class="STATUS_LABELS[provider.status]?.class ?? 'bg-zinc-100 text-zinc-600'"
             >
               {{ STATUS_LABELS[provider.status]?.label ?? provider.status }}

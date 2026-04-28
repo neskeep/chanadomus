@@ -162,15 +162,18 @@ onMounted(async () => {
 </script>
 
 <template>
-  <div class="mx-auto max-w-5xl">
+  <div>
     <!-- Topbar actions -->
     <Teleport :to="target" defer v-if="isMounted">
       <template v-if="activeTab === 'resumen'">
-        <TopbarSearch v-model="searchQuery" placeholder="Buscar unidad..." />
-        <Button size="sm" variant="outline" @click="sortAsc = !sortAsc">
-          <ArrowUpDown class="mr-1.5 size-3.5" />
-          {{ sortAsc ? 'Saldo asc' : 'Saldo desc' }}
-        </Button>
+        <TopbarSearch v-model="searchQuery" placeholder="Buscar unidad...">
+          <button
+            class="relative flex size-8 shrink-0 items-center justify-center rounded-sm text-muted-foreground transition-colors hover:text-foreground"
+            @click="sortAsc = !sortAsc"
+          >
+            <ArrowUpDown class="size-3.5" />
+          </button>
+        </TopbarSearch>
       </template>
     </Teleport>
 
@@ -247,7 +250,7 @@ onMounted(async () => {
                   <Skeleton class="ml-auto h-4 w-20" />
                 </TableCell>
                 <TableCell class="text-right">
-                  <Skeleton class="ml-auto h-5 w-16 rounded-full" />
+                  <Skeleton class="ml-auto h-5 w-16 rounded-lg" />
                 </TableCell>
               </TableRow>
             </TableBody>

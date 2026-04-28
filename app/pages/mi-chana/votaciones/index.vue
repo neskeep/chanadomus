@@ -102,10 +102,12 @@ function getParticipation(poll: Poll): string {
 </script>
 
 <template>
-  <div class="mx-auto max-w-lg">
+  <div>
     <!-- Topbar actions -->
     <Teleport :to="target" defer v-if="isMounted">
-      <TopbarSelect v-model="activeTab" :options="statusOptions" placeholder="Estado" />
+      <TopbarFilters :active="activeTab !== 'active'" @clear="activeTab = 'active'">
+        <TopbarFilterGroup v-model="activeTab" label="Estado" :options="statusOptions" />
+      </TopbarFilters>
     </Teleport>
 
     <!-- Error -->
@@ -141,7 +143,7 @@ function getParticipation(poll: Poll): string {
                 </p>
               </div>
               <span
-                class="inline-flex shrink-0 rounded-full px-2 py-0.5 text-xs font-medium"
+                class="inline-flex shrink-0 rounded-lg px-2 py-0.5 text-xs font-medium"
                 :class="STATUS_CONFIG[poll.status].class"
               >
                 {{ STATUS_CONFIG[poll.status].label }}
@@ -163,7 +165,7 @@ function getParticipation(poll: Poll): string {
             <!-- Voted badge -->
             <div
               v-if="hasVoted(poll)"
-              class="mt-3 inline-flex items-center gap-1.5 rounded-full bg-emerald-100 px-2.5 py-1 text-xs font-medium text-emerald-800"
+              class="mt-3 inline-flex items-center gap-1.5 rounded-lg bg-emerald-100 px-2.5 py-1 text-xs font-medium text-emerald-800"
             >
               <CheckCircle2 class="size-3.5" />
               Ya votaste
@@ -172,7 +174,7 @@ function getParticipation(poll: Poll): string {
             <!-- Expired badge (active but deadline passed) -->
             <div
               v-else-if="poll.status === 'active' && isExpired(poll)"
-              class="mt-3 inline-flex items-center gap-1.5 rounded-full bg-amber-100 px-2.5 py-1 text-xs font-medium text-amber-800"
+              class="mt-3 inline-flex items-center gap-1.5 rounded-lg bg-amber-100 px-2.5 py-1 text-xs font-medium text-amber-800"
             >
               <Clock class="size-3.5" />
               Plazo vencido

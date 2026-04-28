@@ -57,7 +57,7 @@ const { formatDate, formatDateTime } = useFormatDate()
 </script>
 
 <template>
-  <div class="mx-auto max-w-lg">
+  <div>
     <!-- Topbar actions -->
     <Teleport :to="target" defer v-if="isMounted">
       <Button size="sm" @click="navigateTo('/propietario/incidencias/nueva')">
@@ -82,8 +82,8 @@ const { formatDate, formatDateTime } = useFormatDate()
           <div class="space-y-3">
             <Skeleton class="h-4 w-3/4" />
             <div class="flex gap-2">
-              <Skeleton class="h-5 w-16 rounded-full" />
-              <Skeleton class="h-5 w-20 rounded-full" />
+              <Skeleton class="h-5 w-16 rounded-lg" />
+              <Skeleton class="h-5 w-20 rounded-lg" />
             </div>
             <Skeleton class="h-3 w-28" />
           </div>
@@ -132,14 +132,14 @@ const { formatDate, formatDateTime } = useFormatDate()
             <!-- Badges -->
             <div class="mt-2 flex flex-wrap gap-1.5">
               <span
-                class="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium"
+                class="inline-flex items-center gap-1 rounded-lg px-2 py-0.5 text-xs font-medium"
                 :class="STATUS_CONFIG[item.status].class"
               >
                 <component :is="STATUS_CONFIG[item.status].icon" class="size-3" />
                 {{ STATUS_CONFIG[item.status].label }}
               </span>
               <span
-                class="inline-flex rounded-full px-2 py-0.5 text-xs font-medium"
+                class="inline-flex rounded-lg px-2 py-0.5 text-xs font-medium"
                 :class="PRIORITY_CONFIG[item.priority].class"
               >
                 {{ PRIORITY_CONFIG[item.priority].label }}

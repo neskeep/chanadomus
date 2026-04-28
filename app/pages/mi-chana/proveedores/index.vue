@@ -34,16 +34,11 @@ const canCreate = computed(() => role.value === 'admin' || role.value === 'conse
 // Filters & pagination
 const currentPage = ref(1)
 const searchQuery = ref('')
-const filterCategory = ref<ProviderCategory | 'all'>('all')
+const filterCategory = ref<ProviderCategory | ''>('')
 
 const categoryOptions = computed(() => [
-  { value: '' as ProviderCategory | '', label: 'Todas' },
   ...PROVIDER_CATEGORIES.map(c => ({ value: c.key as ProviderCategory | '', label: c.label })),
 ])
-const filterCategoryModel = computed({
-  get: () => filterCategory.value === 'all' ? '' : filterCategory.value,
-  set: (v: string) => { filterCategory.value = (v || 'all') as ProviderCategory | 'all' },
-})
 
 // Suggest dialog
 const suggestOpen = ref(false)
@@ -94,7 +89,7 @@ async function loadProviders() {
     page: currentPage.value,
     status: 'active',
   }
-  if (filterCategory.value && filterCategory.value !== 'all') params.category = filterCategory.value
+  if (filterCategory.value) params.category = filterCategory.value
   await fetchProviders(params)
 }
 
@@ -146,10 +141,13 @@ function renderStars(rating: number | undefined): number[] {
 </script>
 
 <template>
-  <div class="mx-auto max-w-5xl">
+  <div>
     <Teleport :to="target" defer v-if="isMounted">
-      <TopbarSearch v-model="searchQuery" placeholder="Buscar proveedor..." />
-      <TopbarSelect v-model="filterCategoryModel" :options="categoryOptions" placeholder="Categoria" />
+      <TopbarSearch v-model="searchQuery" placeholder="Buscar proveedor...">
+        <TopbarFilters :active="filterCategory !== ''" @clear="filterCategory = ''">
+          <TopbarFilterGroup v-model="filterCategory" label="Categoria" :options="categoryOptions" />
+        </TopbarFilters>
+      </TopbarSearch>
       <Button v-if="role === 'propietario'" size="sm" variant="outline" @click="openSuggestDialog">
         <Plus class="mr-1.5 size-3.5" />
         Sugerir
@@ -175,7 +173,7 @@ function renderStars(rating: number | undefined): number[] {
         <CardContent class="p-3">
           <div class="space-y-2.5">
             <Skeleton class="h-5 w-3/4" />
-            <Skeleton class="h-5 w-20 rounded-full" />
+            <Skeleton class="h-5 w-20 rounded-lg" />
             <Skeleton class="h-4 w-1/2" />
             <Skeleton class="h-4 w-2/3" />
           </div>
@@ -194,7 +192,7 @@ function renderStars(rating: number | undefined): number[] {
       <div>
         <p class="font-medium">No hay proveedores</p>
         <p class="mt-1 text-sm text-muted-foreground">
-          {{ filterCategory !== 'all' ? 'Prueba cambiando los filtros' : 'Los proveedores apareceran aqui' }}
+          {{ filterCategory ? 'Prueba cambiando los filtros' : 'Los proveedores apareceran aqui' }}
         </p>
       </div>
       <Button v-if="role === 'propietario'" size="sm" variant="outline" @click="openSuggestDialog">
@@ -219,7 +217,7 @@ function renderStars(rating: number | undefined): number[] {
               <!-- Category badge -->
               <div class="mt-2">
                 <span
-                  class="inline-flex rounded-full px-2 py-0.5 text-xs font-medium"
+                  class="inline-flex rounded-lg px-2 py-0.5 text-xs font-medium"
                   :class="CATEGORY_COLORS[provider.category]"
                 >
                   {{ CATEGORY_LABELS[provider.category] }}

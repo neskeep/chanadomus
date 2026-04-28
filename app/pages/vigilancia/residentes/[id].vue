@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import {
-  ChevronLeft,
   Users,
   Car,
   Phone,
@@ -11,7 +10,6 @@ import type { HouseholdRelationship } from '~~/shared/types/household'
 
 definePageMeta({ layout: 'default' })
 
-const { target, isMounted } = useTopbarPortal()
 const route = useRoute()
 const unitId = route.params.id as string
 
@@ -28,6 +26,7 @@ const pageOverride = computed(() => {
   return {
     title: `Unidad ${unit.value.number}`,
     description: unit.value.label ?? 'Datos y vehículos',
+    breadcrumbs: [{ label: 'Directorio', to: '/vigilancia/residentes' }],
   }
 })
 usePageInfoOverride(pageOverride)
@@ -122,15 +121,7 @@ onMounted(async () => {
 </script>
 
 <template>
-  <div class="mx-auto max-w-3xl">
-    <!-- Topbar actions: back button -->
-    <Teleport v-if="isMounted" :to="target" defer>
-      <Button variant="ghost" size="sm" @click="navigateTo('/vigilancia/residentes')">
-        <ChevronLeft class="mr-1 size-4" />
-        Directorio
-      </Button>
-    </Teleport>
-
+  <div>
     <!-- Members section -->
     <section class="mb-10">
       <div class="mb-4 flex items-center gap-2">

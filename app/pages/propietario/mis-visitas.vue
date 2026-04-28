@@ -8,13 +8,12 @@ useHead({ title: 'Mis Visitas' })
 const { target, isMounted } = useTopbarPortal()
 const { myCodes, fetchMyCodes, isLoading, error } = useQr()
 
-const activeFilter = ref<QrStatus | 'all'>('all')
+const activeFilter = ref<QrStatus | ''>('')
 const expandedId = ref<string | null>(null)
 const expandedQrUrl = ref<string | null>(null)
 const shareSuccess = ref<string | null>(null)
 
-const filterOptions: Array<{ value: QrStatus | 'all'; label: string }> = [
-  { value: 'all', label: 'Todos' },
+const filterOptions: Array<{ value: QrStatus; label: string }> = [
   { value: 'active', label: 'Activos' },
   { value: 'used', label: 'Usados' },
   { value: 'expired', label: 'Expirados' },
@@ -27,7 +26,7 @@ onMounted(() => {
 watch(activeFilter, (status) => {
   expandedId.value = null
   expandedQrUrl.value = null
-  fetchMyCodes(status)
+  fetchMyCodes(status || 'all')
 })
 
 async function toggleExpand(id: string, token: string) {
@@ -99,13 +98,15 @@ const statusConfig: Record<QrStatus, { label: string; variant: 'default' | 'seco
 </script>
 
 <template>
-  <div class="mx-auto max-w-lg">
+  <div>
     <!-- Topbar actions -->
     <Teleport :to="target" defer v-if="isMounted">
-      <TopbarSelect v-model="activeFilter" :options="filterOptions" placeholder="Estado" />
+      <TopbarFilters :active="activeFilter !== ''" @clear="activeFilter = ''">
+        <TopbarFilterGroup v-model="activeFilter" label="Estado" :options="filterOptions" />
+      </TopbarFilters>
       <Button size="sm" @click="navigateTo('/propietario/nueva-visita')">
         <Plus class="mr-1.5 size-3.5" />
-        Nueva Visita
+        Nueva
       </Button>
     </Teleport>
 

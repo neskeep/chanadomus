@@ -1,12 +1,14 @@
 <script setup lang="ts">
-import { ArrowLeft, Camera, X, Loader2 } from 'lucide-vue-next'
+import { Camera, X, Loader2 } from 'lucide-vue-next'
 import { toast } from 'vue-sonner'
 import type { IncidentPriority } from '~~/shared/types/incident'
 
 useHead({ title: 'Reportar Incidencia' })
 
-const { target, isMounted } = useTopbarPortal()
-
+const pageOverride = computed(() => ({
+  breadcrumbs: [{ label: 'Mis Incidencias', to: '/propietario/incidencias' }],
+}))
+usePageInfoOverride(pageOverride)
 const router = useRouter()
 const { isCreating, error, createIncident } = useIncidents()
 
@@ -82,14 +84,7 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <div class="mx-auto max-w-lg">
-    <Teleport :to="target" defer v-if="isMounted">
-      <Button variant="ghost" size="sm" @click="navigateTo('/propietario/incidencias')">
-        <ArrowLeft class="mr-1 size-4" />
-        Volver
-      </Button>
-    </Teleport>
-
+  <div>
     <form class="space-y-5" @submit.prevent="handleSubmit">
       <!-- Title -->
       <div class="space-y-2">

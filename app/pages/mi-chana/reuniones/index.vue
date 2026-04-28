@@ -77,7 +77,7 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="mx-auto max-w-lg">
+  <div>
     <!-- Error -->
     <div
       v-if="error"
@@ -174,14 +174,14 @@ onMounted(() => {
                   <!-- Badges -->
                   <div class="mt-2 flex flex-wrap gap-1.5">
                     <span
-                      class="inline-flex rounded-full px-2 py-0.5 text-xs font-medium"
+                      class="inline-flex rounded-lg px-2 py-0.5 text-xs font-medium"
                       :class="TYPE_COLORS[m.type]"
                     >
                       {{ typeLabel(m.type) }}
                     </span>
                     <span
                       v-if="m.status !== 'programada'"
-                      class="inline-flex rounded-full px-2 py-0.5 text-xs font-medium"
+                      class="inline-flex rounded-lg px-2 py-0.5 text-xs font-medium"
                       :class="STATUS_COLORS[m.status]"
                     >
                       {{ statusLabel(m.status) }}

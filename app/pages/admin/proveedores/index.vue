@@ -39,18 +39,16 @@ const {
 // Filters & pagination
 const currentPage = ref(1)
 const searchQuery = ref('')
-const filterCategory = ref<ProviderCategory | 'all'>('all')
-const filterStatus = ref<ProviderStatus | 'all'>('all')
+const filterCategory = ref<ProviderCategory | ''>('')
+const filterStatus = ref<ProviderStatus | ''>('')
 
 const { target, isMounted } = useTopbarPortal()
 
 const providerCategoryOptions = [
-  { value: 'all' as const, label: 'Todas las categorias' },
   ...PROVIDER_CATEGORIES.map(cat => ({ value: cat.key, label: cat.label })),
 ]
 
 const providerStatusOptions = [
-  { value: 'all' as const, label: 'Todos los estados' },
   { value: 'active' as const, label: 'Activo' },
   { value: 'pending' as const, label: 'Pendiente' },
   { value: 'inactive' as const, label: 'Inactivo' },
@@ -128,8 +126,8 @@ async function loadProviders() {
   const params: { page?: number; category?: ProviderCategory; status?: ProviderStatus } = {
     page: currentPage.value,
   }
-  if (filterCategory.value && filterCategory.value !== 'all') params.category = filterCategory.value
-  if (filterStatus.value && filterStatus.value !== 'all') params.status = filterStatus.value
+  if (filterCategory.value) params.category = filterCategory.value
+  if (filterStatus.value) params.status = filterStatus.value
   await fetchProviders(params)
 }
 
@@ -278,15 +276,18 @@ function renderStars(rating: number | undefined): number[] {
 </script>
 
 <template>
-  <div class="mx-auto max-w-5xl">
+  <div>
     <!-- Topbar actions -->
     <Teleport :to="target" defer v-if="isMounted">
-      <TopbarSearch v-model="searchQuery" placeholder="Buscar proveedor..." />
-      <TopbarSelect v-model="filterCategory" :options="providerCategoryOptions" placeholder="Categoria" />
-      <TopbarSelect v-model="filterStatus" :options="providerStatusOptions" placeholder="Estado" />
+      <TopbarSearch v-model="searchQuery" placeholder="Buscar proveedor...">
+        <TopbarFilters :active="filterCategory !== '' || filterStatus !== ''" @clear="filterCategory = ''; filterStatus = ''">
+          <TopbarFilterGroup v-model="filterCategory" label="Categoria" :options="providerCategoryOptions" />
+          <TopbarFilterGroup v-model="filterStatus" label="Estado" :options="providerStatusOptions" />
+        </TopbarFilters>
+      </TopbarSearch>
       <Button size="sm" @click="openCreateDialog">
         <Plus class="mr-1.5 size-3.5" />
-        Nuevo Proveedor
+        Nuevo
       </Button>
     </Teleport>
 
@@ -333,7 +334,7 @@ function renderStars(rating: number | undefined): number[] {
               <p class="text-sm font-medium">{{ sug.name }}</p>
               <div class="mt-1 flex flex-wrap items-center gap-1.5">
                 <span
-                  class="inline-flex rounded-full px-2 py-0.5 text-xs font-medium"
+                  class="inline-flex rounded-lg px-2 py-0.5 text-xs font-medium"
                   :class="CATEGORY_COLORS[sug.category]"
                 >
                   {{ CATEGORY_LABELS[sug.category] }}
@@ -386,7 +387,7 @@ function renderStars(rating: number | undefined): number[] {
       <div>
         <p class="font-medium">No hay proveedores</p>
         <p class="mt-1 text-sm text-muted-foreground">
-          {{ filterCategory !== 'all' || filterStatus !== 'all' ? 'Prueba cambiando los filtros' : 'Crea el primer proveedor del directorio' }}
+          {{ filterCategory || filterStatus ? 'Prueba cambiando los filtros' : 'Crea el primer proveedor del directorio' }}
         </p>
       </div>
       <Button @click="openCreateDialog">
@@ -422,7 +423,7 @@ function renderStars(rating: number | undefined): number[] {
               </TableCell>
               <TableCell>
                 <span
-                  class="inline-flex rounded-full px-2 py-0.5 text-xs font-medium"
+                  class="inline-flex rounded-lg px-2 py-0.5 text-xs font-medium"
                   :class="CATEGORY_COLORS[item.category]"
                 >
                   {{ CATEGORY_LABELS[item.category] }}
@@ -444,7 +445,7 @@ function renderStars(rating: number | undefined): number[] {
               </TableCell>
               <TableCell>
                 <span
-                  class="inline-flex rounded-full px-2 py-0.5 text-xs font-medium"
+                  class="inline-flex rounded-lg px-2 py-0.5 text-xs font-medium"
                   :class="STATUS_CONFIG[item.status].class"
                 >
                   {{ STATUS_CONFIG[item.status].label }}
@@ -514,13 +515,13 @@ function renderStars(rating: number | undefined): number[] {
             </div>
             <div class="mt-2 flex flex-wrap items-center gap-1.5">
               <span
-                class="inline-flex rounded-full px-2 py-0.5 text-xs font-medium"
+                class="inline-flex rounded-lg px-2 py-0.5 text-xs font-medium"
                 :class="CATEGORY_COLORS[item.category]"
               >
                 {{ CATEGORY_LABELS[item.category] }}
               </span>
               <span
-                class="inline-flex rounded-full px-2 py-0.5 text-xs font-medium"
+                class="inline-flex rounded-lg px-2 py-0.5 text-xs font-medium"
                 :class="STATUS_CONFIG[item.status].class"
               >
                 {{ STATUS_CONFIG[item.status].label }}

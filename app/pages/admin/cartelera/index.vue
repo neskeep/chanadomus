@@ -36,12 +36,11 @@ const {
 // Filters & pagination
 const currentPage = ref(1)
 const searchQuery = ref('')
-const filterCategory = ref<AnnouncementCategory | 'all'>('all')
+const filterCategory = ref<AnnouncementCategory | ''>('')
 
 const { target, isMounted } = useTopbarPortal()
 
 const categoryOptions = [
-  { value: 'all' as const, label: 'Todas las categorias' },
   { value: 'general' as const, label: 'General' },
   { value: 'mantenimiento' as const, label: 'Mantenimiento' },
   { value: 'seguridad' as const, label: 'Seguridad' },
@@ -96,7 +95,7 @@ const filteredAnnouncements = computed(() => {
 
 async function loadAnnouncements() {
   const params: Record<string, unknown> = { page: currentPage.value }
-  if (filterCategory.value && filterCategory.value !== 'all') params.category = filterCategory.value
+  if (filterCategory.value) params.category = filterCategory.value
   await fetchAnnouncements(params as Parameters<typeof fetchAnnouncements>[0])
 }
 
@@ -215,14 +214,17 @@ function handlePdfSelect(event: Event) {
 </script>
 
 <template>
-  <div class="mx-auto max-w-5xl">
+  <div>
     <!-- Topbar actions -->
     <Teleport :to="target" defer v-if="isMounted">
-      <TopbarSearch v-model="searchQuery" placeholder="Buscar anuncio..." />
-      <TopbarSelect v-model="filterCategory" :options="categoryOptions" placeholder="Categoria" />
+      <TopbarSearch v-model="searchQuery" placeholder="Buscar anuncio...">
+        <TopbarFilters :active="filterCategory !== ''" @clear="filterCategory = ''">
+          <TopbarFilterGroup v-model="filterCategory" label="Categoria" :options="categoryOptions" />
+        </TopbarFilters>
+      </TopbarSearch>
       <Button size="sm" @click="openCreateDialog">
         <Plus class="mr-1.5 size-3.5" />
-        Nuevo Anuncio
+        Nuevo
       </Button>
     </Teleport>
 
@@ -261,7 +263,7 @@ function handlePdfSelect(event: Event) {
       v-else-if="filteredAnnouncements.length === 0"
       :icon="Megaphone"
       title="No hay anuncios"
-      :description="filterCategory !== 'all' ? 'Prueba cambiando los filtros' : 'Los anuncios de la cartelera aparecerán aquí'"
+      :description="filterCategory ? 'Prueba cambiando los filtros' : 'Los anuncios de la cartelera aparecerán aquí'"
     />
 
     <!-- Table (desktop) / Cards (mobile) -->
@@ -284,7 +286,7 @@ function handlePdfSelect(event: Event) {
               <TableCell class="max-w-[200px] truncate font-medium">{{ item.title }}</TableCell>
               <TableCell>
                 <span
-                  class="inline-flex rounded-full px-2 py-0.5 text-xs font-medium"
+                  class="inline-flex rounded-lg px-2 py-0.5 text-xs font-medium"
                   :class="CATEGORY_CONFIG[item.category].class"
                 >
                   {{ CATEGORY_CONFIG[item.category].label }}
@@ -292,7 +294,7 @@ function handlePdfSelect(event: Event) {
               </TableCell>
               <TableCell>
                 <span
-                  class="inline-flex rounded-full px-2 py-0.5 text-xs font-medium"
+                  class="inline-flex rounded-lg px-2 py-0.5 text-xs font-medium"
                   :class="STATUS_CONFIG[item.status].class"
                 >
                   {{ STATUS_CONFIG[item.status].label }}
@@ -361,13 +363,13 @@ function handlePdfSelect(event: Event) {
             </div>
             <div class="mt-2 flex flex-wrap items-center gap-1.5">
               <span
-                class="inline-flex rounded-full px-2 py-0.5 text-xs font-medium"
+                class="inline-flex rounded-lg px-2 py-0.5 text-xs font-medium"
                 :class="CATEGORY_CONFIG[item.category].class"
               >
                 {{ CATEGORY_CONFIG[item.category].label }}
               </span>
               <span
-                class="inline-flex rounded-full px-2 py-0.5 text-xs font-medium"
+                class="inline-flex rounded-lg px-2 py-0.5 text-xs font-medium"
                 :class="STATUS_CONFIG[item.status].class"
               >
                 {{ STATUS_CONFIG[item.status].label }}

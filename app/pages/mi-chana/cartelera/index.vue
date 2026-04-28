@@ -15,7 +15,7 @@ const { formatDate } = useFormatDate()
 const { announcements, meta, isLoading, error, totalPages, fetchAnnouncements } = useAnnouncements()
 
 const currentPage = ref(1)
-const activeCategory = ref<AnnouncementCategory | 'all'>('all')
+const activeCategory = ref<AnnouncementCategory | ''>('')
 const expandedId = ref<string | null>(null)
 
 const CATEGORY_CONFIG: Record<AnnouncementCategory, { label: string; class: string }> = {
@@ -27,8 +27,7 @@ const CATEGORY_CONFIG: Record<AnnouncementCategory, { label: string; class: stri
   urgente: { label: 'Urgente', class: 'bg-rose-100 text-rose-800' },
 }
 
-const categoryOptions: Array<{ value: AnnouncementCategory | 'all'; label: string }> = [
-  { value: 'all', label: 'Todas' },
+const categoryOptions: Array<{ value: AnnouncementCategory; label: string }> = [
   { value: 'general', label: 'General' },
   { value: 'mantenimiento', label: 'Mantenimiento' },
   { value: 'seguridad', label: 'Seguridad' },
@@ -42,7 +41,7 @@ function loadAnnouncements() {
     page: currentPage.value,
     status: 'published',
   }
-  if (activeCategory.value !== 'all') {
+  if (activeCategory.value) {
     params.category = activeCategory.value
   }
   fetchAnnouncements(params)
@@ -75,10 +74,12 @@ function isNew(publishedAt: string | null): boolean {
 </script>
 
 <template>
-  <div class="mx-auto max-w-lg">
+  <div>
     <!-- Topbar actions -->
     <Teleport :to="target" defer v-if="isMounted">
-      <TopbarSelect v-model="activeCategory" :options="categoryOptions" placeholder="Categoria" />
+      <TopbarFilters :active="activeCategory !== ''" @clear="activeCategory = ''">
+        <TopbarFilterGroup v-model="activeCategory" label="Categoria" :options="categoryOptions" />
+      </TopbarFilters>
     </Teleport>
 
     <!-- Error -->
@@ -112,14 +113,14 @@ function isNew(publishedAt: string | null): boolean {
                 <!-- NEW badge -->
                 <span
                   v-if="isNew(item.publishedAt)"
-                  class="inline-flex items-center gap-1 rounded-full bg-amber-100 px-2 py-0.5 text-xs font-semibold uppercase tracking-wider text-amber-700"
+                  class="inline-flex items-center gap-1 rounded-lg bg-amber-100 px-2 py-0.5 text-xs font-semibold uppercase tracking-wider text-amber-700"
                 >
                   <Sparkles class="size-3" />
                   Nuevo
                 </span>
                 <!-- Category badge -->
                 <span
-                  class="inline-flex rounded-full px-2 py-0.5 text-xs font-medium"
+                  class="inline-flex rounded-lg px-2 py-0.5 text-xs font-medium"
                   :class="CATEGORY_CONFIG[item.category].class"
                 >
                   {{ CATEGORY_CONFIG[item.category].label }}

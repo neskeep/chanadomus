@@ -37,13 +37,12 @@ const {
 } = useMeetings()
 
 // Filters
-const filterType = ref<MeetingType | 'all'>('all')
-const filterStatus = ref<MeetingStatus | 'all'>('all')
+const filterType = ref<MeetingType | ''>('')
+const filterStatus = ref<MeetingStatus | ''>('')
 
 const { target, isMounted } = useTopbarPortal()
 
 const typeOptions = [
-  { value: 'all' as const, label: 'Todos los tipos' },
   { value: 'ordinaria' as const, label: 'Ordinaria' },
   { value: 'extraordinaria' as const, label: 'Extraordinaria' },
   { value: 'comite' as const, label: 'Comite' },
@@ -51,7 +50,6 @@ const typeOptions = [
 ]
 
 const meetingStatusOptions = [
-  { value: 'all' as const, label: 'Todos los estados' },
   { value: 'programada' as const, label: 'Programada' },
   { value: 'en_curso' as const, label: 'En Curso' },
   { value: 'completada' as const, label: 'Completada' },
@@ -128,8 +126,8 @@ function toLocalInput(iso: string): string {
 
 async function loadMeetings() {
   const params: { type?: MeetingType; status?: MeetingStatus } = {}
-  if (filterType.value && filterType.value !== 'all') params.type = filterType.value
-  if (filterStatus.value && filterStatus.value !== 'all') params.status = filterStatus.value
+  if (filterType.value) params.type = filterType.value
+  if (filterStatus.value) params.status = filterStatus.value
   await fetchMeetings(params)
 }
 
@@ -244,14 +242,16 @@ async function handleDelete() {
 </script>
 
 <template>
-  <div class="mx-auto max-w-5xl">
+  <div>
     <!-- Topbar actions -->
     <Teleport :to="target" defer v-if="isMounted">
-      <TopbarSelect v-model="filterType" :options="typeOptions" placeholder="Tipo" />
-      <TopbarSelect v-model="filterStatus" :options="meetingStatusOptions" placeholder="Estado" />
+      <TopbarFilters :active="filterType !== '' || filterStatus !== ''" @clear="filterType = ''; filterStatus = ''">
+        <TopbarFilterGroup v-model="filterType" label="Tipo" :options="typeOptions" />
+        <TopbarFilterGroup v-model="filterStatus" label="Estado" :options="meetingStatusOptions" />
+      </TopbarFilters>
       <Button size="sm" @click="openCreateDialog">
         <Plus class="mr-1.5 size-3.5" />
-        Nueva Reunion
+        Nuevo
       </Button>
     </Teleport>
 
@@ -290,7 +290,7 @@ async function handleDelete() {
       v-else-if="meetings.length === 0"
       :icon="Calendar"
       title="No hay reuniones"
-      :description="filterType !== 'all' || filterStatus !== 'all' ? 'Prueba cambiando los filtros' : 'Crea la primera reunion del condominio'"
+      :description="filterType || filterStatus ? 'Prueba cambiando los filtros' : 'Crea la primera reunion del condominio'"
     >
       <template #action>
         <Button @click="openCreateDialog">
@@ -332,7 +332,7 @@ async function handleDelete() {
               </TableCell>
               <TableCell>
                 <span
-                  class="inline-flex rounded-full px-2 py-0.5 text-xs font-medium"
+                  class="inline-flex rounded-lg px-2 py-0.5 text-xs font-medium"
                   :class="TYPE_COLORS[item.type]"
                 >
                   {{ TYPE_LABELS[item.type] }}
@@ -340,7 +340,7 @@ async function handleDelete() {
               </TableCell>
               <TableCell>
                 <span
-                  class="inline-flex rounded-full px-2 py-0.5 text-xs font-medium"
+                  class="inline-flex rounded-lg px-2 py-0.5 text-xs font-medium"
                   :class="STATUS_COLORS[item.status]"
                 >
                   {{ STATUS_LABELS[item.status] }}
@@ -415,13 +415,13 @@ async function handleDelete() {
             </div>
             <div class="mt-2 flex flex-wrap items-center gap-1.5">
               <span
-                class="inline-flex rounded-full px-2 py-0.5 text-xs font-medium"
+                class="inline-flex rounded-lg px-2 py-0.5 text-xs font-medium"
                 :class="TYPE_COLORS[item.type]"
               >
                 {{ TYPE_LABELS[item.type] }}
               </span>
               <span
-                class="inline-flex rounded-full px-2 py-0.5 text-xs font-medium"
+                class="inline-flex rounded-lg px-2 py-0.5 text-xs font-medium"
                 :class="STATUS_COLORS[item.status]"
               >
                 {{ STATUS_LABELS[item.status] }}

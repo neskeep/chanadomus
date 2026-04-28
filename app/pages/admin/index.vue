@@ -112,13 +112,11 @@ const groupedChartOpts = {
 <template>
   <div class="space-y-4">
     <Teleport :to="target" defer v-if="isMounted">
-      <Button size="sm" variant="outline" @click="exportCsv">
-        <Download class="mr-1.5 size-3.5" />
-        <span class="hidden sm:inline">CSV</span>
+      <Button variant="ghost" size="icon" class="size-8" @click="exportCsv">
+        <Download class="size-4" />
       </Button>
-      <Button size="sm" variant="outline" @click="exportPdf">
-        <FileText class="mr-1.5 size-3.5" />
-        <span class="hidden sm:inline">PDF</span>
+      <Button variant="ghost" size="icon" class="size-8" @click="exportPdf">
+        <FileText class="size-4" />
       </Button>
     </Teleport>
 

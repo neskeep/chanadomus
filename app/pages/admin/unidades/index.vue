@@ -48,7 +48,7 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="mx-auto max-w-5xl">
+  <div>
     <Teleport :to="target" defer v-if="isMounted">
       <TopbarSearch v-model="searchQuery" placeholder="Buscar unidad..." />
     </Teleport>

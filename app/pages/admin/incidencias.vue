@@ -25,14 +25,12 @@ const filterStatus = ref<IncidentStatus | ''>('')
 const filterPriority = ref<IncidentPriority | ''>('')
 
 const statusOptions = [
-  { value: '', label: 'Todos los estados' },
   { value: 'open', label: 'Abierta' },
   { value: 'in_progress', label: 'En proceso' },
   { value: 'resolved', label: 'Resuelta' },
   { value: 'closed', label: 'Cerrada' },
 ]
 const priorityOptions = [
-  { value: '', label: 'Todas las prioridades' },
   { value: 'low', label: 'Baja' },
   { value: 'medium', label: 'Media' },
   { value: 'high', label: 'Alta' },
@@ -113,7 +111,7 @@ const { formatDate, formatDateTime } = useFormatDate()
 </script>
 
 <template>
-  <div class="mx-auto max-w-5xl">
+  <div>
     <!-- Stats cards -->
     <div class="mb-6 grid grid-cols-2 gap-3">
       <div class="flex items-center gap-3 rounded-lg border bg-card p-4">
@@ -148,9 +146,12 @@ const { formatDate, formatDateTime } = useFormatDate()
     </div>
 
     <Teleport :to="target" defer v-if="isMounted">
-      <TopbarSearch v-model="searchQuery" placeholder="Buscar incidencia..." />
-      <TopbarSelect v-model="filterStatus" :options="statusOptions" placeholder="Estado" />
-      <TopbarSelect v-model="filterPriority" :options="priorityOptions" placeholder="Prioridad" />
+      <TopbarSearch v-model="searchQuery" placeholder="Buscar incidencia...">
+        <TopbarFilters :active="filterStatus !== '' || filterPriority !== ''" @clear="filterStatus = ''; filterPriority = ''">
+          <TopbarFilterGroup v-model="filterStatus" label="Estado" :options="statusOptions" />
+          <TopbarFilterGroup v-model="filterPriority" label="Prioridad" :options="priorityOptions" />
+        </TopbarFilters>
+      </TopbarSearch>
     </Teleport>
 
     <!-- Loading -->
@@ -201,7 +202,7 @@ const { formatDate, formatDateTime } = useFormatDate()
               <TableCell class="text-muted-foreground">{{ item.reportedByName ?? '—' }}</TableCell>
               <TableCell>
                 <span
-                  class="inline-flex rounded-full px-2 py-0.5 text-xs font-medium"
+                  class="inline-flex rounded-lg px-2 py-0.5 text-xs font-medium"
                   :class="PRIORITY_CONFIG[item.priority].class"
                 >
                   {{ PRIORITY_CONFIG[item.priority].label }}
@@ -209,7 +210,7 @@ const { formatDate, formatDateTime } = useFormatDate()
               </TableCell>
               <TableCell>
                 <span
-                  class="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium"
+                  class="inline-flex items-center gap-1 rounded-lg px-2 py-0.5 text-xs font-medium"
                   :class="STATUS_CONFIG[item.status].class"
                 >
                   <component :is="STATUS_CONFIG[item.status].icon" class="size-3" />
@@ -241,14 +242,14 @@ const { formatDate, formatDateTime } = useFormatDate()
             </div>
             <div class="mt-2 flex flex-wrap items-center gap-1.5">
               <span
-                class="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium"
+                class="inline-flex items-center gap-1 rounded-lg px-2 py-0.5 text-xs font-medium"
                 :class="STATUS_CONFIG[item.status].class"
               >
                 <component :is="STATUS_CONFIG[item.status].icon" class="size-3" />
                 {{ STATUS_CONFIG[item.status].label }}
               </span>
               <span
-                class="inline-flex rounded-full px-2 py-0.5 text-xs font-medium"
+                class="inline-flex rounded-lg px-2 py-0.5 text-xs font-medium"
                 :class="PRIORITY_CONFIG[item.priority].class"
               >
                 {{ PRIORITY_CONFIG[item.priority].label }}
@@ -304,14 +305,14 @@ const { formatDate, formatDateTime } = useFormatDate()
             <!-- Current status & priority -->
             <div class="flex gap-2">
               <span
-                class="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium"
+                class="inline-flex items-center gap-1 rounded-lg px-2 py-0.5 text-xs font-medium"
                 :class="STATUS_CONFIG[detail.incident.value.status].class"
               >
                 <component :is="STATUS_CONFIG[detail.incident.value.status].icon" class="size-3" />
                 {{ STATUS_CONFIG[detail.incident.value.status].label }}
               </span>
               <span
-                class="inline-flex rounded-full px-2 py-0.5 text-xs font-medium"
+                class="inline-flex rounded-lg px-2 py-0.5 text-xs font-medium"
                 :class="PRIORITY_CONFIG[detail.incident.value.priority].class"
               >
                 {{ PRIORITY_CONFIG[detail.incident.value.priority].label }}
