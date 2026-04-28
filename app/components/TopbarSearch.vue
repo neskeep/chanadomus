@@ -9,12 +9,13 @@ defineProps<{
 </script>
 
 <template>
-  <div class="relative">
-    <Search class="absolute left-2.5 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground" />
-    <Input
+  <div class="flex h-8 items-center rounded-lg border bg-background">
+    <Search class="ml-2.5 size-3.5 shrink-0 text-muted-foreground" />
+    <input
       v-model="model"
       :placeholder="placeholder ?? 'Buscar...'"
-      class="h-8 w-[180px] pl-8 text-sm lg:w-[220px]"
+      class="w-[130px] bg-transparent px-2 text-sm outline-none placeholder:text-muted-foreground lg:w-[180px]"
     />
+    <slot />
   </div>
 </template>

@@ -1,6 +1,12 @@
+interface PageBreadcrumb {
+  label: string
+  to: string
+}
+
 interface PageInfo {
   title: string
   description: string
+  breadcrumbs?: PageBreadcrumb[]
 }
 
 const PAGE_MAP: Record<string, PageInfo> = {
@@ -69,7 +75,9 @@ export function usePageInfo() {
     return _override.value?.description ?? base.description
   })
 
-  return reactive({ title, description })
+  const breadcrumbs = computed(() => _override.value?.breadcrumbs ?? undefined)
+
+  return reactive({ title, description, breadcrumbs })
 }
 
 function _resolveBase(path: string): PageInfo {
