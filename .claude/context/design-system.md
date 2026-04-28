@@ -33,6 +33,36 @@ Siempre disenar en orden: movil → tablet → desktop.
 ## Componentes Instalados
 Ver `.claude/state/installed-components.md` para lista actualizada.
 
+## Patrones UI Validados (Referencia: vigilancia/accesos.vue)
+
+### Card Compacto (Feed/Listado)
+- **Padding**: `px-3 py-2.5` — compacto pero tocable
+- **Spacing entre cards**: `space-y-2`
+- **Row 1**: Nombre (text-sm font-semibold truncate) + Badge unidad (text-[11px]) + Hora (text-[11px] tabular-nums)
+- **Row 2**: Meta inline (text-[11px]) con separadores `·` (opacity-30), items con `gap-x-1`
+- **Acciones inline**: Botones ghost `h-6 px-2 text-[11px]` al final de Row 2 — NUNCA en fila propia
+- **Sin bordes coloreados** en cards — cards limpios del design system
+- **Sin fondos de estado** en cards — el estado se indica con texto coloreado o dots externos
+
+### Timeline (Feed cronologico)
+- **Linea vertical**: `w-px bg-border` posicionada con `absolute left-[5px]`
+- **Dots**: `size-2.5 rounded-full ring-2 ring-background` coloreados por estado
+- **Colores dots**: primary (permitido/ok), destructive (denegado/error), amber-500 (warning)
+- **Offset**: `pl-5` en container, dot posicionado con `absolute -left-5`
+
+### Principios de Compactacion
+1. **Maximo 2 filas** por card en feeds — nombre+badges arriba, meta+acciones abajo
+2. **Acciones inline** — botones ghost pequeños al final de la meta line, nunca en fila separada
+3. **Info que reemplaza accion** — cuando una accion se completa (ej: salida marcada), el resultado ocupa el mismo slot inline
+4. **text-[11px]** para meta, **text-sm** para contenido principal, **text-base** para titulos
+5. **tabular-nums** en todos los datos numericos/hora
+6. **truncate** en nombres y textos largos para evitar wrap
+
+### Topbar Actions
+- Badge de estado (conectado/desconectado) via `useTopbarPortal()`
+- Busqueda via `TopbarSearch` component
+- Acciones secundarias como botones en la action zone
+
 ## Reglas de Uso
 1. Usar SOLO componentes shadcn-vue del registro
 2. Usar SOLO clases Tailwind para estilos
