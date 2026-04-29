@@ -145,8 +145,9 @@ const { formatDateTime } = useFormatDate()
     <ErrorAlert :message="error" class="mb-4" />
 
     <!-- Form (hidden after generation) -->
-    <Card v-if="!generatedToken">
-      <CardContent class="space-y-5 p-4">
+    <form v-if="!generatedToken" @submit.prevent="handleGenerate">
+      <Card>
+      <CardContent class="space-y-6 p-4">
         <!-- Nombre del visitante -->
         <div class="space-y-1.5">
           <Label for="visitor-name">Nombre del visitante <span class="text-destructive">*</span></Label>
@@ -197,16 +198,17 @@ const { formatDateTime } = useFormatDate()
 
         <!-- Submit -->
         <Button
+          type="submit"
           class="mt-3 h-12 w-full text-base font-semibold"
           :disabled="!isFormValid || isGenerating"
-          @click="handleGenerate"
         >
           <Loader2 v-if="isGenerating" class="size-4 animate-spin" />
           <QrCode v-else class="size-4" />
           {{ isGenerating ? 'Creando...' : 'Crear pase de acceso' }}
         </Button>
       </CardContent>
-    </Card>
+      </Card>
+    </form>
 
     <!-- Result -->
     <div v-else class="space-y-4">

@@ -83,7 +83,7 @@ onUnmounted(() => {
   <div>
     <Card>
       <CardContent class="p-4">
-        <form class="space-y-5" @submit.prevent="handleSubmit">
+        <form class="space-y-6" @submit.prevent="handleSubmit">
           <!-- Title -->
           <div class="space-y-1.5">
             <Label for="title">Título <span class="text-destructive">*</span></Label>

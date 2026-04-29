@@ -97,7 +97,7 @@ async function submit(result: 'allowed' | 'denied') {
     <ErrorAlert :message="error" class="mb-4" />
 
     <Card>
-      <CardContent class="space-y-5 p-4">
+      <CardContent class="space-y-6 p-4">
         <!-- Nombre visitante -->
         <div class="space-y-1.5">
           <Label for="visitor-name">Nombre del visitante <span class="text-destructive">*</span></Label>
