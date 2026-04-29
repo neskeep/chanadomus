@@ -3,7 +3,7 @@ const pageInfo = usePageInfo()
 </script>
 
 <template>
-  <header class="hidden md:flex shrink-0 py-4 items-center border-b bg-background px-4 lg:px-6">
+  <header class="hidden md:flex shrink-0 h-[68px] items-center border-b bg-background px-5 lg:px-6">
     <div class="min-w-0 shrink-0">
       <!-- Breadcrumb mode -->
       <Breadcrumb v-if="pageInfo.breadcrumbs?.length">
@@ -28,8 +28,10 @@ const pageInfo = usePageInfo()
 
       <!-- Default title mode -->
       <template v-else>
-        <h1 class="text-base font-semibold truncate leading-tight">{{ pageInfo.title }}</h1>
-        <p v-if="pageInfo.description" class="text-xs text-muted-foreground truncate">{{ pageInfo.description }}</p>
+        <div class="flex flex-col">
+          <h1 class="text-base font-semibold truncate leading-tight">{{ pageInfo.title }}</h1>
+          <p v-if="pageInfo.description" class="text-xs text-muted-foreground truncate">{{ pageInfo.description }}</p>
+        </div>
       </template>
     </div>
 

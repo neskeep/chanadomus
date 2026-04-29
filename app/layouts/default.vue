@@ -15,7 +15,7 @@ useContentResize(contentRef)
 
       <!-- Mobile header -->
       <header class="shrink-0 z-40 flex h-12 items-center justify-between border-b bg-background/95 px-3 backdrop-blur md:hidden">
-        <SidebarTrigger class="size-9" />
+        <AppIsotipo :height="24" />
         <span class="text-sm font-semibold text-muted-foreground truncate">{{ usePageInfo().title }}</span>
         <div class="flex items-center gap-1">
           <PanicButton />

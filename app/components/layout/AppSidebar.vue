@@ -23,24 +23,15 @@ watch(() => route.path, () => {
 
 <template>
   <Sidebar collapsible="icon">
-    <SidebarHeader>
-      <div class="flex items-center">
-        <SidebarMenu class="flex-1">
-          <SidebarMenuItem>
-            <SidebarMenuButton size="lg" as-child>
-              <NuxtLink :to="roleHome">
-                <AppIsotipo class="size-8 shrink-0 group-data-[state=expanded]:hidden" />
-                <AppLogo :height="42" class="group-data-[state=collapsed]:hidden" />
-              </NuxtLink>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
-        </SidebarMenu>
-        <button
-          class="group-data-[state=collapsed]:hidden flex size-8 shrink-0 items-center justify-center rounded-md text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-foreground transition-colors"
-          @click="toggleSidebar"
-        >
-          <PanelLeft class="size-4" />
-        </button>
+    <SidebarHeader class="h-[68px] justify-center border-b border-sidebar-border">
+      <!-- Expanded: logo + collapse trigger -->
+      <div class="group-data-[state=collapsed]:hidden flex items-center justify-between px-1">
+        <AppLogo :height="36" />
+        <SidebarTrigger class="shrink-0 text-sidebar-foreground/70" />
+      </div>
+      <!-- Collapsed: isotipo centered, no link -->
+      <div class="group-data-[state=expanded]:hidden flex justify-center">
+        <AppIsotipo class="size-7" />
       </div>
     </SidebarHeader>
 
@@ -63,15 +54,15 @@ watch(() => route.path, () => {
     </SidebarContent>
 
     <SidebarFooter>
-      <SidebarMenu class="group-data-[state=expanded]:hidden">
+      <SidebarMenu class="hidden group-data-[state=collapsed]:block">
         <SidebarMenuItem>
           <SidebarMenuButton tooltip="Expandir menú" @click="toggleSidebar">
             <PanelLeft class="size-4" />
-            <span>Expandir menú</span>
+            <span>Expandir</span>
           </SidebarMenuButton>
         </SidebarMenuItem>
       </SidebarMenu>
-      <LayoutUserMenu variant="sidebar" />
+      <LayoutUserMenu />
     </SidebarFooter>
   </Sidebar>
 </template>
