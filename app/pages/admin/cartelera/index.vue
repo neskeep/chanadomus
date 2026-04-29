@@ -8,7 +8,6 @@ import {
   Pencil,
   Trash2,
   Loader2,
-  Paperclip,
   Calendar,
 } from 'lucide-vue-next'
 import { toast } from 'vue-sonner'
@@ -27,7 +26,6 @@ const {
   error,
   totalPages,
   fetchAnnouncements,
-  createAnnouncement,
   updateAnnouncement,
   publishAnnouncement,
   archiveAnnouncement,
@@ -58,9 +56,6 @@ const formBody = ref('')
 const formCategory = ref<AnnouncementCategory>('general')
 const formStatus = ref<AnnouncementStatus>('draft')
 const formExpiresAt = ref('')
-const formPdfFile = ref<File | null>(null)
-const pdfInputRef = ref<HTMLInputElement | null>(null)
-
 // Delete dialog
 const deleteId = ref<string | null>(null)
 const deleteDialogOpen = ref(false)
@@ -114,13 +109,6 @@ function resetForm() {
   formCategory.value = 'general'
   formStatus.value = 'draft'
   formExpiresAt.value = ''
-  formPdfFile.value = null
-}
-
-function openCreateDialog() {
-  editingId.value = null
-  resetForm()
-  dialogOpen.value = true
 }
 
 function openEditDialog(announcement: Announcement) {
@@ -130,34 +118,21 @@ function openEditDialog(announcement: Announcement) {
   formCategory.value = announcement.category
   formStatus.value = announcement.status
   formExpiresAt.value = announcement.expiresAt ? announcement.expiresAt.split('T')[0] : ''
-  formPdfFile.value = null
   dialogOpen.value = true
 }
 
 async function handleSubmit() {
+  if (!editingId.value) return
   try {
-    if (editingId.value) {
-      const data: Partial<Pick<Announcement, 'title' | 'body' | 'category' | 'status' | 'expiresAt'>> = {
-        title: formTitle.value,
-        body: formBody.value,
-        category: formCategory.value,
-        status: formStatus.value,
-      }
-      if (formExpiresAt.value) data.expiresAt = formExpiresAt.value
-      await updateAnnouncement(editingId.value, data)
-      toast.success('Anuncio actualizado correctamente')
+    const data: Partial<Pick<Announcement, 'title' | 'body' | 'category' | 'status' | 'expiresAt'>> = {
+      title: formTitle.value,
+      body: formBody.value,
+      category: formCategory.value,
+      status: formStatus.value,
     }
-    else {
-      const formData = new FormData()
-      formData.append('title', formTitle.value)
-      formData.append('body', formBody.value)
-      formData.append('category', formCategory.value)
-      formData.append('status', formStatus.value)
-      if (formExpiresAt.value) formData.append('expires_at', formExpiresAt.value)
-      if (formPdfFile.value) formData.append('attachment', formPdfFile.value)
-      await createAnnouncement(formData)
-      toast.success('Anuncio creado correctamente')
-    }
+    if (formExpiresAt.value) data.expiresAt = formExpiresAt.value
+    await updateAnnouncement(editingId.value, data)
+    toast.success('Anuncio actualizado correctamente')
     dialogOpen.value = false
     await loadAnnouncements()
   }
@@ -207,11 +182,6 @@ async function handleDelete() {
   }
 }
 
-function handlePdfSelect(event: Event) {
-  const target = event.target as HTMLInputElement
-  const file = target.files?.[0]
-  if (file) formPdfFile.value = file
-}
 </script>
 
 <template>
@@ -223,10 +193,12 @@ function handlePdfSelect(event: Event) {
           <TopbarFilterGroup v-model="filterCategory" label="Categoria" :options="categoryOptions" />
         </TopbarFilters>
       </TopbarSearch>
-      <Button size="sm" @click="openCreateDialog">
-        <Plus class="mr-1.5 size-3.5" />
-        Nuevo
-      </Button>
+      <NuxtLink to="/admin/cartelera/crear">
+        <Button size="sm">
+          <Plus class="mr-1.5 size-3.5" />
+          Nuevo
+        </Button>
+      </NuxtLink>
     </Teleport>
 
     <!-- Stats cards -->
@@ -410,9 +382,9 @@ function handlePdfSelect(event: Event) {
     <Sheet v-model:open="dialogOpen">
       <SheetContent side="right" class="overflow-y-auto sm:max-w-lg">
         <SheetHeader>
-          <SheetTitle>{{ editingId ? 'Editar Anuncio' : 'Nuevo Anuncio' }}</SheetTitle>
+          <SheetTitle>Editar Anuncio</SheetTitle>
           <SheetDescription>
-            {{ editingId ? 'Modifica los datos del anuncio' : 'Completa los datos para crear un nuevo anuncio' }}
+            Modifica los datos del anuncio
           </SheetDescription>
         </SheetHeader>
 
@@ -470,26 +442,6 @@ function handlePdfSelect(event: Event) {
             </Select>
           </div>
 
-          <div v-if="!editingId">
-            <label class="text-sm font-medium">Adjunto PDF</label>
-            <div class="mt-1.5 flex items-center gap-2">
-              <Button type="button" variant="outline" @click="pdfInputRef?.click()">
-                <Paperclip class="mr-1.5 size-4" />
-                {{ formPdfFile ? formPdfFile.name : 'Seleccionar PDF' }}
-              </Button>
-              <input
-                ref="pdfInputRef"
-                type="file"
-                accept="application/pdf"
-                class="hidden"
-                @change="handlePdfSelect"
-              />
-              <span v-if="formPdfFile" class="text-xs text-muted-foreground">
-                {{ (formPdfFile.size / 1024 / 1024).toFixed(1) }} MB
-              </span>
-            </div>
-          </div>
-
           <div>
             <label for="ann-expires" class="text-sm font-medium">Fecha de expiración (opcional)</label>
             <div class="relative mt-1.5">
@@ -509,7 +461,7 @@ function handlePdfSelect(event: Event) {
             </Button>
             <Button type="submit" :disabled="isSubmitting || !formTitle.trim() || !formBody.trim()">
               <Loader2 v-if="isSubmitting" class="mr-2 size-4 animate-spin" />
-              {{ isSubmitting ? 'Guardando...' : (editingId ? 'Guardar cambios' : 'Crear anuncio') }}
+              {{ isSubmitting ? 'Guardando...' : 'Guardar cambios' }}
             </Button>
           </div>
         </form>
