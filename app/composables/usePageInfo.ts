@@ -26,6 +26,7 @@ const PAGE_MAP: Record<string, PageInfo> = {
   '/admin/votaciones': { title: 'Votaciones', description: 'Consultas y decisiones comunitarias' },
   '/admin/votaciones/crear': { title: 'Nueva Votación', description: 'Crea una nueva votación para la comunidad', breadcrumbs: [{ label: 'Votaciones', to: '/admin/votaciones' }] },
   '/admin/reuniones': { title: 'Reuniones', description: 'Calendario de asambleas y juntas' },
+  '/admin/reuniones/crear': { title: 'Nueva Reunión', description: 'Programa una nueva reunión o asamblea', breadcrumbs: [{ label: 'Reuniones', to: '/admin/reuniones' }] },
 
   // Propietario
   '/propietario': { title: 'Mi Vivienda', description: 'Tu resumen personal' },
