@@ -77,16 +77,10 @@ onMounted(() => {
     </div>
 
     <!-- Error -->
-    <div
-      v-if="error"
-      role="alert"
-      class="mb-4 rounded-lg border border-destructive/50 bg-destructive/10 p-3 text-sm text-destructive"
-    >
-      {{ error }}
-    </div>
+    <ErrorAlert :message="error" class="mb-4" />
 
     <!-- Loading -->
-    <div v-if="isLoading" class="divide-y rounded-xl border bg-card">
+    <div v-if="isLoading" class="divide-y rounded-lg border bg-card">
       <div v-for="i in 4" :key="i" class="flex items-center gap-3 px-3 py-2.5">
         <Skeleton class="size-9 shrink-0 rounded-full" />
         <div class="flex-1 space-y-1.5">
@@ -100,25 +94,15 @@ onMounted(() => {
     <!-- Content -->
     <template v-else-if="!error">
       <!-- Empty state -->
-      <div
+      <EmptyState
         v-if="activeRooms.length === 0"
-        class="flex flex-col items-center gap-4 rounded-lg border border-dashed p-8 text-center"
-      >
-        <div class="flex size-10 items-center justify-center rounded-lg bg-muted">
-          <MessageCircle class="size-5 text-muted-foreground" />
-        </div>
-        <div>
-          <p class="font-medium">
-            {{ activeTab === 'canales' ? 'No hay canales disponibles' : 'No hay chats de unidad' }}
-          </p>
-          <p class="mt-1 text-sm text-muted-foreground">
-            {{ activeTab === 'canales' ? 'Los canales aparecerán aquí cuando estén habilitados' : 'Los chats de tu rancho aparecerán aquí' }}
-          </p>
-        </div>
-      </div>
+        :icon="MessageCircle"
+        :title="activeTab === 'canales' ? 'No hay canales disponibles' : 'No hay chats de unidad'"
+        :description="activeTab === 'canales' ? 'Los canales aparecerán aquí cuando estén habilitados' : 'Los chats de tu rancho aparecerán aquí'"
+      />
 
       <!-- Room list -->
-      <div v-else class="divide-y rounded-xl border bg-card">
+      <div v-else class="divide-y rounded-lg border bg-card">
         <NuxtLink
           v-for="room in activeRooms"
           :key="room.id"

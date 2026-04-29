@@ -67,45 +67,20 @@ onMounted(() => {
 <template>
   <div>
     <!-- Error -->
-    <div
-      v-if="error"
-      role="alert"
-      class="mb-4 rounded-lg border border-destructive/50 bg-destructive/10 p-3 text-sm text-destructive"
-    >
-      {{ error }}
-    </div>
+    <ErrorAlert :message="error" class="mb-4" />
 
     <!-- Loading -->
-    <div v-if="isLoading" class="space-y-3">
-      <Card v-for="i in 3" :key="i">
-        <CardContent class="flex gap-2.5 p-3">
-          <Skeleton class="size-12 shrink-0 rounded-lg" />
-          <div class="flex-1 space-y-2">
-            <Skeleton class="h-4 w-3/4" />
-            <Skeleton class="h-3.5 w-1/2" />
-            <Skeleton class="h-3.5 w-1/3" />
-          </div>
-        </CardContent>
-      </Card>
-    </div>
+    <ListSkeleton v-if="isLoading" :count="3" />
 
     <!-- Content -->
     <template v-else-if="!error">
       <!-- Empty state -->
-      <div
+      <EmptyState
         v-if="meetings.length === 0"
-        class="flex flex-col items-center gap-4 rounded-lg border border-dashed p-8 text-center"
-      >
-        <div class="flex size-10 items-center justify-center rounded-lg bg-muted">
-          <Calendar class="size-5 text-muted-foreground" />
-        </div>
-        <div>
-          <p class="font-medium">No hay reuniones programadas</p>
-          <p class="mt-1 text-sm text-muted-foreground">
-            Las próximas reuniones aparecerán aquí
-          </p>
-        </div>
-      </div>
+        :icon="Calendar"
+        title="No hay reuniones programadas"
+        description="Las próximas reuniones aparecerán aquí"
+      />
 
       <!-- Grouped meetings -->
       <div v-else class="space-y-6">
@@ -116,7 +91,7 @@ onMounted(() => {
           </h2>
 
           <!-- Meeting cards -->
-          <div class="space-y-3">
+          <div class="space-y-2">
             <Card v-for="m in group.meetings" :key="m.id">
               <CardContent class="flex gap-2.5 p-3">
                 <!-- Date badge -->

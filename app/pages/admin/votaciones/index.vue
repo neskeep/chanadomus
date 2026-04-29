@@ -233,27 +233,9 @@ function participationText(poll: Poll): string {
     </Teleport>
 
     <!-- Stats cards -->
-    <div class="mb-6 grid grid-cols-2 gap-2">
-      <div class="flex items-center gap-3 rounded-lg border bg-card p-4">
-        <div class="flex size-10 shrink-0 items-center justify-center rounded-md bg-emerald-100">
-          <Vote class="size-5 text-emerald-600" />
-        </div>
-        <div>
-          <p v-if="isLoading"><Skeleton class="h-5 w-8" /></p>
-          <p v-else class="text-lg font-bold leading-none">{{ totalActive }}</p>
-          <p class="mt-0.5 text-xs text-muted-foreground">Activas</p>
-        </div>
-      </div>
-      <div class="flex items-center gap-3 rounded-lg border bg-card p-4">
-        <div class="flex size-10 shrink-0 items-center justify-center rounded-md bg-zinc-100">
-          <FileText class="size-5 text-zinc-600" />
-        </div>
-        <div>
-          <p v-if="isLoading"><Skeleton class="h-5 w-8" /></p>
-          <p v-else class="text-lg font-bold leading-none">{{ totalDrafts }}</p>
-          <p class="mt-0.5 text-xs text-muted-foreground">Borradores</p>
-        </div>
-      </div>
+    <div class="mb-6 grid grid-cols-2 gap-3">
+      <StatCard label="Activas" :value="totalActive" :icon="Vote" icon-bg-class="bg-primary/10 text-primary" :is-loading="isLoading" />
+      <StatCard label="Borradores" :value="totalDrafts" :icon="FileText" icon-bg-class="bg-muted text-muted-foreground" :is-loading="isLoading" />
     </div>
 
     <!-- Error -->
@@ -325,7 +307,7 @@ function participationText(poll: Poll): string {
                     title="Publicar"
                     @click="handlePublish(poll.id)"
                   >
-                    <Send class="size-4 text-emerald-600" />
+                    <Send class="size-4 text-primary" />
                   </Button>
                   <Button
                     v-if="poll.status === 'active'"
@@ -335,7 +317,7 @@ function participationText(poll: Poll): string {
                     title="Cerrar votación"
                     @click="handleClose(poll.id)"
                   >
-                    <Lock class="size-4 text-blue-600" />
+                    <Lock class="size-4 text-muted-foreground" />
                   </Button>
                   <Button
                     variant="ghost"
@@ -363,80 +345,84 @@ function participationText(poll: Poll): string {
       </div>
 
       <!-- Mobile cards -->
-      <div class="space-y-3 md:hidden">
-        <Card v-for="poll in filteredPolls" :key="poll.id">
-          <CardContent class="p-4">
-            <div class="flex items-start justify-between gap-2">
-              <div class="min-w-0 flex-1">
-                <p class="text-sm font-medium leading-snug">{{ poll.title }}</p>
-                <p class="mt-1 text-xs text-muted-foreground">
-                  {{ participationText(poll) }} · {{ formatDate(poll.createdAt) }}
-                </p>
-              </div>
-            </div>
-            <div class="mt-2 flex flex-wrap items-center gap-1.5">
+      <div class="space-y-2 md:hidden">
+        <Card v-for="poll in filteredPolls" :key="poll.id" class="min-w-0">
+          <CardContent class="px-3 py-2.5">
+            <!-- Row 1: Title + Status badge + Date -->
+            <div class="flex items-center gap-1.5">
+              <p class="min-w-0 flex-1 truncate text-sm font-semibold">{{ poll.title }}</p>
               <span
-                class="inline-flex rounded-lg px-2 py-0.5 text-xs font-medium"
+                class="shrink-0 inline-flex rounded-lg px-2 py-0.5 text-[11px] font-medium"
                 :class="STATUS_CONFIG[poll.status].class"
               >
                 {{ STATUS_CONFIG[poll.status].label }}
               </span>
-              <span v-if="poll.deadline" class="inline-flex items-center gap-1 text-xs text-muted-foreground">
-                <Calendar class="size-3" />
-                {{ formatDate(poll.deadline) }}
+              <span class="shrink-0 text-[11px] tabular-nums text-muted-foreground">
+                {{ formatDate(poll.createdAt) }}
               </span>
             </div>
 
-            <!-- Results for active/closed -->
-            <div v-if="poll.status !== 'draft' && poll.options?.length" class="mt-3 space-y-1.5">
-              <div v-for="opt in poll.options" :key="opt.id" class="space-y-0.5">
-                <div class="flex items-center justify-between text-xs">
-                  <span class="truncate text-muted-foreground">{{ opt.text }}</span>
-                  <span class="ml-2 shrink-0 font-medium">{{ opt.percentage ?? 0 }}%</span>
-                </div>
-                <Progress :model-value="opt.percentage ?? 0" class="h-2" />
+            <!-- Row 2: Participation · Deadline | Actions inline -->
+            <div class="mt-0.5 flex items-center gap-x-1 text-[11px] text-muted-foreground">
+              <span>{{ participationText(poll) }}</span>
+              <template v-if="poll.deadline">
+                <span class="opacity-30">&middot;</span>
+                <Calendar class="size-3 shrink-0" />
+                <span class="shrink-0">{{ formatDate(poll.deadline) }}</span>
+              </template>
+
+              <!-- Inline actions -->
+              <div class="ml-auto flex items-center gap-0.5">
+                <Button
+                  v-if="poll.status === 'draft'"
+                  variant="ghost"
+                  class="h-6 px-2 text-[11px] text-primary"
+                  title="Publicar"
+                  @click="handlePublish(poll.id)"
+                >
+                  <Send class="mr-1 size-3" />
+                  Publicar
+                </Button>
+                <Button
+                  v-if="poll.status === 'active'"
+                  variant="ghost"
+                  class="h-6 px-2 text-[11px] text-muted-foreground"
+                  title="Cerrar votación"
+                  @click="handleClose(poll.id)"
+                >
+                  <Lock class="mr-1 size-3" />
+                  Cerrar
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  class="size-6"
+                  title="Editar"
+                  @click="openEditDialog(poll)"
+                >
+                  <Pencil class="size-3" />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  class="size-6 text-destructive hover:text-destructive"
+                  title="Eliminar"
+                  @click="confirmDelete(poll.id)"
+                >
+                  <Trash2 class="size-3" />
+                </Button>
               </div>
             </div>
 
-            <div class="mt-3 flex items-center gap-1">
-              <Button
-                v-if="poll.status === 'draft'"
-                variant="ghost"
-                size="icon"
-                class="size-8"
-                title="Publicar"
-                @click="handlePublish(poll.id)"
-              >
-                <Send class="size-4 text-emerald-600" />
-              </Button>
-              <Button
-                v-if="poll.status === 'active'"
-                variant="ghost"
-                size="icon"
-                class="size-8"
-                title="Cerrar votación"
-                @click="handleClose(poll.id)"
-              >
-                <Lock class="size-4 text-blue-600" />
-              </Button>
-              <Button
-                variant="ghost"
-                size="icon"
-                class="size-8"
-                title="Editar"
-                @click="openEditDialog(poll)"
-              >
-                <Pencil class="size-4" />
-              </Button>
-              <Button
-                variant="ghost"
-                size="icon"
-                class="size-8 text-destructive hover:text-destructive"
-                title="Eliminar"
-                @click="confirmDelete(poll.id)"
-              >
-                <Trash2 class="size-4" />
-              </Button>
+            <!-- Results for active/closed (compact) -->
+            <div v-if="poll.status !== 'draft' && poll.options?.length" class="mt-1.5 space-y-1">
+              <div v-for="opt in poll.options" :key="opt.id" class="space-y-0.5">
+                <div class="flex items-center justify-between text-[11px]">
+                  <span class="truncate text-muted-foreground">{{ opt.text }}</span>
+                  <span class="ml-2 shrink-0 font-medium tabular-nums">{{ opt.percentage ?? 0 }}%</span>
+                </div>
+                <Progress :model-value="opt.percentage ?? 0" class="h-1.5" />
+              </div>
             </div>
           </CardContent>
         </Card>

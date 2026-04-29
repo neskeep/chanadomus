@@ -100,14 +100,14 @@ function isNew(publishedAt: string | null): boolean {
       />
 
       <!-- Announcement cards -->
-      <div v-else class="space-y-3">
+      <div v-else class="space-y-2">
         <Card
           v-for="item in announcements"
           :key="item.id"
-          class="cursor-pointer transition-shadow hover:shadow-md"
+          class="cursor-pointer transition-colors hover:bg-muted/50"
           @click="toggleExpand(item.id)"
         >
-          <CardContent class="p-4">
+          <CardContent class="px-3 py-2.5">
             <!-- Top row: badges + chevron -->
             <div class="flex items-start justify-between gap-2">
               <div class="flex flex-wrap items-center gap-1.5">

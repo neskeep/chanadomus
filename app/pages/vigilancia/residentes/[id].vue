@@ -123,7 +123,7 @@ onMounted(async () => {
 <template>
   <div>
     <!-- Members section -->
-    <section class="mb-10">
+    <section class="mb-8">
       <div class="mb-4 flex items-center gap-2">
         <Users class="size-5 text-muted-foreground" />
         <h2 class="text-lg font-semibold">Miembros del Hogar</h2>
@@ -143,18 +143,15 @@ onMounted(async () => {
         description="No hay miembros registrados en esta unidad"
       />
 
-      <div v-else class="space-y-3">
+      <div v-else class="space-y-2">
         <Card
           v-for="member in sortedMembers"
           :key="member.id"
-          :class="[
-            member.relationship === 'owner' ? 'border-primary/30 bg-primary/5' : '',
-          ]"
         >
-          <CardContent class="p-4">
+          <CardContent class="px-3 py-2.5">
             <div class="flex items-center gap-3">
               <!-- Avatar with initials -->
-              <Avatar class="size-11 shrink-0">
+              <Avatar class="size-10 shrink-0">
                 <AvatarFallback
                   :class="[
                     'text-sm font-semibold',
@@ -201,7 +198,7 @@ onMounted(async () => {
       </div>
     </section>
 
-    <Separator class="mb-10" />
+    <Separator class="mb-8" />
 
     <!-- Vehicles section -->
     <section class="pb-8">
@@ -224,11 +221,11 @@ onMounted(async () => {
         description="No hay vehículos registrados en esta unidad"
       />
 
-      <div v-else class="space-y-3">
+      <div v-else class="space-y-2">
         <Card v-for="vehicle in vehicles" :key="vehicle.id">
-          <CardContent class="flex items-center gap-4 p-4">
+          <CardContent class="flex items-center gap-4 px-3 py-2.5">
             <!-- Car icon with color dot -->
-            <div class="relative flex size-11 shrink-0 items-center justify-center rounded-lg bg-muted">
+            <div class="relative flex size-10 shrink-0 items-center justify-center rounded-lg bg-muted">
               <Car class="size-5 text-muted-foreground" />
               <span
                 v-if="resolveColor(vehicle.color)"

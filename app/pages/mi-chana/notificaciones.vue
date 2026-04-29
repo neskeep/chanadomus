@@ -106,11 +106,13 @@ function handleToggle(category: PushCategory, enabled: boolean) {
       </template>
 
       <!-- Error state -->
-      <div v-else-if="error" class="p-4 text-center">
-        <p class="text-sm text-destructive">{{ error }}</p>
-        <Button variant="ghost" size="sm" class="mt-2" @click="fetchPreferences">
-          Reintentar
-        </Button>
+      <div v-else-if="error" class="p-4 space-y-3">
+        <ErrorAlert :message="error" />
+        <div class="text-center">
+          <Button variant="ghost" size="sm" @click="fetchPreferences">
+            Reintentar
+          </Button>
+        </div>
       </div>
     </Card>
 

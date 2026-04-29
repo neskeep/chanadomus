@@ -128,11 +128,10 @@ function getParticipation(poll: Poll): string {
       />
 
       <!-- Poll cards -->
-      <div v-else class="space-y-3">
+      <div v-else class="space-y-2">
         <Card
           v-for="poll in filteredPolls"
           :key="poll.id"
-          :class="{ 'border-primary/30': poll.status === 'active' && !hasVoted(poll) }"
         >
           <CardContent class="p-3">
             <!-- Header -->

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Loader2, Share2, Copy, Plus, QrCode } from 'lucide-vue-next'
+import { Loader2, Share2, Plus, QrCode } from 'lucide-vue-next'
 import type { VisitorType } from '~~/shared/types/qr'
 import QRCode from 'qrcode'
 
@@ -146,17 +146,11 @@ const { formatDateTime } = useFormatDate()
 <template>
   <div>
     <!-- Error alert -->
-    <div
-      v-if="error"
-      role="alert"
-      class="mb-4 rounded-lg border border-destructive/50 bg-destructive/10 p-3 text-sm text-destructive"
-    >
-      {{ error }}
-    </div>
+    <ErrorAlert :message="error" class="mb-4" />
 
     <!-- Form (hidden after generation) -->
     <Card v-if="!generatedToken">
-      <CardContent class="space-y-5 p-5">
+      <CardContent class="space-y-5 p-4">
         <!-- Nombre del visitante -->
         <div class="space-y-1.5">
           <Label for="visitor-name">Nombre del visitante <span class="text-destructive">*</span></Label>
@@ -221,7 +215,7 @@ const { formatDateTime } = useFormatDate()
     <!-- Result -->
     <div v-else class="space-y-4">
       <Card>
-        <CardContent class="flex flex-col items-center space-y-4 p-5">
+        <CardContent class="flex flex-col items-center space-y-4 p-4">
           <!-- QR Image -->
           <img
             v-if="qrDataUrl"

@@ -5,8 +5,6 @@ import {
   CheckCircle2,
   Loader2,
   XCircle,
-  ChevronLeft,
-  ChevronRight,
   Camera,
 } from 'lucide-vue-next'
 import { toast } from 'vue-sonner'
@@ -115,36 +113,24 @@ const { formatDate, formatDateTime } = useFormatDate()
   <div>
     <!-- Stats cards -->
     <div class="mb-6 grid grid-cols-2 gap-3">
-      <div class="flex items-center gap-3 rounded-lg border bg-card p-4">
-        <div class="flex size-10 shrink-0 items-center justify-center rounded-md bg-amber-100">
-          <AlertTriangle class="size-5 text-amber-600" />
-        </div>
-        <div>
-          <p v-if="isLoading"><Skeleton class="h-5 w-8" /></p>
-          <p v-else class="text-lg font-bold leading-none">{{ totalOpen }}</p>
-          <p class="mt-0.5 text-xs text-muted-foreground">Abiertas</p>
-        </div>
-      </div>
-      <div class="flex items-center gap-3 rounded-lg border bg-card p-4">
-        <div class="flex size-10 shrink-0 items-center justify-center rounded-md bg-blue-100">
-          <Clock class="size-5 text-blue-600" />
-        </div>
-        <div>
-          <p v-if="isLoading"><Skeleton class="h-5 w-8" /></p>
-          <p v-else class="text-lg font-bold leading-none">{{ totalInProgress }}</p>
-          <p class="mt-0.5 text-xs text-muted-foreground">En proceso</p>
-        </div>
-      </div>
+      <StatCard
+        label="Abiertas"
+        :value="totalOpen"
+        :icon="AlertTriangle"
+        icon-bg-class="bg-secondary/10 text-secondary"
+        :is-loading="isLoading"
+      />
+      <StatCard
+        label="En proceso"
+        :value="totalInProgress"
+        :icon="Clock"
+        icon-bg-class="bg-primary/10 text-primary"
+        :is-loading="isLoading"
+      />
     </div>
 
     <!-- Error -->
-    <div
-      v-if="error"
-      role="alert"
-      class="mb-4 rounded-lg border border-destructive/50 bg-destructive/10 p-3 text-sm text-destructive"
-    >
-      {{ error }}
-    </div>
+    <ErrorAlert v-if="error" :message="error" class="mb-4" />
 
     <Teleport :to="target" defer v-if="isMounted">
       <TopbarSearch v-model="searchQuery" placeholder="Buscar incidencia...">
@@ -156,25 +142,15 @@ const { formatDate, formatDateTime } = useFormatDate()
     </Teleport>
 
     <!-- Loading -->
-    <div v-if="isLoading" class="space-y-2">
-      <Skeleton v-for="i in 5" :key="i" class="h-16 w-full rounded-lg" />
-    </div>
+    <ListSkeleton v-if="isLoading" :count="5" variant="row" />
 
     <!-- Empty state -->
-    <div
+    <EmptyState
       v-else-if="filteredIncidents.length === 0"
-      class="flex flex-col items-center gap-4 rounded-lg border border-dashed p-8 text-center"
-    >
-      <div class="flex size-12 items-center justify-center rounded-full bg-muted">
-        <AlertTriangle class="size-6 text-muted-foreground" />
-      </div>
-      <div>
-        <p class="font-medium">No hay incidencias</p>
-        <p class="mt-1 text-sm text-muted-foreground">
-          {{ filterStatus || filterPriority ? 'Prueba cambiando los filtros' : 'Los reportes de propietarios aparecerán aquí' }}
-        </p>
-      </div>
-    </div>
+      :icon="AlertTriangle"
+      title="No hay incidencias"
+      :description="filterStatus || filterPriority ? 'Prueba cambiando los filtros' : 'Los reportes de propietarios aparecerán aquí'"
+    />
 
     <!-- Table (desktop) / Cards (mobile) -->
     <div v-else>
@@ -225,64 +201,41 @@ const { formatDate, formatDateTime } = useFormatDate()
       </div>
 
       <!-- Mobile cards -->
-      <div class="space-y-3 md:hidden">
+      <div class="space-y-2 md:hidden">
         <Card
           v-for="item in filteredIncidents"
           :key="item.id"
-          class="cursor-pointer transition-shadow hover:shadow-md"
+          class="cursor-pointer transition-colors hover:bg-muted/50"
           @click="openDetail(item)"
         >
-          <CardContent class="p-4">
-            <div class="flex items-start justify-between gap-2">
-              <div class="min-w-0 flex-1">
-                <p class="text-sm font-medium leading-snug">{{ item.title }}</p>
-                <p class="mt-1 text-xs text-muted-foreground">
-                  {{ item.unitNumber ?? '—' }} · {{ item.reportedByName ?? '—' }}
-                </p>
-              </div>
-            </div>
-            <div class="mt-2 flex flex-wrap items-center gap-1.5">
+          <CardContent class="px-3 py-2.5">
+            <!-- Row 1: Title + Priority + Date -->
+            <div class="flex items-center gap-1.5">
+              <p class="min-w-0 flex-1 truncate text-sm font-semibold">{{ item.title }}</p>
               <span
-                class="inline-flex items-center gap-1 rounded-lg px-2 py-0.5 text-xs font-medium"
-                :class="STATUS_CONFIG[item.status].class"
-              >
-                <component :is="STATUS_CONFIG[item.status].icon" class="size-3" />
-                {{ STATUS_CONFIG[item.status].label }}
-              </span>
-              <span
-                class="inline-flex rounded-lg px-2 py-0.5 text-xs font-medium"
+                class="inline-flex shrink-0 rounded-lg px-2 py-0.5 text-[11px] font-medium"
                 :class="PRIORITY_CONFIG[item.priority].class"
               >
                 {{ PRIORITY_CONFIG[item.priority].label }}
               </span>
-              <span class="text-xs text-muted-foreground">{{ formatDate(item.createdAt) }}</span>
+              <span class="shrink-0 text-[11px] tabular-nums text-muted-foreground">{{ formatDate(item.createdAt) }}</span>
+            </div>
+            <!-- Row 2: Status · Unit · Reporter -->
+            <div class="mt-0.5 flex items-center gap-x-1 text-[11px] text-muted-foreground">
+              <span :class="STATUS_CONFIG[item.status].class.replace(/bg-\S+/g, '')" class="font-medium">
+                {{ STATUS_CONFIG[item.status].label }}
+              </span>
+              <span class="opacity-30">·</span>
+              <span class="shrink-0">{{ item.unitNumber ?? '—' }}</span>
+              <span class="opacity-30">·</span>
+              <span class="truncate">{{ item.reportedByName ?? '—' }}</span>
             </div>
           </CardContent>
         </Card>
       </div>
 
       <!-- Pagination -->
-      <div v-if="totalPages > 1" class="mt-4 flex items-center justify-between">
-        <Button
-          variant="outline"
-          :disabled="currentPage <= 1"
-          @click="currentPage--"
-        >
-          <ChevronLeft class="mr-1 size-4" />
-          Anterior
-        </Button>
-        <span class="text-sm text-muted-foreground">
-          {{ currentPage }} / {{ totalPages }}
-        </span>
-        <Button
-          variant="outline"
-          :disabled="currentPage >= totalPages"
-          @click="currentPage++"
-        >
-          Siguiente
-          <ChevronRight class="ml-1 size-4" />
-        </Button>
-      </div>
+      <ListPagination v-model:current-page="currentPage" :total-pages="totalPages" class="mt-4" />
     </div>
 
     <!-- Detail Sheet -->

@@ -6,8 +6,6 @@ import {
   Building2,
   Upload,
   FileText,
-  ChevronLeft,
-  ChevronRight,
   Loader2,
 } from 'lucide-vue-next'
 import { toast } from 'vue-sonner'
@@ -179,37 +177,24 @@ onMounted(async () => {
 
     <!-- Stats cards -->
     <div class="mb-6 grid grid-cols-2 gap-3">
-      <div class="flex items-center gap-3 rounded-lg border bg-card p-4">
-        <div class="flex size-10 shrink-0 items-center justify-center rounded-md bg-primary/10">
-          <Building2 class="size-5 text-primary" />
-        </div>
-        <div>
-          <p v-if="isLoading"><Skeleton class="h-5 w-8" /></p>
-          <p v-else class="text-lg font-bold leading-none">{{ totalUnits }}</p>
-          <p class="mt-0.5 text-sm text-muted-foreground">Total unidades</p>
-        </div>
-      </div>
-
-      <div class="flex items-center gap-3 rounded-lg border bg-card p-4">
-        <div class="flex size-10 shrink-0 items-center justify-center rounded-md bg-destructive/10">
-          <AlertTriangle class="size-5 text-destructive" />
-        </div>
-        <div>
-          <p v-if="isLoading"><Skeleton class="h-5 w-8" /></p>
-          <p v-else class="text-lg font-bold leading-none text-destructive">{{ totalInDebt }}</p>
-          <p class="mt-0.5 text-sm text-muted-foreground">En mora</p>
-        </div>
-      </div>
+      <StatCard
+        label="Total unidades"
+        :value="totalUnits"
+        :icon="Building2"
+        icon-bg-class="bg-primary/10 text-primary"
+        :is-loading="isLoading"
+      />
+      <StatCard
+        label="En mora"
+        :value="totalInDebt"
+        :icon="AlertTriangle"
+        icon-bg-class="bg-destructive/10 text-destructive"
+        :is-loading="isLoading"
+      />
     </div>
 
     <!-- Error alert -->
-    <div
-      v-if="error"
-      role="alert"
-      class="mb-4 rounded-lg border border-destructive/50 bg-destructive/10 p-3 text-sm text-destructive"
-    >
-      {{ error }}
-    </div>
+    <ErrorAlert v-if="error" :message="error" class="mb-4" />
 
     <!-- Tabs -->
     <Tabs v-model="activeTab" default-value="resumen">
@@ -228,50 +213,15 @@ onMounted(async () => {
       <!-- Tab 1: Resumen -->
       <TabsContent value="resumen" class="mt-4">
         <!-- Loading skeletons -->
-        <div v-if="isLoading" class="overflow-x-auto rounded-lg border">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Unidad</TableHead>
-                <TableHead>Etiqueta</TableHead>
-                <TableHead class="text-right">
-                  Saldo
-                </TableHead>
-                <TableHead class="text-right">
-                  Estado
-                </TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              <TableRow v-for="i in 5" :key="i">
-                <TableCell><Skeleton class="h-4 w-12" /></TableCell>
-                <TableCell><Skeleton class="h-4 w-24" /></TableCell>
-                <TableCell class="text-right">
-                  <Skeleton class="ml-auto h-4 w-20" />
-                </TableCell>
-                <TableCell class="text-right">
-                  <Skeleton class="ml-auto h-5 w-16 rounded-lg" />
-                </TableCell>
-              </TableRow>
-            </TableBody>
-          </Table>
-        </div>
+        <ListSkeleton v-if="isLoading" :count="5" variant="row" />
 
         <!-- Empty state -->
-        <div
+        <EmptyState
           v-else-if="filteredSummaries.length === 0"
-          class="flex flex-col items-center gap-4 rounded-lg border border-dashed p-8 text-center"
-        >
-          <div class="flex size-12 items-center justify-center rounded-full bg-muted">
-            <Wallet class="size-6 text-muted-foreground" />
-          </div>
-          <div>
-            <p class="font-medium">No se encontraron unidades</p>
-            <p class="mt-1 text-sm text-muted-foreground">
-              {{ searchQuery ? 'Intenta con otro termino de busqueda' : 'No hay unidades registradas' }}
-            </p>
-          </div>
-        </div>
+          :icon="Wallet"
+          title="No se encontraron unidades"
+          :description="searchQuery ? 'Intenta con otro término de búsqueda' : 'No hay unidades registradas'"
+        />
 
         <!-- Summary table -->
         <div v-else class="overflow-x-auto rounded-lg border">
@@ -329,13 +279,7 @@ onMounted(async () => {
             <Separator />
 
             <!-- Error inline -->
-            <div
-              v-if="recordError"
-              role="alert"
-              class="rounded-lg border border-destructive/50 bg-destructive/10 p-3 text-sm text-destructive"
-            >
-              {{ recordError }}
-            </div>
+            <ErrorAlert v-if="recordError" :message="recordError" />
 
             <!-- Unit select -->
             <div class="space-y-2">
@@ -441,13 +385,7 @@ onMounted(async () => {
             <Separator />
 
             <!-- Error inline -->
-            <div
-              v-if="reportsError"
-              role="alert"
-              class="rounded-lg border border-destructive/50 bg-destructive/10 p-3 text-sm text-destructive"
-            >
-              {{ reportsError }}
-            </div>
+            <ErrorAlert v-if="reportsError" :message="reportsError" />
 
             <!-- Title input -->
             <div class="space-y-2">
@@ -497,14 +435,19 @@ onMounted(async () => {
 
             <!-- File input -->
             <div class="space-y-2">
-              <Label for="report-file">Archivo PDF</Label>
-              <input
-                id="report-file"
-                ref="fileInputRef"
-                type="file"
-                accept=".pdf"
-                class="flex h-12 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-              >
+              <Label>Archivo PDF</Label>
+              <div class="flex items-center gap-2">
+                <Button type="button" variant="outline" class="h-12" @click="fileInputRef?.click()">
+                  <Upload class="mr-1.5 size-4" />
+                  {{ fileInputRef?.files?.[0]?.name ?? 'Seleccionar PDF' }}
+                </Button>
+                <input
+                  ref="fileInputRef"
+                  type="file"
+                  accept=".pdf"
+                  class="hidden"
+                >
+              </div>
             </div>
 
             <!-- Upload button -->
@@ -527,78 +470,44 @@ onMounted(async () => {
           </h2>
 
           <!-- Loading -->
-          <div v-if="reportsLoading" class="space-y-3">
-            <Skeleton v-for="i in 3" :key="i" class="h-20 w-full rounded-lg" />
-          </div>
+          <ListSkeleton v-if="reportsLoading" :count="3" variant="row" />
 
           <!-- Empty state -->
-          <div
+          <EmptyState
             v-else-if="reports.length === 0"
-            class="flex flex-col items-center gap-4 rounded-lg border border-dashed p-8 text-center"
-          >
-            <div class="flex size-12 items-center justify-center rounded-full bg-muted">
-              <FileText class="size-6 text-muted-foreground" />
-            </div>
-            <div>
-              <p class="font-medium">No hay informes subidos</p>
-              <p class="mt-1 text-sm text-muted-foreground">
-                Los informes financieros apareceran aqui
-              </p>
-            </div>
-          </div>
+            :icon="FileText"
+            title="No hay informes subidos"
+            description="Los informes financieros aparecerán aquí"
+          />
 
           <!-- Report cards -->
-          <div v-else class="space-y-3">
+          <div v-else class="space-y-2">
             <Card v-for="report in reports" :key="report.id">
-              <CardContent class="flex items-center justify-between gap-3 p-4">
+              <CardContent class="flex items-center gap-3 px-3 py-2.5">
                 <div class="min-w-0 flex-1">
-                  <p class="truncate font-medium">
+                  <p class="truncate text-sm font-semibold">
                     {{ report.title }}
                   </p>
-                  <div class="mt-1 flex items-center gap-2">
-                    <Badge variant="secondary">
-                      {{ getReportMonthLabel(report.month) }} {{ report.year }}
-                    </Badge>
-                  </div>
+                  <p class="mt-0.5 text-[11px] text-muted-foreground">
+                    {{ getReportMonthLabel(report.month) }} {{ report.year }}
+                  </p>
                 </div>
                 <Button
-                  variant="outline"
+                  variant="ghost"
+                  class="h-6 shrink-0 gap-1 px-2 text-[11px] text-muted-foreground hover:text-foreground"
                   as="a"
                   :href="`/api/finance/reports/${report.filePath}`"
                   target="_blank"
                   rel="noopener noreferrer"
                 >
-                  <FileText class="mr-2 size-4" />
+                  <FileText class="size-3" />
                   Descargar
                 </Button>
               </CardContent>
             </Card>
 
             <!-- Pagination -->
-            <div
-              v-if="totalPages > 1"
-              class="flex items-center justify-between pt-2"
-            >
-              <Button
-                variant="outline"
-                :disabled="currentReportsPage <= 1"
-                @click="goToReportsPage(currentReportsPage - 1)"
-              >
-                <ChevronLeft class="mr-1 size-4" />
-                Anterior
-              </Button>
-              <span class="text-sm text-muted-foreground">
-                {{ currentReportsPage }} / {{ totalPages }}
-              </span>
-              <Button
-                variant="outline"
-                :disabled="currentReportsPage >= totalPages"
-                @click="goToReportsPage(currentReportsPage + 1)"
-              >
-                Siguiente
-                <ChevronRight class="ml-1 size-4" />
-              </Button>
-            </div>
+            <ListPagination v-model:current-page="currentReportsPage" :total-pages="totalPages" />
           </div>
         </div>
       </TabsContent>

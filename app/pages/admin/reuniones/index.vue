@@ -244,27 +244,9 @@ async function handleDelete() {
     </Teleport>
 
     <!-- Stats cards -->
-    <div class="mb-6 grid grid-cols-2 gap-2">
-      <div class="flex items-center gap-3 rounded-lg border bg-card p-4">
-        <div class="flex size-10 shrink-0 items-center justify-center rounded-md bg-blue-100">
-          <Calendar class="size-5 text-blue-600" />
-        </div>
-        <div>
-          <p v-if="isLoading"><Skeleton class="h-5 w-8" /></p>
-          <p v-else class="text-lg font-bold leading-none">{{ totalProgramadas }}</p>
-          <p class="mt-0.5 text-xs text-muted-foreground">Programadas</p>
-        </div>
-      </div>
-      <div class="flex items-center gap-3 rounded-lg border bg-card p-4">
-        <div class="flex size-10 shrink-0 items-center justify-center rounded-md bg-emerald-100">
-          <CalendarDays class="size-5 text-emerald-600" />
-        </div>
-        <div>
-          <p v-if="isLoading"><Skeleton class="h-5 w-8" /></p>
-          <p v-else class="text-lg font-bold leading-none">{{ totalEsteMes }}</p>
-          <p class="mt-0.5 text-xs text-muted-foreground">Este Mes</p>
-        </div>
-      </div>
+    <div class="mb-6 grid grid-cols-2 gap-3">
+      <StatCard label="Programadas" :value="totalProgramadas" :icon="Calendar" icon-bg-class="bg-primary/10 text-primary" :is-loading="isLoading" />
+      <StatCard label="Este mes" :value="totalEsteMes" :icon="CalendarDays" icon-bg-class="bg-muted text-muted-foreground" :is-loading="isLoading" />
     </div>
 
     <!-- Error -->
@@ -375,67 +357,52 @@ async function handleDelete() {
       </div>
 
       <!-- Mobile cards -->
-      <div class="space-y-3 md:hidden">
-        <Card v-for="item in meetings" :key="item.id">
-          <CardContent class="p-4">
-            <div class="flex items-start justify-between gap-2">
-              <div class="min-w-0 flex-1">
-                <p class="text-sm font-medium leading-snug">{{ item.title }}</p>
-                <div class="mt-1.5 flex items-center gap-1.5 text-xs text-muted-foreground">
-                  <Clock class="size-3 shrink-0" />
-                  <span>{{ formatDateTime(item.date) }}</span>
-                </div>
-                <div v-if="item.location" class="mt-0.5 flex items-center gap-1.5 text-xs text-muted-foreground">
-                  <MapPin class="size-3 shrink-0" />
-                  <span>{{ item.location }}</span>
-                </div>
-              </div>
-              <a
-                v-if="item.meetingLink"
-                :href="item.meetingLink"
-                target="_blank"
-                rel="noopener"
-                class="inline-flex shrink-0 items-center justify-center rounded-md p-1.5 hover:bg-muted"
-                title="Abrir enlace de reunion"
-              >
-                <Video class="size-4 text-primary" />
-              </a>
-            </div>
-            <div class="mt-2 flex flex-wrap items-center gap-1.5">
-              <span
-                class="inline-flex rounded-lg px-2 py-0.5 text-xs font-medium"
-                :class="TYPE_COLORS[item.type]"
-              >
-                {{ TYPE_LABELS[item.type] }}
-              </span>
-              <span
-                class="inline-flex rounded-lg px-2 py-0.5 text-xs font-medium"
-                :class="STATUS_COLORS[item.status]"
-              >
-                {{ STATUS_LABELS[item.status] }}
-              </span>
-            </div>
-            <div class="mt-3 flex items-center gap-1">
-              <Button
-                variant="ghost"
-                size="icon"
-                class="size-8"
-                title="Editar"
-                @click="openEditDialog(item)"
-              >
-                <Pencil class="size-4" />
-              </Button>
-              <Button
-                variant="ghost"
-                size="icon"
-                class="size-8 text-destructive hover:text-destructive"
-                title="Eliminar"
-                @click="confirmDelete(item.id)"
-              >
-                <Trash2 class="size-4" />
-              </Button>
-            </div>
-          </CardContent>
+      <div class="space-y-2 md:hidden">
+        <Card v-for="item in meetings" :key="item.id" class="px-3 py-2.5">
+          <!-- Row 1: Title + Type badge + Video link -->
+          <div class="flex items-center gap-2">
+            <p class="min-w-0 flex-1 truncate text-sm font-semibold">{{ item.title }}</p>
+            <span
+              class="shrink-0 rounded-lg px-1.5 py-0.5 text-[11px] font-medium"
+              :class="TYPE_COLORS[item.type]"
+            >
+              {{ TYPE_LABELS[item.type] }}
+            </span>
+            <a
+              v-if="item.meetingLink"
+              :href="item.meetingLink"
+              target="_blank"
+              rel="noopener"
+              class="shrink-0 rounded-lg p-1 hover:bg-muted"
+              title="Abrir enlace de reunion"
+            >
+              <Video class="size-3.5 text-primary" />
+            </a>
+          </div>
+          <!-- Row 2: Status + datetime + location | Actions -->
+          <div class="mt-1 flex items-center gap-x-1 text-[11px] text-muted-foreground">
+            <span
+              class="shrink-0 rounded-lg px-1.5 py-0.5 font-medium"
+              :class="STATUS_COLORS[item.status]"
+            >
+              {{ STATUS_LABELS[item.status] }}
+            </span>
+            <span class="opacity-30">&middot;</span>
+            <span class="tabular-nums">{{ formatDateTime(item.date) }}</span>
+            <template v-if="item.location">
+              <span class="opacity-30">&middot;</span>
+              <span class="truncate">{{ item.location }}</span>
+            </template>
+            <span class="flex-1" />
+            <Button variant="ghost" class="h-6 px-2 text-[11px]" @click="openEditDialog(item)">
+              <Pencil class="mr-1 size-3" />
+              Editar
+            </Button>
+            <Button variant="ghost" class="h-6 px-2 text-[11px] text-destructive hover:text-destructive" @click="confirmDelete(item.id)">
+              <Trash2 class="mr-1 size-3" />
+              Borrar
+            </Button>
+          </div>
         </Card>
       </div>
     </div>

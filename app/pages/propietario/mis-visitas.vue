@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Share2, Plus, ChevronDown, ChevronUp, CalendarClock, User, Loader2 } from 'lucide-vue-next'
+import { Share2, Plus, ChevronDown, ChevronUp, User, Loader2 } from 'lucide-vue-next'
 import type { QrStatus } from '~~/shared/types/qr'
 import QRCode from 'qrcode'
 
@@ -111,13 +111,7 @@ const statusConfig: Record<QrStatus, { label: string; variant: 'default' | 'seco
     </Teleport>
 
     <!-- Error alert -->
-    <div
-      v-if="error"
-      role="alert"
-      class="mb-4 rounded-lg border border-destructive/50 bg-destructive/10 p-3 text-sm text-destructive"
-    >
-      {{ error }}
-    </div>
+    <ErrorAlert :message="error" class="mb-4" />
 
     <!-- Share success -->
     <div
@@ -128,80 +122,61 @@ const statusConfig: Record<QrStatus, { label: string; variant: 'default' | 'seco
       {{ shareSuccess }}
     </div>
 
-    <!-- Loading skeletons -->
-    <div v-if="isLoading" class="space-y-3">
-      <div v-for="i in 3" :key="i" class="animate-pulse rounded-lg border p-4">
-        <div class="flex items-center justify-between">
-          <div class="space-y-2">
-            <div class="h-4 w-32 rounded bg-muted" />
-            <div class="h-3 w-24 rounded bg-muted" />
-          </div>
-          <div class="h-5 w-14 rounded-full bg-muted" />
-        </div>
-      </div>
-    </div>
+    <!-- Loading skeleton -->
+    <ListSkeleton v-if="isLoading" :count="3" />
 
     <!-- Empty state -->
-    <div
+    <EmptyState
       v-else-if="myCodes.length === 0"
-      class="flex flex-col items-center gap-4 rounded-lg border border-dashed p-8 text-center"
+      :icon="User"
+      title="Aún no has registrado visitas"
+      description="Crea un pase de acceso para tu primer visitante"
     >
-      <div class="flex size-12 items-center justify-center rounded-full bg-muted">
-        <User class="size-6 text-muted-foreground" />
-      </div>
-      <div>
-        <p class="font-medium">Aún no has registrado visitas</p>
-        <p class="mt-1 text-sm text-muted-foreground">Crea un pase de acceso para tu primer visitante</p>
-      </div>
-      <Button @click="navigateTo('/propietario/nueva-visita')">
-        <Plus class="mr-1.5 size-4" />
-        Nueva Visita
-      </Button>
-    </div>
+      <template #action>
+        <Button @click="navigateTo('/propietario/nueva-visita')">
+          <Plus class="mr-1.5 size-4" />
+          Nueva Visita
+        </Button>
+      </template>
+    </EmptyState>
 
     <!-- Codes list -->
-    <div v-else class="space-y-3">
+    <div v-else class="space-y-2">
       <Card
         v-for="code in myCodes"
         :key="code.id"
         class="cursor-pointer transition-shadow hover:shadow-sm"
-        :class="code.status === 'active' ? '' : 'opacity-75'"
+        :class="code.status !== 'active' && 'opacity-75'"
         @click="code.status === 'active' ? toggleExpand(code.id, code.token) : undefined"
       >
-        <CardContent class="p-4">
-          <!-- Main row -->
-          <div class="flex items-start justify-between gap-3">
-            <div class="min-w-0 flex-1">
-              <p class="truncate font-medium">{{ code.visitorName }}</p>
-              <div class="mt-1.5 flex flex-wrap items-center gap-2">
-                <Badge :variant="statusConfig[code.status].variant">
-                  {{ statusConfig[code.status].label }}
-                </Badge>
-                <Badge variant="outline">
-                  {{ code.visitorType === 'invitado' ? 'Invitado' : 'Proveedor' }}
-                </Badge>
-              </div>
-            </div>
+        <CardContent class="px-3 py-2.5">
+          <!-- Row 1: Name + badges + chevron -->
+          <div class="flex items-center gap-2">
+            <p class="min-w-0 flex-1 truncate text-sm font-semibold">{{ code.visitorName }}</p>
+            <Badge :variant="statusConfig[code.status].variant" class="shrink-0 text-[11px]">
+              {{ statusConfig[code.status].label }}
+            </Badge>
+            <Badge variant="outline" class="shrink-0 text-[11px]">
+              {{ code.visitorType === 'invitado' ? 'Invitado' : 'Proveedor' }}
+            </Badge>
             <component
               :is="expandedId === code.id ? ChevronUp : ChevronDown"
               v-if="code.status === 'active'"
-              class="mt-1 size-4 shrink-0 text-muted-foreground"
+              class="size-4 shrink-0 text-muted-foreground"
             />
           </div>
 
-          <!-- Details -->
-          <div class="mt-3 flex items-center gap-4 text-xs text-muted-foreground">
-            <span>{{ code.unitNumber }}{{ code.unitLabel ? ` — ${code.unitLabel}` : '' }}</span>
-            <span class="flex items-center gap-1">
-              <CalendarClock class="size-3" />
-              {{ code.usedAt ? formatDateTime(code.usedAt) : formatDateTime(code.expiresAt) }}
-            </span>
+          <!-- Row 2: Unit + date -->
+          <div class="mt-1 flex items-center gap-x-1 text-[11px] text-muted-foreground">
+            <span class="truncate">{{ code.unitNumber }}{{ code.unitLabel ? ` — ${code.unitLabel}` : '' }}</span>
+            <span class="opacity-30">&middot;</span>
+            <span class="shrink-0 tabular-nums">{{ code.usedAt ? formatDateTime(code.usedAt) : formatDateTime(code.expiresAt) }}</span>
           </div>
 
           <!-- Expanded QR (active codes only) -->
           <div
             v-if="expandedId === code.id && code.status === 'active'"
-            class="mt-4 flex flex-col items-center gap-3 border-t pt-4"
+            class="mt-3 flex flex-col items-center gap-3 border-t pt-3"
           >
             <Loader2 v-if="!expandedQrUrl" class="size-8 animate-spin text-muted-foreground" />
             <img

@@ -218,12 +218,11 @@ async function handleReview() {
     </div>
 
     <!-- Error -->
-    <div
-      v-else-if="error && !provider"
-      class="flex flex-col items-center gap-4 rounded-lg border border-dashed p-8 text-center"
-    >
-      <p class="text-sm text-destructive">{{ error }}</p>
-      <Button size="sm" variant="outline" @click="navigateTo('/mi-chana/proveedores')">Volver al directorio</Button>
+    <div v-else-if="error && !provider" class="space-y-4">
+      <ErrorAlert :message="error" />
+      <div class="text-center">
+        <Button size="sm" variant="outline" @click="navigateTo('/mi-chana/proveedores')">Volver al directorio</Button>
+      </div>
     </div>
 
     <!-- Provider detail -->
@@ -351,12 +350,11 @@ async function handleReview() {
           </Card>
         </div>
 
-        <div
+        <EmptyState
           v-else
-          class="rounded-lg border border-dashed p-6 text-center"
-        >
-          <p class="text-sm text-muted-foreground">Aun no hay resenas</p>
-        </div>
+          :icon="Star"
+          title="Aún no hay reseñas"
+        />
       </div>
     </template>
 

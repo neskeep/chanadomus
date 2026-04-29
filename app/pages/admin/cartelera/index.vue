@@ -230,27 +230,21 @@ function handlePdfSelect(event: Event) {
     </Teleport>
 
     <!-- Stats cards -->
-    <div class="mb-6 grid grid-cols-2 gap-2">
-      <div class="flex items-center gap-3 rounded-lg border bg-card p-4">
-        <div class="flex size-10 shrink-0 items-center justify-center rounded-md bg-emerald-100">
-          <Megaphone class="size-5 text-emerald-600" />
-        </div>
-        <div>
-          <p v-if="isLoading"><Skeleton class="h-5 w-8" /></p>
-          <p v-else class="text-lg font-bold leading-none">{{ totalPublished }}</p>
-          <p class="mt-0.5 text-xs text-muted-foreground">Publicados</p>
-        </div>
-      </div>
-      <div class="flex items-center gap-3 rounded-lg border bg-card p-4">
-        <div class="flex size-10 shrink-0 items-center justify-center rounded-md bg-zinc-100">
-          <FileText class="size-5 text-zinc-600" />
-        </div>
-        <div>
-          <p v-if="isLoading"><Skeleton class="h-5 w-8" /></p>
-          <p v-else class="text-lg font-bold leading-none">{{ totalDrafts }}</p>
-          <p class="mt-0.5 text-xs text-muted-foreground">Borradores</p>
-        </div>
-      </div>
+    <div class="mb-6 grid grid-cols-2 gap-3">
+      <StatCard
+        label="Publicados"
+        :value="totalPublished"
+        :icon="Megaphone"
+        icon-bg-class="bg-primary/10 text-primary"
+        :is-loading="isLoading"
+      />
+      <StatCard
+        label="Borradores"
+        :value="totalDrafts"
+        :icon="FileText"
+        icon-bg-class="bg-muted text-muted-foreground"
+        :is-loading="isLoading"
+      />
     </div>
 
     <!-- Error -->
@@ -351,70 +345,58 @@ function handlePdfSelect(event: Event) {
       </div>
 
       <!-- Mobile cards -->
-      <div class="space-y-3 md:hidden">
+      <div class="space-y-2 md:hidden">
         <Card v-for="item in filteredAnnouncements" :key="item.id">
-          <CardContent class="p-4">
-            <div class="flex items-start justify-between gap-2">
-              <div class="min-w-0 flex-1">
-                <p class="text-sm font-medium leading-snug">{{ item.title }}</p>
-                <p class="mt-1 text-xs text-muted-foreground">
-                  {{ item.authorName ?? '—' }} · {{ formatDate(item.createdAt) }}
-                </p>
-              </div>
-            </div>
-            <div class="mt-2 flex flex-wrap items-center gap-1.5">
+          <CardContent class="px-3 py-2.5">
+            <!-- Row 1: Title + Category badge + Date -->
+            <div class="flex items-center gap-1.5">
+              <p class="min-w-0 flex-1 truncate text-sm font-semibold">{{ item.title }}</p>
               <span
-                class="inline-flex rounded-lg px-2 py-0.5 text-xs font-medium"
+                class="inline-flex shrink-0 rounded-lg px-2 py-0.5 text-[11px] font-medium"
                 :class="CATEGORY_CONFIG[item.category].class"
               >
                 {{ CATEGORY_CONFIG[item.category].label }}
               </span>
+            </div>
+            <!-- Row 2: Status · Author · Date | Actions inline -->
+            <div class="mt-0.5 flex items-center gap-x-1 text-[11px] text-muted-foreground">
               <span
-                class="inline-flex rounded-lg px-2 py-0.5 text-xs font-medium"
+                class="inline-flex shrink-0 rounded-lg px-1.5 py-0.5 font-medium"
                 :class="STATUS_CONFIG[item.status].class"
               >
                 {{ STATUS_CONFIG[item.status].label }}
               </span>
-            </div>
-            <div class="mt-3 flex items-center gap-1">
-              <Button
-                v-if="item.status === 'draft'"
-                variant="ghost"
-                size="icon"
-                class="size-8"
-                title="Publicar"
-                @click="handlePublish(item.id)"
-              >
-                <Send class="size-4 text-emerald-600" />
-              </Button>
-              <Button
-                variant="ghost"
-                size="icon"
-                class="size-8"
-                title="Editar"
-                @click="openEditDialog(item)"
-              >
-                <Pencil class="size-4" />
-              </Button>
-              <Button
-                v-if="item.status === 'published'"
-                variant="ghost"
-                size="icon"
-                class="size-8"
-                title="Archivar"
-                @click="handleArchive(item.id)"
-              >
-                <Archive class="size-4" />
-              </Button>
-              <Button
-                variant="ghost"
-                size="icon"
-                class="size-8 text-destructive hover:text-destructive"
-                title="Eliminar"
-                @click="confirmDelete(item.id)"
-              >
-                <Trash2 class="size-4" />
-              </Button>
+              <span class="opacity-30">·</span>
+              <span class="truncate">{{ item.authorName ?? '—' }}</span>
+              <span class="opacity-30">·</span>
+              <span class="shrink-0 tabular-nums">{{ formatDate(item.createdAt) }}</span>
+              <span class="ml-auto flex shrink-0 items-center gap-0.5">
+                <Button
+                  v-if="item.status === 'draft'"
+                  variant="ghost"
+                  class="h-6 px-2 text-[11px] text-primary hover:text-primary"
+                  title="Publicar"
+                  @click="handlePublish(item.id)"
+                >
+                  <Send class="size-3" />
+                </Button>
+                <Button
+                  variant="ghost"
+                  class="h-6 px-2 text-[11px] text-muted-foreground hover:text-foreground"
+                  title="Editar"
+                  @click="openEditDialog(item)"
+                >
+                  <Pencil class="size-3" />
+                </Button>
+                <Button
+                  variant="ghost"
+                  class="h-6 px-2 text-[11px] text-destructive hover:text-destructive"
+                  title="Eliminar"
+                  @click="confirmDelete(item.id)"
+                >
+                  <Trash2 class="size-3" />
+                </Button>
+              </span>
             </div>
           </CardContent>
         </Card>

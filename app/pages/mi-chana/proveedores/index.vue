@@ -1,14 +1,10 @@
 <script setup lang="ts">
 import {
-  Search,
   Star,
   Phone,
   Wrench,
   Plus,
-  ChevronLeft,
-  ChevronRight,
   Loader2,
-  Filter,
 } from 'lucide-vue-next'
 import { toast } from 'vue-sonner'
 import type { ProviderCategory } from '~~/shared/types/provider'
@@ -148,57 +144,35 @@ function renderStars(rating: number | undefined): number[] {
     </Teleport>
 
     <!-- Error -->
-    <div
-      v-if="error"
-      role="alert"
-      class="mb-4 rounded-lg border border-destructive/50 bg-destructive/10 p-3 text-sm text-destructive"
-    >
-      {{ error }}
-    </div>
+    <ErrorAlert :message="error" class="mb-4" />
 
     <!-- Loading -->
-    <div v-if="isLoading" class="grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-3">
-      <Card v-for="i in 6" :key="i">
-        <CardContent class="p-3">
-          <div class="space-y-2.5">
-            <Skeleton class="h-5 w-3/4" />
-            <Skeleton class="h-5 w-20 rounded-lg" />
-            <Skeleton class="h-4 w-1/2" />
-            <Skeleton class="h-4 w-2/3" />
-          </div>
-        </CardContent>
-      </Card>
-    </div>
+    <ListSkeleton v-if="isLoading" :count="6" />
 
     <!-- Empty state -->
-    <div
+    <EmptyState
       v-else-if="filteredProviders.length === 0"
-      class="flex flex-col items-center gap-4 rounded-lg border border-dashed p-8 text-center"
+      :icon="Wrench"
+      title="No hay proveedores"
+      :description="filterCategory ? 'Prueba cambiando los filtros' : 'Los proveedores aparecerán aquí'"
     >
-      <div class="flex size-10 items-center justify-center rounded-lg bg-muted">
-        <Wrench class="size-5 text-muted-foreground" />
-      </div>
-      <div>
-        <p class="font-medium">No hay proveedores</p>
-        <p class="mt-1 text-sm text-muted-foreground">
-          {{ filterCategory ? 'Prueba cambiando los filtros' : 'Los proveedores apareceran aqui' }}
-        </p>
-      </div>
-      <Button v-if="role === 'propietario'" size="sm" variant="outline" @click="openSuggestDialog">
-        Sugerir proveedor
-      </Button>
-    </div>
+      <template v-if="role === 'propietario'" #action>
+        <Button size="sm" variant="outline" @click="openSuggestDialog">
+          Sugerir proveedor
+        </Button>
+      </template>
+    </EmptyState>
 
     <!-- Provider grid -->
     <div v-else>
-      <div class="grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-3">
+      <div class="grid grid-cols-1 gap-2 md:grid-cols-2 lg:grid-cols-3">
         <NuxtLink
           v-for="provider in filteredProviders"
           :key="provider.id"
           :to="`/mi-chana/proveedores/${provider.id}`"
           class="block"
         >
-          <Card class="h-full transition-shadow hover:shadow-md">
+          <Card class="h-full transition-colors hover:bg-muted/50">
             <CardContent class="p-3">
               <!-- Name -->
               <p class="text-sm font-semibold leading-snug">{{ provider.name }}</p>
@@ -245,29 +219,7 @@ function renderStars(rating: number | undefined): number[] {
       </div>
 
       <!-- Pagination -->
-      <div v-if="totalPages > 1" class="mt-4 flex items-center justify-between">
-        <Button
-          variant="outline"
-          size="sm"
-          :disabled="currentPage <= 1"
-          @click="currentPage--"
-        >
-          <ChevronLeft class="mr-1 size-4" />
-          Anterior
-        </Button>
-        <span class="text-sm text-muted-foreground">
-          {{ currentPage }} / {{ totalPages }}
-        </span>
-        <Button
-          variant="outline"
-          size="sm"
-          :disabled="currentPage >= totalPages"
-          @click="currentPage++"
-        >
-          Siguiente
-          <ChevronRight class="ml-1 size-4" />
-        </Button>
-      </div>
+      <ListPagination v-model:current-page="currentPage" :total-pages="totalPages" class="mt-4" />
     </div>
 
     <!-- Suggest Dialog -->

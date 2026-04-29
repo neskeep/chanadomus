@@ -282,23 +282,15 @@ onMounted(() => {
         <p class="mb-4 text-sm text-muted-foreground">{{ members.length }} miembro{{ members.length !== 1 ? 's' : '' }}</p>
 
         <!-- Loading -->
-        <div v-if="membersLoading" class="space-y-2">
-          <Skeleton v-for="i in 3" :key="i" class="h-14 w-full rounded-lg" />
-        </div>
+        <ListSkeleton v-if="membersLoading" :count="3" variant="row" />
 
         <!-- Empty -->
-        <div
+        <EmptyState
           v-else-if="members.length === 0"
-          class="flex flex-col items-center gap-4 rounded-lg border border-dashed p-8 text-center"
-        >
-          <div class="flex size-12 items-center justify-center rounded-full bg-muted">
-            <Users class="size-6 text-muted-foreground" />
-          </div>
-          <div>
-            <p class="font-medium">Sin miembros registrados</p>
-            <p class="mt-1 text-sm text-muted-foreground">Agrega los miembros del hogar de esta unidad</p>
-          </div>
-        </div>
+          :icon="Users"
+          title="Sin miembros registrados"
+          description="Agrega los miembros del hogar de esta unidad"
+        />
 
         <!-- Desktop Table -->
         <div v-else class="hidden overflow-x-auto rounded-lg border md:block">
@@ -340,32 +332,31 @@ onMounted(() => {
         </div>
 
         <!-- Mobile Cards -->
-        <div v-if="!membersLoading && members.length > 0" class="space-y-3 md:hidden">
+        <div v-if="!membersLoading && members.length > 0" class="space-y-2 md:hidden">
           <Card v-for="member in members" :key="member.id">
-            <CardContent class="p-4">
-              <div class="flex items-start justify-between gap-2">
-                <div class="min-w-0 flex-1">
-                  <p class="font-medium">{{ member.name }}</p>
-                  <div class="mt-1.5 flex flex-wrap items-center gap-1.5">
-                    <Badge :variant="RELATIONSHIP_CONFIG[member.relationship].variant" class="text-xs">
-                      {{ RELATIONSHIP_CONFIG[member.relationship].label }}
-                    </Badge>
-                  </div>
-                  <div class="mt-2 space-y-0.5 text-xs text-muted-foreground">
-                    <p v-if="member.phone">Tel: {{ member.phone }}</p>
-                    <p v-if="member.idDocument">Doc: {{ member.idDocument }}</p>
-                  </div>
-                </div>
-                <div class="flex items-center gap-1">
-                  <Button variant="ghost" size="icon" class="size-10" @click="openMemberDialog(member)">
-                    <Pencil class="size-3.5" />
-                    <span class="sr-only">Editar</span>
+            <CardContent class="px-3 py-2.5">
+              <div class="flex items-center gap-1.5">
+                <p class="min-w-0 flex-1 truncate text-sm font-semibold">{{ member.name }}</p>
+                <Badge :variant="RELATIONSHIP_CONFIG[member.relationship].variant" class="shrink-0 text-[11px]">
+                  {{ RELATIONSHIP_CONFIG[member.relationship].label }}
+                </Badge>
+              </div>
+              <div class="mt-0.5 flex items-center gap-x-1 text-[11px] text-muted-foreground">
+                <template v-if="member.phone">
+                  <span class="shrink-0 tabular-nums">{{ member.phone }}</span>
+                </template>
+                <template v-if="member.idDocument">
+                  <span class="opacity-30">·</span>
+                  <span class="truncate">{{ member.idDocument }}</span>
+                </template>
+                <span class="ml-auto flex shrink-0 items-center gap-0.5">
+                  <Button variant="ghost" class="h-6 px-2 text-[11px]" @click="openMemberDialog(member)">
+                    <Pencil class="size-3" />
                   </Button>
-                  <Button variant="ghost" size="icon" class="size-10 text-destructive hover:text-destructive" @click="confirmDeleteMember(member)">
-                    <Trash2 class="size-3.5" />
-                    <span class="sr-only">Eliminar</span>
+                  <Button variant="ghost" class="h-6 px-2 text-[11px] text-destructive hover:text-destructive" @click="confirmDeleteMember(member)">
+                    <Trash2 class="size-3" />
                   </Button>
-                </div>
+                </span>
               </div>
             </CardContent>
           </Card>
@@ -377,23 +368,15 @@ onMounted(() => {
         <p class="mb-4 text-sm text-muted-foreground">{{ vehicles.length }} vehiculo{{ vehicles.length !== 1 ? 's' : '' }}</p>
 
         <!-- Loading -->
-        <div v-if="vehiclesLoading" class="space-y-2">
-          <Skeleton v-for="i in 3" :key="i" class="h-14 w-full rounded-lg" />
-        </div>
+        <ListSkeleton v-if="vehiclesLoading" :count="3" variant="row" />
 
         <!-- Empty -->
-        <div
+        <EmptyState
           v-else-if="vehicles.length === 0"
-          class="flex flex-col items-center gap-4 rounded-lg border border-dashed p-8 text-center"
-        >
-          <div class="flex size-12 items-center justify-center rounded-full bg-muted">
-            <Car class="size-6 text-muted-foreground" />
-          </div>
-          <div>
-            <p class="font-medium">Sin vehiculos registrados</p>
-            <p class="mt-1 text-sm text-muted-foreground">Agrega los vehiculos asociados a esta unidad</p>
-          </div>
-        </div>
+          :icon="Car"
+          title="Sin vehículos registrados"
+          description="Agrega los vehículos asociados a esta unidad"
+        />
 
         <!-- Desktop Table -->
         <div v-else class="hidden overflow-x-auto rounded-lg border md:block">
@@ -431,28 +414,25 @@ onMounted(() => {
         </div>
 
         <!-- Mobile Cards -->
-        <div v-if="!vehiclesLoading && vehicles.length > 0" class="space-y-3 md:hidden">
+        <div v-if="!vehiclesLoading && vehicles.length > 0" class="space-y-2 md:hidden">
           <Card v-for="vehicle in vehicles" :key="vehicle.id">
-            <CardContent class="p-4">
-              <div class="flex items-start justify-between gap-2">
-                <div class="min-w-0 flex-1">
-                  <p class="font-mono font-medium">{{ vehicle.plate }}</p>
-                  <p class="mt-0.5 text-sm text-muted-foreground">{{ vehicle.brand }} {{ vehicle.model }}</p>
-                  <div class="mt-2 space-y-0.5 text-xs text-muted-foreground">
-                    <p>Color: {{ vehicle.color }}</p>
-                    <p>Propietario: {{ getMemberName(vehicle.ownerMemberId) }}</p>
-                  </div>
-                </div>
-                <div class="flex items-center gap-1">
-                  <Button variant="ghost" size="icon" class="size-10" @click="openVehicleDialog(vehicle)">
-                    <Pencil class="size-3.5" />
-                    <span class="sr-only">Editar</span>
+            <CardContent class="px-3 py-2.5">
+              <div class="flex items-center gap-1.5">
+                <p class="text-sm font-bold tabular-nums tracking-wider">{{ vehicle.plate }}</p>
+                <span class="text-sm text-muted-foreground">{{ vehicle.brand }} {{ vehicle.model }}</span>
+              </div>
+              <div class="mt-0.5 flex items-center gap-x-1 text-[11px] text-muted-foreground">
+                <span>{{ vehicle.color }}</span>
+                <span class="opacity-30">·</span>
+                <span class="truncate">{{ getMemberName(vehicle.ownerMemberId) }}</span>
+                <span class="ml-auto flex shrink-0 items-center gap-0.5">
+                  <Button variant="ghost" class="h-6 px-2 text-[11px]" @click="openVehicleDialog(vehicle)">
+                    <Pencil class="size-3" />
                   </Button>
-                  <Button variant="ghost" size="icon" class="size-10 text-destructive hover:text-destructive" @click="confirmDeleteVehicle(vehicle)">
-                    <Trash2 class="size-3.5" />
-                    <span class="sr-only">Eliminar</span>
+                  <Button variant="ghost" class="h-6 px-2 text-[11px] text-destructive hover:text-destructive" @click="confirmDeleteVehicle(vehicle)">
+                    <Trash2 class="size-3" />
                   </Button>
-                </div>
+                </span>
               </div>
             </CardContent>
           </Card>
