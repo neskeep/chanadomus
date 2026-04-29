@@ -6,6 +6,7 @@ import {
   Download,
   FileText,
   Home,
+  Megaphone,
   Percent,
   ShieldAlert,
   Users,
@@ -35,7 +36,9 @@ const { target, isMounted } = useTopbarPortal()
 const { stats, trends, isLoading, exportCsv, exportPdf } = useDashboard()
 const { formatCurrency, formatDateTime } = useFormatDate()
 
-// --- Chart label helpers (local, chart-specific) ---
+const collectionRate = computed(() => trends.value?.financialKpis?.collectionRate ?? 0)
+
+// --- Chart helpers ---
 
 function monthLabel(yyyymm: string): string {
   const [y, m] = yyyymm.split('-')
@@ -56,7 +59,7 @@ const accessChartData = computed(() => {
       label: 'Accesos',
       data: items.map(i => i.count),
       backgroundColor: '#19C2C0',
-      borderRadius: 4,
+      borderRadius: 6,
     }],
   }
 })
@@ -66,8 +69,8 @@ const financeChartData = computed(() => {
   return {
     labels: items.map(i => monthLabel(i.month)),
     datasets: [
-      { label: 'Cargos', data: items.map(i => i.cargos), backgroundColor: '#E53B3B', borderRadius: 4 },
-      { label: 'Abonos', data: items.map(i => i.abonos), backgroundColor: '#19C2C0', borderRadius: 4 },
+      { label: 'Cargos', data: items.map(i => i.cargos), backgroundColor: '#E53B3B', borderRadius: 6 },
+      { label: 'Abonos', data: items.map(i => i.abonos), backgroundColor: '#19C2C0', borderRadius: 6 },
     ],
   }
 })
@@ -80,11 +83,12 @@ const incidentsChartData = computed(() => {
       label: 'Incidencias',
       data: items.map(i => i.count),
       borderColor: '#F47A1F',
-      backgroundColor: 'rgba(244, 122, 31, 0.15)',
+      backgroundColor: 'rgba(244, 122, 31, 0.1)',
       fill: true,
-      tension: 0.3,
-      pointRadius: 3,
+      tension: 0.4,
+      pointRadius: 4,
       pointBackgroundColor: '#F47A1F',
+      borderWidth: 2,
     }],
   }
 })
@@ -94,251 +98,203 @@ const chartOpts = {
   maintainAspectRatio: false,
   plugins: { legend: { display: false } },
   scales: {
-    x: { grid: { display: false } },
-    y: { beginAtZero: true, ticks: { precision: 0 } },
+    x: { grid: { display: false }, ticks: { font: { size: 11 } } },
+    y: { beginAtZero: true, ticks: { precision: 0, font: { size: 11 } }, grid: { color: 'rgba(0,0,0,0.04)' } },
   },
 }
 
 const groupedChartOpts = {
   responsive: true,
   maintainAspectRatio: false,
-  plugins: { legend: { position: 'bottom' as const, labels: { boxWidth: 12, padding: 8 } } },
+  plugins: { legend: { position: 'bottom' as const, labels: { boxWidth: 10, padding: 12, font: { size: 11 } } } },
   scales: {
-    x: { grid: { display: false } },
-    y: { beginAtZero: true },
+    x: { grid: { display: false }, ticks: { font: { size: 11 } } },
+    y: { beginAtZero: true, grid: { color: 'rgba(0,0,0,0.04)' }, ticks: { font: { size: 11 } } },
   },
 }
 </script>
 
 <template>
-  <div class="space-y-4">
+  <div class="space-y-8">
+    <!-- Topbar: export actions -->
     <Teleport :to="target" defer v-if="isMounted">
-      <Button variant="ghost" size="icon" class="size-8" @click="exportCsv">
+      <Button variant="ghost" size="icon" class="size-8" @click="exportCsv" title="Exportar CSV">
         <Download class="size-4" />
       </Button>
-      <Button variant="ghost" size="icon" class="size-8" @click="exportPdf">
+      <Button variant="ghost" size="icon" class="size-8" @click="exportPdf" title="Exportar PDF">
         <FileText class="size-4" />
       </Button>
     </Teleport>
 
-    <!-- Tabs -->
-    <Tabs default-value="resumen">
-      <TabsList class="w-full">
-        <TabsTrigger value="resumen" class="flex-1">Resumen</TabsTrigger>
-        <TabsTrigger value="finanzas" class="flex-1">Finanzas</TabsTrigger>
-        <TabsTrigger value="actividad" class="flex-1">Actividad</TabsTrigger>
-      </TabsList>
-
-      <!-- TAB: Resumen -->
-      <TabsContent value="resumen" class="mt-4 space-y-5">
-        <!-- Next meeting (most time-sensitive first) -->
-        <div v-if="stats?.nextMeeting" class="flex items-center gap-3 rounded-lg border bg-card p-4">
-          <div :class="['flex size-10 items-center justify-center rounded-md', ICON_BG.success]">
-            <Calendar class="size-5" />
+    <!-- Financial hero: 3 stat cards + collection rate with progress -->
+    <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      <StatCard
+        label="Cobrado"
+        :value="trends?.financialKpis ? formatCurrency(trends.financialKpis.totalAbonos) : '—'"
+        :icon="ClipboardCheck"
+        :icon-bg-class="ICON_BG.success"
+        :is-loading="isLoading"
+      />
+      <StatCard
+        label="Pendiente"
+        :value="trends?.financialKpis ? formatCurrency(trends.financialKpis.pendingBalance) : '—'"
+        :icon="Wallet"
+        :icon-bg-class="ICON_BG.danger"
+        :is-loading="isLoading"
+      />
+      <StatCard
+        :label="`En mora — ${stats?.unitsInDebt ?? 0} de ${stats?.totalUnits ?? 0}`"
+        :value="stats?.unitsInDebt ?? 0"
+        :icon="Home"
+        :icon-bg-class="ICON_BG.warning"
+        :is-loading="isLoading"
+      />
+      <!-- Collection rate: custom card with Progress bar -->
+      <Card class="p-4">
+        <div class="flex items-start justify-between">
+          <div class="flex flex-col gap-1">
+            <template v-if="isLoading">
+              <Skeleton class="h-5 w-16" />
+              <Skeleton class="h-8 w-24" />
+            </template>
+            <template v-else>
+              <p class="text-sm text-muted-foreground">Cobranza</p>
+              <p class="text-2xl font-bold tabular-nums tracking-tight">{{ collectionRate.toFixed(1) }}%</p>
+            </template>
           </div>
-          <div class="min-w-0">
-            <p class="truncate text-base font-medium">{{ stats.nextMeeting.title }}</p>
-            <p class="text-sm text-muted-foreground">{{ formatDateTime(stats.nextMeeting.date) }}</p>
-          </div>
-        </div>
-
-        <!-- Operaciones -->
-        <div class="space-y-2">
-          <p class="text-sm font-medium uppercase tracking-wider text-muted-foreground/70">Operaciones</p>
-          <div class="grid grid-cols-2 gap-3">
-            <StatCard
-              label="Incidencias abiertas"
-              :value="stats?.openIncidents ?? 0"
-              :icon="AlertTriangle"
-              :icon-bg-class="ICON_BG.warning"
-              :is-loading="isLoading"
-            />
-            <StatCard
-              label="En progreso"
-              :value="stats?.inProgressIncidents ?? 0"
-              :icon="ShieldAlert"
-              :icon-bg-class="ICON_BG.info"
-              :is-loading="isLoading"
-            />
-          </div>
-        </div>
-
-        <Separator class="opacity-40" />
-
-        <!-- Comunidad -->
-        <div class="space-y-2">
-          <p class="text-sm font-medium uppercase tracking-wider text-muted-foreground/70">Comunidad</p>
-          <div class="grid grid-cols-2 gap-3">
-            <StatCard
-              label="Votaciones activas"
-              :value="stats?.activePolls ?? 0"
-              :icon="Vote"
-              :icon-bg-class="ICON_BG.purple"
-              :is-loading="isLoading"
-            />
-            <StatCard
-              label="Reuniones proximas"
-              :value="stats?.upcomingMeetings ?? 0"
-              :icon="Users"
-              :icon-bg-class="ICON_BG.success"
-              :is-loading="isLoading"
-            />
+          <div :class="['flex size-10 items-center justify-center rounded-lg', ICON_BG.teal]">
+            <Percent class="size-5" />
           </div>
         </div>
+        <Progress v-if="!isLoading" :model-value="collectionRate" class="mt-3 h-1.5" />
+        <Skeleton v-else class="mt-3 h-1.5 w-full rounded-full" />
+      </Card>
+    </div>
 
-        <Separator class="opacity-40" />
-
-        <!-- Condominio -->
-        <div class="space-y-2">
-          <p class="text-sm font-medium uppercase tracking-wider text-muted-foreground/70">Condominio</p>
-          <div class="grid grid-cols-2 gap-3">
-            <StatCard
-              label="Unidades"
-              :value="stats?.totalUnits ?? 0"
-              :icon="Home"
-              :icon-bg-class="ICON_BG.info"
-              :is-loading="isLoading"
-            />
-            <StatCard
-              label="En mora"
-              :value="stats?.unitsInDebt ?? 0"
-              :icon="Wallet"
-              :icon-bg-class="ICON_BG.danger"
-              :is-loading="isLoading"
-            />
-          </div>
+    <!-- Charts row 1: Finance + Access -->
+    <div class="grid gap-4 lg:grid-cols-2">
+      <!-- Finance chart -->
+      <Card class="p-5">
+        <div class="mb-4">
+          <h3 class="text-sm font-semibold">Cargos vs Abonos</h3>
+          <p class="text-xs text-muted-foreground">Últimos 6 meses</p>
         </div>
-
-        <Separator class="opacity-40" />
-
-        <!-- Finance snapshot -->
-        <div class="space-y-2">
-          <p class="text-sm font-medium uppercase tracking-wider text-muted-foreground/70">Finanzas del mes</p>
-          <div class="grid grid-cols-3 gap-3">
-            <StatCard
-              label="Cobrado"
-              :value="trends?.financialKpis ? formatCurrency(trends.financialKpis.totalAbonos) : '—'"
-              :icon="ClipboardCheck"
-              :icon-bg-class="ICON_BG.success"
-              :is-loading="isLoading"
-            />
-            <StatCard
-              label="Pendiente"
-              :value="trends?.financialKpis ? formatCurrency(trends.financialKpis.pendingBalance) : '—'"
-              :icon="Wallet"
-              :icon-bg-class="ICON_BG.danger"
-              :is-loading="isLoading"
-            />
-            <StatCard
-              label="Cobranza"
-              :value="trends?.financialKpis ? `${trends.financialKpis.collectionRate.toFixed(1)}%` : '—'"
-              :icon="Percent"
-              :icon-bg-class="ICON_BG.info"
-              :is-loading="isLoading"
-            />
-          </div>
+        <div v-if="isLoading" class="h-56">
+          <Skeleton class="h-full w-full rounded-lg" />
         </div>
-      </TabsContent>
-
-      <!-- TAB: Finanzas -->
-      <TabsContent value="finanzas" class="mt-4 space-y-5">
-        <!-- KPI cards -->
-        <div class="grid grid-cols-2 gap-3">
-          <StatCard
-            label="Cobrado este mes"
-            :value="trends?.financialKpis ? formatCurrency(trends.financialKpis.totalAbonos) : '—'"
-            :icon="ClipboardCheck"
-            :icon-bg-class="ICON_BG.success"
-            :is-loading="isLoading"
-          />
-          <StatCard
-            label="Cargos este mes"
-            :value="trends?.financialKpis ? formatCurrency(trends.financialKpis.totalCargos) : '—'"
-            :icon="Wallet"
-            icon-bg-class="bg-muted text-muted-foreground"
-            :is-loading="isLoading"
-          />
-          <StatCard
-            label="Pendiente total"
-            :value="trends?.financialKpis ? formatCurrency(trends.financialKpis.pendingBalance) : '—'"
-            :icon="AlertTriangle"
-            :icon-bg-class="ICON_BG.danger"
-            :is-loading="isLoading"
-          />
-          <StatCard
-            label="Tasa de cobranza"
-            :value="trends?.financialKpis ? `${trends.financialKpis.collectionRate.toFixed(1)}%` : '—'"
-            :icon="Percent"
-            :icon-bg-class="ICON_BG.info"
-            :is-loading="isLoading"
-          />
+        <div v-else class="h-56">
+          <Bar :data="financeChartData" :options="groupedChartOpts" />
         </div>
+      </Card>
 
-        <!-- Unidades en mora badge -->
-        <div class="flex items-center gap-3 rounded-lg border bg-card p-4">
-          <div :class="['flex size-10 items-center justify-center rounded-md', ICON_BG.danger]">
-            <Wallet class="size-5" />
-          </div>
+      <!-- Access chart -->
+      <Card class="p-5">
+        <div class="mb-4 flex items-center justify-between">
           <div>
-            <p class="text-sm font-semibold">{{ stats?.unitsInDebt ?? 0 }} {{ (stats?.unitsInDebt ?? 0) === 1 ? 'unidad' : 'unidades' }} en mora</p>
-            <p class="text-sm text-muted-foreground">de {{ stats?.totalUnits ?? 0 }} totales</p>
+            <h3 class="text-sm font-semibold">Accesos</h3>
+            <p class="text-xs text-muted-foreground">Últimos 7 días</p>
           </div>
+          <Badge v-if="!isLoading" variant="secondary" class="tabular-nums">
+            {{ stats?.todayAccessCount ?? 0 }} hoy
+          </Badge>
         </div>
+        <div v-if="isLoading" class="h-56">
+          <Skeleton class="h-full w-full rounded-lg" />
+        </div>
+        <div v-else class="h-56">
+          <Bar :data="accessChartData" :options="chartOpts" />
+        </div>
+      </Card>
+    </div>
 
-        <!-- Finance chart -->
-        <div class="rounded-lg border bg-card p-4">
-          <p class="mb-2 text-sm font-semibold text-muted-foreground">Cargos vs Abonos (6 meses)</p>
-          <div v-if="isLoading" class="h-56">
-            <Skeleton class="h-full w-full rounded-md" />
+    <!-- Charts row 2: Incidents + Activity summary -->
+    <div class="grid gap-4 lg:grid-cols-2">
+      <!-- Incidents chart -->
+      <Card class="p-5">
+        <div class="mb-4 flex items-center justify-between">
+          <div>
+            <h3 class="text-sm font-semibold">Incidencias</h3>
+            <p class="text-xs text-muted-foreground">Últimos 6 meses</p>
           </div>
-          <div v-else class="h-56">
-            <Bar :data="financeChartData" :options="groupedChartOpts" />
+          <div v-if="!isLoading" class="flex items-center gap-3 text-xs text-muted-foreground">
+            <span class="flex items-center gap-1.5">
+              <span class="size-2 rounded-full bg-amber-500" />
+              {{ stats?.openIncidents ?? 0 }} abiertas
+            </span>
+            <span class="flex items-center gap-1.5">
+              <span class="size-2 rounded-full bg-blue-500" />
+              {{ stats?.inProgressIncidents ?? 0 }} en progreso
+            </span>
           </div>
         </div>
-      </TabsContent>
+        <div v-if="isLoading" class="h-56">
+          <Skeleton class="h-full w-full rounded-lg" />
+        </div>
+        <div v-else class="h-56">
+          <Line :data="incidentsChartData" :options="chartOpts" />
+        </div>
+      </Card>
 
-      <!-- TAB: Actividad -->
-      <TabsContent value="actividad" class="mt-4 space-y-5">
-        <!-- Access chart -->
-        <div class="rounded-lg border bg-card p-4">
-          <p class="mb-2 text-sm font-semibold text-muted-foreground">Accesos (ultimos 7 dias)</p>
-          <div v-if="isLoading" class="h-56">
-            <Skeleton class="h-full w-full rounded-md" />
-          </div>
-          <div v-else class="h-56">
-            <Bar :data="accessChartData" :options="chartOpts" />
-          </div>
-        </div>
+      <!-- Activity summary -->
+      <Card class="p-5">
+        <h3 class="text-sm font-semibold mb-5">Actividad del condominio</h3>
 
-        <!-- Incidents chart -->
-        <div class="rounded-lg border bg-card p-4">
-          <p class="mb-2 text-sm font-semibold text-muted-foreground">Incidencias (6 meses)</p>
-          <div v-if="isLoading" class="h-56">
-            <Skeleton class="h-full w-full rounded-md" />
+        <div class="space-y-4">
+          <!-- Next meeting highlight -->
+          <div v-if="stats?.nextMeeting" class="flex items-center gap-3 rounded-lg bg-accent/50 p-3">
+            <div class="flex size-9 shrink-0 items-center justify-center rounded-lg bg-emerald-100">
+              <Calendar class="size-4 text-emerald-600" />
+            </div>
+            <div class="min-w-0 flex-1">
+              <p class="text-sm font-medium truncate">{{ stats.nextMeeting.title }}</p>
+              <p class="text-xs text-muted-foreground">{{ formatDateTime(stats.nextMeeting.date) }}</p>
+            </div>
           </div>
-          <div v-else class="h-56">
-            <Line :data="incidentsChartData" :options="chartOpts" />
-          </div>
-        </div>
 
-        <!-- Quick incident stats -->
-        <div class="grid grid-cols-2 gap-3">
-          <StatCard
-            label="Abiertas"
-            :value="stats?.openIncidents ?? 0"
-            :icon="AlertTriangle"
-            :icon-bg-class="ICON_BG.warning"
-            :is-loading="isLoading"
-          />
-          <StatCard
-            label="En progreso"
-            :value="stats?.inProgressIncidents ?? 0"
-            :icon="ShieldAlert"
-            :icon-bg-class="ICON_BG.info"
-            :is-loading="isLoading"
-          />
+          <!-- Community stats grid -->
+          <div class="grid grid-cols-2 gap-4">
+            <div class="flex items-center gap-3">
+              <div class="flex size-9 shrink-0 items-center justify-center rounded-lg bg-purple-100">
+                <Vote class="size-4 text-purple-600" />
+              </div>
+              <div>
+                <p class="text-lg font-bold tabular-nums leading-none">{{ stats?.activePolls ?? 0 }}</p>
+                <p class="mt-0.5 text-xs text-muted-foreground">Votaciones activas</p>
+              </div>
+            </div>
+
+            <div class="flex items-center gap-3">
+              <div class="flex size-9 shrink-0 items-center justify-center rounded-lg bg-emerald-100">
+                <Users class="size-4 text-emerald-600" />
+              </div>
+              <div>
+                <p class="text-lg font-bold tabular-nums leading-none">{{ stats?.upcomingMeetings ?? 0 }}</p>
+                <p class="mt-0.5 text-xs text-muted-foreground">Reuniones próximas</p>
+              </div>
+            </div>
+
+            <div class="flex items-center gap-3">
+              <div class="flex size-9 shrink-0 items-center justify-center rounded-lg bg-blue-100">
+                <Megaphone class="size-4 text-blue-600" />
+              </div>
+              <div>
+                <p class="text-lg font-bold tabular-nums leading-none">{{ stats?.publishedAnnouncements ?? 0 }}</p>
+                <p class="mt-0.5 text-xs text-muted-foreground">Anuncios</p>
+              </div>
+            </div>
+
+            <div class="flex items-center gap-3">
+              <div class="flex size-9 shrink-0 items-center justify-center rounded-lg bg-amber-100">
+                <AlertTriangle class="size-4 text-amber-600" />
+              </div>
+              <div>
+                <p class="text-lg font-bold tabular-nums leading-none">{{ stats?.openIncidents ?? 0 }}</p>
+                <p class="mt-0.5 text-xs text-muted-foreground">Incidencias abiertas</p>
+              </div>
+            </div>
+          </div>
         </div>
-      </TabsContent>
-    </Tabs>
+      </Card>
+    </div>
   </div>
 </template>

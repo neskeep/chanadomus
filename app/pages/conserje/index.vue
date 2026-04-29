@@ -2,9 +2,8 @@
 import { Calendar, ClipboardList, Megaphone, Shield, Store, Wrench } from 'lucide-vue-next'
 import { ICON_BG } from '~/composables/useColorMap'
 
-useHead({ title: 'Panel Conserjeria' })
+useHead({ title: 'Panel Conserjería' })
 
-const { user } = useAuth()
 const { formatDateTime } = useFormatDate()
 
 interface DashboardStats {
@@ -18,32 +17,6 @@ interface DashboardStats {
 const stats = ref<DashboardStats | null>(null)
 const isLoading = ref(true)
 
-const statCards = computed(() => [
-  {
-    label: 'Accesos Hoy',
-    value: stats.value?.todayAccessCount ?? 0,
-    icon: Shield,
-    iconBgClass: ICON_BG.info,
-  },
-  {
-    label: 'Anuncios',
-    value: stats.value?.publishedAnnouncements ?? 0,
-    icon: Megaphone,
-    iconBgClass: ICON_BG.teal,
-  },
-  {
-    label: 'Proveedores',
-    value: stats.value?.activeProviders ?? 0,
-    icon: Wrench,
-    iconBgClass: ICON_BG.success,
-  },
-  {
-    label: 'Reuniones Proximas',
-    value: stats.value?.upcomingMeetings ?? 0,
-    icon: Calendar,
-    iconBgClass: ICON_BG.purple,
-  },
-])
 
 const quickActions = [
   { label: 'Registrar Acceso', to: '/vigilancia/accesos', icon: ClipboardList },
@@ -51,10 +24,7 @@ const quickActions = [
   { label: 'Cartelera', to: '/mi-chana/cartelera', icon: Megaphone },
 ]
 
-const todayFormatted = ref('')
-
 onMounted(async () => {
-  todayFormatted.value = formatDateTime(new Date())
   try {
     const res = await $fetch<{ data: DashboardStats }>('/api/dashboard/stats')
     stats.value = res.data
@@ -67,57 +37,115 @@ onMounted(async () => {
 </script>
 
 <template>
-  <div>
-    <!-- Greeting -->
-    <div class="mb-6">
-      <h1 class="text-2xl font-bold text-foreground">
-        Hola, {{ user?.name?.split(' ')[0] || 'Operador' }}
-      </h1>
-      <p class="mt-1 text-sm text-muted-foreground">
-        {{ todayFormatted }}
-      </p>
-    </div>
+  <div class="space-y-8">
+    <!-- Stats grid -->
+    <div class="grid grid-cols-2 gap-4">
+      <Card class="p-4">
+        <div class="flex items-start justify-between">
+          <div class="flex flex-col gap-1">
+            <template v-if="isLoading">
+              <Skeleton class="h-5 w-16" />
+              <Skeleton class="h-8 w-12" />
+            </template>
+            <template v-else>
+              <p class="text-sm text-muted-foreground">Accesos Hoy</p>
+              <p class="text-2xl font-bold tabular-nums tracking-tight">{{ stats?.todayAccessCount ?? 0 }}</p>
+            </template>
+          </div>
+          <div :class="['flex size-10 items-center justify-center rounded-lg', ICON_BG.info]">
+            <Shield class="size-5" />
+          </div>
+        </div>
+      </Card>
 
-    <!-- Stats -->
-    <div class="grid grid-cols-2 gap-3">
-      <StatCard
-        v-for="card in statCards"
-        :key="card.label"
-        :label="card.label"
-        :value="card.value"
-        :icon="card.icon"
-        :icon-bg-class="card.iconBgClass"
-        :is-loading="isLoading"
-      />
+      <Card class="p-4">
+        <div class="flex items-start justify-between">
+          <div class="flex flex-col gap-1">
+            <template v-if="isLoading">
+              <Skeleton class="h-5 w-16" />
+              <Skeleton class="h-8 w-12" />
+            </template>
+            <template v-else>
+              <p class="text-sm text-muted-foreground">Anuncios</p>
+              <p class="text-2xl font-bold tabular-nums tracking-tight">{{ stats?.publishedAnnouncements ?? 0 }}</p>
+            </template>
+          </div>
+          <div :class="['flex size-10 items-center justify-center rounded-lg', ICON_BG.teal]">
+            <Megaphone class="size-5" />
+          </div>
+        </div>
+      </Card>
+
+      <Card class="p-4">
+        <div class="flex items-start justify-between">
+          <div class="flex flex-col gap-1">
+            <template v-if="isLoading">
+              <Skeleton class="h-5 w-16" />
+              <Skeleton class="h-8 w-12" />
+            </template>
+            <template v-else>
+              <p class="text-sm text-muted-foreground">Proveedores</p>
+              <p class="text-2xl font-bold tabular-nums tracking-tight">{{ stats?.activeProviders ?? 0 }}</p>
+            </template>
+          </div>
+          <div :class="['flex size-10 items-center justify-center rounded-lg', ICON_BG.success]">
+            <Wrench class="size-5" />
+          </div>
+        </div>
+      </Card>
+
+      <Card class="p-4">
+        <div class="flex items-start justify-between">
+          <div class="flex flex-col gap-1">
+            <template v-if="isLoading">
+              <Skeleton class="h-5 w-16" />
+              <Skeleton class="h-8 w-12" />
+            </template>
+            <template v-else>
+              <p class="text-sm text-muted-foreground">Reuniones</p>
+              <p class="text-2xl font-bold tabular-nums tracking-tight">{{ stats?.upcomingMeetings ?? 0 }}</p>
+            </template>
+          </div>
+          <div :class="['flex size-10 items-center justify-center rounded-lg', ICON_BG.purple]">
+            <Calendar class="size-5" />
+          </div>
+        </div>
+      </Card>
     </div>
 
     <!-- Quick Actions -->
-    <div class="mt-6">
-      <h2 class="mb-3 text-base font-semibold text-foreground">Acciones rapidas</h2>
-      <div class="grid grid-cols-2 gap-3">
-        <Button
+    <div>
+      <h2 class="mb-3 text-sm font-semibold text-muted-foreground">Acciones rápidas</h2>
+      <div class="grid grid-cols-3 gap-3">
+        <NuxtLink
           v-for="action in quickActions"
           :key="action.to"
-          variant="outline"
-          size="lg"
-          as="NuxtLink"
           :to="action.to"
-          class="h-12 gap-2 text-sm"
         >
-          <component :is="action.icon" class="size-5" />
-          {{ action.label }}
-        </Button>
+          <Button
+            variant="outline"
+            size="lg"
+            class="flex h-auto min-h-14 w-full flex-col gap-2 py-4"
+          >
+            <component :is="action.icon" class="size-5 text-primary" />
+            <span class="text-xs font-medium">{{ action.label }}</span>
+          </Button>
+        </NuxtLink>
       </div>
     </div>
 
     <!-- Next Meeting -->
-    <div v-if="stats?.nextMeeting" class="mt-6 rounded-lg border border-l-4 border-l-primary bg-card p-4">
-      <div class="flex items-center gap-1.5">
-        <Calendar class="size-4 text-muted-foreground" />
-        <p class="text-xs text-muted-foreground">Proxima reunion</p>
+    <Card v-if="stats?.nextMeeting" class="p-4">
+      <div class="flex items-center gap-3">
+        <div :class="['flex size-10 shrink-0 items-center justify-center rounded-lg', ICON_BG.success]">
+          <Calendar class="size-5" />
+        </div>
+        <div class="min-w-0 flex-1">
+          <p class="text-xs font-medium text-muted-foreground">Próxima reunión</p>
+          <p class="truncate text-base font-semibold">{{ stats.nextMeeting.title }}</p>
+          <p class="text-sm text-muted-foreground">{{ formatDateTime(stats.nextMeeting.date) }}</p>
+        </div>
       </div>
-      <p class="mt-0.5 text-base font-semibold">{{ stats.nextMeeting.title }}</p>
-      <p class="text-xs text-muted-foreground">{{ formatDateTime(stats.nextMeeting.date) }}</p>
-    </div>
+    </Card>
   </div>
 </template>
