@@ -13,6 +13,7 @@ import {
 } from 'lucide-vue-next'
 import { toast } from 'vue-sonner'
 import type { Poll, PollStatus } from '~~/shared/types/poll'
+import { POLL_STATUS_COLORS, POLL_STATUS_LABELS } from '~/composables/useColorMap'
 
 useHead({ title: 'Gestion de Votaciones' })
 
@@ -60,9 +61,9 @@ const deleteId = ref<string | null>(null)
 const deleteDialogOpen = ref(false)
 
 const STATUS_CONFIG: Record<PollStatus, { label: string; class: string }> = {
-  draft: { label: 'Borrador', class: 'bg-zinc-100 text-zinc-600' },
-  active: { label: 'Activa', class: 'bg-emerald-100 text-emerald-800' },
-  closed: { label: 'Cerrada', class: 'bg-blue-100 text-blue-800' },
+  draft: { label: POLL_STATUS_LABELS.draft, class: POLL_STATUS_COLORS.draft },
+  active: { label: POLL_STATUS_LABELS.active, class: POLL_STATUS_COLORS.active },
+  closed: { label: POLL_STATUS_LABELS.closed, class: POLL_STATUS_COLORS.closed },
 }
 
 // Stats

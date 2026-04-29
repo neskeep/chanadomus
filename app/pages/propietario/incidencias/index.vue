@@ -13,6 +13,7 @@ import {
   ChevronUp,
 } from 'lucide-vue-next'
 import type { Incident, IncidentStatus, IncidentPriority } from '~~/shared/types/incident'
+import { INCIDENT_STATUS_COLORS, INCIDENT_STATUS_LABELS, INCIDENT_PRIORITY_COLORS, INCIDENT_PRIORITY_LABELS } from '~/composables/useColorMap'
 
 useHead({ title: 'Mis Incidencias' })
 
@@ -24,16 +25,16 @@ const expandedId = ref<string | null>(null)
 const detail = useIncidentDetail()
 
 const STATUS_CONFIG: Record<IncidentStatus, { label: string, class: string, icon: typeof Clock }> = {
-  open: { label: 'Abierta', class: 'bg-amber-100 text-amber-800', icon: AlertTriangle },
-  in_progress: { label: 'En proceso', class: 'bg-blue-100 text-blue-800', icon: Loader2 },
-  resolved: { label: 'Resuelta', class: 'bg-emerald-100 text-emerald-800', icon: CheckCircle2 },
-  closed: { label: 'Cerrada', class: 'bg-zinc-100 text-zinc-600', icon: XCircle },
+  open: { label: INCIDENT_STATUS_LABELS.open, class: INCIDENT_STATUS_COLORS.open, icon: AlertTriangle },
+  in_progress: { label: INCIDENT_STATUS_LABELS.in_progress, class: INCIDENT_STATUS_COLORS.in_progress, icon: Loader2 },
+  resolved: { label: INCIDENT_STATUS_LABELS.resolved, class: INCIDENT_STATUS_COLORS.resolved, icon: CheckCircle2 },
+  closed: { label: INCIDENT_STATUS_LABELS.closed, class: INCIDENT_STATUS_COLORS.closed, icon: XCircle },
 }
 
 const PRIORITY_CONFIG: Record<IncidentPriority, { label: string, class: string }> = {
-  low: { label: 'Baja', class: 'bg-zinc-100 text-zinc-600' },
-  medium: { label: 'Media', class: 'bg-amber-100 text-amber-700' },
-  high: { label: 'Alta', class: 'bg-red-100 text-red-700' },
+  low: { label: INCIDENT_PRIORITY_LABELS.low, class: INCIDENT_PRIORITY_COLORS.low },
+  medium: { label: INCIDENT_PRIORITY_LABELS.medium, class: INCIDENT_PRIORITY_COLORS.medium },
+  high: { label: INCIDENT_PRIORITY_LABELS.high, class: INCIDENT_PRIORITY_COLORS.high },
 }
 
 watch(currentPage, (page) => {

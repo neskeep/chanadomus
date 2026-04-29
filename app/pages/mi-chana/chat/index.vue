@@ -8,6 +8,7 @@ import {
   MessageCircle,
 } from 'lucide-vue-next'
 import type { ChatRoomType } from '~~/shared/types/chat'
+import { CHAT_CHANNEL_COLORS } from '~/composables/useColorMap'
 
 useHead({ title: 'Chat' })
 
@@ -17,26 +18,22 @@ const ROOM_TYPE_CONFIG: Record<ChatRoomType, { label: string; icon: typeof Globe
   general: {
     label: 'General',
     icon: Globe,
-    iconBg: 'bg-primary/10',
-    iconColor: 'text-primary',
+    ...CHAT_CHANNEL_COLORS.general,
   },
   unit: {
     label: 'Mi Rancho',
     icon: Home,
-    iconBg: 'bg-amber-100',
-    iconColor: 'text-amber-700',
+    ...CHAT_CHANNEL_COLORS.unit,
   },
   vigilancia: {
     label: 'Vigilancia',
     icon: Shield,
-    iconBg: 'bg-blue-100',
-    iconColor: 'text-blue-700',
+    ...CHAT_CHANNEL_COLORS.vigilancia,
   },
   admin: {
     label: 'Admin',
     icon: Settings,
-    iconBg: 'bg-emerald-100',
-    iconColor: 'text-emerald-700',
+    ...CHAT_CHANNEL_COLORS.admin,
   },
 }
 

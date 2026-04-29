@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import type { Component } from 'vue'
 import { TrendingUp, TrendingDown } from 'lucide-vue-next'
+import { TREND_COLORS } from '~/composables/useColorMap'
 
 interface TrendInfo {
   value: number
@@ -39,9 +40,9 @@ withDefaults(defineProps<Props>(), {
       </div>
     </div>
     <div v-if="trend && !isLoading" class="mt-2 flex items-center gap-1 text-xs">
-      <TrendingUp v-if="trend.value >= 0" class="size-3 text-emerald-500" />
-      <TrendingDown v-else class="size-3 text-red-500" />
-      <span :class="trend.value >= 0 ? 'text-emerald-600' : 'text-red-600'">
+      <TrendingUp v-if="trend.value >= 0" :class="TREND_COLORS.positive.icon" class="size-3" />
+      <TrendingDown v-else :class="TREND_COLORS.negative.icon" class="size-3" />
+      <span :class="trend.value >= 0 ? TREND_COLORS.positive.text : TREND_COLORS.negative.text">
         {{ trend.value >= 0 ? '+' : '' }}{{ trend.value }}%
       </span>
       <span class="text-muted-foreground">{{ trend.label }}</span>

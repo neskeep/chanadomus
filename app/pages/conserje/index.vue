@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { Calendar, ClipboardList, Megaphone, Shield, Store, Wrench } from 'lucide-vue-next'
+import { ICON_BG } from '~/composables/useColorMap'
 
 useHead({ title: 'Panel Conserjeria' })
 
@@ -22,25 +23,25 @@ const statCards = computed(() => [
     label: 'Accesos Hoy',
     value: stats.value?.todayAccessCount ?? 0,
     icon: Shield,
-    iconBgClass: 'bg-blue-100 text-blue-600',
+    iconBgClass: ICON_BG.info,
   },
   {
     label: 'Anuncios',
     value: stats.value?.publishedAnnouncements ?? 0,
     icon: Megaphone,
-    iconBgClass: 'bg-cyan-100 text-cyan-600',
+    iconBgClass: ICON_BG.teal,
   },
   {
     label: 'Proveedores',
     value: stats.value?.activeProviders ?? 0,
     icon: Wrench,
-    iconBgClass: 'bg-emerald-100 text-emerald-600',
+    iconBgClass: ICON_BG.success,
   },
   {
     label: 'Reuniones Proximas',
     value: stats.value?.upcomingMeetings ?? 0,
     icon: Calendar,
-    iconBgClass: 'bg-purple-100 text-purple-600',
+    iconBgClass: ICON_BG.purple,
   },
 ])
 

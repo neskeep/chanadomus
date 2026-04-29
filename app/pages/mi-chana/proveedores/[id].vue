@@ -64,18 +64,7 @@ const reviewRating = ref(0)
 const reviewHover = ref(0)
 const reviewComment = ref('')
 
-const CATEGORY_COLORS: Record<ProviderCategory, string> = {
-  plomeria: 'bg-blue-100 text-blue-700',
-  electricidad: 'bg-yellow-100 text-yellow-700',
-  jardineria: 'bg-green-100 text-green-700',
-  cerrajeria: 'bg-gray-100 text-gray-700',
-  limpieza: 'bg-cyan-100 text-cyan-700',
-  pintura: 'bg-purple-100 text-purple-700',
-  albanileria: 'bg-orange-100 text-orange-700',
-  seguridad: 'bg-red-100 text-red-700',
-  fumigacion: 'bg-emerald-100 text-emerald-700',
-  otro: 'bg-slate-100 text-slate-700',
-}
+import { PROVIDER_CATEGORY_COLORS as CATEGORY_COLORS, PROVIDER_STATUS_COLORS, PROVIDER_STATUS_LABELS } from '~/composables/useColorMap'
 
 const CATEGORY_LABELS: Record<ProviderCategory, string> = {
   plomeria: 'Plomeria',
@@ -91,9 +80,9 @@ const CATEGORY_LABELS: Record<ProviderCategory, string> = {
 }
 
 const STATUS_LABELS: Record<string, { label: string; class: string }> = {
-  active: { label: 'Activo', class: 'bg-emerald-100 text-emerald-800' },
-  inactive: { label: 'Inactivo', class: 'bg-zinc-100 text-zinc-600' },
-  pending: { label: 'Pendiente', class: 'bg-amber-100 text-amber-800' },
+  active: { label: PROVIDER_STATUS_LABELS.active, class: PROVIDER_STATUS_COLORS.active },
+  inactive: { label: PROVIDER_STATUS_LABELS.inactive, class: PROVIDER_STATUS_COLORS.inactive },
+  pending: { label: PROVIDER_STATUS_LABELS.pending, class: PROVIDER_STATUS_COLORS.pending },
 }
 
 async function loadProvider() {

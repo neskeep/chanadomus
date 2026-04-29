@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { AlertTriangle, Calendar, DoorOpen, Megaphone, QrCode, Shield, Users } from 'lucide-vue-next'
+import { ICON_BG } from '~/composables/useColorMap'
 
 useHead({ title: 'Panel Vigilancia' })
 
@@ -63,7 +64,7 @@ onMounted(async () => {
           </p>
         </div>
         <div class="flex flex-col items-end gap-2">
-          <div class="flex size-12 items-center justify-center rounded-lg bg-blue-100 text-blue-600">
+          <div :class="['flex size-12 items-center justify-center rounded-lg', ICON_BG.info]">
             <Shield class="size-6" />
           </div>
           <Badge variant="secondary" class="gap-1.5">
@@ -83,21 +84,21 @@ onMounted(async () => {
         label="Incidencias Abiertas"
         :value="stats?.openIncidents ?? 0"
         :icon="AlertTriangle"
-        icon-bg-class="bg-amber-100 text-amber-600"
+        :icon-bg-class="ICON_BG.warning"
         :is-loading="isLoading"
       />
       <StatCard
         label="Anuncios"
         :value="stats?.publishedAnnouncements ?? 0"
         :icon="Megaphone"
-        icon-bg-class="bg-cyan-100 text-cyan-600"
+        :icon-bg-class="ICON_BG.teal"
         :is-loading="isLoading"
       />
       <StatCard
         label="Reuniones Proximas"
         :value="stats?.upcomingMeetings ?? 0"
         :icon="Calendar"
-        icon-bg-class="bg-emerald-100 text-emerald-600"
+        :icon-bg-class="ICON_BG.success"
         :is-loading="isLoading"
       />
     </div>

@@ -3,6 +3,7 @@ import { CheckCircle, Clock, Info, XCircle, Loader2 } from 'lucide-vue-next'
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '~/components/ui/card'
 import { Badge } from '~/components/ui/badge'
 import { Separator } from '~/components/ui/separator'
+import { ACCESS_STATUS_COLORS } from '~/composables/useColorMap'
 
 definePageMeta({ layout: false })
 
@@ -37,30 +38,26 @@ const statusConfig = computed(() => {
     case 'valid':
       return {
         icon: CheckCircle,
-        iconColor: 'text-green-500',
-        borderColor: 'border-green-500',
+        ...ACCESS_STATUS_COLORS.valid,
         title: 'ACCESO AUTORIZADO',
       }
     case 'expired':
       return {
         icon: Clock,
-        iconColor: 'text-amber-500',
-        borderColor: 'border-amber-500',
+        ...ACCESS_STATUS_COLORS.expired,
         title: 'ACCESO EXPIRADO',
       }
     case 'already_used':
       return {
         icon: Info,
-        iconColor: 'text-blue-500',
-        borderColor: 'border-blue-500',
+        ...ACCESS_STATUS_COLORS.already_used,
         title: 'CODIGO YA UTILIZADO',
       }
     case 'invalid':
     default:
       return {
         icon: XCircle,
-        iconColor: 'text-red-500',
-        borderColor: 'border-red-500',
+        ...ACCESS_STATUS_COLORS.invalid,
         title: 'CODIGO INVALIDO',
       }
   }

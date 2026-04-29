@@ -8,6 +8,7 @@ import {
   ClipboardList,
 } from 'lucide-vue-next'
 import { buttonVariants } from '~/components/ui/button'
+import { ICON_BG } from '~/composables/useColorMap'
 
 useHead({ title: 'Mi Vivienda' })
 
@@ -30,25 +31,25 @@ const statCards = computed(() => [
     label: 'Mis Incidencias',
     value: stats.value?.myOpenIncidents ?? 0,
     icon: AlertTriangle,
-    iconBgClass: 'bg-amber-100 text-amber-600',
+    iconBgClass: ICON_BG.warning,
   },
   {
     label: 'Votaciones Activas',
     value: stats.value?.activePolls ?? 0,
     icon: Vote,
-    iconBgClass: 'bg-purple-100 text-purple-600',
+    iconBgClass: ICON_BG.purple,
   },
   {
     label: 'Anuncios',
     value: stats.value?.publishedAnnouncements ?? 0,
     icon: Megaphone,
-    iconBgClass: 'bg-blue-100 text-blue-600',
+    iconBgClass: ICON_BG.info,
   },
   {
     label: 'Reuniones Proximas',
     value: stats.value?.upcomingMeetings ?? 0,
     icon: Calendar,
-    iconBgClass: 'bg-emerald-100 text-emerald-600',
+    iconBgClass: ICON_BG.success,
   },
 ])
 

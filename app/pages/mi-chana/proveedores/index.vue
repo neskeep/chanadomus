@@ -47,18 +47,7 @@ const suggestPhone = ref('')
 const suggestCategory = ref<ProviderCategory>('otro')
 const suggestNote = ref('')
 
-const CATEGORY_COLORS: Record<ProviderCategory, string> = {
-  plomeria: 'bg-blue-100 text-blue-700',
-  electricidad: 'bg-yellow-100 text-yellow-700',
-  jardineria: 'bg-green-100 text-green-700',
-  cerrajeria: 'bg-gray-100 text-gray-700',
-  limpieza: 'bg-cyan-100 text-cyan-700',
-  pintura: 'bg-purple-100 text-purple-700',
-  albanileria: 'bg-orange-100 text-orange-700',
-  seguridad: 'bg-red-100 text-red-700',
-  fumigacion: 'bg-emerald-100 text-emerald-700',
-  otro: 'bg-slate-100 text-slate-700',
-}
+import { PROVIDER_CATEGORY_COLORS as CATEGORY_COLORS } from '~/composables/useColorMap'
 
 const CATEGORY_LABELS: Record<ProviderCategory, string> = {
   plomeria: 'Plomeria',

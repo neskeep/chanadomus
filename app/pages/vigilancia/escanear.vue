@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { SwitchCamera, CheckCircle2, XCircle, AlertTriangle, Camera, ScanLine, User, Home, Clock, RotateCcw } from 'lucide-vue-next'
 import type { ValidationStatus } from '~~/shared/types/qr'
+import { VALIDATION_STATUS_COLORS, VALIDATION_STATUS_LABELS } from '~/composables/useColorMap'
 
 useHead({ title: 'Escanear QR' })
 
@@ -27,10 +28,10 @@ onUnmounted(() => {
 })
 
 const statusConfig: Record<ValidationStatus, { label: string; bg: string; icon: string; accent: string }> = {
-  valid: { label: 'Acceso autorizado', bg: 'bg-green-500', icon: 'text-green-500', accent: 'ring-green-500/30' },
-  expired: { label: 'Código expirado', bg: 'bg-amber-500', icon: 'text-amber-500', accent: 'ring-amber-500/30' },
-  already_used: { label: 'Código ya utilizado', bg: 'bg-amber-500', icon: 'text-amber-500', accent: 'ring-amber-500/30' },
-  invalid: { label: 'Código inválido', bg: 'bg-red-500', icon: 'text-red-500', accent: 'ring-red-500/30' },
+  valid: { label: VALIDATION_STATUS_LABELS.valid, ...VALIDATION_STATUS_COLORS.valid },
+  expired: { label: VALIDATION_STATUS_LABELS.expired, ...VALIDATION_STATUS_COLORS.expired },
+  already_used: { label: VALIDATION_STATUS_LABELS.already_used, ...VALIDATION_STATUS_COLORS.already_used },
+  invalid: { label: VALIDATION_STATUS_LABELS.invalid, ...VALIDATION_STATUS_COLORS.invalid },
 }
 </script>
 

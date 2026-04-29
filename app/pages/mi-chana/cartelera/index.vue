@@ -7,6 +7,7 @@ import {
   Sparkles,
 } from 'lucide-vue-next'
 import type { AnnouncementCategory } from '~~/shared/types/announcement'
+import { ANNOUNCEMENT_CATEGORY_COLORS, ANNOUNCEMENT_CATEGORY_LABELS } from '~/composables/useColorMap'
 
 useHead({ title: 'Cartelera' })
 
@@ -19,12 +20,12 @@ const activeCategory = ref<AnnouncementCategory | ''>('')
 const expandedId = ref<string | null>(null)
 
 const CATEGORY_CONFIG: Record<AnnouncementCategory, { label: string; class: string }> = {
-  general: { label: 'General', class: 'bg-blue-100 text-blue-800' },
-  mantenimiento: { label: 'Mantenimiento', class: 'bg-amber-100 text-amber-800' },
-  seguridad: { label: 'Seguridad', class: 'bg-red-100 text-red-800' },
-  financiero: { label: 'Financiero', class: 'bg-emerald-100 text-emerald-800' },
-  evento: { label: 'Evento', class: 'bg-purple-100 text-purple-800' },
-  urgente: { label: 'Urgente', class: 'bg-rose-100 text-rose-800' },
+  general: { label: ANNOUNCEMENT_CATEGORY_LABELS.general, class: ANNOUNCEMENT_CATEGORY_COLORS.general },
+  mantenimiento: { label: ANNOUNCEMENT_CATEGORY_LABELS.mantenimiento, class: ANNOUNCEMENT_CATEGORY_COLORS.mantenimiento },
+  seguridad: { label: ANNOUNCEMENT_CATEGORY_LABELS.seguridad, class: ANNOUNCEMENT_CATEGORY_COLORS.seguridad },
+  financiero: { label: ANNOUNCEMENT_CATEGORY_LABELS.financiero, class: ANNOUNCEMENT_CATEGORY_COLORS.financiero },
+  evento: { label: ANNOUNCEMENT_CATEGORY_LABELS.evento, class: ANNOUNCEMENT_CATEGORY_COLORS.evento },
+  urgente: { label: ANNOUNCEMENT_CATEGORY_LABELS.urgente, class: ANNOUNCEMENT_CATEGORY_COLORS.urgente },
 }
 
 const categoryOptions: Array<{ value: AnnouncementCategory; label: string }> = [

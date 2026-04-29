@@ -13,6 +13,7 @@ import {
 } from 'lucide-vue-next'
 import { toast } from 'vue-sonner'
 import type { Announcement, AnnouncementCategory, AnnouncementStatus } from '~~/shared/types/announcement'
+import { ANNOUNCEMENT_CATEGORY_COLORS, ANNOUNCEMENT_CATEGORY_LABELS, ANNOUNCEMENT_STATUS_COLORS, ANNOUNCEMENT_STATUS_LABELS } from '~/composables/useColorMap'
 
 useHead({ title: 'Gestion de Anuncios' })
 
@@ -65,18 +66,18 @@ const deleteId = ref<string | null>(null)
 const deleteDialogOpen = ref(false)
 
 const CATEGORY_CONFIG: Record<AnnouncementCategory, { label: string, class: string }> = {
-  general: { label: 'General', class: 'bg-blue-100 text-blue-800' },
-  mantenimiento: { label: 'Mantenimiento', class: 'bg-amber-100 text-amber-800' },
-  seguridad: { label: 'Seguridad', class: 'bg-red-100 text-red-800' },
-  financiero: { label: 'Financiero', class: 'bg-emerald-100 text-emerald-800' },
-  evento: { label: 'Evento', class: 'bg-purple-100 text-purple-800' },
-  urgente: { label: 'Urgente', class: 'bg-red-200 text-red-900' },
+  general: { label: ANNOUNCEMENT_CATEGORY_LABELS.general, class: ANNOUNCEMENT_CATEGORY_COLORS.general },
+  mantenimiento: { label: ANNOUNCEMENT_CATEGORY_LABELS.mantenimiento, class: ANNOUNCEMENT_CATEGORY_COLORS.mantenimiento },
+  seguridad: { label: ANNOUNCEMENT_CATEGORY_LABELS.seguridad, class: ANNOUNCEMENT_CATEGORY_COLORS.seguridad },
+  financiero: { label: ANNOUNCEMENT_CATEGORY_LABELS.financiero, class: ANNOUNCEMENT_CATEGORY_COLORS.financiero },
+  evento: { label: ANNOUNCEMENT_CATEGORY_LABELS.evento, class: ANNOUNCEMENT_CATEGORY_COLORS.evento },
+  urgente: { label: ANNOUNCEMENT_CATEGORY_LABELS.urgente, class: ANNOUNCEMENT_CATEGORY_COLORS.urgente },
 }
 
 const STATUS_CONFIG: Record<AnnouncementStatus, { label: string, class: string }> = {
-  draft: { label: 'Borrador', class: 'bg-zinc-100 text-zinc-600' },
-  published: { label: 'Publicado', class: 'bg-emerald-100 text-emerald-800' },
-  archived: { label: 'Archivado', class: 'bg-zinc-100 text-zinc-500' },
+  draft: { label: ANNOUNCEMENT_STATUS_LABELS.draft, class: ANNOUNCEMENT_STATUS_COLORS.draft },
+  published: { label: ANNOUNCEMENT_STATUS_LABELS.published, class: ANNOUNCEMENT_STATUS_COLORS.published },
+  archived: { label: ANNOUNCEMENT_STATUS_LABELS.archived, class: ANNOUNCEMENT_STATUS_COLORS.archived },
 }
 
 // Stats

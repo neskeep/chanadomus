@@ -1,5 +1,5 @@
 
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap');
 
 @import "tailwindcss";
 
@@ -68,38 +68,79 @@
 }
 
 :root {
-    --background: oklch(0.993 0.003 80);
-    --foreground: oklch(0.18 0.01 55);
-    --card: oklch(1 0 0);
-    --card-foreground: oklch(0.18 0.01 55);
-    --popover: oklch(1 0 0);
-    --popover-foreground: oklch(0.18 0.01 55);
-    --primary: oklch(0.511 0.096 186.391);
-    --primary-foreground: oklch(0.984 0.014 180.72);
-    --secondary: oklch(0.965 0.008 75);
-    --secondary-foreground: oklch(0.25 0.015 60);
-    --muted: oklch(0.96 0.005 75);
-    --muted-foreground: oklch(0.50 0.02 55);
-    --accent: oklch(0.95 0.015 186);
-    --accent-foreground: oklch(0.25 0.05 186);
-    --destructive: oklch(0.577 0.245 27.325);
-    --border: oklch(0.922 0.005 34.3);
-    --input: oklch(0.922 0.005 34.3);
-    --ring: oklch(0.714 0.014 41.2);
-    --chart-1: oklch(0.855 0.138 181.071);
-    --chart-2: oklch(0.704 0.14 182.503);
-    --chart-3: oklch(0.6 0.118 184.704);
-    --chart-4: oklch(0.511 0.096 186.391);
-    --chart-5: oklch(0.437 0.078 188.216);
+    /* Background & Surfaces */
+    --background: oklch(0.973 0.004 198.1);      /* #F3F7F7 — fondo con tinte teal sutil */
+    --foreground: oklch(0.276 0.023 248.7);      /* #1F2933 — texto principal */
+    --card: oklch(1.000 0 0);                    /* #FFFFFF */
+    --card-foreground: oklch(0.276 0.023 248.7); /* #1F2933 */
+    --popover: oklch(1.000 0 0);                 /* #FFFFFF */
+    --popover-foreground: oklch(0.276 0.023 248.7); /* #1F2933 */
+
+    /* Primary — Teal (#19C2C0) */
+    --primary: oklch(0.738 0.123 193.5);
+    --primary-foreground: oklch(1.000 0 0);      /* blanco para contraste */
+
+    /* Secondary — Orange (#F47A1F) — identidad de marca */
+    --secondary: oklch(0.708 0.176 50.5);
+    --secondary-foreground: oklch(1.000 0 0);    /* blanco */
+
+    /* Muted — neutral con tinte teal */
+    --muted: oklch(0.936 0.014 191.7);
+    --muted-foreground: oklch(0.618 0.024 250.4); /* #7B8794 — text tertiary */
+
+    /* Accent — Soft Teal (#E0F7F6) */
+    --accent: oklch(0.959 0.024 193.8);
+    --accent-foreground: oklch(0.660 0.110 193.3); /* #12A7A5 — primary-800 */
+
+    /* Destructive — Error red (#E53B3B) */
+    --destructive: oklch(0.611 0.207 25.8);
+
+    /* Borders & Inputs — teal-tinted (#E0EDEC) */
+    --border: oklch(0.936 0.014 191.7);
+    --input: oklch(0.936 0.014 191.7);
+    --ring: oklch(0.738 0.123 193.5);            /* primary teal para focus rings */
+
+    /* Charts — escala del brandbook */
+    --chart-1: oklch(0.959 0.024 193.8);         /* soft teal */
+    --chart-2: oklch(0.738 0.123 193.5);         /* primary */
+    --chart-3: oklch(0.660 0.110 193.3);         /* primary-800 */
+    --chart-4: oklch(0.708 0.176 50.5);          /* secondary orange */
+    --chart-5: oklch(0.589 0.099 193.1);         /* primary-700 */
+
     --radius: 0.625rem;
-    --sidebar: oklch(0.986 0.002 67.8);
-    --sidebar-foreground: oklch(0.147 0.004 49.3);
-    --sidebar-primary: oklch(0.6 0.118 184.704);
-    --sidebar-primary-foreground: oklch(0.984 0.014 180.72);
-    --sidebar-accent: oklch(0.96 0.002 17.2);
-    --sidebar-accent-foreground: oklch(0.214 0.009 43.1);
-    --sidebar-border: oklch(0.922 0.005 34.3);
-    --sidebar-ring: oklch(0.714 0.014 41.2);
+
+    /* Sidebar */
+    --sidebar: oklch(1.000 0 0);                  /* blanco limpio */
+    --sidebar-foreground: oklch(0.276 0.023 248.7); /* text primary */
+    --sidebar-primary: oklch(0.738 0.123 193.5);    /* primary teal */
+    --sidebar-primary-foreground: oklch(1.000 0 0);
+    --sidebar-accent: oklch(0.959 0.024 193.8);     /* soft teal */
+    --sidebar-accent-foreground: oklch(0.276 0.023 248.7);
+    --sidebar-border: oklch(0.936 0.014 191.7);
+    --sidebar-ring: oklch(0.738 0.123 193.5);
+}
+
+/* ChanaDomus Brand Tokens — extended palette */
+:root {
+    /* Brand shades */
+    --brand-primary-800: oklch(0.660 0.110 193.3); /* #12A7A5 */
+    --brand-primary-700: oklch(0.589 0.099 193.1); /* #0E8F8D */
+    --brand-secondary-700: oklch(0.638 0.167 48.3); /* #D96512 */
+
+    /* Status colors */
+    --status-success: oklch(0.676 0.138 157.6);  /* #38B075 */
+    --status-warning: oklch(0.789 0.145 70.0);   /* #F5A842 */
+    --status-error: oklch(0.611 0.207 25.8);     /* #E53B3B */
+    --status-info: oklch(0.637 0.195 259.5);     /* #3A86FF */
+
+    /* Icon backgrounds */
+    --icon-bg-teal: oklch(0.959 0.024 196.9);    /* #E0F7F7 */
+    --icon-bg-orange: oklch(0.972 0.023 75.8);   /* #FFF4E5 */
+    --icon-bg-yellow: oklch(0.980 0.032 95.4);   /* #FFF9E1 */
+
+    /* Accent shades */
+    --accent-warm: oklch(0.805 0.164 91.5);      /* #E6BA00 gold */
+    --accent-main: oklch(0.646 0.217 33.0);      /* #F54623 red-orange */
 }
 
 @layer base {
@@ -110,6 +151,15 @@
     @apply bg-background text-foreground;
     @apply font-sans;
     }
+}
+
+/* Autofill — match input background instead of browser blue/yellow */
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus {
+  -webkit-box-shadow: 0 0 0 1000px oklch(0.955 0.008 198) inset;
+  -webkit-text-fill-color: oklch(0.276 0.023 248.7);
+  transition: background-color 5000s ease-in-out 0s;
 }
 
 /* Page transitions — subtle fade for route changes */

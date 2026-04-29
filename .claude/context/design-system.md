@@ -2,9 +2,9 @@
 
 ## Preset shadcn-vue
 - **Estilo**: reka-luma
-- **Font**: Inter (Google Fonts, variable)
-- **Base color**: taupe
-- **CSS Variables**: habilitadas
+- **Font**: Plus Jakarta Sans (Google Fonts, 400/500/600/700)
+- **Base color**: ChanaDomus brand (teal + orange)
+- **CSS Variables**: habilitadas (OKLCH format)
 - **Menu color**: default-translucent
 - **Menu accent**: subtle
 - **Border radius**: 0.625rem (--radius)
@@ -15,25 +15,37 @@
 - **Dots/Indicadores**: `rounded-full` — SOLO para status dots, ping animations, radio buttons, switches
 - **NO usar**: `rounded-xl`, `rounded-2xl`, `rounded-3xl`, `rounded-4xl` (eliminados del sistema)
 
-## Paleta de Colores (Light)
-- **Primary**: oklch(0.511 0.096 186.391) — teal/verde azulado
-- **Secondary**: oklch(0.967 0.001 286.375)
-- **Destructive**: oklch(0.577 0.245 27.325)
-- **Muted**: oklch(0.96 0.002 17.2)
-- **Background**: oklch(1 0 0) — blanco
-- **Foreground**: oklch(0.147 0.004 49.3) — casi negro
+## Paleta de Colores (Light) — Brandbook ChanaDomus
 
-## Estrategia Responsive (Mobile-First)
-ChanaDomus es PWA — el diseno movil es la experiencia principal.
+### Core tokens (CSS variables en main.css)
+- **Primary**: oklch(0.738 0.123 193.5) — teal #19C2C0
+- **Secondary**: oklch(0.708 0.176 50.5) — orange #F47A1F (identidad de marca)
+- **Accent**: oklch(0.959 0.024 193.8) — soft teal #E0F7F6
+- **Destructive**: oklch(0.611 0.207 25.8) — error #E53B3B
+- **Muted**: oklch(0.936 0.014 191.7) — neutral teal-tinted
+- **Background**: oklch(0.973 0.004 198.1) — #F3F7F7 (tinte teal sutil)
+- **Foreground**: oklch(0.276 0.023 248.7) — #1F2933
+
+### Brand shades (variables --brand-*)
+- **Primary 800**: #12A7A5 (hover, emphasis)
+- **Primary 700**: #0E8F8D (dark variant)
+- **Secondary 700**: #D96512 (hover orange)
+
+### Status colors (variables --status-*)
+- **Success**: #38B075 | **Warning**: #F5A842 | **Error**: #E53B3B | **Info**: #3A86FF
+
+### Icon backgrounds (variables --icon-bg-*)
+- **Teal**: #E0F7F7 | **Orange**: #FFF4E5 | **Yellow**: #FFF9E1
+
+## Estrategia Responsive (Desktop-First)
+Disenar primero para desktop, luego ajustar a tablet y mobile.
 
 | Rol | Dispositivo principal | Breakpoint foco |
 |-----|----------------------|-----------------|
-| Propietario | Movil | `sm` (default) |
-| Vigilancia | Movil/Tablet | `sm` → `md` |
+| Administrador | Desktop | `lg` → `md` |
 | Conserje | Tablet | `md` |
-| Administrador | Desktop | `md` → `lg` |
-
-Siempre disenar en orden: movil → tablet → desktop.
+| Vigilancia | Movil/Tablet | `md` → `sm` |
+| Propietario | Movil | `sm` (default) |
 
 ## Componentes Instalados
 Ver `.claude/state/installed-components.md` para lista actualizada.

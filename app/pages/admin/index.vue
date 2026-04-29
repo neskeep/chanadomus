@@ -12,6 +12,7 @@ import {
   Vote,
   Wallet,
 } from 'lucide-vue-next'
+import { ICON_BG } from '~/composables/useColorMap'
 import { Bar, Line } from 'vue-chartjs'
 import {
   BarElement,
@@ -54,7 +55,7 @@ const accessChartData = computed(() => {
     datasets: [{
       label: 'Accesos',
       data: items.map(i => i.count),
-      backgroundColor: '#3b9b8f',
+      backgroundColor: '#19C2C0',
       borderRadius: 4,
     }],
   }
@@ -65,8 +66,8 @@ const financeChartData = computed(() => {
   return {
     labels: items.map(i => monthLabel(i.month)),
     datasets: [
-      { label: 'Cargos', data: items.map(i => i.cargos), backgroundColor: '#e85d5d', borderRadius: 4 },
-      { label: 'Abonos', data: items.map(i => i.abonos), backgroundColor: '#3b9b8f', borderRadius: 4 },
+      { label: 'Cargos', data: items.map(i => i.cargos), backgroundColor: '#E53B3B', borderRadius: 4 },
+      { label: 'Abonos', data: items.map(i => i.abonos), backgroundColor: '#19C2C0', borderRadius: 4 },
     ],
   }
 })
@@ -78,12 +79,12 @@ const incidentsChartData = computed(() => {
     datasets: [{
       label: 'Incidencias',
       data: items.map(i => i.count),
-      borderColor: '#e09945',
-      backgroundColor: 'rgba(224, 153, 69, 0.15)',
+      borderColor: '#F47A1F',
+      backgroundColor: 'rgba(244, 122, 31, 0.15)',
       fill: true,
       tension: 0.3,
       pointRadius: 3,
-      pointBackgroundColor: '#e09945',
+      pointBackgroundColor: '#F47A1F',
     }],
   }
 })
@@ -132,7 +133,7 @@ const groupedChartOpts = {
       <TabsContent value="resumen" class="mt-4 space-y-5">
         <!-- Next meeting (most time-sensitive first) -->
         <div v-if="stats?.nextMeeting" class="flex items-center gap-3 rounded-lg border bg-card p-4">
-          <div class="flex size-10 items-center justify-center rounded-md bg-emerald-100 text-emerald-600">
+          <div :class="['flex size-10 items-center justify-center rounded-md', ICON_BG.success]">
             <Calendar class="size-5" />
           </div>
           <div class="min-w-0">
@@ -149,14 +150,14 @@ const groupedChartOpts = {
               label="Incidencias abiertas"
               :value="stats?.openIncidents ?? 0"
               :icon="AlertTriangle"
-              icon-bg-class="bg-amber-100 text-amber-600"
+              :icon-bg-class="ICON_BG.warning"
               :is-loading="isLoading"
             />
             <StatCard
               label="En progreso"
               :value="stats?.inProgressIncidents ?? 0"
               :icon="ShieldAlert"
-              icon-bg-class="bg-blue-100 text-blue-600"
+              :icon-bg-class="ICON_BG.info"
               :is-loading="isLoading"
             />
           </div>
@@ -172,14 +173,14 @@ const groupedChartOpts = {
               label="Votaciones activas"
               :value="stats?.activePolls ?? 0"
               :icon="Vote"
-              icon-bg-class="bg-purple-100 text-purple-600"
+              :icon-bg-class="ICON_BG.purple"
               :is-loading="isLoading"
             />
             <StatCard
               label="Reuniones proximas"
               :value="stats?.upcomingMeetings ?? 0"
               :icon="Users"
-              icon-bg-class="bg-emerald-100 text-emerald-600"
+              :icon-bg-class="ICON_BG.success"
               :is-loading="isLoading"
             />
           </div>
@@ -195,14 +196,14 @@ const groupedChartOpts = {
               label="Unidades"
               :value="stats?.totalUnits ?? 0"
               :icon="Home"
-              icon-bg-class="bg-blue-100 text-blue-600"
+              :icon-bg-class="ICON_BG.info"
               :is-loading="isLoading"
             />
             <StatCard
               label="En mora"
               :value="stats?.unitsInDebt ?? 0"
               :icon="Wallet"
-              icon-bg-class="bg-red-100 text-red-600"
+              :icon-bg-class="ICON_BG.danger"
               :is-loading="isLoading"
             />
           </div>
@@ -218,21 +219,21 @@ const groupedChartOpts = {
               label="Cobrado"
               :value="trends?.financialKpis ? formatCurrency(trends.financialKpis.totalAbonos) : '—'"
               :icon="ClipboardCheck"
-              icon-bg-class="bg-emerald-100 text-emerald-600"
+              :icon-bg-class="ICON_BG.success"
               :is-loading="isLoading"
             />
             <StatCard
               label="Pendiente"
               :value="trends?.financialKpis ? formatCurrency(trends.financialKpis.pendingBalance) : '—'"
               :icon="Wallet"
-              icon-bg-class="bg-red-100 text-red-600"
+              :icon-bg-class="ICON_BG.danger"
               :is-loading="isLoading"
             />
             <StatCard
               label="Cobranza"
               :value="trends?.financialKpis ? `${trends.financialKpis.collectionRate.toFixed(1)}%` : '—'"
               :icon="Percent"
-              icon-bg-class="bg-blue-100 text-blue-600"
+              :icon-bg-class="ICON_BG.info"
               :is-loading="isLoading"
             />
           </div>
@@ -247,7 +248,7 @@ const groupedChartOpts = {
             label="Cobrado este mes"
             :value="trends?.financialKpis ? formatCurrency(trends.financialKpis.totalAbonos) : '—'"
             :icon="ClipboardCheck"
-            icon-bg-class="bg-emerald-100 text-emerald-600"
+            :icon-bg-class="ICON_BG.success"
             :is-loading="isLoading"
           />
           <StatCard
@@ -261,21 +262,21 @@ const groupedChartOpts = {
             label="Pendiente total"
             :value="trends?.financialKpis ? formatCurrency(trends.financialKpis.pendingBalance) : '—'"
             :icon="AlertTriangle"
-            icon-bg-class="bg-red-100 text-red-600"
+            :icon-bg-class="ICON_BG.danger"
             :is-loading="isLoading"
           />
           <StatCard
             label="Tasa de cobranza"
             :value="trends?.financialKpis ? `${trends.financialKpis.collectionRate.toFixed(1)}%` : '—'"
             :icon="Percent"
-            icon-bg-class="bg-blue-100 text-blue-600"
+            :icon-bg-class="ICON_BG.info"
             :is-loading="isLoading"
           />
         </div>
 
         <!-- Unidades en mora badge -->
         <div class="flex items-center gap-3 rounded-lg border bg-card p-4">
-          <div class="flex size-10 items-center justify-center rounded-md bg-red-100 text-red-600">
+          <div :class="['flex size-10 items-center justify-center rounded-md', ICON_BG.danger]">
             <Wallet class="size-5" />
           </div>
           <div>
@@ -326,14 +327,14 @@ const groupedChartOpts = {
             label="Abiertas"
             :value="stats?.openIncidents ?? 0"
             :icon="AlertTriangle"
-            icon-bg-class="bg-amber-100 text-amber-600"
+            :icon-bg-class="ICON_BG.warning"
             :is-loading="isLoading"
           />
           <StatCard
             label="En progreso"
             :value="stats?.inProgressIncidents ?? 0"
             :icon="ShieldAlert"
-            icon-bg-class="bg-blue-100 text-blue-600"
+            :icon-bg-class="ICON_BG.info"
             :is-loading="isLoading"
           />
         </div>

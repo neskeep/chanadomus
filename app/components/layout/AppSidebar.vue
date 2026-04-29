@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Building2, PanelLeft } from 'lucide-vue-next'
+import { PanelLeft } from 'lucide-vue-next'
 import { useSidebar } from '~/components/ui/sidebar'
 import { ROLE_REDIRECTS } from '~~/shared/types/auth'
 
@@ -29,12 +29,8 @@ watch(() => route.path, () => {
           <SidebarMenuItem>
             <SidebarMenuButton size="lg" as-child>
               <NuxtLink :to="roleHome">
-                <div class="flex size-8 shrink-0 items-center justify-center rounded-lg bg-primary text-primary-foreground">
-                  <Building2 class="size-4" />
-                </div>
-                <div class="flex flex-col gap-0.5 leading-none">
-                  <span class="font-semibold">ChanaDomus</span>
-                </div>
+                <AppIsotipo class="size-8 shrink-0 group-data-[state=expanded]:hidden" />
+                <AppLogo :height="42" class="group-data-[state=collapsed]:hidden" />
               </NuxtLink>
             </SidebarMenuButton>
           </SidebarMenuItem>

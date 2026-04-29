@@ -31,19 +31,7 @@ const { formatMonthYear } = useFormatDate()
 
 // --- Type / Status helpers ---
 
-const TYPE_COLORS: Record<MeetingType, string> = {
-  ordinaria: 'bg-blue-100 text-blue-700',
-  extraordinaria: 'bg-amber-100 text-amber-700',
-  comite: 'bg-purple-100 text-purple-700',
-  informativa: 'bg-cyan-100 text-cyan-700',
-}
-
-const STATUS_COLORS: Record<MeetingStatus, string> = {
-  programada: 'bg-blue-100 text-blue-700',
-  en_curso: 'bg-emerald-100 text-emerald-700',
-  completada: 'bg-zinc-100 text-zinc-600',
-  cancelada: 'bg-red-100 text-red-700',
-}
+import { MEETING_TYPE_COLORS as TYPE_COLORS, MEETING_STATUS_COLORS as STATUS_COLORS } from '~/composables/useColorMap'
 
 function typeLabel(key: MeetingType): string {
   return MEETING_TYPES.find(t => t.key === key)?.label ?? key
