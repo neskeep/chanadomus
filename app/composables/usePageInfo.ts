@@ -24,6 +24,7 @@ const PAGE_MAP: Record<string, PageInfo> = {
   '/admin/cartelera': { title: 'Cartelera', description: 'Anuncios y comunicados oficiales' },
   '/admin/cartelera/crear': { title: 'Nuevo Anuncio', description: 'Crea un nuevo anuncio para la cartelera', breadcrumbs: [{ label: 'Cartelera', to: '/admin/cartelera' }] },
   '/admin/votaciones': { title: 'Votaciones', description: 'Consultas y decisiones comunitarias' },
+  '/admin/votaciones/crear': { title: 'Nueva Votación', description: 'Crea una nueva votación para la comunidad', breadcrumbs: [{ label: 'Votaciones', to: '/admin/votaciones' }] },
   '/admin/reuniones': { title: 'Reuniones', description: 'Calendario de asambleas y juntas' },
 
   // Propietario

@@ -9,7 +9,6 @@ import {
   Loader2,
   Calendar,
   FileText,
-  X,
 } from 'lucide-vue-next'
 import { toast } from 'vue-sonner'
 import type { Poll, PollStatus } from '~~/shared/types/poll'
@@ -27,7 +26,6 @@ const {
   error,
   totalPages,
   fetchPolls,
-  createPoll,
   updatePoll,
   publishPoll,
   closePoll,
@@ -54,7 +52,6 @@ const formTitle = ref('')
 const formDescription = ref('')
 const formStatus = ref<'draft' | 'active'>('draft')
 const formDeadline = ref('')
-const formOptions = ref<string[]>(['', ''])
 
 // Delete dialog
 const deleteId = ref<string | null>(null)
@@ -105,13 +102,6 @@ function resetForm() {
   formDescription.value = ''
   formStatus.value = 'draft'
   formDeadline.value = ''
-  formOptions.value = ['', '']
-}
-
-function openCreateDialog() {
-  editingId.value = null
-  resetForm()
-  dialogOpen.value = true
 }
 
 function openEditDialog(poll: Poll) {
@@ -120,47 +110,23 @@ function openEditDialog(poll: Poll) {
   formDescription.value = poll.description ?? ''
   formStatus.value = poll.status === 'closed' ? 'draft' : poll.status
   formDeadline.value = poll.deadline ? poll.deadline.split('T')[0] : ''
-  formOptions.value = poll.options?.map(o => o.text) ?? ['', '']
   dialogOpen.value = true
 }
 
-function addOption() {
-  formOptions.value.push('')
-}
-
-function removeOption(index: number) {
-  if (formOptions.value.length <= 2) return
-  formOptions.value.splice(index, 1)
-}
-
-const canSubmit = computed(() => {
-  const hasTitle = formTitle.value.trim().length > 0
-  const validOptions = formOptions.value.filter(o => o.trim().length > 0)
-  return hasTitle && validOptions.length >= 2 && !isSubmitting.value
-})
+const canSubmit = computed(() =>
+  formTitle.value.trim().length > 0 && !isSubmitting.value,
+)
 
 async function handleSubmit() {
+  if (!editingId.value) return
   try {
-    if (editingId.value) {
-      await updatePoll(editingId.value, {
-        title: formTitle.value,
-        description: formDescription.value || null,
-        status: formStatus.value,
-        deadline: formDeadline.value || null,
-      })
-      toast.success('Votación actualizada correctamente')
-    }
-    else {
-      const options = formOptions.value.filter(o => o.trim().length > 0)
-      await createPoll({
-        title: formTitle.value,
-        description: formDescription.value || undefined,
-        status: formStatus.value,
-        deadline: formDeadline.value || undefined,
-        options,
-      })
-      toast.success('Votación creada correctamente')
-    }
+    await updatePoll(editingId.value, {
+      title: formTitle.value,
+      description: formDescription.value || null,
+      status: formStatus.value,
+      deadline: formDeadline.value || null,
+    })
+    toast.success('Votación actualizada correctamente')
     dialogOpen.value = false
     await loadPolls()
   }
@@ -226,10 +192,12 @@ function participationText(poll: Poll): string {
           <TopbarFilterGroup v-model="filterStatus" label="Estado" :options="statusOptions" />
         </TopbarFilters>
       </TopbarSearch>
-      <Button size="sm" @click="openCreateDialog">
-        <Plus class="mr-1.5 size-3.5" />
-        Nuevo
-      </Button>
+      <NuxtLink to="/admin/votaciones/crear">
+        <Button size="sm">
+          <Plus class="mr-1.5 size-3.5" />
+          Nuevo
+        </Button>
+      </NuxtLink>
     </Teleport>
 
     <!-- Stats cards -->
@@ -432,13 +400,13 @@ function participationText(poll: Poll): string {
       <ListPagination v-model:current-page="currentPage" :total-pages="totalPages" class="mt-4" />
     </div>
 
-    <!-- Create/Edit Sheet -->
+    <!-- Edit Sheet -->
     <Sheet v-model:open="dialogOpen">
       <SheetContent side="right" class="overflow-y-auto sm:max-w-lg">
         <SheetHeader>
-          <SheetTitle>{{ editingId ? 'Editar Votación' : 'Nueva Votación' }}</SheetTitle>
+          <SheetTitle>Editar Votación</SheetTitle>
           <SheetDescription>
-            {{ editingId ? 'Modifica los datos de la votación' : 'Completa los datos para crear una nueva votación' }}
+            Modifica los datos de la votación
           </SheetDescription>
         </SheetHeader>
 
@@ -463,40 +431,6 @@ function participationText(poll: Poll): string {
               rows="3"
               class="mt-1.5"
             />
-          </div>
-
-          <!-- Dynamic options -->
-          <div v-if="!editingId">
-            <Label>Opciones de voto</Label>
-            <div class="mt-1.5 space-y-2">
-              <div v-for="(_, index) in formOptions" :key="index" class="flex gap-2">
-                <Input
-                  v-model="formOptions[index]"
-                  :placeholder="`Opción ${index + 1}`"
-                  class="h-12 flex-1"
-                  required
-                />
-                <Button
-                  v-if="formOptions.length > 2"
-                  type="button"
-                  variant="ghost"
-                  size="icon"
-                  class="size-9 shrink-0 text-muted-foreground hover:text-destructive"
-                  @click="removeOption(index)"
-                >
-                  <X class="size-4" />
-                </Button>
-              </div>
-              <Button
-                type="button"
-                variant="outline"
-                class="h-12 w-full"
-                @click="addOption"
-              >
-                <Plus class="mr-1.5 size-4" />
-                Agregar opción
-              </Button>
-            </div>
           </div>
 
           <div>
@@ -531,7 +465,7 @@ function participationText(poll: Poll): string {
             </Button>
             <Button type="submit" :disabled="!canSubmit">
               <Loader2 v-if="isSubmitting" class="mr-2 size-4 animate-spin" />
-              {{ isSubmitting ? 'Guardando...' : (editingId ? 'Guardar cambios' : 'Crear votación') }}
+              {{ isSubmitting ? 'Guardando...' : 'Guardar cambios' }}
             </Button>
           </div>
         </form>
