@@ -26,7 +26,7 @@ const emit = defineEmits<{
     <PopoverContent
       align="end"
       :side-offset="8"
-      class="!w-56 !gap-0 !p-0 !shadow-md !ring-border"
+      class="w-56 p-0"
     >
       <div class="space-y-3 p-2.5">
         <slot />

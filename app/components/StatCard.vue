@@ -32,7 +32,7 @@ withDefaults(defineProps<Props>(), {
         </template>
         <template v-else>
           <p class="text-sm text-muted-foreground">{{ label }}</p>
-          <p class="text-2xl font-bold tracking-tight">{{ value }}</p>
+          <p class="text-2xl font-bold tabular-nums tracking-tight">{{ value }}</p>
         </template>
       </div>
       <div class="flex size-10 items-center justify-center rounded-lg" :class="iconBgClass">
