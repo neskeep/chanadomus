@@ -551,7 +551,7 @@ function renderStars(rating: number | undefined): number[] {
           <div class="space-y-2">
             <Label for="prov-category">Categoria</Label>
             <Select v-model="formCategory">
-              <SelectTrigger id="prov-category" class="h-12">
+              <SelectTrigger id="prov-category" size="lg">
                 <SelectValue placeholder="Seleccionar categoria" />
               </SelectTrigger>
               <SelectContent>

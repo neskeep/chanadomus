@@ -465,7 +465,7 @@ onMounted(() => {
           <div class="space-y-2">
             <Label for="member-relationship">Parentesco</Label>
             <Select v-model="memberForm.relationship">
-              <SelectTrigger id="member-relationship" class="h-12">
+              <SelectTrigger id="member-relationship" size="lg">
                 <SelectValue placeholder="Seleccionar parentesco" />
               </SelectTrigger>
               <SelectContent>
@@ -594,7 +594,7 @@ onMounted(() => {
           <div class="space-y-2">
             <Label for="vehicle-owner">Propietario</Label>
             <Select v-model="vehicleForm.ownerMemberId">
-              <SelectTrigger id="vehicle-owner" class="h-12">
+              <SelectTrigger id="vehicle-owner" size="lg">
                 <SelectValue placeholder="Seleccionar miembro (opcional)" />
               </SelectTrigger>
               <SelectContent>

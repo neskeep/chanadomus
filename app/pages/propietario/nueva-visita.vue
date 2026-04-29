@@ -5,10 +5,6 @@ import QRCode from 'qrcode'
 
 useHead({ title: 'Nueva Visita' })
 
-const pageOverride = computed(() => ({
-  breadcrumbs: [{ label: 'Mis Visitas', to: '/propietario/mis-visitas' }],
-}))
-usePageInfoOverride(pageOverride)
 const { user } = useAuth()
 const { generateQr, isGenerating, error } = useQr()
 
@@ -178,7 +174,7 @@ const { formatDateTime } = useFormatDate()
         <div class="space-y-1.5">
           <Label for="visitor-type">Tipo de visita</Label>
           <Select v-model="visitorType">
-            <SelectTrigger id="visitor-type" class="h-12 w-full text-base">
+            <SelectTrigger id="visitor-type" size="lg" class="w-full text-base">
               <SelectValue placeholder="Seleccionar tipo" />
             </SelectTrigger>
             <SelectContent>

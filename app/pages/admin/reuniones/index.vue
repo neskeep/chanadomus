@@ -452,7 +452,7 @@ async function handleDelete() {
           <div class="space-y-2">
             <Label for="meet-type">Tipo</Label>
             <Select v-model="formType">
-              <SelectTrigger id="meet-type" class="h-12">
+              <SelectTrigger id="meet-type" size="lg">
                 <SelectValue placeholder="Seleccionar tipo" />
               </SelectTrigger>
               <SelectContent>
@@ -478,7 +478,7 @@ async function handleDelete() {
             <div class="space-y-2">
               <Label for="meet-status">Estado</Label>
               <Select v-model="formStatus">
-                <SelectTrigger id="meet-status" class="h-12">
+                <SelectTrigger id="meet-status" size="lg">
                   <SelectValue placeholder="Seleccionar estado" />
                 </SelectTrigger>
                 <SelectContent>

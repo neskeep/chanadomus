@@ -5,10 +5,6 @@ import type { IncidentPriority } from '~~/shared/types/incident'
 
 useHead({ title: 'Reportar Incidencia' })
 
-const pageOverride = computed(() => ({
-  breadcrumbs: [{ label: 'Mis Incidencias', to: '/propietario/incidencias' }],
-}))
-usePageInfoOverride(pageOverride)
 const router = useRouter()
 const { isCreating, error, createIncident } = useIncidents()
 
@@ -119,7 +115,7 @@ onUnmounted(() => {
           <div class="space-y-1.5">
             <Label for="priority">Prioridad</Label>
             <Select v-model="priority">
-              <SelectTrigger id="priority" class="h-12 w-full text-base">
+              <SelectTrigger id="priority" size="lg" class="w-full text-base">
                 <SelectValue placeholder="Selecciona prioridad" />
               </SelectTrigger>
               <SelectContent>

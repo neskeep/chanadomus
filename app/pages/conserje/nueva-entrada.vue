@@ -125,7 +125,7 @@ async function submit(result: 'allowed' | 'denied') {
         <div class="space-y-1.5">
           <Label for="unit-select">Unidad destino <span class="text-destructive">*</span></Label>
           <Select v-model="form.unitId">
-            <SelectTrigger id="unit-select" class="h-12 w-full text-base">
+            <SelectTrigger id="unit-select" size="lg" class="w-full text-base">
               <SelectValue placeholder="Seleccionar unidad" />
             </SelectTrigger>
             <SelectContent>

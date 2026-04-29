@@ -515,7 +515,7 @@ function participationText(poll: Poll): string {
           <div>
             <Label for="poll-status">Estado</Label>
             <Select v-model="formStatus">
-              <SelectTrigger id="poll-status" class="h-12 mt-1.5">
+              <SelectTrigger id="poll-status" size="lg" class="mt-1.5">
                 <SelectValue placeholder="Seleccionar estado" />
               </SelectTrigger>
               <SelectContent>

@@ -443,7 +443,7 @@ function handlePdfSelect(event: Event) {
           <div>
             <label for="ann-category" class="text-sm font-medium">Categoría</label>
             <Select v-model="formCategory">
-              <SelectTrigger id="ann-category" class="h-12 mt-1.5">
+              <SelectTrigger id="ann-category" size="lg" class="mt-1.5">
                 <SelectValue placeholder="Seleccionar categoría" />
               </SelectTrigger>
               <SelectContent>
@@ -460,7 +460,7 @@ function handlePdfSelect(event: Event) {
           <div>
             <label for="ann-status" class="text-sm font-medium">Estado</label>
             <Select v-model="formStatus">
-              <SelectTrigger id="ann-status" class="h-12 mt-1.5">
+              <SelectTrigger id="ann-status" size="lg" class="mt-1.5">
                 <SelectValue placeholder="Seleccionar estado" />
               </SelectTrigger>
               <SelectContent>

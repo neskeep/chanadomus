@@ -305,7 +305,7 @@ onMounted(() => {
           <div class="space-y-2">
             <Label for="staff-role">Rol *</Label>
             <Select v-model="formRole">
-              <SelectTrigger id="staff-role" class="h-12">
+              <SelectTrigger id="staff-role" size="lg">
                 <SelectValue placeholder="Seleccionar rol" />
               </SelectTrigger>
               <SelectContent>
@@ -353,7 +353,7 @@ onMounted(() => {
           <div class="space-y-2">
             <Label for="staff-shift">Turno</Label>
             <Select v-model="formShift">
-              <SelectTrigger id="staff-shift" class="h-12">
+              <SelectTrigger id="staff-shift" size="lg">
                 <SelectValue placeholder="Seleccionar turno" />
               </SelectTrigger>
               <SelectContent>

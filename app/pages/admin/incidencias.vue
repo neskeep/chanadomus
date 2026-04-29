@@ -305,7 +305,7 @@ const { formatDate, formatDateTime } = useFormatDate()
             <div class="space-y-3">
               <p class="text-sm font-medium">Cambiar estado</p>
               <Select v-model="newStatus">
-                <SelectTrigger class="h-12">
+                <SelectTrigger size="lg">
                   <SelectValue placeholder="Seleccionar nuevo estado" />
                 </SelectTrigger>
                 <SelectContent>
