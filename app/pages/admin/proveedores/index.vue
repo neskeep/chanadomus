@@ -14,7 +14,6 @@ import type {
   Provider,
   ProviderCategory,
   ProviderStatus,
-  CreateProvider,
   UpdateProvider,
 } from '~~/shared/types/provider'
 import { PROVIDER_CATEGORIES } from '~~/shared/types/provider'
@@ -29,7 +28,6 @@ const {
   error,
   totalPages,
   fetchProviders,
-  createProvider,
   updateProvider,
   deleteProvider,
 } = useProviders()
@@ -137,12 +135,6 @@ function resetForm() {
   formNotes.value = ''
 }
 
-function openCreateDialog() {
-  editingId.value = null
-  resetForm()
-  dialogOpen.value = true
-}
-
 function openEditDialog(provider: Provider) {
   editingId.value = provider.id
   formName.value = provider.name
@@ -161,40 +153,24 @@ const canSubmit = computed(() =>
 )
 
 async function handleSubmit() {
-  if (!canSubmit.value) return
+  if (!canSubmit.value || !editingId.value) return
   try {
     const services = formServices.value.trim()
       ? formServices.value.trim().split('\n').filter(Boolean)
       : undefined
 
-    if (editingId.value) {
-      const data: UpdateProvider = {
-        name: formName.value.trim(),
-        phone: formPhone.value.trim() || null,
-        category: formCategory.value,
-        address: formAddress.value.trim() || null,
-        schedule: formSchedule.value.trim() || null,
-        services: services ?? null,
-        costs: formCosts.value.trim() || null,
-        notes: formNotes.value.trim() || null,
-      }
-      await updateProvider(editingId.value, data)
-      toast.success('Proveedor actualizado')
+    const data: UpdateProvider = {
+      name: formName.value.trim(),
+      phone: formPhone.value.trim() || null,
+      category: formCategory.value,
+      address: formAddress.value.trim() || null,
+      schedule: formSchedule.value.trim() || null,
+      services: services ?? null,
+      costs: formCosts.value.trim() || null,
+      notes: formNotes.value.trim() || null,
     }
-    else {
-      const data: CreateProvider = {
-        name: formName.value.trim(),
-        phone: formPhone.value.trim() || undefined,
-        category: formCategory.value,
-        address: formAddress.value.trim() || undefined,
-        schedule: formSchedule.value.trim() || undefined,
-        services,
-        costs: formCosts.value.trim() || undefined,
-        notes: formNotes.value.trim() || undefined,
-      }
-      await createProvider(data)
-      toast.success('Proveedor creado')
-    }
+    await updateProvider(editingId.value, data)
+    toast.success('Proveedor actualizado')
     dialogOpen.value = false
     await loadProviders()
   }
@@ -272,10 +248,12 @@ function renderStars(rating: number | undefined): number[] {
           <TopbarFilterGroup v-model="filterStatus" label="Estado" :options="providerStatusOptions" />
         </TopbarFilters>
       </TopbarSearch>
-      <Button size="sm" @click="openCreateDialog">
-        <Plus class="mr-1.5 size-3.5" />
-        Nuevo
-      </Button>
+      <NuxtLink to="/admin/proveedores/crear">
+        <Button size="sm">
+          <Plus class="mr-1.5 size-3.5" />
+          Nuevo
+        </Button>
+      </NuxtLink>
     </Teleport>
 
     <!-- Stats cards -->
@@ -349,10 +327,12 @@ function renderStars(rating: number | undefined): number[] {
       :description="filterCategory || filterStatus ? 'Prueba cambiando los filtros' : 'Crea el primer proveedor del directorio'"
     >
       <template #action>
-        <Button @click="openCreateDialog">
-          <Plus class="mr-1.5 size-4" />
-          Nuevo Proveedor
-        </Button>
+        <NuxtLink to="/admin/proveedores/crear">
+          <Button>
+            <Plus class="mr-1.5 size-4" />
+            Nuevo Proveedor
+          </Button>
+        </NuxtLink>
       </template>
     </EmptyState>
 
@@ -531,9 +511,9 @@ function renderStars(rating: number | undefined): number[] {
     <Sheet v-model:open="dialogOpen">
       <SheetContent class="overflow-y-auto sm:max-w-lg">
         <SheetHeader>
-          <SheetTitle>{{ editingId ? 'Editar Proveedor' : 'Nuevo Proveedor' }}</SheetTitle>
+          <SheetTitle>Editar Proveedor</SheetTitle>
           <SheetDescription>
-            {{ editingId ? 'Modifica los datos del proveedor' : 'Completa los datos para agregar un proveedor' }}
+            Modifica los datos del proveedor
           </SheetDescription>
         </SheetHeader>
 
@@ -598,7 +578,7 @@ function renderStars(rating: number | undefined): number[] {
             </Button>
             <Button type="submit" :disabled="!canSubmit">
               <Loader2 v-if="isSubmitting" class="mr-2 size-4 animate-spin" />
-              {{ isSubmitting ? 'Guardando...' : (editingId ? 'Guardar cambios' : 'Crear proveedor') }}
+              {{ isSubmitting ? 'Guardando...' : 'Guardar cambios' }}
             </Button>
           </div>
         </form>

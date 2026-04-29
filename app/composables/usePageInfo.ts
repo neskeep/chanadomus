@@ -20,6 +20,7 @@ const PAGE_MAP: Record<string, PageInfo> = {
   '/admin/personal': { title: 'Personal', description: 'Equipo de trabajo del condominio' },
   '/admin/personal/crear': { title: 'Agregar Personal', description: 'Registra un nuevo miembro del equipo', breadcrumbs: [{ label: 'Personal', to: '/admin/personal' }] },
   '/admin/proveedores': { title: 'Proveedores', description: 'Directorio de servicios contratados' },
+  '/admin/proveedores/crear': { title: 'Nuevo Proveedor', description: 'Agrega un proveedor al directorio', breadcrumbs: [{ label: 'Proveedores', to: '/admin/proveedores' }] },
   '/admin/cartelera': { title: 'Cartelera', description: 'Anuncios y comunicados oficiales' },
   '/admin/votaciones': { title: 'Votaciones', description: 'Consultas y decisiones comunitarias' },
   '/admin/reuniones': { title: 'Reuniones', description: 'Calendario de asambleas y juntas' },
