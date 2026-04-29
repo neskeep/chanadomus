@@ -1,44 +1,44 @@
 # Estado de Sesion — ChanaDomus
 
 ## Ultima Sesion
-- **Fecha**: 2026-04-27
-- **Sesion #**: 27
-- **Fase**: Fase 5 — Rediseno UI (M5.3 Dashboards + M5.4 Listados/Formularios)
+- **Fecha**: 2026-04-28
+- **Sesion #**: 37
+- **Fase**: Fase 5 — Rediseno UI, Ola 4 COMPLETADA
 - **Version**: v0.16.1 (sin tag nuevo, cambios en dev)
 - **Branch**: dev
 - **Tag**: v0.16.1
 - **Push**: pendiente
 
-## Resumen Session 27
+## Resumen Session 37
 
-### Fase 3: Dashboards Modernizados (4 paginas)
-- **Admin dashboard**: 9+ StatCards en 3 tabs, useFormatDate reemplaza helpers locales
-- **Propietario dashboard**: StatCard + 4 quick actions + greeting con fecha
-- **Vigilancia dashboard**: Hero card "Accesos Hoy" con badge En Vivo + 3 StatCards + 3 quick actions
-- **Conserje dashboard**: StatCard + 3 quick actions + greeting con fecha
+### Ola 4: Listados y CRUD — COMPLETADA (4 sub-olas)
 
-### Fase 4a: Patrones duplicados reemplazados (5 paginas admin + propietario)
-- EmptyState, ErrorAlert, ListPagination, ListSkeleton, FilterTabs aplicados en:
-  - admin/cartelera, admin/reuniones, admin/votaciones
-  - mi-chana/cartelera, mi-chana/votaciones
+**4.2 Propietario** (6 paginas):
+- estado-cuenta: ErrorAlert, EmptyState, ListSkeleton, hero cleanup, compact 2-row movements
+- mis-visitas: ErrorAlert, EmptyState, ListSkeleton, compact 2-row QR cards
+- nueva-visita: ErrorAlert, Card wrapper p-4, import cleanup
+- incidencias/index: ErrorAlert, EmptyState, ListSkeleton, ListPagination, compact 2-row, Sheet detalle
+- incidencias/nueva: Card wrapper, field spacing 1.5, required markers
+- informes: ErrorAlert, EmptyState, ListSkeleton, ListPagination, compact 2-row, inline PDF ghost
 
-### Fase 4b: Dialog migrado a Sheet (3 paginas admin)
-- admin/cartelera, admin/reuniones, admin/votaciones: Dialog → Sheet side="right"
+**4.3 Vigilancia + Conserje** (2 changed, 3 already done):
+- residentes/[id]: Compact padding, removed owner bg anti-pattern, size-10 avatars
+- conserje/nueva-entrada: ErrorAlert, Card wrapper, removed border-l-4, h-12 inputs, brand colors
 
-### Fase 4c: Vista accesos modernizada
-- vigilancia/accesos: EmptyState, cleanup min-h-screen, sticky top-0
+**4.4 Mi-Chana** (7 paginas):
+- cartelera: Compact padding, hover:bg-muted/50
+- votaciones: Removed border-primary/30 anti-pattern
+- proveedores/index: ErrorAlert, EmptyState, ListSkeleton, ListPagination, hover fix
+- proveedores/[id]: ErrorAlert, EmptyState for reviews
+- reuniones: ErrorAlert, ListSkeleton, EmptyState
+- notificaciones: ErrorAlert in-card
+- chat/index: ErrorAlert, EmptyState dynamic
 
-### Bugs corregidos
-1. **useSidebar not defined** — Faltaba import en AppSidebar.vue
-2. **Hydration mismatch x3** — `new Date()` en computed/template movido a `ref('') + onMounted()` en propietario, vigilancia, conserje
+### Build: PASSING
+### Errores pre-existentes: server/api/finance/ (TypeScript strict)
 
-### Metricas
-- 20 archivos modificados, -223 lineas netas
-- Build: PASSING
-
-## Pendientes para Session 28
-1. **F5**: Reemplazar formatDate/formatTime locales en paginas restantes (incidencias, visitas, estado-cuenta, chat, proveedores, reuniones propietario, acceso/[token])
-2. **F6**: Migrar Dialog → Sheet en admin/incidencias, admin/unidades, admin/personal
-3. **F7**: Polish final — /polish, /audit, /adapt en todas las vistas
-4. **Button circular dep warning**: button/index.ts ↔ Button.vue (preexistente, no critico)
-5. **Merge dev → main** cuando rediseno este completo
+## Pendientes para Session 38
+1. **Ola 5**: Paginas especiales (escanear, chat/[roomId], acceso/[token])
+2. **Polish pass**: /polish cross-page despues de Ola 5
+3. **Merge dev -> main** cuando rediseno completo
+4. **Tag v0.17.0** para el rediseno UI completo
