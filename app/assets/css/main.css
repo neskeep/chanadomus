@@ -194,6 +194,12 @@ a[data-slot="button"]:active {
   transform: scale(0.98);
 }
 
+/* QR scanner viewfinder line animation */
+@keyframes scan {
+  0%, 100% { top: 0.75rem; }
+  50% { top: calc(100% - 0.75rem); }
+}
+
 /* Respect reduced motion preferences */
 @media (prefers-reduced-motion: reduce) {
   .page-enter-active,

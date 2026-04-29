@@ -70,10 +70,10 @@ const statusConfig: Record<ValidationStatus, { label: string; bg: string; icon: 
             <div class="absolute -inset-[2000px] bg-black/40 [clip-path:polygon(0_0,100%_0,100%_100%,0_100%,0_0,calc(50%-7rem)_calc(50%-7rem),calc(50%-7rem)_calc(50%+7rem),calc(50%+7rem)_calc(50%+7rem),calc(50%+7rem)_calc(50%-7rem),calc(50%-7rem)_calc(50%-7rem))] sm:[clip-path:polygon(0_0,100%_0,100%_100%,0_100%,0_0,calc(50%-8rem)_calc(50%-8rem),calc(50%-8rem)_calc(50%+8rem),calc(50%+8rem)_calc(50%+8rem),calc(50%+8rem)_calc(50%-8rem),calc(50%-8rem)_calc(50%-8rem))]" />
 
             <!-- Corner brackets -->
-            <div class="absolute left-0 top-0 h-10 w-10 border-l-[3px] border-t-[3px] border-white rounded-tl-xl" />
-            <div class="absolute right-0 top-0 h-10 w-10 border-r-[3px] border-t-[3px] border-white rounded-tr-xl" />
-            <div class="absolute bottom-0 left-0 h-10 w-10 border-b-[3px] border-l-[3px] border-white rounded-bl-xl" />
-            <div class="absolute bottom-0 right-0 h-10 w-10 border-b-[3px] border-r-[3px] border-white rounded-br-xl" />
+            <div class="absolute left-0 top-0 h-10 w-10 border-l-[3px] border-t-[3px] border-white rounded-tl-lg" />
+            <div class="absolute right-0 top-0 h-10 w-10 border-r-[3px] border-t-[3px] border-white rounded-tr-lg" />
+            <div class="absolute bottom-0 left-0 h-10 w-10 border-b-[3px] border-l-[3px] border-white rounded-bl-lg" />
+            <div class="absolute bottom-0 right-0 h-10 w-10 border-b-[3px] border-r-[3px] border-white rounded-br-lg" />
 
             <!-- Scan line animation -->
             <div class="absolute inset-x-3 top-3 h-0.5 animate-[scan_2s_ease-in-out_infinite] rounded-full bg-white/80 shadow-[0_0_8px_rgba(255,255,255,0.5)]" />
@@ -108,7 +108,7 @@ const statusConfig: Record<ValidationStatus, { label: string; bg: string; icon: 
           <!-- Status icon -->
           <div
             :class="[statusConfig[scanResult.status].accent]"
-            class="flex size-24 items-center justify-center rounded-full bg-white/10 ring-4 backdrop-blur-sm"
+            class="flex size-24 items-center justify-center rounded-full bg-white/10 ring-2 backdrop-blur-sm"
           >
             <CheckCircle2
               v-if="scanResult.status === 'valid'"
@@ -138,7 +138,7 @@ const statusConfig: Record<ValidationStatus, { label: string; bg: string; icon: 
           <!-- Visitor details -->
           <div
             v-if="scanResult.visitorName || scanResult.unitNumber"
-            class="mt-6 w-full max-w-xs space-y-3 rounded-2xl bg-white/10 p-4 backdrop-blur-sm"
+            class="mt-6 w-full max-w-xs space-y-3 rounded-lg bg-white/10 p-4 backdrop-blur-sm"
           >
             <div v-if="scanResult.visitorName" class="flex items-center gap-3">
               <User class="size-4 shrink-0 text-white/50" />
@@ -160,7 +160,7 @@ const statusConfig: Record<ValidationStatus, { label: string; bg: string; icon: 
 
           <!-- Scan again button -->
           <Button
-            class="mt-8 h-12 gap-2 rounded-full px-8 text-base"
+            class="mt-8 h-12 gap-2 px-8 text-base"
             @click="resetScan"
           >
             <RotateCcw class="size-4" />
@@ -181,7 +181,7 @@ const statusConfig: Record<ValidationStatus, { label: string; bg: string; icon: 
         <div
           v-if="error"
           role="alert"
-          class="absolute inset-x-4 top-4 rounded-xl border border-red-500/30 bg-red-950/80 p-3 text-sm text-red-200 backdrop-blur-sm"
+          class="absolute inset-x-4 top-4 rounded-lg border border-red-500/30 bg-red-950/80 p-3 text-sm text-red-200 backdrop-blur-sm"
         >
           {{ error }}
         </div>
@@ -193,7 +193,7 @@ const statusConfig: Record<ValidationStatus, { label: string; bg: string; icon: 
         class="absolute inset-0 flex flex-col items-center justify-center gap-5 bg-black/80"
         @click="startScanning"
       >
-        <div class="flex size-20 items-center justify-center rounded-full bg-white/10 ring-1 ring-white/20">
+        <div class="flex size-20 items-center justify-center rounded-full bg-white/10 ring-2 ring-white/20">
           <Camera class="size-10 text-white/70" />
         </div>
         <p class="text-lg font-medium text-white/80">Toque para iniciar</p>
@@ -201,10 +201,3 @@ const statusConfig: Record<ValidationStatus, { label: string; bg: string; icon: 
     </div>
   </div>
 </template>
-
-<style>
-@keyframes scan {
-  0%, 100% { top: 0.75rem; }
-  50% { top: calc(100% - 0.75rem); }
-}
-</style>

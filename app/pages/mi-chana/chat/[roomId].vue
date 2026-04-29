@@ -208,7 +208,7 @@ onBeforeUnmount(() => {
           <Skeleton v-if="i % 2 !== 0" class="size-7 shrink-0 rounded-full" />
           <div :class="i % 2 === 0 ? 'items-end' : 'items-start'" class="flex flex-col gap-1">
             <Skeleton v-if="i % 2 !== 0" class="h-3 w-16" />
-            <Skeleton class="h-8 rounded-2xl" :class="i % 2 === 0 ? 'w-40' : 'w-48'" />
+            <Skeleton class="h-8 rounded-lg" :class="i % 2 === 0 ? 'w-40' : 'w-48'" />
           </div>
         </div>
       </div>
@@ -232,7 +232,7 @@ onBeforeUnmount(() => {
               :key="msg.id"
               class="max-w-[80%]"
             >
-              <div class="rounded-2xl rounded-br-md bg-primary px-3 py-2 text-primary-foreground">
+              <div class="rounded-lg rounded-br-sm bg-primary px-3 py-2 text-primary-foreground">
                 <p class="text-sm whitespace-pre-wrap break-words">{{ msg.content }}</p>
               </div>
               <p
@@ -263,7 +263,7 @@ onBeforeUnmount(() => {
                 :key="msg.id"
                 class="max-w-[80%]"
               >
-                <div class="rounded-2xl rounded-bl-md bg-muted px-3 py-2">
+                <div class="rounded-lg rounded-bl-sm bg-muted px-3 py-2">
                   <p class="text-sm whitespace-pre-wrap break-words">{{ msg.content }}</p>
                 </div>
                 <p

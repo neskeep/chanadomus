@@ -26,12 +26,12 @@ async function handleSubmit() {
 <template>
   <div>
     <!-- Branding -->
-    <div class="mb-10 flex justify-center">
-      <AppLogo :height="56" />
+    <div class="mb-8 flex justify-center md:mb-10">
+      <AppLogo :height="48" />
     </div>
 
     <!-- Form -->
-    <form class="flex flex-col gap-6" @submit.prevent="handleSubmit">
+    <form class="flex flex-col gap-5 md:gap-6" @submit.prevent="handleSubmit">
       <!-- Error -->
       <div
         v-if="error"
@@ -41,8 +41,8 @@ async function handleSubmit() {
         {{ error }}
       </div>
 
-      <div class="flex flex-col gap-2.5">
-        <Label for="email" class="text-base font-medium">Correo electrónico</Label>
+      <div class="flex flex-col gap-2">
+        <Label for="email" class="text-sm font-medium md:text-base">Correo electrónico</Label>
         <Input
           id="email"
           v-model="email"
@@ -50,12 +50,12 @@ async function handleSubmit() {
           placeholder="joe.doe@chanadomus.com"
           required
           autocomplete="email"
-          class="h-14 text-lg"
+          class="h-11 text-base md:h-14 md:text-lg"
         />
       </div>
 
-      <div class="flex flex-col gap-2.5">
-        <Label for="password" class="text-base font-medium">Contraseña</Label>
+      <div class="flex flex-col gap-2">
+        <Label for="password" class="text-sm font-medium md:text-base">Contraseña</Label>
         <div class="relative">
           <Input
             id="password"
@@ -64,7 +64,7 @@ async function handleSubmit() {
             placeholder="••••••••"
             required
             autocomplete="current-password"
-            class="h-14 pr-12 text-lg"
+            class="h-11 pr-12 text-base md:h-14 md:text-lg"
           />
           <button
             type="button"
@@ -81,7 +81,7 @@ async function handleSubmit() {
       <Button
         type="submit"
         variant="default"
-        class="mt-2 h-14 w-full text-lg font-semibold"
+        class="mt-2 h-11 w-full text-base font-semibold md:h-14 md:text-lg"
         :disabled="loading"
       >
         {{ loading ? 'Ingresando...' : 'Ingresar' }}
