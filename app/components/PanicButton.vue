@@ -78,7 +78,7 @@ onUnmounted(() => {
         ? 'bg-green-600 text-white'
         : isHolding
           ? 'scale-110 bg-red-600 text-white ring-2 ring-red-300'
-          : 'text-red-600 hover:bg-red-100 dark:hover:bg-red-900/30',
+          : 'text-red-600 hover:bg-red-100',
     ]"
     :disabled="isLoading"
     :title="isTriggered ? 'Alerta enviada' : 'Manten presionado para alerta de panico'"

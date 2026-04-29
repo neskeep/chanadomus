@@ -3,7 +3,7 @@ import { Bell, BellOff, Loader2 } from 'lucide-vue-next'
 import { PUSH_CATEGORIES } from '~~/shared/types/push-preferences'
 import type { PushCategory } from '~~/shared/types/push-preferences'
 
-definePageMeta({ title: 'Notificaciones' })
+useHead({ title: 'Notificaciones' })
 
 const { preferences, isLoading, isSaving, error, fetchPreferences, toggleCategory } = usePushPreferences()
 const { isSupported, permission, isSubscribed, subscribe, checkSubscription } = usePushNotifications()
@@ -29,7 +29,7 @@ function handleToggle(category: PushCategory, enabled: boolean) {
 </script>
 
 <template>
-  <div class="mx-auto max-w-lg space-y-6">
+  <div class="space-y-6">
     <!-- Push Subscription Status -->
     <Card class="p-4">
       <div class="flex items-center justify-between gap-4">
@@ -79,7 +79,7 @@ function handleToggle(category: PushCategory, enabled: boolean) {
             <Skeleton class="h-4 w-28" />
             <Skeleton class="h-3 w-48" />
           </div>
-          <Skeleton class="h-5 w-9 rounded-full" />
+          <Skeleton class="h-5 w-9 rounded-lg" />
         </div>
       </template>
 
@@ -106,11 +106,13 @@ function handleToggle(category: PushCategory, enabled: boolean) {
       </template>
 
       <!-- Error state -->
-      <div v-else-if="error" class="p-4 text-center">
-        <p class="text-sm text-destructive">{{ error }}</p>
-        <Button variant="ghost" size="sm" class="mt-2" @click="fetchPreferences">
-          Reintentar
-        </Button>
+      <div v-else-if="error" class="p-4 space-y-3">
+        <ErrorAlert :message="error" />
+        <div class="text-center">
+          <Button variant="ghost" size="sm" @click="fetchPreferences">
+            Reintentar
+          </Button>
+        </div>
       </div>
     </Card>
 

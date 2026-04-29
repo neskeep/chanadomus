@@ -1,34 +1,33 @@
 <script setup lang="ts">
-import { Share2, Plus, ChevronDown, ChevronUp, CalendarClock, User, Loader2 } from 'lucide-vue-next'
+import { Share2, Plus, ChevronDown, ChevronUp, User, Loader2 } from 'lucide-vue-next'
 import type { QrStatus } from '~~/shared/types/qr'
 import QRCode from 'qrcode'
 
-definePageMeta({ layout: 'default', title: 'Mis Visitas' })
+useHead({ title: 'Mis Visitas' })
 
+const { target, isMounted } = useTopbarPortal()
 const { myCodes, fetchMyCodes, isLoading, error } = useQr()
 
-const activeFilter = ref<QrStatus | 'all'>('all')
+const activeFilter = ref<QrStatus | ''>('')
 const expandedId = ref<string | null>(null)
 const expandedQrUrl = ref<string | null>(null)
 const shareSuccess = ref<string | null>(null)
 
-const filters: { label: string; value: QrStatus | 'all' }[] = [
-  { label: 'Todos', value: 'all' },
-  { label: 'Activos', value: 'active' },
-  { label: 'Usados', value: 'used' },
-  { label: 'Expirados', value: 'expired' },
+const filterOptions: Array<{ value: QrStatus; label: string }> = [
+  { value: 'active', label: 'Activos' },
+  { value: 'used', label: 'Usados' },
+  { value: 'expired', label: 'Expirados' },
 ]
 
 onMounted(() => {
   fetchMyCodes('all')
 })
 
-async function handleFilterChange(status: QrStatus | 'all') {
-  activeFilter.value = status
+watch(activeFilter, (status) => {
   expandedId.value = null
   expandedQrUrl.value = null
-  await fetchMyCodes(status)
-}
+  fetchMyCodes(status || 'all')
+})
 
 async function toggleExpand(id: string, token: string) {
   if (expandedId.value === id) {
@@ -67,7 +66,19 @@ async function handleShare(token: string) {
 
 async function copyToClipboard(text: string) {
   try {
-    await navigator.clipboard.writeText(text)
+    if (navigator.clipboard?.writeText) {
+      await navigator.clipboard.writeText(text)
+    }
+    else {
+      const textarea = document.createElement('textarea')
+      textarea.value = text
+      textarea.style.position = 'fixed'
+      textarea.style.opacity = '0'
+      document.body.appendChild(textarea)
+      textarea.select()
+      document.execCommand('copy')
+      document.body.removeChild(textarea)
+    }
     shareSuccess.value = 'Enlace copiado al portapapeles'
     setTimeout(() => { shareSuccess.value = null }, 3000)
   }
@@ -77,12 +88,7 @@ async function copyToClipboard(text: string) {
   }
 }
 
-function formatDate(dateStr: string): string {
-  return new Date(dateStr).toLocaleString('es-VE', {
-    dateStyle: 'medium',
-    timeStyle: 'short',
-  })
-}
+const { formatDateTime } = useFormatDate()
 
 const statusConfig: Record<QrStatus, { label: string; variant: 'default' | 'secondary' | 'outline' }> = {
   active: { label: 'Activo', variant: 'default' },
@@ -92,40 +98,20 @@ const statusConfig: Record<QrStatus, { label: string; variant: 'default' | 'seco
 </script>
 
 <template>
-  <div class="mx-auto max-w-lg">
-    <!-- Header -->
-    <div class="mb-6 flex justify-end">
-      <Button size="sm" as-child>
-        <NuxtLink to="/propietario/nueva-visita">
-          <Plus class="size-4" />
-          Nueva
-        </NuxtLink>
+  <div>
+    <!-- Topbar actions -->
+    <Teleport :to="target" defer v-if="isMounted">
+      <TopbarFilters :active="activeFilter !== ''" @clear="activeFilter = ''">
+        <TopbarFilterGroup v-model="activeFilter" label="Estado" :options="filterOptions" />
+      </TopbarFilters>
+      <Button size="sm" @click="navigateTo('/propietario/nueva-visita')">
+        <Plus class="mr-1.5 size-3.5" />
+        Nueva
       </Button>
-    </div>
-
-    <!-- Filters -->
-    <div class="mb-4 flex gap-2 overflow-x-auto pb-1">
-      <button
-        v-for="filter in filters"
-        :key="filter.value"
-        class="shrink-0 rounded-full border px-3 py-1.5 text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-        :class="activeFilter === filter.value
-          ? 'border-primary bg-primary text-primary-foreground'
-          : 'border-border bg-background text-muted-foreground hover:bg-muted'"
-        @click="handleFilterChange(filter.value)"
-      >
-        {{ filter.label }}
-      </button>
-    </div>
+    </Teleport>
 
     <!-- Error alert -->
-    <div
-      v-if="error"
-      role="alert"
-      class="mb-4 rounded-lg border border-destructive/50 bg-destructive/10 p-3 text-sm text-destructive"
-    >
-      {{ error }}
-    </div>
+    <ErrorAlert :message="error" class="mb-4" />
 
     <!-- Share success -->
     <div
@@ -136,82 +122,61 @@ const statusConfig: Record<QrStatus, { label: string; variant: 'default' | 'seco
       {{ shareSuccess }}
     </div>
 
-    <!-- Loading skeletons -->
-    <div v-if="isLoading" class="space-y-3">
-      <div v-for="i in 3" :key="i" class="animate-pulse rounded-lg border p-4">
-        <div class="flex items-center justify-between">
-          <div class="space-y-2">
-            <div class="h-4 w-32 rounded bg-muted" />
-            <div class="h-3 w-24 rounded bg-muted" />
-          </div>
-          <div class="h-5 w-14 rounded-full bg-muted" />
-        </div>
-      </div>
-    </div>
+    <!-- Loading skeleton -->
+    <ListSkeleton v-if="isLoading" :count="3" />
 
     <!-- Empty state -->
-    <div
+    <EmptyState
       v-else-if="myCodes.length === 0"
-      class="flex flex-col items-center gap-4 rounded-lg border border-dashed p-8 text-center"
+      :icon="User"
+      title="Aún no has registrado visitas"
+      description="Crea un pase de acceso para tu primer visitante"
     >
-      <div class="flex size-12 items-center justify-center rounded-full bg-muted">
-        <User class="size-6 text-muted-foreground" />
-      </div>
-      <div>
-        <p class="font-medium">No tienes visitas registradas</p>
-        <p class="mt-1 text-sm text-muted-foreground">Genera tu primer codigo QR para una visita</p>
-      </div>
-      <Button as-child>
-        <NuxtLink to="/propietario/nueva-visita">
-          <Plus class="size-4" />
+      <template #action>
+        <Button @click="navigateTo('/propietario/nueva-visita')">
+          <Plus class="mr-1.5 size-4" />
           Nueva Visita
-        </NuxtLink>
-      </Button>
-    </div>
+        </Button>
+      </template>
+    </EmptyState>
 
     <!-- Codes list -->
-    <div v-else class="space-y-3">
+    <div v-else class="space-y-2">
       <Card
         v-for="code in myCodes"
         :key="code.id"
         class="cursor-pointer transition-shadow hover:shadow-sm"
-        :class="code.status === 'active' ? '' : 'opacity-75'"
+        :class="code.status !== 'active' && 'opacity-75'"
         @click="code.status === 'active' ? toggleExpand(code.id, code.token) : undefined"
       >
-        <CardContent class="p-4">
-          <!-- Main row -->
-          <div class="flex items-start justify-between gap-3">
-            <div class="min-w-0 flex-1">
-              <p class="truncate font-medium">{{ code.visitorName }}</p>
-              <div class="mt-1.5 flex flex-wrap items-center gap-2">
-                <Badge :variant="statusConfig[code.status].variant">
-                  {{ statusConfig[code.status].label }}
-                </Badge>
-                <Badge variant="outline">
-                  {{ code.visitorType === 'invitado' ? 'Invitado' : 'Proveedor' }}
-                </Badge>
-              </div>
-            </div>
+        <CardContent class="px-3 py-2.5">
+          <!-- Row 1: Name + badges + chevron -->
+          <div class="flex items-center gap-2">
+            <p class="min-w-0 flex-1 truncate text-sm font-semibold">{{ code.visitorName }}</p>
+            <Badge :variant="statusConfig[code.status].variant" class="shrink-0 text-[11px]">
+              {{ statusConfig[code.status].label }}
+            </Badge>
+            <Badge variant="outline" class="shrink-0 text-[11px]">
+              {{ code.visitorType === 'invitado' ? 'Invitado' : 'Proveedor' }}
+            </Badge>
             <component
               :is="expandedId === code.id ? ChevronUp : ChevronDown"
               v-if="code.status === 'active'"
-              class="mt-1 size-4 shrink-0 text-muted-foreground"
+              class="size-4 shrink-0 text-muted-foreground"
             />
           </div>
 
-          <!-- Details -->
-          <div class="mt-3 flex items-center gap-4 text-xs text-muted-foreground">
-            <span>{{ code.unitNumber }}{{ code.unitLabel ? ` — ${code.unitLabel}` : '' }}</span>
-            <span class="flex items-center gap-1">
-              <CalendarClock class="size-3" />
-              {{ code.usedAt ? formatDate(code.usedAt) : formatDate(code.expiresAt) }}
-            </span>
+          <!-- Row 2: Unit + date -->
+          <div class="mt-1 flex items-center gap-x-1 text-[11px] text-muted-foreground">
+            <span class="truncate">{{ code.unitNumber }}{{ code.unitLabel ? ` — ${code.unitLabel}` : '' }}</span>
+            <span class="opacity-30">&middot;</span>
+            <span class="shrink-0 tabular-nums">{{ code.usedAt ? formatDateTime(code.usedAt) : formatDateTime(code.expiresAt) }}</span>
           </div>
 
           <!-- Expanded QR (active codes only) -->
           <div
             v-if="expandedId === code.id && code.status === 'active'"
-            class="mt-4 flex flex-col items-center gap-3 border-t pt-4"
+            class="mt-3 flex flex-col items-center gap-3 border-t pt-3"
           >
             <Loader2 v-if="!expandedQrUrl" class="size-8 animate-spin text-muted-foreground" />
             <img
@@ -220,7 +185,7 @@ const statusConfig: Record<QrStatus, { label: string; variant: 'default' | 'seco
               alt="Codigo QR de acceso"
               class="size-48 rounded-lg"
             />
-            <Button size="sm" variant="outline" @click.stop="handleShare(code.token)">
+            <Button variant="outline" @click.stop="handleShare(code.token)">
               <Share2 class="size-4" />
               Compartir
             </Button>

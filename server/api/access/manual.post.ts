@@ -16,7 +16,7 @@ interface ManualEntryBody {
 
 export default defineEventHandler(async (event) => {
   // 1. Auth: only conserje and admin
-  const session = await requireRole(event, ['conserje', 'admin'])
+  const session = await requireRole(event, ['conserje', 'vigilancia', 'admin'])
   const tenantId = (session.user as Record<string, unknown>).tenantId as string | undefined
 
   if (!tenantId) {
@@ -78,6 +78,7 @@ export default defineEventHandler(async (event) => {
     unitNumber: unit?.number ?? null,
     unitLabel: unit?.label ?? null,
     notes,
+    exitAt: null,
     createdAt: log.createdAt.toISOString(),
   }
 

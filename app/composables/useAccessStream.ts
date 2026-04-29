@@ -40,6 +40,13 @@ export function useAccessStream() {
       if (message.type === 'access-event' && message.data) {
         events.value = [message.data, ...events.value].slice(0, maxEvents)
       }
+      if (message.type === 'access-exit' && message.data) {
+        const idx = events.value.findIndex(e => e.id === message.data.id)
+        const existing = events.value[idx]
+        if (idx !== -1 && existing) {
+          events.value[idx] = { ...existing, exitAt: message.data.exitAt }
+        }
+      }
     }
     catch {
       // Ignore non-JSON messages (e.g. 'pong')
@@ -59,9 +66,20 @@ export function useAccessStream() {
     }
   }
 
+  async function markExit(id: string) {
+    const result = await $fetch<{ data: { id: string; exitAt: string } }>(`/api/access/logs/${id}/exit`, { method: 'PATCH' })
+    const idx = events.value.findIndex(e => e.id === id)
+    const existing = events.value[idx]
+    if (idx !== -1 && existing) {
+      events.value[idx] = { ...existing, exitAt: result.data.exitAt }
+    }
+    return result.data
+  }
+
   return {
     events,
     isConnected,
     loadInitialEvents,
+    markExit,
   }
 }

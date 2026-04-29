@@ -4,33 +4,33 @@ import {
   ChevronDown,
   ChevronUp,
   FileDown,
-  ChevronLeft,
-  ChevronRight,
   Sparkles,
 } from 'lucide-vue-next'
 import type { AnnouncementCategory } from '~~/shared/types/announcement'
+import { ANNOUNCEMENT_CATEGORY_COLORS, ANNOUNCEMENT_CATEGORY_LABELS } from '~/composables/useColorMap'
 
-definePageMeta({ layout: 'default', title: 'Cartelera' })
+useHead({ title: 'Cartelera' })
 
+const { target, isMounted } = useTopbarPortal()
+const { formatDate } = useFormatDate()
 const { announcements, meta, isLoading, error, totalPages, fetchAnnouncements } = useAnnouncements()
 
 const currentPage = ref(1)
-const activeCategory = ref<AnnouncementCategory | 'all'>('all')
+const activeCategory = ref<AnnouncementCategory | ''>('')
 const expandedId = ref<string | null>(null)
 
 const CATEGORY_CONFIG: Record<AnnouncementCategory, { label: string; class: string }> = {
-  general: { label: 'General', class: 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400' },
-  mantenimiento: { label: 'Mantenimiento', class: 'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400' },
-  seguridad: { label: 'Seguridad', class: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400' },
-  financiero: { label: 'Financiero', class: 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-400' },
-  evento: { label: 'Evento', class: 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-400' },
-  urgente: { label: 'Urgente', class: 'bg-rose-100 text-rose-800 dark:bg-rose-900/30 dark:text-rose-400' },
+  general: { label: ANNOUNCEMENT_CATEGORY_LABELS.general, class: ANNOUNCEMENT_CATEGORY_COLORS.general },
+  mantenimiento: { label: ANNOUNCEMENT_CATEGORY_LABELS.mantenimiento, class: ANNOUNCEMENT_CATEGORY_COLORS.mantenimiento },
+  seguridad: { label: ANNOUNCEMENT_CATEGORY_LABELS.seguridad, class: ANNOUNCEMENT_CATEGORY_COLORS.seguridad },
+  financiero: { label: ANNOUNCEMENT_CATEGORY_LABELS.financiero, class: ANNOUNCEMENT_CATEGORY_COLORS.financiero },
+  evento: { label: ANNOUNCEMENT_CATEGORY_LABELS.evento, class: ANNOUNCEMENT_CATEGORY_COLORS.evento },
+  urgente: { label: ANNOUNCEMENT_CATEGORY_LABELS.urgente, class: ANNOUNCEMENT_CATEGORY_COLORS.urgente },
 }
 
-const categoryTabs: { value: AnnouncementCategory | 'all'; label: string }[] = [
-  { value: 'all', label: 'Todos' },
+const categoryOptions: Array<{ value: AnnouncementCategory; label: string }> = [
   { value: 'general', label: 'General' },
-  { value: 'mantenimiento', label: 'Mantenim.' },
+  { value: 'mantenimiento', label: 'Mantenimiento' },
   { value: 'seguridad', label: 'Seguridad' },
   { value: 'financiero', label: 'Financiero' },
   { value: 'evento', label: 'Evento' },
@@ -42,7 +42,7 @@ function loadAnnouncements() {
     page: currentPage.value,
     status: 'published',
   }
-  if (activeCategory.value !== 'all') {
+  if (activeCategory.value) {
     params.category = activeCategory.value
   }
   fetchAnnouncements(params)
@@ -64,104 +64,64 @@ function toggleExpand(id: string) {
   expandedId.value = expandedId.value === id ? null : id
 }
 
-function isNew(publishedAt: string | null): boolean {
-  if (!publishedAt) return false
-  const published = new Date(publishedAt).getTime()
-  const now = Date.now()
-  return now - published < 24 * 60 * 60 * 1000
-}
+const clientNow = ref<number>(0)
+onMounted(() => { clientNow.value = Date.now() })
 
-function formatDate(dateStr: string): string {
-  return new Date(dateStr).toLocaleDateString('es-VE', {
-    day: '2-digit',
-    month: 'short',
-    year: 'numeric',
-  })
+function isNew(publishedAt: string | null): boolean {
+  if (!publishedAt || !clientNow.value) return false
+  const published = new Date(publishedAt).getTime()
+  return clientNow.value - published < 24 * 60 * 60 * 1000
 }
 </script>
 
 <template>
-  <div class="mx-auto max-w-lg">
-    <!-- Category filter tabs -->
-    <div class="mb-4 flex gap-2 overflow-x-auto pb-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-      <Button
-        v-for="tab in categoryTabs"
-        :key="tab.value"
-        :variant="activeCategory === tab.value ? 'default' : 'outline'"
-        size="sm"
-        class="shrink-0"
-        @click="activeCategory = tab.value"
-      >
-        {{ tab.label }}
-      </Button>
-    </div>
+  <div>
+    <!-- Topbar actions -->
+    <Teleport :to="target" defer v-if="isMounted">
+      <TopbarFilters :active="activeCategory !== ''" @clear="activeCategory = ''">
+        <TopbarFilterGroup v-model="activeCategory" label="Categoria" :options="categoryOptions" />
+      </TopbarFilters>
+    </Teleport>
 
     <!-- Error -->
-    <div
-      v-if="error"
-      role="alert"
-      class="mb-4 rounded-lg border border-destructive/50 bg-destructive/10 p-3 text-sm text-destructive"
-    >
-      {{ error }}
-    </div>
+    <ErrorAlert v-if="error" :message="error" class="mb-4" />
 
     <!-- Loading -->
-    <div v-if="isLoading" class="space-y-3">
-      <Card v-for="i in 3" :key="i">
-        <CardContent class="p-3">
-          <div class="space-y-2.5">
-            <div class="flex gap-2">
-              <Skeleton class="h-5 w-16 rounded-full" />
-              <Skeleton class="h-5 w-20 rounded-full" />
-            </div>
-            <Skeleton class="h-4 w-3/4" />
-            <Skeleton class="h-3 w-28" />
-          </div>
-        </CardContent>
-      </Card>
-    </div>
+    <ListSkeleton v-if="isLoading" :count="3" variant="card" />
 
     <!-- Content -->
     <template v-else-if="!error">
       <!-- Empty state -->
-      <div
+      <EmptyState
         v-if="announcements.length === 0"
-        class="flex flex-col items-center gap-4 rounded-lg border border-dashed p-8 text-center"
-      >
-        <div class="flex size-10 items-center justify-center rounded-lg bg-muted">
-          <Megaphone class="size-5 text-muted-foreground" />
-        </div>
-        <div>
-          <p class="font-medium">No hay anuncios</p>
-          <p class="mt-1 text-sm text-muted-foreground">
-            Los comunicados de la administracion apareceran aqui
-          </p>
-        </div>
-      </div>
+        :icon="Megaphone"
+        title="No hay anuncios"
+        description="Los comunicados de la administracion apareceran aqui"
+      />
 
       <!-- Announcement cards -->
-      <div v-else class="space-y-3">
+      <div v-else class="space-y-2">
         <Card
           v-for="item in announcements"
           :key="item.id"
-          class="cursor-pointer transition-shadow hover:shadow-md"
+          class="cursor-pointer transition-colors hover:bg-muted/50"
           @click="toggleExpand(item.id)"
         >
-          <CardContent class="p-4">
+          <CardContent class="px-3 py-2.5">
             <!-- Top row: badges + chevron -->
             <div class="flex items-start justify-between gap-2">
               <div class="flex flex-wrap items-center gap-1.5">
                 <!-- NEW badge -->
                 <span
                   v-if="isNew(item.publishedAt)"
-                  class="inline-flex items-center gap-1 rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-amber-700 dark:bg-amber-900/30 dark:text-amber-400"
+                  class="inline-flex items-center gap-1 rounded-lg bg-amber-100 px-2 py-0.5 text-xs font-semibold uppercase tracking-wider text-amber-700"
                 >
                   <Sparkles class="size-3" />
                   Nuevo
                 </span>
                 <!-- Category badge -->
                 <span
-                  class="inline-flex rounded-full px-2 py-0.5 text-xs font-medium"
+                  class="inline-flex rounded-lg px-2 py-0.5 text-xs font-medium"
                   :class="CATEGORY_CONFIG[item.category].class"
                 >
                   {{ CATEGORY_CONFIG[item.category].label }}
@@ -201,7 +161,7 @@ function formatDate(dateStr: string): string {
               </div>
 
               <!-- Expiry notice -->
-              <p v-if="item.expiresAt" class="mt-2 text-[10px] text-muted-foreground">
+              <p v-if="item.expiresAt" class="mt-2 text-xs text-muted-foreground">
                 Vigente hasta: {{ formatDate(item.expiresAt) }}
               </p>
             </div>
@@ -209,29 +169,7 @@ function formatDate(dateStr: string): string {
         </Card>
 
         <!-- Pagination -->
-        <div v-if="totalPages > 1" class="flex items-center justify-between pt-4">
-          <Button
-            variant="outline"
-            size="sm"
-            :disabled="currentPage <= 1"
-            @click="currentPage--"
-          >
-            <ChevronLeft class="mr-1 size-4" />
-            Anterior
-          </Button>
-          <span class="text-sm text-muted-foreground">
-            {{ currentPage }} / {{ totalPages }}
-          </span>
-          <Button
-            variant="outline"
-            size="sm"
-            :disabled="currentPage >= totalPages"
-            @click="currentPage++"
-          >
-            Siguiente
-            <ChevronRight class="ml-1 size-4" />
-          </Button>
-        </div>
+        <ListPagination v-model:current-page="currentPage" :total-pages="totalPages" />
       </div>
     </template>
   </div>

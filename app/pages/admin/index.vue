@@ -1,85 +1,300 @@
 <script setup lang="ts">
-import { AlertTriangle, Building2, Calendar, Vote, Wallet } from 'lucide-vue-next'
+import {
+  AlertTriangle,
+  Calendar,
+  ClipboardCheck,
+  Download,
+  FileText,
+  Home,
+  Megaphone,
+  Percent,
+  ShieldAlert,
+  Users,
+  Vote,
+  Wallet,
+} from 'lucide-vue-next'
+import { ICON_BG } from '~/composables/useColorMap'
+import { Bar, Line } from 'vue-chartjs'
+import {
+  BarElement,
+  CategoryScale,
+  Chart as ChartJS,
+  Filler,
+  Legend,
+  LinearScale,
+  LineElement,
+  PointElement,
+  Title,
+  Tooltip,
+} from 'chart.js'
 
-definePageMeta({ layout: 'default', title: 'Panel Administrador' })
+ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, BarElement, Title, Tooltip, Legend, Filler)
 
-const { user } = useAuth()
+useHead({ title: 'Panel Administrador' })
 
-interface DashboardStats {
-  openIncidents: number
-  inProgressIncidents: number
-  activePolls: number
-  upcomingMeetings: number
-  nextMeeting: { title: string; date: string } | null
-  totalUnits: number
-  unitsInDebt: number
+const { target, isMounted } = useTopbarPortal()
+const { stats, trends, isLoading, exportCsv, exportPdf } = useDashboard()
+const { formatCurrency, formatDateTime } = useFormatDate()
+
+const collectionRate = computed(() => trends.value?.financialKpis?.collectionRate ?? 0)
+
+// --- Chart helpers ---
+
+function monthLabel(yyyymm: string): string {
+  const [y, m] = yyyymm.split('-')
+  return new Date(Number(y), Number(m) - 1).toLocaleDateString('es-VE', { month: 'short' })
 }
 
-const stats = ref<DashboardStats | null>(null)
-const isLoading = ref(true)
-
-const statCards = computed(() => [
-  { label: 'Incidencias Abiertas', value: stats.value?.openIncidents ?? 0, icon: AlertTriangle, color: 'amber' },
-  { label: 'En Progreso', value: stats.value?.inProgressIncidents ?? 0, icon: AlertTriangle, color: 'blue' },
-  { label: 'Unidades', value: stats.value?.totalUnits ?? 0, icon: Building2, color: 'slate' },
-  { label: 'En Mora', value: stats.value?.unitsInDebt ?? 0, icon: Wallet, color: 'red' },
-  { label: 'Votaciones Activas', value: stats.value?.activePolls ?? 0, icon: Vote, color: 'purple' },
-  { label: 'Reuniones Proximas', value: stats.value?.upcomingMeetings ?? 0, icon: Calendar, color: 'emerald' },
-])
-
-const colorMap: Record<string, string> = {
-  amber: 'bg-amber-100 text-amber-600 dark:bg-amber-900/30',
-  blue: 'bg-blue-100 text-blue-600 dark:bg-blue-900/30',
-  slate: 'bg-slate-100 text-slate-600 dark:bg-slate-900/30',
-  red: 'bg-red-100 text-red-600 dark:bg-red-900/30',
-  purple: 'bg-purple-100 text-purple-600 dark:bg-purple-900/30',
-  emerald: 'bg-emerald-100 text-emerald-600 dark:bg-emerald-900/30',
+function dayLabel(yyyymmdd: string): string {
+  return new Date(yyyymmdd).toLocaleDateString('es-VE', { weekday: 'short' })
 }
 
-function formatDate(iso: string): string {
-  return new Date(iso).toLocaleDateString('es-VE', {
-    weekday: 'long', day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit',
-  })
-}
+// --- Chart data ---
 
-onMounted(async () => {
-  try {
-    const res = await $fetch<{ data: DashboardStats }>('/api/dashboard/stats')
-    stats.value = res.data
-  } catch {
-    // silent
-  } finally {
-    isLoading.value = false
+const accessChartData = computed(() => {
+  const items = trends.value?.accessByDay ?? []
+  return {
+    labels: items.map(i => dayLabel(i.day)),
+    datasets: [{
+      label: 'Accesos',
+      data: items.map(i => i.count),
+      backgroundColor: '#19C2C0',
+      borderRadius: 6,
+    }],
   }
 })
+
+const financeChartData = computed(() => {
+  const items = trends.value?.financeByMonth ?? []
+  return {
+    labels: items.map(i => monthLabel(i.month)),
+    datasets: [
+      { label: 'Cargos', data: items.map(i => i.cargos), backgroundColor: '#E53B3B', borderRadius: 6 },
+      { label: 'Abonos', data: items.map(i => i.abonos), backgroundColor: '#19C2C0', borderRadius: 6 },
+    ],
+  }
+})
+
+const incidentsChartData = computed(() => {
+  const items = trends.value?.incidentsByMonth ?? []
+  return {
+    labels: items.map(i => monthLabel(i.month)),
+    datasets: [{
+      label: 'Incidencias',
+      data: items.map(i => i.count),
+      borderColor: '#F47A1F',
+      backgroundColor: 'rgba(244, 122, 31, 0.1)',
+      fill: true,
+      tension: 0.4,
+      pointRadius: 4,
+      pointBackgroundColor: '#F47A1F',
+      borderWidth: 2,
+    }],
+  }
+})
+
+const chartOpts = {
+  responsive: true,
+  maintainAspectRatio: false,
+  plugins: { legend: { display: false } },
+  scales: {
+    x: { grid: { display: false }, ticks: { font: { size: 11 } } },
+    y: { beginAtZero: true, ticks: { precision: 0, font: { size: 11 } }, grid: { color: 'rgba(0,0,0,0.04)' } },
+  },
+}
+
+const groupedChartOpts = {
+  responsive: true,
+  maintainAspectRatio: false,
+  plugins: { legend: { position: 'bottom' as const, labels: { boxWidth: 10, padding: 12, font: { size: 11 } } } },
+  scales: {
+    x: { grid: { display: false }, ticks: { font: { size: 11 } } },
+    y: { beginAtZero: true, grid: { color: 'rgba(0,0,0,0.04)' }, ticks: { font: { size: 11 } } },
+  },
+}
 </script>
 
 <template>
-  <div>
-    <div class="mt-4 grid grid-cols-2 gap-2">
-      <div
-        v-for="(card, i) in statCards"
-        :key="i"
-        class="flex items-center gap-3 rounded-lg border bg-card p-3"
-      >
-        <div class="flex size-8 shrink-0 items-center justify-center rounded-md" :class="colorMap[card.color]">
-          <component :is="card.icon" class="size-4" />
+  <div class="space-y-8">
+    <!-- Topbar: export actions -->
+    <Teleport :to="target" defer v-if="isMounted">
+      <Button variant="ghost" size="icon" class="size-8" @click="exportCsv" title="Exportar CSV">
+        <Download class="size-4" />
+      </Button>
+      <Button variant="ghost" size="icon" class="size-8" @click="exportPdf" title="Exportar PDF">
+        <FileText class="size-4" />
+      </Button>
+    </Teleport>
+
+    <!-- Financial hero: 3 stat cards + collection rate with progress -->
+    <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      <StatCard
+        label="Cobrado"
+        :value="trends?.financialKpis ? formatCurrency(trends.financialKpis.totalAbonos) : '—'"
+        :icon="ClipboardCheck"
+        :icon-bg-class="ICON_BG.success"
+        :is-loading="isLoading"
+      />
+      <StatCard
+        label="Pendiente"
+        :value="trends?.financialKpis ? formatCurrency(trends.financialKpis.pendingBalance) : '—'"
+        :icon="Wallet"
+        :icon-bg-class="ICON_BG.danger"
+        :is-loading="isLoading"
+      />
+      <StatCard
+        :label="`En mora — ${stats?.unitsInDebt ?? 0} de ${stats?.totalUnits ?? 0}`"
+        :value="stats?.unitsInDebt ?? 0"
+        :icon="Home"
+        :icon-bg-class="ICON_BG.warning"
+        :is-loading="isLoading"
+      />
+      <!-- Collection rate: custom card with Progress bar -->
+      <Card class="p-4">
+        <div class="flex items-start justify-between">
+          <div class="flex flex-col gap-1">
+            <template v-if="isLoading">
+              <Skeleton class="h-5 w-16" />
+              <Skeleton class="h-8 w-24" />
+            </template>
+            <template v-else>
+              <p class="text-sm text-muted-foreground">Cobranza</p>
+              <p class="text-2xl font-bold tabular-nums tracking-tight">{{ collectionRate.toFixed(1) }}%</p>
+            </template>
+          </div>
+          <div :class="['flex size-10 items-center justify-center rounded-lg', ICON_BG.teal]">
+            <Percent class="size-5" />
+          </div>
         </div>
-        <div v-if="isLoading" class="space-y-1">
-          <Skeleton class="h-5 w-8" />
-          <Skeleton class="h-3 w-16" />
-        </div>
-        <div v-else>
-          <p class="text-lg font-bold leading-none">{{ card.value }}</p>
-          <p class="mt-0.5 text-[11px] text-muted-foreground">{{ card.label }}</p>
-        </div>
-      </div>
+        <Progress v-if="!isLoading" :model-value="collectionRate" class="mt-3 h-1.5" />
+        <Skeleton v-else class="mt-3 h-1.5 w-full rounded-full" />
+      </Card>
     </div>
 
-    <div v-if="stats?.nextMeeting" class="mt-3 rounded-lg border bg-card p-3">
-      <p class="text-[11px] font-medium text-muted-foreground">Proxima reunion</p>
-      <p class="mt-0.5 text-sm font-medium">{{ stats.nextMeeting.title }}</p>
-      <p class="text-[11px] text-muted-foreground">{{ formatDate(stats.nextMeeting.date) }}</p>
+    <!-- Charts row 1: Finance + Access -->
+    <div class="grid gap-4 lg:grid-cols-2">
+      <!-- Finance chart -->
+      <Card class="p-5">
+        <div class="mb-4">
+          <h3 class="text-sm font-semibold">Cargos vs Abonos</h3>
+          <p class="text-xs text-muted-foreground">Últimos 6 meses</p>
+        </div>
+        <div v-if="isLoading" class="h-56">
+          <Skeleton class="h-full w-full rounded-lg" />
+        </div>
+        <div v-else class="h-56">
+          <Bar :data="financeChartData" :options="groupedChartOpts" />
+        </div>
+      </Card>
+
+      <!-- Access chart -->
+      <Card class="p-5">
+        <div class="mb-4 flex items-center justify-between">
+          <div>
+            <h3 class="text-sm font-semibold">Accesos</h3>
+            <p class="text-xs text-muted-foreground">Últimos 7 días</p>
+          </div>
+          <Badge v-if="!isLoading" variant="secondary" class="tabular-nums">
+            {{ stats?.todayAccessCount ?? 0 }} hoy
+          </Badge>
+        </div>
+        <div v-if="isLoading" class="h-56">
+          <Skeleton class="h-full w-full rounded-lg" />
+        </div>
+        <div v-else class="h-56">
+          <Bar :data="accessChartData" :options="chartOpts" />
+        </div>
+      </Card>
+    </div>
+
+    <!-- Charts row 2: Incidents + Activity summary -->
+    <div class="grid gap-4 lg:grid-cols-2">
+      <!-- Incidents chart -->
+      <Card class="p-5">
+        <div class="mb-4 flex items-center justify-between">
+          <div>
+            <h3 class="text-sm font-semibold">Incidencias</h3>
+            <p class="text-xs text-muted-foreground">Últimos 6 meses</p>
+          </div>
+          <div v-if="!isLoading" class="flex items-center gap-3 text-xs text-muted-foreground">
+            <span class="flex items-center gap-1.5">
+              <span class="size-2 rounded-full bg-amber-500" />
+              {{ stats?.openIncidents ?? 0 }} abiertas
+            </span>
+            <span class="flex items-center gap-1.5">
+              <span class="size-2 rounded-full bg-blue-500" />
+              {{ stats?.inProgressIncidents ?? 0 }} en progreso
+            </span>
+          </div>
+        </div>
+        <div v-if="isLoading" class="h-56">
+          <Skeleton class="h-full w-full rounded-lg" />
+        </div>
+        <div v-else class="h-56">
+          <Line :data="incidentsChartData" :options="chartOpts" />
+        </div>
+      </Card>
+
+      <!-- Activity summary -->
+      <Card class="p-5">
+        <h3 class="text-sm font-semibold mb-5">Actividad del condominio</h3>
+
+        <div class="space-y-4">
+          <!-- Next meeting highlight -->
+          <div v-if="stats?.nextMeeting" class="flex items-center gap-3 rounded-lg bg-accent/50 p-3">
+            <div class="flex size-9 shrink-0 items-center justify-center rounded-lg bg-emerald-100">
+              <Calendar class="size-4 text-emerald-600" />
+            </div>
+            <div class="min-w-0 flex-1">
+              <p class="text-sm font-medium truncate">{{ stats.nextMeeting.title }}</p>
+              <p class="text-xs text-muted-foreground">{{ formatDateTime(stats.nextMeeting.date) }}</p>
+            </div>
+          </div>
+
+          <!-- Community stats grid -->
+          <div class="grid grid-cols-2 gap-4">
+            <div class="flex items-center gap-3">
+              <div class="flex size-9 shrink-0 items-center justify-center rounded-lg bg-purple-100">
+                <Vote class="size-4 text-purple-600" />
+              </div>
+              <div>
+                <p class="text-lg font-bold tabular-nums leading-none">{{ stats?.activePolls ?? 0 }}</p>
+                <p class="mt-0.5 text-xs text-muted-foreground">Votaciones activas</p>
+              </div>
+            </div>
+
+            <div class="flex items-center gap-3">
+              <div class="flex size-9 shrink-0 items-center justify-center rounded-lg bg-emerald-100">
+                <Users class="size-4 text-emerald-600" />
+              </div>
+              <div>
+                <p class="text-lg font-bold tabular-nums leading-none">{{ stats?.upcomingMeetings ?? 0 }}</p>
+                <p class="mt-0.5 text-xs text-muted-foreground">Reuniones próximas</p>
+              </div>
+            </div>
+
+            <div class="flex items-center gap-3">
+              <div class="flex size-9 shrink-0 items-center justify-center rounded-lg bg-blue-100">
+                <Megaphone class="size-4 text-blue-600" />
+              </div>
+              <div>
+                <p class="text-lg font-bold tabular-nums leading-none">{{ stats?.publishedAnnouncements ?? 0 }}</p>
+                <p class="mt-0.5 text-xs text-muted-foreground">Anuncios</p>
+              </div>
+            </div>
+
+            <div class="flex items-center gap-3">
+              <div class="flex size-9 shrink-0 items-center justify-center rounded-lg bg-amber-100">
+                <AlertTriangle class="size-4 text-amber-600" />
+              </div>
+              <div>
+                <p class="text-lg font-bold tabular-nums leading-none">{{ stats?.openIncidents ?? 0 }}</p>
+                <p class="mt-0.5 text-xs text-muted-foreground">Incidencias abiertas</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </Card>
     </div>
   </div>
 </template>

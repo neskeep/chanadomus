@@ -73,6 +73,7 @@ export default defineEventHandler(async (event) => {
       unitNumber: null,
       unitLabel: null,
       notes: 'RFID scan',
+      exitAt: null,
       createdAt: rfidLog.createdAt.toISOString(),
     }
 
@@ -149,6 +150,7 @@ export default defineEventHandler(async (event) => {
     unitNumber: qrRecord?.unitNumber ?? null,
     unitLabel: qrRecord?.unitLabel ?? null,
     notes: null,
+    exitAt: null,
     createdAt: qrLog.createdAt.toISOString(),
   }
 

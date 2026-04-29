@@ -23,6 +23,12 @@ Actualizar este archivo cada vez que se ejecute `shadcn add`.
 | Progress | 2026-04-19 | Votaciones resultados (barras de progreso) |
 | Switch | 2026-04-19 | Preferencias de notificaciones push |
 | Sheet | 2026-04-19 | Nav "Más" bottom sheet en default.vue |
+| Sidebar | 2026-04-27 | AppSidebar.vue — layout principal desktop/tablet |
+| Avatar | 2026-04-27 | UserMenu.vue — iniciales usuario en sidebar y topbar |
+| Tooltip | 2026-04-27 | Sidebar icon-only tooltips |
+| Collapsible | 2026-04-27 | Sidebar groups colapsables |
+| Breadcrumb | 2026-04-27 | AppTopbar.vue — navegacion contextual |
+| DropdownMenu | 2026-04-27 | UserMenu.vue — menu de usuario con logout |
 
 ## Notas
 - El preset a6PDm8yA (reka-luma) esta configurado

@@ -1,41 +1,59 @@
 <script setup lang="ts">
 import {
   Vote,
-  ChevronLeft,
-  ChevronRight,
   CheckCircle2,
   Clock,
-  Lock,
   Users,
   Loader2,
 } from 'lucide-vue-next'
 import { toast } from 'vue-sonner'
 import type { Poll, PollStatus } from '~~/shared/types/poll'
+import { POLL_STATUS_COLORS, POLL_STATUS_LABELS } from '~/composables/useColorMap'
 
-definePageMeta({ layout: 'default', title: 'Votaciones' })
+useHead({ title: 'Votaciones' })
 
+const { formatDate } = useFormatDate()
 const { polls, meta, isLoading, isSubmitting, error, totalPages, fetchPolls, vote } = usePolls()
+
+const { target, isMounted } = useTopbarPortal()
 
 const currentPage = ref(1)
 const activeTab = ref<'active' | 'closed'>('active')
 const selectedOption = ref<Record<string, string>>({})
 
 const STATUS_CONFIG: Record<PollStatus, { label: string; class: string }> = {
-  draft: { label: 'Borrador', class: 'bg-zinc-100 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400' },
-  active: { label: 'Activa', class: 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-400' },
-  closed: { label: 'Cerrada', class: 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400' },
+  draft: { label: POLL_STATUS_LABELS.draft, class: POLL_STATUS_COLORS.draft },
+  active: { label: POLL_STATUS_LABELS.active, class: POLL_STATUS_COLORS.active },
+  closed: { label: POLL_STATUS_LABELS.closed, class: POLL_STATUS_COLORS.closed },
 }
+
+const statusOptions: Array<{ value: 'active' | 'closed'; label: string }> = [
+  { value: 'active', label: 'Activas' },
+  { value: 'closed', label: 'Cerradas' },
+]
 
 const filteredPolls = computed(() => {
   return polls.value.filter(p => p.status === activeTab.value)
 })
 
+const emptyTitle = computed(() =>
+  activeTab.value === 'active' ? 'No hay votaciones activas' : 'No hay votaciones cerradas',
+)
+
+const emptyDescription = computed(() =>
+  activeTab.value === 'active' ? 'Las nuevas votaciones apareceran aqui' : 'Las votaciones cerradas apareceran aqui',
+)
+
 async function loadPolls() {
   await fetchPolls({ page: currentPage.value, status: activeTab.value })
 }
 
-watch([currentPage, activeTab], () => {
-  currentPage.value = activeTab.value ? 1 : currentPage.value
+watch(activeTab, () => {
+  currentPage.value = 1
+  loadPolls()
+})
+
+watch(currentPage, () => {
   loadPolls()
 })
 
@@ -47,9 +65,12 @@ function hasVoted(poll: Poll): boolean {
   return !!poll.userVote
 }
 
+const clientNow = ref<Date | null>(null)
+onMounted(() => { clientNow.value = new Date() })
+
 function isExpired(poll: Poll): boolean {
-  if (!poll.deadline) return false
-  return new Date() > new Date(poll.deadline)
+  if (!poll.deadline || !clientNow.value) return false
+  return clientNow.value > new Date(poll.deadline)
 }
 
 function canVote(poll: Poll): boolean {
@@ -59,7 +80,7 @@ function canVote(poll: Poll): boolean {
 async function handleVote(poll: Poll) {
   const optionId = selectedOption.value[poll.id]
   if (!optionId) {
-    toast.error('Selecciona una opción')
+    toast.error('Selecciona una opcion')
     return
   }
 
@@ -73,14 +94,6 @@ async function handleVote(poll: Poll) {
   }
 }
 
-function formatDate(dateStr: string): string {
-  return new Date(dateStr).toLocaleDateString('es-VE', {
-    day: '2-digit',
-    month: 'short',
-    year: 'numeric',
-  })
-}
-
 function getParticipation(poll: Poll): string {
   const total = poll.totalUnits ?? 0
   const votes = poll.totalVotes ?? 0
@@ -90,74 +103,35 @@ function getParticipation(poll: Poll): string {
 </script>
 
 <template>
-  <div class="mx-auto max-w-lg">
-    <!-- Tabs -->
-    <div class="mb-4 flex gap-2">
-      <Button
-        :variant="activeTab === 'active' ? 'default' : 'outline'"
-        size="sm"
-        @click="activeTab = 'active'"
-      >
-        Activas
-      </Button>
-      <Button
-        :variant="activeTab === 'closed' ? 'default' : 'outline'"
-        size="sm"
-        @click="activeTab = 'closed'"
-      >
-        Cerradas
-      </Button>
-    </div>
+  <div>
+    <!-- Topbar actions -->
+    <Teleport :to="target" defer v-if="isMounted">
+      <TopbarFilters :active="activeTab !== 'active'" @clear="activeTab = 'active'">
+        <TopbarFilterGroup v-model="activeTab" label="Estado" :options="statusOptions" />
+      </TopbarFilters>
+    </Teleport>
 
     <!-- Error -->
-    <div
-      v-if="error"
-      role="alert"
-      class="mb-4 rounded-lg border border-destructive/50 bg-destructive/10 p-3 text-sm text-destructive"
-    >
-      {{ error }}
-    </div>
+    <ErrorAlert v-if="error" :message="error" class="mb-4" />
 
     <!-- Loading -->
-    <div v-if="isLoading" class="space-y-3">
-      <Card v-for="i in 3" :key="i">
-        <CardContent class="p-3">
-          <div class="space-y-2.5">
-            <Skeleton class="h-5 w-3/4" />
-            <Skeleton class="h-4 w-1/2" />
-            <Skeleton class="h-8 w-full" />
-            <Skeleton class="h-8 w-full" />
-          </div>
-        </CardContent>
-      </Card>
-    </div>
+    <ListSkeleton v-if="isLoading" :count="3" variant="card" />
 
     <!-- Content -->
     <template v-else-if="!error">
       <!-- Empty state -->
-      <div
+      <EmptyState
         v-if="filteredPolls.length === 0"
-        class="flex flex-col items-center gap-4 rounded-lg border border-dashed p-8 text-center"
-      >
-        <div class="flex size-10 items-center justify-center rounded-lg bg-muted">
-          <Vote class="size-5 text-muted-foreground" />
-        </div>
-        <div>
-          <p class="font-medium">
-            {{ activeTab === 'active' ? 'No hay votaciones activas' : 'No hay votaciones cerradas' }}
-          </p>
-          <p class="mt-1 text-sm text-muted-foreground">
-            {{ activeTab === 'active' ? 'Las nuevas votaciones aparecerán aquí' : 'Las votaciones cerradas aparecerán aquí' }}
-          </p>
-        </div>
-      </div>
+        :icon="Vote"
+        :title="emptyTitle"
+        :description="emptyDescription"
+      />
 
       <!-- Poll cards -->
-      <div v-else class="space-y-3">
+      <div v-else class="space-y-2">
         <Card
           v-for="poll in filteredPolls"
           :key="poll.id"
-          :class="{ 'border-primary/30': poll.status === 'active' && !hasVoted(poll) }"
         >
           <CardContent class="p-3">
             <!-- Header -->
@@ -169,7 +143,7 @@ function getParticipation(poll: Poll): string {
                 </p>
               </div>
               <span
-                class="inline-flex shrink-0 rounded-full px-2 py-0.5 text-[10px] font-medium"
+                class="inline-flex shrink-0 rounded-lg px-2 py-0.5 text-xs font-medium"
                 :class="STATUS_CONFIG[poll.status].class"
               >
                 {{ STATUS_CONFIG[poll.status].label }}
@@ -191,7 +165,7 @@ function getParticipation(poll: Poll): string {
             <!-- Voted badge -->
             <div
               v-if="hasVoted(poll)"
-              class="mt-3 inline-flex items-center gap-1.5 rounded-full bg-emerald-100 px-2.5 py-1 text-xs font-medium text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-400"
+              class="mt-3 inline-flex items-center gap-1.5 rounded-lg bg-emerald-100 px-2.5 py-1 text-xs font-medium text-emerald-800"
             >
               <CheckCircle2 class="size-3.5" />
               Ya votaste
@@ -200,7 +174,7 @@ function getParticipation(poll: Poll): string {
             <!-- Expired badge (active but deadline passed) -->
             <div
               v-else-if="poll.status === 'active' && isExpired(poll)"
-              class="mt-3 inline-flex items-center gap-1.5 rounded-full bg-amber-100 px-2.5 py-1 text-xs font-medium text-amber-800 dark:bg-amber-900/30 dark:text-amber-400"
+              class="mt-3 inline-flex items-center gap-1.5 rounded-lg bg-amber-100 px-2.5 py-1 text-xs font-medium text-amber-800"
             >
               <Clock class="size-3.5" />
               Plazo vencido
@@ -211,7 +185,7 @@ function getParticipation(poll: Poll): string {
               <Separator class="mb-4" />
               <RadioGroup
                 :model-value="selectedOption[poll.id] ?? ''"
-                @update:model-value="(val: string) => selectedOption[poll.id] = val"
+                @update:model-value="(val) => selectedOption[poll.id] = String(val)"
               >
                 <div
                   v-for="opt in poll.options"
@@ -266,36 +240,14 @@ function getParticipation(poll: Poll): string {
             </div>
 
             <!-- Closed at info -->
-            <p v-if="poll.closedAt" class="mt-3 text-[10px] text-muted-foreground">
+            <p v-if="poll.closedAt" class="mt-3 text-xs text-muted-foreground">
               Cerrada el {{ formatDate(poll.closedAt) }}
             </p>
           </CardContent>
         </Card>
 
         <!-- Pagination -->
-        <div v-if="totalPages > 1" class="flex items-center justify-between pt-4">
-          <Button
-            variant="outline"
-            size="sm"
-            :disabled="currentPage <= 1"
-            @click="currentPage--"
-          >
-            <ChevronLeft class="mr-1 size-4" />
-            Anterior
-          </Button>
-          <span class="text-sm text-muted-foreground">
-            {{ currentPage }} / {{ totalPages }}
-          </span>
-          <Button
-            variant="outline"
-            size="sm"
-            :disabled="currentPage >= totalPages"
-            @click="currentPage++"
-          >
-            Siguiente
-            <ChevronRight class="ml-1 size-4" />
-          </Button>
-        </div>
+        <ListPagination v-model:current-page="currentPage" :total-pages="totalPages" />
       </div>
     </template>
   </div>

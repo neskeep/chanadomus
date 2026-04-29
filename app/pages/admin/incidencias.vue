@@ -1,29 +1,39 @@
 <script setup lang="ts">
 import {
-  Search,
   AlertTriangle,
   Clock,
   CheckCircle2,
   Loader2,
   XCircle,
-  ChevronLeft,
-  ChevronRight,
   Camera,
-  Filter,
 } from 'lucide-vue-next'
 import { toast } from 'vue-sonner'
 import type { Incident, IncidentStatus, IncidentPriority } from '~~/shared/types/incident'
+import { INCIDENT_STATUS_COLORS, INCIDENT_STATUS_LABELS, INCIDENT_PRIORITY_COLORS, INCIDENT_PRIORITY_LABELS } from '~/composables/useColorMap'
 
-definePageMeta({ layout: 'default', title: 'Gestion de Incidencias' })
+useHead({ title: 'Gestion de Incidencias' })
 
 const { incidents, meta, isLoading, error, totalPages, fetchIncidents } = useIncidents()
 const detail = useIncidentDetail()
+
+const { target, isMounted } = useTopbarPortal()
 
 const currentPage = ref(1)
 const searchQuery = ref('')
 const filterStatus = ref<IncidentStatus | ''>('')
 const filterPriority = ref<IncidentPriority | ''>('')
-const showFilters = ref(false)
+
+const statusOptions = [
+  { value: 'open', label: 'Abierta' },
+  { value: 'in_progress', label: 'En proceso' },
+  { value: 'resolved', label: 'Resuelta' },
+  { value: 'closed', label: 'Cerrada' },
+]
+const priorityOptions = [
+  { value: 'low', label: 'Baja' },
+  { value: 'medium', label: 'Media' },
+  { value: 'high', label: 'Alta' },
+]
 
 // Dialog state
 const selectedIncident = ref<Incident | null>(null)
@@ -32,16 +42,16 @@ const newStatus = ref<IncidentStatus | ''>('')
 const statusNote = ref('')
 
 const STATUS_CONFIG: Record<IncidentStatus, { label: string, class: string, icon: typeof Clock }> = {
-  open: { label: 'Abierta', class: 'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400', icon: AlertTriangle },
-  in_progress: { label: 'En proceso', class: 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400', icon: Loader2 },
-  resolved: { label: 'Resuelta', class: 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-400', icon: CheckCircle2 },
-  closed: { label: 'Cerrada', class: 'bg-zinc-100 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400', icon: XCircle },
+  open: { label: INCIDENT_STATUS_LABELS.open, class: INCIDENT_STATUS_COLORS.open, icon: AlertTriangle },
+  in_progress: { label: INCIDENT_STATUS_LABELS.in_progress, class: INCIDENT_STATUS_COLORS.in_progress, icon: Loader2 },
+  resolved: { label: INCIDENT_STATUS_LABELS.resolved, class: INCIDENT_STATUS_COLORS.resolved, icon: CheckCircle2 },
+  closed: { label: INCIDENT_STATUS_LABELS.closed, class: INCIDENT_STATUS_COLORS.closed, icon: XCircle },
 }
 
 const PRIORITY_CONFIG: Record<IncidentPriority, { label: string, class: string }> = {
-  low: { label: 'Baja', class: 'bg-zinc-100 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400' },
-  medium: { label: 'Media', class: 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400' },
-  high: { label: 'Alta', class: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400' },
+  low: { label: INCIDENT_PRIORITY_LABELS.low, class: INCIDENT_PRIORITY_COLORS.low },
+  medium: { label: INCIDENT_PRIORITY_LABELS.medium, class: INCIDENT_PRIORITY_COLORS.medium },
+  high: { label: INCIDENT_PRIORITY_LABELS.high, class: INCIDENT_PRIORITY_COLORS.high },
 }
 
 // Stats
@@ -96,129 +106,51 @@ async function handleUpdateStatus() {
   }
 }
 
-function formatDate(dateStr: string): string {
-  return new Date(dateStr).toLocaleDateString('es-VE', {
-    day: '2-digit',
-    month: 'short',
-    year: 'numeric',
-  })
-}
-
-function formatDateTime(dateStr: string): string {
-  return new Date(dateStr).toLocaleString('es-VE', {
-    day: '2-digit',
-    month: 'short',
-    hour: '2-digit',
-    minute: '2-digit',
-  })
-}
+const { formatDate, formatDateTime } = useFormatDate()
 </script>
 
 <template>
-  <div class="mx-auto max-w-5xl">
+  <div>
     <!-- Stats cards -->
-    <div class="mb-6 grid grid-cols-2 gap-2">
-      <div class="flex items-center gap-3 rounded-lg border bg-card p-3">
-        <div class="flex size-8 shrink-0 items-center justify-center rounded-md bg-amber-100 dark:bg-amber-900/30">
-          <AlertTriangle class="size-4 text-amber-600" />
-        </div>
-        <div>
-          <p v-if="isLoading"><Skeleton class="h-5 w-8" /></p>
-          <p v-else class="text-lg font-bold leading-none">{{ totalOpen }}</p>
-          <p class="mt-0.5 text-[11px] text-muted-foreground">Abiertas</p>
-        </div>
-      </div>
-      <div class="flex items-center gap-3 rounded-lg border bg-card p-3">
-        <div class="flex size-8 shrink-0 items-center justify-center rounded-md bg-blue-100 dark:bg-blue-900/30">
-          <Clock class="size-4 text-blue-600" />
-        </div>
-        <div>
-          <p v-if="isLoading"><Skeleton class="h-5 w-8" /></p>
-          <p v-else class="text-lg font-bold leading-none">{{ totalInProgress }}</p>
-          <p class="mt-0.5 text-[11px] text-muted-foreground">En proceso</p>
-        </div>
-      </div>
+    <div class="mb-6 grid grid-cols-2 gap-3">
+      <StatCard
+        label="Abiertas"
+        :value="totalOpen"
+        :icon="AlertTriangle"
+        icon-bg-class="bg-secondary/10 text-secondary"
+        :is-loading="isLoading"
+      />
+      <StatCard
+        label="En proceso"
+        :value="totalInProgress"
+        :icon="Clock"
+        icon-bg-class="bg-primary/10 text-primary"
+        :is-loading="isLoading"
+      />
     </div>
 
     <!-- Error -->
-    <div
-      v-if="error"
-      role="alert"
-      class="mb-4 rounded-lg border border-destructive/50 bg-destructive/10 p-3 text-sm text-destructive"
-    >
-      {{ error }}
-    </div>
+    <ErrorAlert v-if="error" :message="error" class="mb-4" />
 
-    <!-- Search & filters -->
-    <div class="mb-4 space-y-3">
-      <div class="flex gap-2">
-        <div class="relative flex-1">
-          <Search class="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-          <Input
-            v-model="searchQuery"
-            placeholder="Buscar por título, unidad o propietario..."
-            class="pl-9"
-          />
-        </div>
-        <Button
-          variant="outline"
-          size="icon"
-          :class="{ 'border-primary text-primary': showFilters }"
-          @click="showFilters = !showFilters"
-        >
-          <Filter class="size-4" />
-        </Button>
-      </div>
-
-      <!-- Filter selects -->
-      <div v-if="showFilters" class="grid grid-cols-2 gap-3">
-        <Select v-model="filterStatus">
-          <SelectTrigger>
-            <SelectValue placeholder="Estado" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="">Todos</SelectItem>
-            <SelectItem value="open">Abierta</SelectItem>
-            <SelectItem value="in_progress">En proceso</SelectItem>
-            <SelectItem value="resolved">Resuelta</SelectItem>
-            <SelectItem value="closed">Cerrada</SelectItem>
-          </SelectContent>
-        </Select>
-
-        <Select v-model="filterPriority">
-          <SelectTrigger>
-            <SelectValue placeholder="Prioridad" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="">Todas</SelectItem>
-            <SelectItem value="low">Baja</SelectItem>
-            <SelectItem value="medium">Media</SelectItem>
-            <SelectItem value="high">Alta</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
-    </div>
+    <Teleport :to="target" defer v-if="isMounted">
+      <TopbarSearch v-model="searchQuery" placeholder="Buscar incidencia...">
+        <TopbarFilters :active="filterStatus !== '' || filterPriority !== ''" @clear="filterStatus = ''; filterPriority = ''">
+          <TopbarFilterGroup v-model="filterStatus" label="Estado" :options="statusOptions" />
+          <TopbarFilterGroup v-model="filterPriority" label="Prioridad" :options="priorityOptions" />
+        </TopbarFilters>
+      </TopbarSearch>
+    </Teleport>
 
     <!-- Loading -->
-    <div v-if="isLoading" class="space-y-2">
-      <Skeleton v-for="i in 5" :key="i" class="h-16 w-full rounded-lg" />
-    </div>
+    <ListSkeleton v-if="isLoading" :count="5" variant="row" />
 
     <!-- Empty state -->
-    <div
+    <EmptyState
       v-else-if="filteredIncidents.length === 0"
-      class="flex flex-col items-center gap-4 rounded-lg border border-dashed p-8 text-center"
-    >
-      <div class="flex size-12 items-center justify-center rounded-full bg-muted">
-        <AlertTriangle class="size-6 text-muted-foreground" />
-      </div>
-      <div>
-        <p class="font-medium">No hay incidencias</p>
-        <p class="mt-1 text-sm text-muted-foreground">
-          {{ filterStatus || filterPriority ? 'Prueba cambiando los filtros' : 'Los reportes de propietarios aparecerán aquí' }}
-        </p>
-      </div>
-    </div>
+      :icon="AlertTriangle"
+      title="No hay incidencias"
+      :description="filterStatus || filterPriority ? 'Prueba cambiando los filtros' : 'Los reportes de propietarios aparecerán aquí'"
+    />
 
     <!-- Table (desktop) / Cards (mobile) -->
     <div v-else>
@@ -247,7 +179,7 @@ function formatDateTime(dateStr: string): string {
               <TableCell class="text-muted-foreground">{{ item.reportedByName ?? '—' }}</TableCell>
               <TableCell>
                 <span
-                  class="inline-flex rounded-full px-2 py-0.5 text-xs font-medium"
+                  class="inline-flex rounded-lg px-2 py-0.5 text-xs font-medium"
                   :class="PRIORITY_CONFIG[item.priority].class"
                 >
                   {{ PRIORITY_CONFIG[item.priority].label }}
@@ -255,7 +187,7 @@ function formatDateTime(dateStr: string): string {
               </TableCell>
               <TableCell>
                 <span
-                  class="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium"
+                  class="inline-flex items-center gap-1 rounded-lg px-2 py-0.5 text-xs font-medium"
                   :class="STATUS_CONFIG[item.status].class"
                 >
                   <component :is="STATUS_CONFIG[item.status].icon" class="size-3" />
@@ -269,77 +201,52 @@ function formatDateTime(dateStr: string): string {
       </div>
 
       <!-- Mobile cards -->
-      <div class="space-y-3 md:hidden">
+      <div class="space-y-2 md:hidden">
         <Card
           v-for="item in filteredIncidents"
           :key="item.id"
-          class="cursor-pointer transition-shadow hover:shadow-md"
+          class="cursor-pointer transition-colors hover:bg-muted/50"
           @click="openDetail(item)"
         >
-          <CardContent class="p-4">
-            <div class="flex items-start justify-between gap-2">
-              <div class="min-w-0 flex-1">
-                <p class="text-sm font-medium leading-snug">{{ item.title }}</p>
-                <p class="mt-1 text-xs text-muted-foreground">
-                  {{ item.unitNumber ?? '—' }} · {{ item.reportedByName ?? '—' }}
-                </p>
-              </div>
-            </div>
-            <div class="mt-2 flex flex-wrap items-center gap-1.5">
+          <CardContent class="px-3 py-2.5">
+            <!-- Row 1: Title + Priority + Date -->
+            <div class="flex items-center gap-1.5">
+              <p class="min-w-0 flex-1 truncate text-sm font-semibold">{{ item.title }}</p>
               <span
-                class="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium"
-                :class="STATUS_CONFIG[item.status].class"
-              >
-                <component :is="STATUS_CONFIG[item.status].icon" class="size-3" />
-                {{ STATUS_CONFIG[item.status].label }}
-              </span>
-              <span
-                class="inline-flex rounded-full px-2 py-0.5 text-xs font-medium"
+                class="inline-flex shrink-0 rounded-lg px-2 py-0.5 text-[11px] font-medium"
                 :class="PRIORITY_CONFIG[item.priority].class"
               >
                 {{ PRIORITY_CONFIG[item.priority].label }}
               </span>
-              <span class="text-xs text-muted-foreground">{{ formatDate(item.createdAt) }}</span>
+              <span class="shrink-0 text-[11px] tabular-nums text-muted-foreground">{{ formatDate(item.createdAt) }}</span>
+            </div>
+            <!-- Row 2: Status · Unit · Reporter -->
+            <div class="mt-0.5 flex items-center gap-x-1 text-[11px] text-muted-foreground">
+              <span :class="STATUS_CONFIG[item.status].class.replace(/bg-\S+/g, '')" class="font-medium">
+                {{ STATUS_CONFIG[item.status].label }}
+              </span>
+              <span class="opacity-30">·</span>
+              <span class="shrink-0">{{ item.unitNumber ?? '—' }}</span>
+              <span class="opacity-30">·</span>
+              <span class="truncate">{{ item.reportedByName ?? '—' }}</span>
             </div>
           </CardContent>
         </Card>
       </div>
 
       <!-- Pagination -->
-      <div v-if="totalPages > 1" class="mt-4 flex items-center justify-between">
-        <Button
-          variant="outline"
-          size="sm"
-          :disabled="currentPage <= 1"
-          @click="currentPage--"
-        >
-          <ChevronLeft class="mr-1 size-4" />
-          Anterior
-        </Button>
-        <span class="text-sm text-muted-foreground">
-          {{ currentPage }} / {{ totalPages }}
-        </span>
-        <Button
-          variant="outline"
-          size="sm"
-          :disabled="currentPage >= totalPages"
-          @click="currentPage++"
-        >
-          Siguiente
-          <ChevronRight class="ml-1 size-4" />
-        </Button>
-      </div>
+      <ListPagination v-model:current-page="currentPage" :total-pages="totalPages" class="mt-4" />
     </div>
 
-    <!-- Detail Dialog -->
-    <Dialog v-model:open="dialogOpen">
-      <DialogContent class="max-h-[90vh] overflow-y-auto sm:max-w-lg">
-        <DialogHeader>
-          <DialogTitle>{{ selectedIncident?.title }}</DialogTitle>
-          <DialogDescription>
+    <!-- Detail Sheet -->
+    <Sheet v-model:open="dialogOpen">
+      <SheetContent side="right" class="overflow-y-auto">
+        <SheetHeader>
+          <SheetTitle>{{ selectedIncident?.title }}</SheetTitle>
+          <SheetDescription>
             {{ selectedIncident?.unitNumber ?? '—' }} · {{ selectedIncident?.reportedByName ?? '—' }}
-          </DialogDescription>
-        </DialogHeader>
+          </SheetDescription>
+        </SheetHeader>
 
         <div v-if="detail.isLoading.value" class="space-y-3 py-4">
           <Skeleton class="h-4 w-full" />
@@ -352,14 +259,14 @@ function formatDateTime(dateStr: string): string {
             <!-- Current status & priority -->
             <div class="flex gap-2">
               <span
-                class="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium"
+                class="inline-flex items-center gap-1 rounded-lg px-2 py-0.5 text-xs font-medium"
                 :class="STATUS_CONFIG[detail.incident.value.status].class"
               >
                 <component :is="STATUS_CONFIG[detail.incident.value.status].icon" class="size-3" />
                 {{ STATUS_CONFIG[detail.incident.value.status].label }}
               </span>
               <span
-                class="inline-flex rounded-full px-2 py-0.5 text-xs font-medium"
+                class="inline-flex rounded-lg px-2 py-0.5 text-xs font-medium"
                 :class="PRIORITY_CONFIG[detail.incident.value.priority].class"
               >
                 {{ PRIORITY_CONFIG[detail.incident.value.priority].label }}
@@ -398,7 +305,7 @@ function formatDateTime(dateStr: string): string {
             <div class="space-y-3">
               <p class="text-sm font-medium">Cambiar estado</p>
               <Select v-model="newStatus">
-                <SelectTrigger>
+                <SelectTrigger size="lg">
                   <SelectValue placeholder="Seleccionar nuevo estado" />
                 </SelectTrigger>
                 <SelectContent>
@@ -416,7 +323,7 @@ function formatDateTime(dateStr: string): string {
               />
 
               <Button
-                class="w-full"
+                class="h-12 w-full"
                 :disabled="!newStatus || detail.isUpdating.value"
                 @click="handleUpdateStatus"
               >
@@ -442,7 +349,7 @@ function formatDateTime(dateStr: string): string {
                     </span>
                   </div>
                   <p v-if="update.note" class="ml-3.5 mt-1 text-xs text-muted-foreground">{{ update.note }}</p>
-                  <p class="ml-3.5 mt-1 text-[10px] text-muted-foreground">
+                  <p class="ml-3.5 mt-1 text-xs text-muted-foreground">
                     {{ update.updatedByName ?? 'Admin' }} · {{ formatDateTime(update.createdAt) }}
                   </p>
                 </div>
@@ -458,7 +365,7 @@ function formatDateTime(dateStr: string): string {
             </div>
           </div>
         </template>
-      </DialogContent>
-    </Dialog>
+      </SheetContent>
+    </Sheet>
   </div>
 </template>

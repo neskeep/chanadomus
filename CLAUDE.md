@@ -19,6 +19,7 @@
 | Convenciones | `.claude/context/conventions.md` |
 | Esquema de datos | `.claude/context/data-schema.md` |
 | Versionado y releases | `.claude/context/versioning.md` |
+| Skills de UI/UX | `.claude/context/skills-ui.md` |
 | Estado de sesion | `.claude/state/session.md` |
 | Componentes instalados | `.claude/state/installed-components.md` |
 | Changelog | `CHANGELOG.md` |
@@ -26,7 +27,7 @@
 ## Reglas de Workflow (No Negociables)
 
 1. **SIEMPRE usar agentes** — Delegar a subagentes especializados (nuxt-ui, nuxt-logic, project-orchestrator, etc.). Nunca implementar directamente sin agentes.
-2. **UI = Skills obligatorios** — Invocar `frontend-design` y/o `ui-ux-pro-max` ANTES de generar cualquier codigo de UI. Sin excepcion.
+2. **UI = Skills obligatorios** — Invocar `frontend-design` ANTES de generar codigo UI. Usar Impeccable (`/critique`, `/audit`, `/polish`, `/animate`, `/adapt`, `/clarify`) para evaluar y refinar. Ver `.claude/context/skills-ui.md`.
 3. **shadcn = Skill shadcn** — Usar el skill `shadcn` para buscar, agregar y gestionar componentes.
 4. **Desarrollo modular** — Un modulo/feature por sesion. Nunca desarrollo masivo de multiples modulos.
 5. **Reuso primero** — SIEMPRE buscar componentes, composables y utilidades existentes antes de crear nuevos. Grep/Glob antes de Write.
@@ -44,7 +45,7 @@
 1. **TypeScript strict** — Cero `any`. Tipos derivados de Drizzle schemas cuando sea posible.
 2. **Composables** — Toda logica reutilizable va en `app/composables/` con prefijo `use`.
 3. **Server utils** — Logica de servidor reutilizable en `server/utils/`.
-4. **Mobile-first** — Siempre disenar para movil primero. PWA es el producto.
+4. **Desktop-first** — Disenar primero para desktop, luego ajustar a mobile/tablet.
 5. **Cero spaghetti** — Codigo reutilizable, escalable, mantenible. Separar logica de presentacion.
 6. **Sin hardcoding** — Data reutilizable en composables o stores. Configuracion en runtime config.
 7. **tenant_id** — Todas las tablas tenant-scoped llevan `tenant_id` FK. Sin excepciones.
@@ -79,6 +80,17 @@
 3. Generar handoff automatico al 90% de contexto con estado completo.
 4. Nunca asumir estado — verificar archivos antes de actuar.
 
+## Comandos de Proyecto
+
+| Comando | Cuando usar | Que inyecta |
+|---------|-------------|-------------|
+| `/design <prompt>` | Trabajo de UI | Contexto visual + reglas + agentes/skills UI |
+| `/backend <prompt>` | APIs, schemas, server routes | Convenciones + schema + update docs obligatorio |
+| `/fix <prompt>` | Bug fixes | Diagnose → fix → verify (build+dev) |
+| `/review <prompt>` | QA post-implementacion | Playwright MCP + verificacion visual/funcional |
+
+**Regla**: Usar el comando apropiado ANTES de empezar. No implementar directamente.
+
 ## Agentes Disponibles
 
 | Agente | Responsabilidad | Modelo |
@@ -91,11 +103,19 @@
 
 ## Skills Obligatorios para UI
 
+> Detalle completo en `.claude/context/skills-ui.md`
+
 | Skill | Cuando usar |
 |-------|-------------|
-| `frontend-design` | Antes de crear cualquier componente, pagina o layout |
-| `ui-ux-pro-max` | Revision de UX post-implementacion (spacing, responsive, accesibilidad) |
+| `frontend-design` | ANTES de crear cualquier componente, pagina o layout |
 | `shadcn` | Buscar, agregar o gestionar componentes shadcn-vue |
+| `/critique` | Diagnostico UX: heuristics score, anti-patterns, personas |
+| `/audit` | Auditoria tecnica: a11y, performance, responsive, theming |
+| `/polish` | Paso FINAL obligatorio despues de todo cambio de UI |
+| `/animate` | Microinteracciones y motion con proposito |
+| `/adapt` | Adaptacion responsive multi-dispositivo |
+| `/clarify` | Mejora de UX copy, labels, errores, empty states |
+| `ui-ux-pro-max` | Revision general UX post-implementacion |
 
 ---
 

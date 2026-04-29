@@ -9,7 +9,6 @@ import {
   Video,
   MapPin,
   Clock,
-  Filter,
 } from 'lucide-vue-next'
 import { toast } from 'vue-sonner'
 import type {
@@ -21,7 +20,9 @@ import type {
 } from '~~/shared/types/meeting'
 import { MEETING_TYPES, MEETING_STATUSES } from '~~/shared/types/meeting'
 
-definePageMeta({ layout: 'default', title: 'Gestion de Reuniones' })
+useHead({ title: 'Gestion de Reuniones' })
+
+const { formatDateTime } = useFormatDate()
 
 const {
   meetings,
@@ -36,9 +37,24 @@ const {
 } = useMeetings()
 
 // Filters
-const filterType = ref<MeetingType | 'all'>('all')
-const filterStatus = ref<MeetingStatus | 'all'>('all')
-const showFilters = ref(false)
+const filterType = ref<MeetingType | ''>('')
+const filterStatus = ref<MeetingStatus | ''>('')
+
+const { target, isMounted } = useTopbarPortal()
+
+const typeOptions = [
+  { value: 'ordinaria' as const, label: 'Ordinaria' },
+  { value: 'extraordinaria' as const, label: 'Extraordinaria' },
+  { value: 'comite' as const, label: 'Comite' },
+  { value: 'informativa' as const, label: 'Informativa' },
+]
+
+const meetingStatusOptions = [
+  { value: 'programada' as const, label: 'Programada' },
+  { value: 'en_curso' as const, label: 'En Curso' },
+  { value: 'completada' as const, label: 'Completada' },
+  { value: 'cancelada' as const, label: 'Cancelada' },
+]
 
 // Create/Edit dialog
 const dialogOpen = ref(false)
@@ -58,25 +74,13 @@ const formStatus = ref<MeetingStatus>('programada')
 const deleteId = ref<string | null>(null)
 const deleteDialogOpen = ref(false)
 
-const TYPE_COLORS: Record<MeetingType, string> = {
-  ordinaria: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400',
-  extraordinaria: 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400',
-  comite: 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400',
-  informativa: 'bg-cyan-100 text-cyan-700 dark:bg-cyan-900/30 dark:text-cyan-400',
-}
+import { MEETING_TYPE_COLORS as TYPE_COLORS, MEETING_STATUS_COLORS as STATUS_COLORS } from '~/composables/useColorMap'
 
 const TYPE_LABELS: Record<MeetingType, string> = {
   ordinaria: 'Ordinaria',
   extraordinaria: 'Extraordinaria',
   comite: 'Comité',
   informativa: 'Informativa',
-}
-
-const STATUS_COLORS: Record<MeetingStatus, string> = {
-  programada: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400',
-  en_curso: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400',
-  completada: 'bg-zinc-100 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400',
-  cancelada: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400',
 }
 
 const STATUS_LABELS: Record<MeetingStatus, string> = {
@@ -88,30 +92,18 @@ const STATUS_LABELS: Record<MeetingStatus, string> = {
 
 // Stats
 const totalProgramadas = computed(() => meetings.value.filter(m => m.status === 'programada').length)
+const clientNow = ref<Date | null>(null)
+onMounted(() => { clientNow.value = new Date() })
+
 const totalEsteMes = computed(() => {
-  const now = new Date()
-  const year = now.getFullYear()
-  const month = now.getMonth()
+  if (!clientNow.value) return 0
+  const year = clientNow.value.getFullYear()
+  const month = clientNow.value.getMonth()
   return meetings.value.filter((m) => {
     const d = new Date(m.date)
     return d.getFullYear() === year && d.getMonth() === month
   }).length
 })
-
-// Date formatting
-function formatDate(iso: string): string {
-  const d = new Date(iso)
-  return d.toLocaleDateString('es-VE', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' })
-}
-
-function formatTime(iso: string): string {
-  const d = new Date(iso)
-  return d.toLocaleTimeString('es-VE', { hour: '2-digit', minute: '2-digit' })
-}
-
-function formatDateTime(iso: string): string {
-  return `${formatDate(iso)} ${formatTime(iso)}`
-}
 
 function toLocalInput(iso: string): string {
   const d = new Date(iso)
@@ -122,8 +114,8 @@ function toLocalInput(iso: string): string {
 
 async function loadMeetings() {
   const params: { type?: MeetingType; status?: MeetingStatus } = {}
-  if (filterType.value && filterType.value !== 'all') params.type = filterType.value
-  if (filterStatus.value && filterStatus.value !== 'all') params.status = filterStatus.value
+  if (filterType.value) params.type = filterType.value
+  if (filterStatus.value) params.status = filterStatus.value
   await fetchMeetings(params)
 }
 
@@ -238,113 +230,45 @@ async function handleDelete() {
 </script>
 
 <template>
-  <div class="mx-auto max-w-5xl">
-    <!-- Header -->
-    <div class="mb-6 flex justify-end">
+  <div>
+    <!-- Topbar actions -->
+    <Teleport :to="target" defer v-if="isMounted">
+      <TopbarFilters :active="filterType !== '' || filterStatus !== ''" @clear="filterType = ''; filterStatus = ''">
+        <TopbarFilterGroup v-model="filterType" label="Tipo" :options="typeOptions" />
+        <TopbarFilterGroup v-model="filterStatus" label="Estado" :options="meetingStatusOptions" />
+      </TopbarFilters>
       <Button size="sm" @click="openCreateDialog">
-        <Plus class="mr-1.5 size-4" />
-        Nueva Reunion
+        <Plus class="mr-1.5 size-3.5" />
+        Nuevo
       </Button>
-    </div>
+    </Teleport>
 
     <!-- Stats cards -->
-    <div class="mb-6 grid grid-cols-2 gap-2">
-      <div class="flex items-center gap-3 rounded-lg border bg-card p-3">
-        <div class="flex size-8 shrink-0 items-center justify-center rounded-md bg-blue-100 dark:bg-blue-900/30">
-          <Calendar class="size-4 text-blue-600" />
-        </div>
-        <div>
-          <p v-if="isLoading"><Skeleton class="h-5 w-8" /></p>
-          <p v-else class="text-lg font-bold leading-none">{{ totalProgramadas }}</p>
-          <p class="mt-0.5 text-[11px] text-muted-foreground">Programadas</p>
-        </div>
-      </div>
-      <div class="flex items-center gap-3 rounded-lg border bg-card p-3">
-        <div class="flex size-8 shrink-0 items-center justify-center rounded-md bg-emerald-100 dark:bg-emerald-900/30">
-          <CalendarDays class="size-4 text-emerald-600" />
-        </div>
-        <div>
-          <p v-if="isLoading"><Skeleton class="h-5 w-8" /></p>
-          <p v-else class="text-lg font-bold leading-none">{{ totalEsteMes }}</p>
-          <p class="mt-0.5 text-[11px] text-muted-foreground">Este Mes</p>
-        </div>
-      </div>
+    <div class="mb-6 grid grid-cols-2 gap-3">
+      <StatCard label="Programadas" :value="totalProgramadas" :icon="Calendar" icon-bg-class="bg-primary/10 text-primary" :is-loading="isLoading" />
+      <StatCard label="Este mes" :value="totalEsteMes" :icon="CalendarDays" icon-bg-class="bg-muted text-muted-foreground" :is-loading="isLoading" />
     </div>
 
     <!-- Error -->
-    <div
-      v-if="error"
-      role="alert"
-      class="mb-4 rounded-lg border border-destructive/50 bg-destructive/10 p-3 text-sm text-destructive"
-    >
-      {{ error }}
-    </div>
-
-    <!-- Filters -->
-    <div class="mb-4 space-y-3">
-      <div class="flex justify-end">
-        <Button
-          variant="outline"
-          size="icon"
-          :class="{ 'border-primary text-primary': showFilters }"
-          @click="showFilters = !showFilters"
-        >
-          <Filter class="size-4" />
-        </Button>
-      </div>
-
-      <!-- Filter selects -->
-      <div v-if="showFilters" class="grid grid-cols-2 gap-3">
-        <Select v-model="filterType">
-          <SelectTrigger>
-            <SelectValue placeholder="Tipo" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">Todos los tipos</SelectItem>
-            <SelectItem v-for="t in MEETING_TYPES" :key="t.key" :value="t.key">
-              {{ t.label }}
-            </SelectItem>
-          </SelectContent>
-        </Select>
-
-        <Select v-model="filterStatus">
-          <SelectTrigger>
-            <SelectValue placeholder="Estado" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">Todos los estados</SelectItem>
-            <SelectItem v-for="s in MEETING_STATUSES" :key="s.key" :value="s.key">
-              {{ s.label }}
-            </SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
-    </div>
+    <ErrorAlert v-if="error" :message="error" class="mb-4" />
 
     <!-- Loading -->
-    <div v-if="isLoading" class="space-y-2">
-      <Skeleton v-for="i in 5" :key="i" class="h-16 w-full rounded-lg" />
-    </div>
+    <ListSkeleton v-if="isLoading" :count="5" variant="row" />
 
     <!-- Empty state -->
-    <div
+    <EmptyState
       v-else-if="meetings.length === 0"
-      class="flex flex-col items-center gap-4 rounded-lg border border-dashed p-8 text-center"
+      :icon="Calendar"
+      title="No hay reuniones"
+      :description="filterType || filterStatus ? 'Prueba cambiando los filtros' : 'Crea la primera reunion del condominio'"
     >
-      <div class="flex size-12 items-center justify-center rounded-full bg-muted">
-        <Calendar class="size-6 text-muted-foreground" />
-      </div>
-      <div>
-        <p class="font-medium">No hay reuniones</p>
-        <p class="mt-1 text-sm text-muted-foreground">
-          {{ filterType !== 'all' || filterStatus !== 'all' ? 'Prueba cambiando los filtros' : 'Crea la primera reunion del condominio' }}
-        </p>
-      </div>
-      <Button size="sm" @click="openCreateDialog">
-        <Plus class="mr-1.5 size-4" />
-        Nueva Reunion
-      </Button>
-    </div>
+      <template #action>
+        <Button @click="openCreateDialog">
+          <Plus class="mr-1.5 size-4" />
+          Nueva Reunion
+        </Button>
+      </template>
+    </EmptyState>
 
     <!-- Table (desktop) / Cards (mobile) -->
     <div v-else>
@@ -378,7 +302,7 @@ async function handleDelete() {
               </TableCell>
               <TableCell>
                 <span
-                  class="inline-flex rounded-full px-2 py-0.5 text-xs font-medium"
+                  class="inline-flex rounded-lg px-2 py-0.5 text-xs font-medium"
                   :class="TYPE_COLORS[item.type]"
                 >
                   {{ TYPE_LABELS[item.type] }}
@@ -386,7 +310,7 @@ async function handleDelete() {
               </TableCell>
               <TableCell>
                 <span
-                  class="inline-flex rounded-full px-2 py-0.5 text-xs font-medium"
+                  class="inline-flex rounded-lg px-2 py-0.5 text-xs font-medium"
                   :class="STATUS_COLORS[item.status]"
                 >
                   {{ STATUS_LABELS[item.status] }}
@@ -410,7 +334,7 @@ async function handleDelete() {
                   <Button
                     variant="ghost"
                     size="icon"
-                    class="size-8"
+                    class="size-10"
                     title="Editar"
                     @click="openEditDialog(item)"
                   >
@@ -419,7 +343,7 @@ async function handleDelete() {
                   <Button
                     variant="ghost"
                     size="icon"
-                    class="size-8 text-destructive hover:text-destructive"
+                    class="size-10 text-destructive hover:text-destructive"
                     title="Eliminar"
                     @click="confirmDelete(item.id)"
                   >
@@ -433,85 +357,70 @@ async function handleDelete() {
       </div>
 
       <!-- Mobile cards -->
-      <div class="space-y-3 md:hidden">
-        <Card v-for="item in meetings" :key="item.id">
-          <CardContent class="p-4">
-            <div class="flex items-start justify-between gap-2">
-              <div class="min-w-0 flex-1">
-                <p class="text-sm font-medium leading-snug">{{ item.title }}</p>
-                <div class="mt-1.5 flex items-center gap-1.5 text-xs text-muted-foreground">
-                  <Clock class="size-3 shrink-0" />
-                  <span>{{ formatDateTime(item.date) }}</span>
-                </div>
-                <div v-if="item.location" class="mt-0.5 flex items-center gap-1.5 text-xs text-muted-foreground">
-                  <MapPin class="size-3 shrink-0" />
-                  <span>{{ item.location }}</span>
-                </div>
-              </div>
-              <a
-                v-if="item.meetingLink"
-                :href="item.meetingLink"
-                target="_blank"
-                rel="noopener"
-                class="inline-flex shrink-0 items-center justify-center rounded-md p-1.5 hover:bg-muted"
-                title="Abrir enlace de reunion"
-              >
-                <Video class="size-4 text-primary" />
-              </a>
-            </div>
-            <div class="mt-2 flex flex-wrap items-center gap-1.5">
-              <span
-                class="inline-flex rounded-full px-2 py-0.5 text-xs font-medium"
-                :class="TYPE_COLORS[item.type]"
-              >
-                {{ TYPE_LABELS[item.type] }}
-              </span>
-              <span
-                class="inline-flex rounded-full px-2 py-0.5 text-xs font-medium"
-                :class="STATUS_COLORS[item.status]"
-              >
-                {{ STATUS_LABELS[item.status] }}
-              </span>
-            </div>
-            <div class="mt-3 flex items-center gap-1">
-              <Button
-                variant="ghost"
-                size="icon"
-                class="size-8"
-                title="Editar"
-                @click="openEditDialog(item)"
-              >
-                <Pencil class="size-4" />
-              </Button>
-              <Button
-                variant="ghost"
-                size="icon"
-                class="size-8 text-destructive hover:text-destructive"
-                title="Eliminar"
-                @click="confirmDelete(item.id)"
-              >
-                <Trash2 class="size-4" />
-              </Button>
-            </div>
-          </CardContent>
+      <div class="space-y-2 md:hidden">
+        <Card v-for="item in meetings" :key="item.id" class="px-3 py-2.5">
+          <!-- Row 1: Title + Type badge + Video link -->
+          <div class="flex items-center gap-2">
+            <p class="min-w-0 flex-1 truncate text-sm font-semibold">{{ item.title }}</p>
+            <span
+              class="shrink-0 rounded-lg px-1.5 py-0.5 text-[11px] font-medium"
+              :class="TYPE_COLORS[item.type]"
+            >
+              {{ TYPE_LABELS[item.type] }}
+            </span>
+            <a
+              v-if="item.meetingLink"
+              :href="item.meetingLink"
+              target="_blank"
+              rel="noopener"
+              class="shrink-0 rounded-lg p-1 hover:bg-muted"
+              title="Abrir enlace de reunion"
+            >
+              <Video class="size-3.5 text-primary" />
+            </a>
+          </div>
+          <!-- Row 2: Status + datetime + location | Actions -->
+          <div class="mt-1 flex items-center gap-x-1 text-[11px] text-muted-foreground">
+            <span
+              class="shrink-0 rounded-lg px-1.5 py-0.5 font-medium"
+              :class="STATUS_COLORS[item.status]"
+            >
+              {{ STATUS_LABELS[item.status] }}
+            </span>
+            <span class="opacity-30">&middot;</span>
+            <span class="tabular-nums">{{ formatDateTime(item.date) }}</span>
+            <template v-if="item.location">
+              <span class="opacity-30">&middot;</span>
+              <span class="truncate">{{ item.location }}</span>
+            </template>
+            <span class="flex-1" />
+            <Button variant="ghost" class="h-6 px-2 text-[11px]" @click="openEditDialog(item)">
+              <Pencil class="mr-1 size-3" />
+              Editar
+            </Button>
+            <Button variant="ghost" class="h-6 px-2 text-[11px] text-destructive hover:text-destructive" @click="confirmDelete(item.id)">
+              <Trash2 class="mr-1 size-3" />
+              Borrar
+            </Button>
+          </div>
         </Card>
       </div>
     </div>
 
-    <!-- Create/Edit Dialog -->
-    <Dialog v-model:open="dialogOpen">
-      <DialogContent class="max-h-[90vh] overflow-y-auto sm:max-w-lg">
-        <DialogHeader>
-          <DialogTitle>{{ editingId ? 'Editar Reunion' : 'Nueva Reunion' }}</DialogTitle>
-          <DialogDescription>
+    <!-- Create/Edit Sheet -->
+    <Sheet v-model:open="dialogOpen">
+      <SheetContent side="right" class="overflow-y-auto sm:max-w-lg">
+        <SheetHeader>
+          <SheetTitle>{{ editingId ? 'Editar Reunion' : 'Nueva Reunion' }}</SheetTitle>
+          <SheetDescription>
             {{ editingId ? 'Modifica los datos de la reunion' : 'Completa los datos para programar una reunion' }}
-          </DialogDescription>
-        </DialogHeader>
+          </SheetDescription>
+        </SheetHeader>
 
         <form class="space-y-4 py-2" @submit.prevent="handleSubmit">
           <div class="space-y-2">
             <Label for="meet-title">Titulo</Label>
-            <Input id="meet-title" v-model="formTitle" placeholder="Titulo de la reunion" required />
+            <Input id="meet-title" v-model="formTitle" placeholder="Titulo de la reunion" class="h-12" required />
           </div>
 
           <div class="space-y-2">
@@ -522,28 +431,28 @@ async function handleDelete() {
           <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div class="space-y-2">
               <Label for="meet-date">Fecha y Hora</Label>
-              <Input id="meet-date" v-model="formDate" type="datetime-local" required />
+              <Input id="meet-date" v-model="formDate" type="datetime-local" class="h-12" required />
             </div>
             <div class="space-y-2">
               <Label for="meet-end-date">Hora de Fin</Label>
-              <Input id="meet-end-date" v-model="formEndDate" type="datetime-local" />
+              <Input id="meet-end-date" v-model="formEndDate" type="datetime-local" class="h-12" />
             </div>
           </div>
 
           <div class="space-y-2">
             <Label for="meet-location">Ubicacion</Label>
-            <Input id="meet-location" v-model="formLocation" placeholder="Salon de usos multiples" />
+            <Input id="meet-location" v-model="formLocation" placeholder="Salon de usos multiples" class="h-12" />
           </div>
 
           <div class="space-y-2">
             <Label for="meet-link">Link de Reunion</Label>
-            <Input id="meet-link" v-model="formMeetingLink" placeholder="https://meet.google.com/..." />
+            <Input id="meet-link" v-model="formMeetingLink" placeholder="https://meet.google.com/..." class="h-12" />
           </div>
 
           <div class="space-y-2">
             <Label for="meet-type">Tipo</Label>
             <Select v-model="formType">
-              <SelectTrigger id="meet-type">
+              <SelectTrigger id="meet-type" size="lg">
                 <SelectValue placeholder="Seleccionar tipo" />
               </SelectTrigger>
               <SelectContent>
@@ -569,7 +478,7 @@ async function handleDelete() {
             <div class="space-y-2">
               <Label for="meet-status">Estado</Label>
               <Select v-model="formStatus">
-                <SelectTrigger id="meet-status">
+                <SelectTrigger id="meet-status" size="lg">
                   <SelectValue placeholder="Seleccionar estado" />
                 </SelectTrigger>
                 <SelectContent>
@@ -591,8 +500,8 @@ async function handleDelete() {
             </Button>
           </div>
         </form>
-      </DialogContent>
-    </Dialog>
+      </SheetContent>
+    </Sheet>
 
     <!-- Delete AlertDialog -->
     <AlertDialog v-model:open="deleteDialogOpen">

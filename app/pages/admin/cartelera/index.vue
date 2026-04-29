@@ -1,7 +1,5 @@
 <script setup lang="ts">
 import {
-  Search,
-  Filter,
   Plus,
   Megaphone,
   FileText,
@@ -10,15 +8,16 @@ import {
   Pencil,
   Trash2,
   Loader2,
-  ChevronLeft,
-  ChevronRight,
   Paperclip,
   Calendar,
 } from 'lucide-vue-next'
 import { toast } from 'vue-sonner'
 import type { Announcement, AnnouncementCategory, AnnouncementStatus } from '~~/shared/types/announcement'
+import { ANNOUNCEMENT_CATEGORY_COLORS, ANNOUNCEMENT_CATEGORY_LABELS, ANNOUNCEMENT_STATUS_COLORS, ANNOUNCEMENT_STATUS_LABELS } from '~/composables/useColorMap'
 
-definePageMeta({ layout: 'default', title: 'Gestion de Anuncios' })
+useHead({ title: 'Gestion de Anuncios' })
+
+const { formatDate } = useFormatDate()
 
 const {
   announcements,
@@ -38,8 +37,18 @@ const {
 // Filters & pagination
 const currentPage = ref(1)
 const searchQuery = ref('')
-const filterCategory = ref<AnnouncementCategory | 'all'>('all')
-const showFilters = ref(false)
+const filterCategory = ref<AnnouncementCategory | ''>('')
+
+const { target, isMounted } = useTopbarPortal()
+
+const categoryOptions = [
+  { value: 'general' as const, label: 'General' },
+  { value: 'mantenimiento' as const, label: 'Mantenimiento' },
+  { value: 'seguridad' as const, label: 'Seguridad' },
+  { value: 'financiero' as const, label: 'Financiero' },
+  { value: 'evento' as const, label: 'Evento' },
+  { value: 'urgente' as const, label: 'Urgente' },
+]
 
 // Create/Edit dialog
 const dialogOpen = ref(false)
@@ -57,18 +66,18 @@ const deleteId = ref<string | null>(null)
 const deleteDialogOpen = ref(false)
 
 const CATEGORY_CONFIG: Record<AnnouncementCategory, { label: string, class: string }> = {
-  general: { label: 'General', class: 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400' },
-  mantenimiento: { label: 'Mantenimiento', class: 'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400' },
-  seguridad: { label: 'Seguridad', class: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400' },
-  financiero: { label: 'Financiero', class: 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-400' },
-  evento: { label: 'Evento', class: 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-400' },
-  urgente: { label: 'Urgente', class: 'bg-red-200 text-red-900 dark:bg-red-900/50 dark:text-red-300' },
+  general: { label: ANNOUNCEMENT_CATEGORY_LABELS.general, class: ANNOUNCEMENT_CATEGORY_COLORS.general },
+  mantenimiento: { label: ANNOUNCEMENT_CATEGORY_LABELS.mantenimiento, class: ANNOUNCEMENT_CATEGORY_COLORS.mantenimiento },
+  seguridad: { label: ANNOUNCEMENT_CATEGORY_LABELS.seguridad, class: ANNOUNCEMENT_CATEGORY_COLORS.seguridad },
+  financiero: { label: ANNOUNCEMENT_CATEGORY_LABELS.financiero, class: ANNOUNCEMENT_CATEGORY_COLORS.financiero },
+  evento: { label: ANNOUNCEMENT_CATEGORY_LABELS.evento, class: ANNOUNCEMENT_CATEGORY_COLORS.evento },
+  urgente: { label: ANNOUNCEMENT_CATEGORY_LABELS.urgente, class: ANNOUNCEMENT_CATEGORY_COLORS.urgente },
 }
 
 const STATUS_CONFIG: Record<AnnouncementStatus, { label: string, class: string }> = {
-  draft: { label: 'Borrador', class: 'bg-zinc-100 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400' },
-  published: { label: 'Publicado', class: 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-400' },
-  archived: { label: 'Archivado', class: 'bg-zinc-100 text-zinc-500 dark:bg-zinc-800 dark:text-zinc-500' },
+  draft: { label: ANNOUNCEMENT_STATUS_LABELS.draft, class: ANNOUNCEMENT_STATUS_COLORS.draft },
+  published: { label: ANNOUNCEMENT_STATUS_LABELS.published, class: ANNOUNCEMENT_STATUS_COLORS.published },
+  archived: { label: ANNOUNCEMENT_STATUS_LABELS.archived, class: ANNOUNCEMENT_STATUS_COLORS.archived },
 }
 
 // Stats
@@ -87,7 +96,7 @@ const filteredAnnouncements = computed(() => {
 
 async function loadAnnouncements() {
   const params: Record<string, unknown> = { page: currentPage.value }
-  if (filterCategory.value && filterCategory.value !== 'all') params.category = filterCategory.value
+  if (filterCategory.value) params.category = filterCategory.value
   await fetchAnnouncements(params as Parameters<typeof fetchAnnouncements>[0])
 }
 
@@ -203,119 +212,54 @@ function handlePdfSelect(event: Event) {
   const file = target.files?.[0]
   if (file) formPdfFile.value = file
 }
-
-function formatDate(dateStr: string): string {
-  return new Date(dateStr).toLocaleDateString('es-VE', {
-    day: '2-digit',
-    month: 'short',
-    year: 'numeric',
-  })
-}
 </script>
 
 <template>
-  <div class="mx-auto max-w-5xl">
-    <!-- Header -->
-    <div class="mb-6 flex justify-end">
+  <div>
+    <!-- Topbar actions -->
+    <Teleport :to="target" defer v-if="isMounted">
+      <TopbarSearch v-model="searchQuery" placeholder="Buscar anuncio...">
+        <TopbarFilters :active="filterCategory !== ''" @clear="filterCategory = ''">
+          <TopbarFilterGroup v-model="filterCategory" label="Categoria" :options="categoryOptions" />
+        </TopbarFilters>
+      </TopbarSearch>
       <Button size="sm" @click="openCreateDialog">
-        <Plus class="mr-1.5 size-4" />
-        Nuevo Anuncio
+        <Plus class="mr-1.5 size-3.5" />
+        Nuevo
       </Button>
-    </div>
+    </Teleport>
 
     <!-- Stats cards -->
-    <div class="mb-6 grid grid-cols-2 gap-2">
-      <div class="flex items-center gap-3 rounded-lg border bg-card p-3">
-        <div class="flex size-8 shrink-0 items-center justify-center rounded-md bg-emerald-100 dark:bg-emerald-900/30">
-          <Megaphone class="size-4 text-emerald-600" />
-        </div>
-        <div>
-          <p v-if="isLoading"><Skeleton class="h-5 w-8" /></p>
-          <p v-else class="text-lg font-bold leading-none">{{ totalPublished }}</p>
-          <p class="mt-0.5 text-[11px] text-muted-foreground">Publicados</p>
-        </div>
-      </div>
-      <div class="flex items-center gap-3 rounded-lg border bg-card p-3">
-        <div class="flex size-8 shrink-0 items-center justify-center rounded-md bg-zinc-100 dark:bg-zinc-800">
-          <FileText class="size-4 text-zinc-600 dark:text-zinc-400" />
-        </div>
-        <div>
-          <p v-if="isLoading"><Skeleton class="h-5 w-8" /></p>
-          <p v-else class="text-lg font-bold leading-none">{{ totalDrafts }}</p>
-          <p class="mt-0.5 text-[11px] text-muted-foreground">Borradores</p>
-        </div>
-      </div>
+    <div class="mb-6 grid grid-cols-2 gap-3">
+      <StatCard
+        label="Publicados"
+        :value="totalPublished"
+        :icon="Megaphone"
+        icon-bg-class="bg-primary/10 text-primary"
+        :is-loading="isLoading"
+      />
+      <StatCard
+        label="Borradores"
+        :value="totalDrafts"
+        :icon="FileText"
+        icon-bg-class="bg-muted text-muted-foreground"
+        :is-loading="isLoading"
+      />
     </div>
 
     <!-- Error -->
-    <div
-      v-if="error"
-      role="alert"
-      class="mb-4 rounded-lg border border-destructive/50 bg-destructive/10 p-3 text-sm text-destructive"
-    >
-      {{ error }}
-    </div>
-
-    <!-- Search & filters -->
-    <div class="mb-4 space-y-3">
-      <div class="flex gap-2">
-        <div class="relative flex-1">
-          <Search class="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-          <Input
-            v-model="searchQuery"
-            placeholder="Buscar por título o autor..."
-            class="pl-9"
-          />
-        </div>
-        <Button
-          variant="outline"
-          size="icon"
-          :class="{ 'border-primary text-primary': showFilters }"
-          @click="showFilters = !showFilters"
-        >
-          <Filter class="size-4" />
-        </Button>
-      </div>
-
-      <!-- Filter selects -->
-      <div v-if="showFilters" class="grid grid-cols-1 gap-3">
-        <Select v-model="filterCategory">
-          <SelectTrigger>
-            <SelectValue placeholder="Categoría" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">Todas</SelectItem>
-            <SelectItem value="general">General</SelectItem>
-            <SelectItem value="mantenimiento">Mantenimiento</SelectItem>
-            <SelectItem value="seguridad">Seguridad</SelectItem>
-            <SelectItem value="financiero">Financiero</SelectItem>
-            <SelectItem value="evento">Evento</SelectItem>
-            <SelectItem value="urgente">Urgente</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
-    </div>
+    <ErrorAlert v-if="error" :message="error" class="mb-4" />
 
     <!-- Loading -->
-    <div v-if="isLoading" class="space-y-2">
-      <Skeleton v-for="i in 5" :key="i" class="h-16 w-full rounded-lg" />
-    </div>
+    <ListSkeleton v-if="isLoading" :count="5" variant="row" />
 
     <!-- Empty state -->
-    <div
+    <EmptyState
       v-else-if="filteredAnnouncements.length === 0"
-      class="flex flex-col items-center gap-4 rounded-lg border border-dashed p-8 text-center"
-    >
-      <div class="flex size-12 items-center justify-center rounded-full bg-muted">
-        <Megaphone class="size-6 text-muted-foreground" />
-      </div>
-      <div>
-        <p class="font-medium">No hay anuncios</p>
-        <p class="mt-1 text-sm text-muted-foreground">
-          {{ filterCategory !== 'all' ? 'Prueba cambiando los filtros' : 'Los anuncios de la cartelera aparecerán aquí' }}
-        </p>
-      </div>
-    </div>
+      :icon="Megaphone"
+      title="No hay anuncios"
+      :description="filterCategory ? 'Prueba cambiando los filtros' : 'Los anuncios de la cartelera aparecerán aquí'"
+    />
 
     <!-- Table (desktop) / Cards (mobile) -->
     <div v-else>
@@ -337,7 +281,7 @@ function formatDate(dateStr: string): string {
               <TableCell class="max-w-[200px] truncate font-medium">{{ item.title }}</TableCell>
               <TableCell>
                 <span
-                  class="inline-flex rounded-full px-2 py-0.5 text-xs font-medium"
+                  class="inline-flex rounded-lg px-2 py-0.5 text-xs font-medium"
                   :class="CATEGORY_CONFIG[item.category].class"
                 >
                   {{ CATEGORY_CONFIG[item.category].label }}
@@ -345,7 +289,7 @@ function formatDate(dateStr: string): string {
               </TableCell>
               <TableCell>
                 <span
-                  class="inline-flex rounded-full px-2 py-0.5 text-xs font-medium"
+                  class="inline-flex rounded-lg px-2 py-0.5 text-xs font-medium"
                   :class="STATUS_CONFIG[item.status].class"
                 >
                   {{ STATUS_CONFIG[item.status].label }}
@@ -359,7 +303,7 @@ function formatDate(dateStr: string): string {
                     v-if="item.status === 'draft'"
                     variant="ghost"
                     size="icon"
-                    class="size-8"
+                    class="size-10"
                     title="Publicar"
                     @click="handlePublish(item.id)"
                   >
@@ -368,7 +312,7 @@ function formatDate(dateStr: string): string {
                   <Button
                     variant="ghost"
                     size="icon"
-                    class="size-8"
+                    class="size-10"
                     title="Editar"
                     @click="openEditDialog(item)"
                   >
@@ -378,7 +322,7 @@ function formatDate(dateStr: string): string {
                     v-if="item.status === 'published'"
                     variant="ghost"
                     size="icon"
-                    class="size-8"
+                    class="size-10"
                     title="Archivar"
                     @click="handleArchive(item.id)"
                   >
@@ -387,7 +331,7 @@ function formatDate(dateStr: string): string {
                   <Button
                     variant="ghost"
                     size="icon"
-                    class="size-8 text-destructive hover:text-destructive"
+                    class="size-10 text-destructive hover:text-destructive"
                     title="Eliminar"
                     @click="confirmDelete(item.id)"
                   >
@@ -401,110 +345,76 @@ function formatDate(dateStr: string): string {
       </div>
 
       <!-- Mobile cards -->
-      <div class="space-y-3 md:hidden">
+      <div class="space-y-2 md:hidden">
         <Card v-for="item in filteredAnnouncements" :key="item.id">
-          <CardContent class="p-4">
-            <div class="flex items-start justify-between gap-2">
-              <div class="min-w-0 flex-1">
-                <p class="text-sm font-medium leading-snug">{{ item.title }}</p>
-                <p class="mt-1 text-xs text-muted-foreground">
-                  {{ item.authorName ?? '—' }} · {{ formatDate(item.createdAt) }}
-                </p>
-              </div>
-            </div>
-            <div class="mt-2 flex flex-wrap items-center gap-1.5">
+          <CardContent class="px-3 py-2.5">
+            <!-- Row 1: Title + Category badge + Date -->
+            <div class="flex items-center gap-1.5">
+              <p class="min-w-0 flex-1 truncate text-sm font-semibold">{{ item.title }}</p>
               <span
-                class="inline-flex rounded-full px-2 py-0.5 text-xs font-medium"
+                class="inline-flex shrink-0 rounded-lg px-2 py-0.5 text-[11px] font-medium"
                 :class="CATEGORY_CONFIG[item.category].class"
               >
                 {{ CATEGORY_CONFIG[item.category].label }}
               </span>
+            </div>
+            <!-- Row 2: Status · Author · Date | Actions inline -->
+            <div class="mt-0.5 flex items-center gap-x-1 text-[11px] text-muted-foreground">
               <span
-                class="inline-flex rounded-full px-2 py-0.5 text-xs font-medium"
+                class="inline-flex shrink-0 rounded-lg px-1.5 py-0.5 font-medium"
                 :class="STATUS_CONFIG[item.status].class"
               >
                 {{ STATUS_CONFIG[item.status].label }}
               </span>
-            </div>
-            <div class="mt-3 flex items-center gap-1">
-              <Button
-                v-if="item.status === 'draft'"
-                variant="ghost"
-                size="icon"
-                class="size-8"
-                title="Publicar"
-                @click="handlePublish(item.id)"
-              >
-                <Send class="size-4 text-emerald-600" />
-              </Button>
-              <Button
-                variant="ghost"
-                size="icon"
-                class="size-8"
-                title="Editar"
-                @click="openEditDialog(item)"
-              >
-                <Pencil class="size-4" />
-              </Button>
-              <Button
-                v-if="item.status === 'published'"
-                variant="ghost"
-                size="icon"
-                class="size-8"
-                title="Archivar"
-                @click="handleArchive(item.id)"
-              >
-                <Archive class="size-4" />
-              </Button>
-              <Button
-                variant="ghost"
-                size="icon"
-                class="size-8 text-destructive hover:text-destructive"
-                title="Eliminar"
-                @click="confirmDelete(item.id)"
-              >
-                <Trash2 class="size-4" />
-              </Button>
+              <span class="opacity-30">·</span>
+              <span class="truncate">{{ item.authorName ?? '—' }}</span>
+              <span class="opacity-30">·</span>
+              <span class="shrink-0 tabular-nums">{{ formatDate(item.createdAt) }}</span>
+              <span class="ml-auto flex shrink-0 items-center gap-0.5">
+                <Button
+                  v-if="item.status === 'draft'"
+                  variant="ghost"
+                  class="h-6 px-2 text-[11px] text-primary hover:text-primary"
+                  title="Publicar"
+                  @click="handlePublish(item.id)"
+                >
+                  <Send class="size-3" />
+                </Button>
+                <Button
+                  variant="ghost"
+                  class="h-6 px-2 text-[11px] text-muted-foreground hover:text-foreground"
+                  title="Editar"
+                  @click="openEditDialog(item)"
+                >
+                  <Pencil class="size-3" />
+                </Button>
+                <Button
+                  variant="ghost"
+                  class="h-6 px-2 text-[11px] text-destructive hover:text-destructive"
+                  title="Eliminar"
+                  @click="confirmDelete(item.id)"
+                >
+                  <Trash2 class="size-3" />
+                </Button>
+              </span>
             </div>
           </CardContent>
         </Card>
       </div>
 
       <!-- Pagination -->
-      <div v-if="totalPages > 1" class="mt-4 flex items-center justify-between">
-        <Button
-          variant="outline"
-          size="sm"
-          :disabled="currentPage <= 1"
-          @click="currentPage--"
-        >
-          <ChevronLeft class="mr-1 size-4" />
-          Anterior
-        </Button>
-        <span class="text-sm text-muted-foreground">
-          {{ currentPage }} / {{ totalPages }}
-        </span>
-        <Button
-          variant="outline"
-          size="sm"
-          :disabled="currentPage >= totalPages"
-          @click="currentPage++"
-        >
-          Siguiente
-          <ChevronRight class="ml-1 size-4" />
-        </Button>
-      </div>
+      <ListPagination v-model:current-page="currentPage" :total-pages="totalPages" class="mt-4" />
     </div>
 
-    <!-- Create/Edit Dialog -->
-    <Dialog v-model:open="dialogOpen">
-      <DialogContent class="max-h-[90vh] overflow-y-auto sm:max-w-lg">
-        <DialogHeader>
-          <DialogTitle>{{ editingId ? 'Editar Anuncio' : 'Nuevo Anuncio' }}</DialogTitle>
-          <DialogDescription>
+    <!-- Create/Edit Sheet -->
+    <Sheet v-model:open="dialogOpen">
+      <SheetContent side="right" class="overflow-y-auto sm:max-w-lg">
+        <SheetHeader>
+          <SheetTitle>{{ editingId ? 'Editar Anuncio' : 'Nuevo Anuncio' }}</SheetTitle>
+          <SheetDescription>
             {{ editingId ? 'Modifica los datos del anuncio' : 'Completa los datos para crear un nuevo anuncio' }}
-          </DialogDescription>
-        </DialogHeader>
+          </SheetDescription>
+        </SheetHeader>
 
         <form class="space-y-4 py-2" @submit.prevent="handleSubmit">
           <div>
@@ -513,7 +423,7 @@ function formatDate(dateStr: string): string {
               id="ann-title"
               v-model="formTitle"
               placeholder="Título del anuncio"
-              class="mt-1.5"
+              class="h-12 mt-1.5"
               required
             />
           </div>
@@ -533,7 +443,7 @@ function formatDate(dateStr: string): string {
           <div>
             <label for="ann-category" class="text-sm font-medium">Categoría</label>
             <Select v-model="formCategory">
-              <SelectTrigger id="ann-category" class="mt-1.5">
+              <SelectTrigger id="ann-category" size="lg" class="mt-1.5">
                 <SelectValue placeholder="Seleccionar categoría" />
               </SelectTrigger>
               <SelectContent>
@@ -550,7 +460,7 @@ function formatDate(dateStr: string): string {
           <div>
             <label for="ann-status" class="text-sm font-medium">Estado</label>
             <Select v-model="formStatus">
-              <SelectTrigger id="ann-status" class="mt-1.5">
+              <SelectTrigger id="ann-status" size="lg" class="mt-1.5">
                 <SelectValue placeholder="Seleccionar estado" />
               </SelectTrigger>
               <SelectContent>
@@ -563,7 +473,7 @@ function formatDate(dateStr: string): string {
           <div v-if="!editingId">
             <label class="text-sm font-medium">Adjunto PDF</label>
             <div class="mt-1.5 flex items-center gap-2">
-              <Button type="button" variant="outline" size="sm" @click="pdfInputRef?.click()">
+              <Button type="button" variant="outline" @click="pdfInputRef?.click()">
                 <Paperclip class="mr-1.5 size-4" />
                 {{ formPdfFile ? formPdfFile.name : 'Seleccionar PDF' }}
               </Button>
@@ -588,7 +498,7 @@ function formatDate(dateStr: string): string {
                 id="ann-expires"
                 v-model="formExpiresAt"
                 type="date"
-                class="pl-9"
+                class="h-12 pl-9"
               />
             </div>
           </div>
@@ -603,8 +513,8 @@ function formatDate(dateStr: string): string {
             </Button>
           </div>
         </form>
-      </DialogContent>
-    </Dialog>
+      </SheetContent>
+    </Sheet>
 
     <!-- Delete AlertDialog -->
     <AlertDialog v-model:open="deleteDialogOpen">

@@ -8,8 +8,9 @@ import {
   MessageCircle,
 } from 'lucide-vue-next'
 import type { ChatRoomType } from '~~/shared/types/chat'
+import { CHAT_CHANNEL_COLORS } from '~/composables/useColorMap'
 
-definePageMeta({ layout: 'default', title: 'Chat' })
+useHead({ title: 'Chat' })
 
 const { rooms, isLoading, error, fetchRooms } = useChatRooms()
 
@@ -17,26 +18,22 @@ const ROOM_TYPE_CONFIG: Record<ChatRoomType, { label: string; icon: typeof Globe
   general: {
     label: 'General',
     icon: Globe,
-    iconBg: 'bg-primary/10',
-    iconColor: 'text-primary',
+    ...CHAT_CHANNEL_COLORS.general,
   },
   unit: {
     label: 'Mi Rancho',
     icon: Home,
-    iconBg: 'bg-amber-100 dark:bg-amber-900/30',
-    iconColor: 'text-amber-700 dark:text-amber-400',
+    ...CHAT_CHANNEL_COLORS.unit,
   },
   vigilancia: {
     label: 'Vigilancia',
     icon: Shield,
-    iconBg: 'bg-blue-100 dark:bg-blue-900/30',
-    iconColor: 'text-blue-700 dark:text-blue-400',
+    ...CHAT_CHANNEL_COLORS.vigilancia,
   },
   admin: {
     label: 'Admin',
     icon: Settings,
-    iconBg: 'bg-emerald-100 dark:bg-emerald-900/30',
-    iconColor: 'text-emerald-700 dark:text-emerald-400',
+    ...CHAT_CHANNEL_COLORS.admin,
   },
 }
 
@@ -60,7 +57,7 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="mx-auto max-w-lg">
+  <div>
     <!-- Tabs -->
     <div class="mb-4 flex gap-2">
       <Button
@@ -80,16 +77,10 @@ onMounted(() => {
     </div>
 
     <!-- Error -->
-    <div
-      v-if="error"
-      role="alert"
-      class="mb-4 rounded-lg border border-destructive/50 bg-destructive/10 p-3 text-sm text-destructive"
-    >
-      {{ error }}
-    </div>
+    <ErrorAlert :message="error" class="mb-4" />
 
     <!-- Loading -->
-    <div v-if="isLoading" class="divide-y rounded-xl border bg-card">
+    <div v-if="isLoading" class="divide-y rounded-lg border bg-card">
       <div v-for="i in 4" :key="i" class="flex items-center gap-3 px-3 py-2.5">
         <Skeleton class="size-9 shrink-0 rounded-full" />
         <div class="flex-1 space-y-1.5">
@@ -103,25 +94,15 @@ onMounted(() => {
     <!-- Content -->
     <template v-else-if="!error">
       <!-- Empty state -->
-      <div
+      <EmptyState
         v-if="activeRooms.length === 0"
-        class="flex flex-col items-center gap-4 rounded-lg border border-dashed p-8 text-center"
-      >
-        <div class="flex size-10 items-center justify-center rounded-lg bg-muted">
-          <MessageCircle class="size-5 text-muted-foreground" />
-        </div>
-        <div>
-          <p class="font-medium">
-            {{ activeTab === 'canales' ? 'No hay canales disponibles' : 'No hay chats de unidad' }}
-          </p>
-          <p class="mt-1 text-sm text-muted-foreground">
-            {{ activeTab === 'canales' ? 'Los canales aparecerán aquí cuando estén habilitados' : 'Los chats de tu rancho aparecerán aquí' }}
-          </p>
-        </div>
-      </div>
+        :icon="MessageCircle"
+        :title="activeTab === 'canales' ? 'No hay canales disponibles' : 'No hay chats de unidad'"
+        :description="activeTab === 'canales' ? 'Los canales aparecerán aquí cuando estén habilitados' : 'Los chats de tu rancho aparecerán aquí'"
+      />
 
       <!-- Room list -->
-      <div v-else class="divide-y rounded-xl border bg-card">
+      <div v-else class="divide-y rounded-lg border bg-card">
         <NuxtLink
           v-for="room in activeRooms"
           :key="room.id"

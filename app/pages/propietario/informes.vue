@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import { ChevronLeft, ChevronRight, FileText } from 'lucide-vue-next'
+import { Download, FileText } from 'lucide-vue-next'
 
-definePageMeta({ layout: 'default', title: 'Informes Financieros' })
+useHead({ title: 'Informes Financieros' })
 
 const MONTHS = [
   'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
@@ -24,13 +24,7 @@ function formatMonth(month: number, year: number): string {
   return `${MONTHS[month - 1]} ${year}`
 }
 
-function formatDate(dateStr: string): string {
-  return new Date(dateStr).toLocaleDateString('es-VE', {
-    day: '2-digit',
-    month: 'short',
-    year: 'numeric',
-  })
-}
+const { formatDate } = useFormatDate()
 
 function openReport(filePath: string): void {
   window.open(`/api/finance/reports/${filePath}`, '_blank')
@@ -38,95 +32,53 @@ function openReport(filePath: string): void {
 </script>
 
 <template>
-  <div class="mx-auto max-w-lg">
-    <!-- Error alert -->
-    <div
-      v-if="error"
-      role="alert"
-      class="mb-4 rounded-lg border border-destructive/50 bg-destructive/10 p-3 text-sm text-destructive"
-    >
-      {{ error }}
-    </div>
+  <div>
+    <ErrorAlert :message="error" class="mb-4" />
 
-    <!-- Loading skeletons -->
-    <div v-if="isLoading" class="space-y-3">
-      <Card v-for="i in 3" :key="i">
-        <CardContent class="p-4">
-          <div class="space-y-3">
-            <Skeleton class="h-4 w-3/4" />
-            <Skeleton class="h-5 w-24 rounded-full" />
-            <Skeleton class="h-8 w-32" />
-            <Skeleton class="h-3 w-28" />
-          </div>
-        </CardContent>
-      </Card>
-    </div>
+    <ListSkeleton v-if="isLoading" :count="3" />
 
-    <!-- Content -->
     <template v-else-if="!error">
-      <!-- Empty state -->
-      <div
+      <EmptyState
         v-if="reports.length === 0"
-        class="flex flex-col items-center gap-4 rounded-lg border border-dashed p-8 text-center"
-      >
-        <div class="flex size-12 items-center justify-center rounded-full bg-muted">
-          <FileText class="size-6 text-muted-foreground" />
-        </div>
-        <div>
-          <p class="font-medium">No hay informes publicados</p>
-          <p class="mt-1 text-sm text-muted-foreground">Los reportes financieros aparecerán aquí</p>
-        </div>
-      </div>
+        :icon="FileText"
+        title="No hay informes publicados"
+        description="Los informes financieros aparecerán aquí"
+      />
 
-      <!-- Report cards -->
-      <div v-else class="space-y-3">
-        <Card v-for="report in reports" :key="report.id">
-          <CardContent class="p-4">
-            <p class="text-sm font-medium">{{ report.title }}</p>
-            <Badge class="mt-2">{{ formatMonth(report.month, report.year) }}</Badge>
-            <div class="mt-3">
+      <div v-else class="space-y-2">
+        <Card
+          v-for="report in reports"
+          :key="report.id"
+          class="cursor-pointer hover:bg-muted/50"
+          @click="openReport(report.filePath)"
+        >
+          <CardContent class="px-3 py-2.5">
+            <div class="flex items-center gap-2">
+              <p class="min-w-0 flex-1 truncate text-sm font-semibold">{{ report.title }}</p>
+              <Badge variant="secondary" class="shrink-0 text-[11px]">{{ formatMonth(report.month, report.year) }}</Badge>
+            </div>
+            <div class="mt-1 flex items-center gap-2">
+              <span class="text-[11px] text-muted-foreground tabular-nums">Publicado el {{ formatDate(report.createdAt) }}</span>
+              <span class="flex-1" />
               <Button
-                variant="outline"
+                variant="ghost"
                 size="sm"
+                class="h-6 px-2 text-[11px]"
                 aria-label="Descargar PDF"
-                @click="openReport(report.filePath)"
+                @click.stop="openReport(report.filePath)"
               >
-                <FileText class="mr-1.5 size-4" />
+                <Download class="mr-1 size-3" />
                 Descargar PDF
               </Button>
             </div>
-            <p class="mt-2 text-xs text-muted-foreground">
-              Publicado el {{ formatDate(report.createdAt) }}
-            </p>
           </CardContent>
         </Card>
 
-        <!-- Pagination -->
-        <div v-if="totalPages > 1" class="flex items-center justify-between pt-4">
-          <Button
-            variant="outline"
-            size="sm"
-            :disabled="currentPage <= 1"
-            aria-label="Página anterior"
-            @click="currentPage--"
-          >
-            <ChevronLeft class="mr-1 size-4" />
-            Anterior
-          </Button>
-          <span class="text-sm text-muted-foreground">
-            Página {{ currentPage }} de {{ totalPages }}
-          </span>
-          <Button
-            variant="outline"
-            size="sm"
-            :disabled="currentPage >= totalPages"
-            aria-label="Página siguiente"
-            @click="currentPage++"
-          >
-            Siguiente
-            <ChevronRight class="ml-1 size-4" />
-          </Button>
-        </div>
+        <ListPagination
+          v-model:current-page="currentPage"
+          :total-pages="totalPages"
+          class="mt-4"
+        />
       </div>
     </template>
   </div>

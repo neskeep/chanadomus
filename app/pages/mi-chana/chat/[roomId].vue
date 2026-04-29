@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import {
-  ChevronLeft,
   Send,
   Loader2,
 } from 'lucide-vue-next'
@@ -8,8 +7,8 @@ import type { ChatMessage } from '~~/shared/types/chat'
 
 definePageMeta({ layout: 'default' })
 
+const { target, isMounted } = useTopbarPortal()
 const route = useRoute()
-const router = useRouter()
 const { user } = useAuth()
 
 const roomId = computed(() => route.params.roomId as string)
@@ -35,6 +34,13 @@ const roomName = computed(() => {
   const room = rooms.value.find(r => r.id === roomId.value)
   return room?.name ?? 'Chat'
 })
+
+// Breadcrumb navigation
+const chatPageOverride = computed(() => ({
+  title: roomName.value,
+  breadcrumbs: [{ label: 'Chat', to: '/mi-chana/chat' }],
+}))
+usePageInfoOverride(chatPageOverride)
 
 // Group consecutive messages from the same sender
 interface MessageGroup {
@@ -154,25 +160,28 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <div class="-mx-4 -mt-6 -mb-6 flex flex-col h-[calc(100dvh-7.5rem)] md:h-[calc(100dvh-3.5rem)]">
-    <!-- Chat header -->
-    <div class="flex shrink-0 items-center gap-3 border-b bg-background px-4 py-3">
-      <button
-        type="button"
-        class="flex size-8 items-center justify-center rounded-lg transition-colors hover:bg-muted"
-        aria-label="Volver a salas de chat"
-        @click="router.push('/mi-chana/chat')"
+  <div class="absolute inset-0 flex flex-col pb-[4.5rem] md:pb-0">
+    <Teleport :to="target" defer v-if="isMounted">
+      <Badge
+        variant="outline"
+        :class="connected ? 'border-primary text-primary' : 'border-destructive text-destructive'"
+        class="gap-1.5"
       >
-        <ChevronLeft class="size-5" />
-      </button>
-      <h1 class="min-w-0 flex-1 truncate text-sm font-semibold">{{ roomName }}</h1>
-      <span
-        class="size-2 shrink-0 rounded-full"
-        :class="connected ? 'bg-emerald-500' : 'bg-red-500'"
-        :aria-label="connected ? 'Conectado' : 'Desconectado'"
-        role="status"
-      />
-    </div>
+        <span
+          class="relative flex size-2"
+        >
+          <span
+            v-if="connected"
+            class="absolute inline-flex size-full animate-ping rounded-full bg-primary opacity-75"
+          />
+          <span
+            class="relative inline-flex size-2 rounded-full"
+            :class="connected ? 'bg-primary' : 'bg-destructive'"
+          />
+        </span>
+        {{ connected ? 'Conectado' : 'Desconectado' }}
+      </Badge>
+    </Teleport>
 
     <!-- Messages area -->
     <div
@@ -199,7 +208,7 @@ onBeforeUnmount(() => {
           <Skeleton v-if="i % 2 !== 0" class="size-7 shrink-0 rounded-full" />
           <div :class="i % 2 === 0 ? 'items-end' : 'items-start'" class="flex flex-col gap-1">
             <Skeleton v-if="i % 2 !== 0" class="h-3 w-16" />
-            <Skeleton class="h-8 rounded-2xl" :class="i % 2 === 0 ? 'w-40' : 'w-48'" />
+            <Skeleton class="h-8 rounded-lg" :class="i % 2 === 0 ? 'w-40' : 'w-48'" />
           </div>
         </div>
       </div>
@@ -223,12 +232,12 @@ onBeforeUnmount(() => {
               :key="msg.id"
               class="max-w-[80%]"
             >
-              <div class="rounded-2xl rounded-br-md bg-primary px-3 py-2 text-primary-foreground">
+              <div class="rounded-lg rounded-br-sm bg-primary px-3 py-2 text-primary-foreground">
                 <p class="text-sm whitespace-pre-wrap break-words">{{ msg.content }}</p>
               </div>
               <p
                 v-if="mi === group.messages.length - 1"
-                class="mt-0.5 text-right text-[10px] text-muted-foreground"
+                class="mt-0.5 text-right text-xs text-muted-foreground"
               >
                 {{ formatTime(msg.createdAt) }}
               </p>
@@ -254,12 +263,12 @@ onBeforeUnmount(() => {
                 :key="msg.id"
                 class="max-w-[80%]"
               >
-                <div class="rounded-2xl rounded-bl-md bg-muted px-3 py-2">
+                <div class="rounded-lg rounded-bl-sm bg-muted px-3 py-2">
                   <p class="text-sm whitespace-pre-wrap break-words">{{ msg.content }}</p>
                 </div>
                 <p
                   v-if="mi === group.messages.length - 1"
-                  class="mt-0.5 text-[10px] text-muted-foreground"
+                  class="mt-0.5 text-xs text-muted-foreground"
                 >
                   {{ formatTime(msg.createdAt) }}
                 </p>

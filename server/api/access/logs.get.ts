@@ -48,6 +48,7 @@ export default defineEventHandler(async (event) => {
       unitNumber: units.number,
       unitLabel: units.label,
       notes: accessLogs.notes,
+      exitAt: accessLogs.exitAt,
       createdAt: accessLogs.createdAt,
     })
     .from(accessLogs)
@@ -73,6 +74,7 @@ export default defineEventHandler(async (event) => {
     unitNumber: row.unitNumber,
     unitLabel: row.unitLabel,
     notes: row.notes,
+    exitAt: row.exitAt?.toISOString() ?? null,
     createdAt: row.createdAt.toISOString(),
   }))
 

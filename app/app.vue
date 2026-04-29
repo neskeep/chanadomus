@@ -3,5 +3,7 @@
   <NuxtLayout>
     <NuxtPage />
   </NuxtLayout>
-  <Sonner />
+  <ClientOnly>
+    <Sonner />
+  </ClientOnly>
 </template>

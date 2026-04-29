@@ -1,9 +1,9 @@
 <script setup lang="ts">
-import { ArrowLeft, Camera, X, Loader2 } from 'lucide-vue-next'
+import { Camera, X, Loader2 } from 'lucide-vue-next'
 import { toast } from 'vue-sonner'
 import type { IncidentPriority } from '~~/shared/types/incident'
 
-definePageMeta({ layout: 'default', title: 'Reportar Incidencia' })
+useHead({ title: 'Reportar Incidencia' })
 
 const router = useRouter()
 const { isCreating, error, createIncident } = useIncidents()
@@ -80,109 +80,103 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <div class="mx-auto max-w-lg">
-    <!-- Header -->
-    <div class="mb-6">
-      <Button variant="ghost" size="sm" class="-ml-2" as-child>
-        <NuxtLink to="/propietario/incidencias">
-          <ArrowLeft class="mr-1 size-4" />
-          Volver
-        </NuxtLink>
-      </Button>
-    </div>
-
-    <form class="space-y-5" @submit.prevent="handleSubmit">
-      <!-- Title -->
-      <div class="space-y-2">
-        <Label for="title">Título</Label>
-        <Input
-          id="title"
-          v-model="title"
-          placeholder="Ej: Tubería rota en pasillo"
-          maxlength="200"
-          required
-        />
-        <p class="text-xs text-muted-foreground">{{ title.length }}/200</p>
-      </div>
-
-      <!-- Description -->
-      <div class="space-y-2">
-        <Label for="description">Descripción</Label>
-        <Textarea
-          id="description"
-          v-model="description"
-          placeholder="Describe el problema con detalle: ubicación, desde cuándo ocurre, etc."
-          rows="4"
-          required
-        />
-      </div>
-
-      <!-- Priority -->
-      <div class="space-y-2">
-        <Label for="priority">Prioridad</Label>
-        <Select v-model="priority">
-          <SelectTrigger id="priority">
-            <SelectValue placeholder="Selecciona prioridad" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="low">Baja — No urgente</SelectItem>
-            <SelectItem value="medium">Media — Requiere atención</SelectItem>
-            <SelectItem value="high">Alta — Urgente</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
-
-      <!-- Photos -->
-      <div class="space-y-2">
-        <Label>Fotos (opcional, máx. {{ MAX_PHOTOS }})</Label>
-
-        <!-- Photo previews -->
-        <div v-if="photos.length > 0" class="flex gap-2">
-          <div
-            v-for="(photo, index) in photos"
-            :key="index"
-            class="relative"
-          >
-            <img
-              :src="photo.preview"
-              :alt="`Foto ${index + 1}`"
-              class="size-24 rounded-lg border object-cover"
+  <div>
+    <Card>
+      <CardContent class="p-4">
+        <form class="space-y-6" @submit.prevent="handleSubmit">
+          <!-- Title -->
+          <div class="space-y-1.5">
+            <Label for="title">Título <span class="text-destructive">*</span></Label>
+            <Input
+              id="title"
+              v-model="title"
+              placeholder="Ej: Tubería rota en el pasillo principal"
+              class="h-12 text-base"
+              maxlength="200"
+              required
             />
-            <button
-              type="button"
-              class="absolute -right-1.5 -top-1.5 flex size-5 items-center justify-center rounded-full bg-destructive text-destructive-foreground shadow-sm"
-              @click="removePhoto(index)"
-            >
-              <X class="size-3" />
-            </button>
+            <p class="text-xs text-muted-foreground">{{ title.length }}/200</p>
           </div>
-        </div>
 
-        <!-- Upload button -->
-        <div v-if="photos.length < MAX_PHOTOS">
-          <label
-            class="flex cursor-pointer flex-col items-center gap-2 rounded-lg border-2 border-dashed p-6 transition-colors hover:border-primary/50 hover:bg-muted/50"
-          >
-            <Camera class="size-8 text-muted-foreground" />
-            <span class="text-sm text-muted-foreground">Toca para agregar foto</span>
-            <input
-              type="file"
-              accept="image/jpeg,image/png,image/webp"
-              multiple
-              class="hidden"
-              @change="onFileChange"
+          <!-- Description -->
+          <div class="space-y-1.5">
+            <Label for="description">Descripción <span class="text-destructive">*</span></Label>
+            <Textarea
+              id="description"
+              v-model="description"
+              placeholder="Describe el problema con detalle: ubicación, desde cuándo ocurre, etc."
+              rows="4"
+              class="text-base"
+              required
             />
-          </label>
-        </div>
-      </div>
+          </div>
 
-      <Separator />
+          <!-- Priority -->
+          <div class="space-y-1.5">
+            <Label for="priority">Prioridad</Label>
+            <Select v-model="priority">
+              <SelectTrigger id="priority" size="lg" class="w-full text-base">
+                <SelectValue placeholder="Selecciona prioridad" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="low">Baja — No urgente</SelectItem>
+                <SelectItem value="medium">Media — Requiere atención</SelectItem>
+                <SelectItem value="high">Alta — Urgente</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
 
-      <!-- Submit -->
-      <Button type="submit" class="w-full" :disabled="!canSubmit">
-        <Loader2 v-if="isCreating" class="mr-2 size-4 animate-spin" />
-        {{ isCreating ? 'Enviando...' : 'Reportar incidencia' }}
-      </Button>
-    </form>
+          <!-- Photos -->
+          <div class="space-y-1.5">
+            <Label>Fotos <span class="text-xs text-muted-foreground">(opcional, máx. {{ MAX_PHOTOS }})</span></Label>
+
+            <!-- Photo previews -->
+            <div v-if="photos.length > 0" class="flex gap-2">
+              <div
+                v-for="(photo, index) in photos"
+                :key="index"
+                class="relative"
+              >
+                <img
+                  :src="photo.preview"
+                  :alt="`Foto ${index + 1}`"
+                  class="size-24 rounded-lg border object-cover"
+                />
+                <button
+                  type="button"
+                  class="absolute -right-1.5 -top-1.5 flex size-5 items-center justify-center rounded-full bg-destructive text-destructive-foreground shadow-sm"
+                  @click="removePhoto(index)"
+                >
+                  <X class="size-3" />
+                </button>
+              </div>
+            </div>
+
+            <!-- Upload button -->
+            <div v-if="photos.length < MAX_PHOTOS">
+              <label
+                class="flex cursor-pointer flex-col items-center gap-2 rounded-lg border-2 border-dashed p-6 transition-colors hover:border-primary/50 hover:bg-muted/50"
+              >
+                <Camera class="size-10 text-muted-foreground" />
+                <span class="text-base text-muted-foreground">Toca para agregar foto</span>
+                <input
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp"
+                  multiple
+                  class="hidden"
+                  @change="onFileChange"
+                />
+              </label>
+            </div>
+          </div>
+
+          <!-- Submit -->
+          <Button type="submit" class="mt-3 h-12 w-full text-base font-semibold" :disabled="!canSubmit">
+            <Loader2 v-if="isCreating" class="size-4 animate-spin" />
+            {{ isCreating ? 'Enviando...' : 'Reportar incidencia' }}
+          </Button>
+        </form>
+      </CardContent>
+    </Card>
   </div>
 </template>

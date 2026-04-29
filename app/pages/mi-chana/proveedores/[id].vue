@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import {
-  ArrowLeft,
   Star,
   Phone,
   MapPin,
@@ -15,8 +14,19 @@ import { PROVIDER_CATEGORIES } from '~~/shared/types/provider'
 
 definePageMeta({ layout: 'default' })
 
+const { target, isMounted } = useTopbarPortal()
 const route = useRoute()
 const router = useRouter()
+
+// Breadcrumb navigation
+const providerPageOverride = computed(() => {
+  if (!provider.value) return null
+  return {
+    title: provider.value.name,
+    breadcrumbs: [{ label: 'Proveedores', to: '/mi-chana/proveedores' }],
+  }
+})
+usePageInfoOverride(providerPageOverride)
 const { role } = useAuth()
 const {
   isLoading,
@@ -54,18 +64,7 @@ const reviewRating = ref(0)
 const reviewHover = ref(0)
 const reviewComment = ref('')
 
-const CATEGORY_COLORS: Record<ProviderCategory, string> = {
-  plomeria: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400',
-  electricidad: 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400',
-  jardineria: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400',
-  cerrajeria: 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-400',
-  limpieza: 'bg-cyan-100 text-cyan-700 dark:bg-cyan-900/30 dark:text-cyan-400',
-  pintura: 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400',
-  albanileria: 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400',
-  seguridad: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400',
-  fumigacion: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400',
-  otro: 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-400',
-}
+import { PROVIDER_CATEGORY_COLORS as CATEGORY_COLORS, PROVIDER_STATUS_COLORS, PROVIDER_STATUS_LABELS } from '~/composables/useColorMap'
 
 const CATEGORY_LABELS: Record<ProviderCategory, string> = {
   plomeria: 'Plomeria',
@@ -81,9 +80,9 @@ const CATEGORY_LABELS: Record<ProviderCategory, string> = {
 }
 
 const STATUS_LABELS: Record<string, { label: string; class: string }> = {
-  active: { label: 'Activo', class: 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-400' },
-  inactive: { label: 'Inactivo', class: 'bg-zinc-100 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400' },
-  pending: { label: 'Pendiente', class: 'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400' },
+  active: { label: PROVIDER_STATUS_LABELS.active, class: PROVIDER_STATUS_COLORS.active },
+  inactive: { label: PROVIDER_STATUS_LABELS.inactive, class: PROVIDER_STATUS_COLORS.inactive },
+  pending: { label: PROVIDER_STATUS_LABELS.pending, class: PROVIDER_STATUS_COLORS.pending },
 }
 
 async function loadProvider() {
@@ -104,13 +103,7 @@ function renderStars(rating: number | undefined): number[] {
   return [1, 2, 3, 4, 5].map(i => (i <= r ? 1 : 0))
 }
 
-function formatDate(dateStr: string): string {
-  return new Date(dateStr).toLocaleDateString('es-VE', {
-    day: '2-digit',
-    month: 'short',
-    year: 'numeric',
-  })
-}
+const { formatDate } = useFormatDate()
 
 // Edit handlers
 function openEditDialog() {
@@ -198,23 +191,26 @@ async function handleReview() {
 </script>
 
 <template>
-  <div class="mx-auto max-w-lg">
-    <!-- Back button -->
-    <div class="mb-4">
-      <Button variant="ghost" size="sm" class="-ml-2" as-child>
-        <NuxtLink to="/mi-chana/proveedores">
-          <ArrowLeft class="mr-1 size-4" />
-          Volver
-        </NuxtLink>
-      </Button>
-    </div>
+  <div>
+    <Teleport :to="target" defer v-if="isMounted">
+      <template v-if="canManage && provider">
+        <Button variant="outline" size="sm" @click="openEditDialog">
+          <Pencil class="mr-1.5 size-3.5" />
+          Editar
+        </Button>
+        <Button variant="outline" size="sm" class="text-destructive hover:text-destructive" @click="deleteDialogOpen = true">
+          <Trash2 class="mr-1.5 size-3.5" />
+          Eliminar
+        </Button>
+      </template>
+    </Teleport>
 
     <!-- Loading -->
     <div v-if="isLoading" class="space-y-4">
       <Skeleton class="h-6 w-3/4" />
       <div class="flex gap-2">
-        <Skeleton class="h-5 w-20 rounded-full" />
-        <Skeleton class="h-5 w-16 rounded-full" />
+        <Skeleton class="h-5 w-20 rounded-lg" />
+        <Skeleton class="h-5 w-16 rounded-lg" />
       </div>
       <Skeleton class="h-4 w-1/2" />
       <Skeleton class="h-4 w-2/3" />
@@ -222,35 +218,15 @@ async function handleReview() {
     </div>
 
     <!-- Error -->
-    <div
-      v-else-if="error && !provider"
-      class="flex flex-col items-center gap-4 rounded-lg border border-dashed p-8 text-center"
-    >
-      <p class="text-sm text-destructive">{{ error }}</p>
-      <Button size="sm" variant="outline" as-child>
-        <NuxtLink to="/mi-chana/proveedores">Volver al directorio</NuxtLink>
-      </Button>
+    <div v-else-if="error && !provider" class="space-y-4">
+      <ErrorAlert :message="error" />
+      <div class="text-center">
+        <Button size="sm" variant="outline" @click="navigateTo('/mi-chana/proveedores')">Volver al directorio</Button>
+      </div>
     </div>
 
     <!-- Provider detail -->
     <template v-else-if="provider">
-      <!-- Admin actions -->
-      <div v-if="canManage" class="mb-4 flex gap-2">
-        <Button variant="outline" size="sm" @click="openEditDialog">
-          <Pencil class="mr-1.5 size-4" />
-          Editar
-        </Button>
-        <Button
-          variant="outline"
-          size="sm"
-          class="text-destructive hover:text-destructive"
-          @click="deleteDialogOpen = true"
-        >
-          <Trash2 class="mr-1.5 size-4" />
-          Eliminar
-        </Button>
-      </div>
-
       <!-- Main card -->
       <Card>
         <CardContent class="p-4 space-y-3">
@@ -260,13 +236,13 @@ async function handleReview() {
           <!-- Badges -->
           <div class="flex flex-wrap gap-2">
             <span
-              class="inline-flex rounded-full px-2 py-0.5 text-xs font-medium"
+              class="inline-flex rounded-lg px-2 py-0.5 text-xs font-medium"
               :class="CATEGORY_COLORS[provider.category]"
             >
               {{ CATEGORY_LABELS[provider.category] }}
             </span>
             <span
-              class="inline-flex rounded-full px-2 py-0.5 text-xs font-medium"
+              class="inline-flex rounded-lg px-2 py-0.5 text-xs font-medium"
               :class="STATUS_LABELS[provider.status]?.class ?? 'bg-zinc-100 text-zinc-600'"
             >
               {{ STATUS_LABELS[provider.status]?.label ?? provider.status }}
@@ -374,12 +350,11 @@ async function handleReview() {
           </Card>
         </div>
 
-        <div
+        <EmptyState
           v-else
-          class="rounded-lg border border-dashed p-6 text-center"
-        >
-          <p class="text-sm text-muted-foreground">Aun no hay resenas</p>
-        </div>
+          :icon="Star"
+          title="Aún no hay reseñas"
+        />
       </div>
     </template>
 

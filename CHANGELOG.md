@@ -7,6 +7,30 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.16.1] - 2026-04-20
+
+### Fixed
+- Pluralización "1 unidades en mora" → "1 unidad en mora" en dashboard admin
+- Hardcoded fallback `totalUnits ?? 86` → `0` en votaciones admin
+- Bug de paginación en votaciones propietario: watch reseteaba currentPage en cada trigger
+- Conflicto Vite HMR WebSocket con Nitro: HMR movido a puerto 24678
+
+### Changed
+- Login page: icono Building2, spacing mejorado, card con shadow
+
+## [0.16.0] - 2026-04-19
+
+### Added
+- API GET /api/dashboard/trends: tendencias de incidencias (6m), accesos (7d), finanzas (6m cargos vs abonos), KPIs financieros (cobrado, pendiente, tasa cobranza) (M4.3)
+- API GET /api/dashboard/export/csv: resumen financiero por unidad + incidencias abiertas, BOM Excel-compatible (admin only)
+- API GET /api/dashboard/export/pdf: reporte operacional con jsPDF + autoTable (stats, finanzas, incidencias) (admin only)
+- Composable `useDashboard`: fetch paralelo stats+trends, exportCsv/exportPdf
+- Admin dashboard rediseñado: 3 tabs (Resumen/Finanzas/Actividad), KPIs financieros, 3 graficos Chart.js (bar accesos, grouped bar finanzas, line incidencias), botones export CSV/PDF
+- Dependencies: chart.js, vue-chartjs, jspdf, jspdf-autotable
+
+### Fixed
+- Hydration mismatch en dashboard: isLoading inicia true + fetch client-only
+
 ## [0.15.0] - 2026-04-19
 
 ### Added

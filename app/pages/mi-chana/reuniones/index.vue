@@ -9,7 +9,7 @@ import {
 import type { Meeting, MeetingType, MeetingStatus } from '~~/shared/types/meeting'
 import { MEETING_TYPES, MEETING_STATUSES } from '~~/shared/types/meeting'
 
-definePageMeta({ layout: 'default', title: 'Reuniones' })
+useHead({ title: 'Reuniones' })
 
 const { meetings, isLoading, error, fetchMeetings } = useMeetings()
 
@@ -27,26 +27,11 @@ function formatTime(iso: string): string {
   return new Date(iso).toLocaleTimeString('es-VE', { hour: '2-digit', minute: '2-digit' })
 }
 
-function formatMonthYear(iso: string): string {
-  const d = new Date(iso)
-  return d.toLocaleDateString('es-VE', { month: 'long', year: 'numeric' })
-}
+const { formatMonthYear } = useFormatDate()
 
 // --- Type / Status helpers ---
 
-const TYPE_COLORS: Record<MeetingType, string> = {
-  ordinaria: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400',
-  extraordinaria: 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400',
-  comite: 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400',
-  informativa: 'bg-cyan-100 text-cyan-700 dark:bg-cyan-900/30 dark:text-cyan-400',
-}
-
-const STATUS_COLORS: Record<MeetingStatus, string> = {
-  programada: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400',
-  en_curso: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400',
-  completada: 'bg-zinc-100 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400',
-  cancelada: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400',
-}
+import { MEETING_TYPE_COLORS as TYPE_COLORS, MEETING_STATUS_COLORS as STATUS_COLORS } from '~/composables/useColorMap'
 
 function typeLabel(key: MeetingType): string {
   return MEETING_TYPES.find(t => t.key === key)?.label ?? key
@@ -80,47 +65,22 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="mx-auto max-w-lg">
+  <div>
     <!-- Error -->
-    <div
-      v-if="error"
-      role="alert"
-      class="mb-4 rounded-lg border border-destructive/50 bg-destructive/10 p-3 text-sm text-destructive"
-    >
-      {{ error }}
-    </div>
+    <ErrorAlert :message="error" class="mb-4" />
 
     <!-- Loading -->
-    <div v-if="isLoading" class="space-y-3">
-      <Card v-for="i in 3" :key="i">
-        <CardContent class="flex gap-2.5 p-3">
-          <Skeleton class="size-12 shrink-0 rounded-lg" />
-          <div class="flex-1 space-y-2">
-            <Skeleton class="h-4 w-3/4" />
-            <Skeleton class="h-3.5 w-1/2" />
-            <Skeleton class="h-3.5 w-1/3" />
-          </div>
-        </CardContent>
-      </Card>
-    </div>
+    <ListSkeleton v-if="isLoading" :count="3" />
 
     <!-- Content -->
     <template v-else-if="!error">
       <!-- Empty state -->
-      <div
+      <EmptyState
         v-if="meetings.length === 0"
-        class="flex flex-col items-center gap-4 rounded-lg border border-dashed p-8 text-center"
-      >
-        <div class="flex size-10 items-center justify-center rounded-lg bg-muted">
-          <Calendar class="size-5 text-muted-foreground" />
-        </div>
-        <div>
-          <p class="font-medium">No hay reuniones programadas</p>
-          <p class="mt-1 text-sm text-muted-foreground">
-            Las próximas reuniones aparecerán aquí
-          </p>
-        </div>
-      </div>
+        :icon="Calendar"
+        title="No hay reuniones programadas"
+        description="Las próximas reuniones aparecerán aquí"
+      />
 
       <!-- Grouped meetings -->
       <div v-else class="space-y-6">
@@ -131,7 +91,7 @@ onMounted(() => {
           </h2>
 
           <!-- Meeting cards -->
-          <div class="space-y-3">
+          <div class="space-y-2">
             <Card v-for="m in group.meetings" :key="m.id">
               <CardContent class="flex gap-2.5 p-3">
                 <!-- Date badge -->
@@ -177,14 +137,14 @@ onMounted(() => {
                   <!-- Badges -->
                   <div class="mt-2 flex flex-wrap gap-1.5">
                     <span
-                      class="inline-flex rounded-full px-2 py-0.5 text-[10px] font-medium"
+                      class="inline-flex rounded-lg px-2 py-0.5 text-xs font-medium"
                       :class="TYPE_COLORS[m.type]"
                     >
                       {{ typeLabel(m.type) }}
                     </span>
                     <span
                       v-if="m.status !== 'programada'"
-                      class="inline-flex rounded-full px-2 py-0.5 text-[10px] font-medium"
+                      class="inline-flex rounded-lg px-2 py-0.5 text-xs font-medium"
                       :class="STATUS_COLORS[m.status]"
                     >
                       {{ statusLabel(m.status) }}

@@ -18,11 +18,16 @@ export function useQrScanner() {
     scanResult.value = null
 
     try {
+      if (!navigator.mediaDevices?.getUserMedia) {
+        error.value = 'La cámara requiere una conexión segura (HTTPS). Verifica que estés accediendo por HTTPS.'
+        return
+      }
+
       stream = await navigator.mediaDevices.getUserMedia({
         video: {
-          facingMode: facingMode.value,
-          width: { ideal: 640 },
-          height: { ideal: 480 },
+          facingMode: { ideal: facingMode.value },
+          width: { ideal: 1280 },
+          height: { ideal: 720 },
         },
       })
 

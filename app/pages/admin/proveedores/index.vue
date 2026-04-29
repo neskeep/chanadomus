@@ -1,16 +1,12 @@
 <script setup lang="ts">
 import {
-  Search,
   Star,
   Phone,
   Plus,
   Pencil,
   Trash2,
   Wrench,
-  Filter,
   Loader2,
-  ChevronLeft,
-  ChevronRight,
   CheckCircle2,
 } from 'lucide-vue-next'
 import { toast } from 'vue-sonner'
@@ -23,7 +19,7 @@ import type {
 } from '~~/shared/types/provider'
 import { PROVIDER_CATEGORIES } from '~~/shared/types/provider'
 
-definePageMeta({ layout: 'default', title: 'Gestion de Proveedores' })
+useHead({ title: 'Gestion de Proveedores' })
 
 const {
   providers,
@@ -41,9 +37,20 @@ const {
 // Filters & pagination
 const currentPage = ref(1)
 const searchQuery = ref('')
-const filterCategory = ref<ProviderCategory | 'all'>('all')
-const filterStatus = ref<ProviderStatus | 'all'>('all')
-const showFilters = ref(false)
+const filterCategory = ref<ProviderCategory | ''>('')
+const filterStatus = ref<ProviderStatus | ''>('')
+
+const { target, isMounted } = useTopbarPortal()
+
+const providerCategoryOptions = [
+  ...PROVIDER_CATEGORIES.map(cat => ({ value: cat.key, label: cat.label })),
+]
+
+const providerStatusOptions = [
+  { value: 'active' as const, label: 'Activo' },
+  { value: 'pending' as const, label: 'Pendiente' },
+  { value: 'inactive' as const, label: 'Inactivo' },
+]
 
 // Create/Edit dialog
 const dialogOpen = ref(false)
@@ -61,18 +68,7 @@ const formNotes = ref('')
 const deleteId = ref<string | null>(null)
 const deleteDialogOpen = ref(false)
 
-const CATEGORY_COLORS: Record<ProviderCategory, string> = {
-  plomeria: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400',
-  electricidad: 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400',
-  jardineria: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400',
-  cerrajeria: 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-400',
-  limpieza: 'bg-cyan-100 text-cyan-700 dark:bg-cyan-900/30 dark:text-cyan-400',
-  pintura: 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400',
-  albanileria: 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400',
-  seguridad: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400',
-  fumigacion: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400',
-  otro: 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-400',
-}
+import { PROVIDER_CATEGORY_COLORS as CATEGORY_COLORS, PROVIDER_STATUS_COLORS, PROVIDER_STATUS_LABELS } from '~/composables/useColorMap'
 
 const CATEGORY_LABELS: Record<ProviderCategory, string> = {
   plomeria: 'Plomeria',
@@ -88,9 +84,9 @@ const CATEGORY_LABELS: Record<ProviderCategory, string> = {
 }
 
 const STATUS_CONFIG: Record<ProviderStatus, { label: string; class: string }> = {
-  active: { label: 'Activo', class: 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-400' },
-  inactive: { label: 'Inactivo', class: 'bg-zinc-100 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400' },
-  pending: { label: 'Pendiente', class: 'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400' },
+  active: { label: PROVIDER_STATUS_LABELS.active, class: PROVIDER_STATUS_COLORS.active },
+  inactive: { label: PROVIDER_STATUS_LABELS.inactive, class: PROVIDER_STATUS_COLORS.inactive },
+  pending: { label: PROVIDER_STATUS_LABELS.pending, class: PROVIDER_STATUS_COLORS.pending },
 }
 
 // Stats
@@ -117,8 +113,8 @@ async function loadProviders() {
   const params: { page?: number; category?: ProviderCategory; status?: ProviderStatus } = {
     page: currentPage.value,
   }
-  if (filterCategory.value && filterCategory.value !== 'all') params.category = filterCategory.value
-  if (filterStatus.value && filterStatus.value !== 'all') params.status = filterStatus.value
+  if (filterCategory.value) params.category = filterCategory.value
+  if (filterStatus.value) params.status = filterStatus.value
   await fetchProviders(params)
 }
 
@@ -267,168 +263,98 @@ function renderStars(rating: number | undefined): number[] {
 </script>
 
 <template>
-  <div class="mx-auto max-w-5xl">
-    <!-- Header -->
-    <div class="mb-6 flex justify-end">
+  <div>
+    <!-- Topbar actions -->
+    <Teleport :to="target" defer v-if="isMounted">
+      <TopbarSearch v-model="searchQuery" placeholder="Buscar proveedor...">
+        <TopbarFilters :active="filterCategory !== '' || filterStatus !== ''" @clear="filterCategory = ''; filterStatus = ''">
+          <TopbarFilterGroup v-model="filterCategory" label="Categoria" :options="providerCategoryOptions" />
+          <TopbarFilterGroup v-model="filterStatus" label="Estado" :options="providerStatusOptions" />
+        </TopbarFilters>
+      </TopbarSearch>
       <Button size="sm" @click="openCreateDialog">
-        <Plus class="mr-1.5 size-4" />
-        Nuevo Proveedor
+        <Plus class="mr-1.5 size-3.5" />
+        Nuevo
       </Button>
-    </div>
+    </Teleport>
 
     <!-- Stats cards -->
-    <div class="mb-6 grid grid-cols-2 gap-2">
-      <div class="flex items-center gap-3 rounded-lg border bg-card p-3">
-        <div class="flex size-8 shrink-0 items-center justify-center rounded-md bg-emerald-100 dark:bg-emerald-900/30">
-          <Wrench class="size-4 text-emerald-600" />
-        </div>
-        <div>
-          <p v-if="isLoading"><Skeleton class="h-5 w-8" /></p>
-          <p v-else class="text-lg font-bold leading-none">{{ totalActive }}</p>
-          <p class="mt-0.5 text-[11px] text-muted-foreground">Activos</p>
-        </div>
-      </div>
-      <div class="flex items-center gap-3 rounded-lg border bg-card p-3">
-        <div class="flex size-8 shrink-0 items-center justify-center rounded-md bg-amber-100 dark:bg-amber-900/30">
-          <CheckCircle2 class="size-4 text-amber-600" />
-        </div>
-        <div>
-          <p v-if="isLoading"><Skeleton class="h-5 w-8" /></p>
-          <p v-else class="text-lg font-bold leading-none">{{ totalPending }}</p>
-          <p class="mt-0.5 text-[11px] text-muted-foreground">Pendientes</p>
-        </div>
-      </div>
+    <div class="mb-6 grid grid-cols-2 gap-3">
+      <StatCard label="Activos" :value="totalActive" :icon="Wrench" icon-bg-class="bg-primary/10 text-primary" :is-loading="isLoading" />
+      <StatCard label="Pendientes" :value="totalPending" :icon="CheckCircle2" icon-bg-class="bg-secondary/10 text-secondary" :is-loading="isLoading" />
     </div>
 
     <!-- Error -->
-    <div
-      v-if="error"
-      role="alert"
-      class="mb-4 rounded-lg border border-destructive/50 bg-destructive/10 p-3 text-sm text-destructive"
-    >
-      {{ error }}
-    </div>
+    <ErrorAlert v-if="error" :message="error" class="mb-4" />
 
     <!-- Pending suggestions -->
     <div v-if="pendingSuggestions.length > 0" class="mb-6">
       <h2 class="mb-3 text-sm font-semibold">Sugerencias pendientes</h2>
       <div class="space-y-2">
         <Card v-for="sug in pendingSuggestions" :key="sug.id">
-          <CardContent class="flex items-center justify-between gap-3 p-3">
-            <div class="min-w-0 flex-1">
-              <p class="text-sm font-medium">{{ sug.name }}</p>
-              <div class="mt-1 flex flex-wrap items-center gap-1.5">
-                <span
-                  class="inline-flex rounded-full px-2 py-0.5 text-xs font-medium"
-                  :class="CATEGORY_COLORS[sug.category]"
-                >
-                  {{ CATEGORY_LABELS[sug.category] }}
-                </span>
-                <span v-if="sug.phone" class="text-xs text-muted-foreground">{{ sug.phone }}</span>
-                <span v-if="sug.createdByName" class="text-xs text-muted-foreground">
-                  por {{ sug.createdByName }}
-                </span>
+          <CardContent class="px-3 py-2.5">
+            <div class="flex items-center justify-between gap-2">
+              <div class="min-w-0 flex-1">
+                <div class="flex items-center gap-2">
+                  <p class="truncate text-sm font-semibold">{{ sug.name }}</p>
+                  <span
+                    class="inline-flex shrink-0 rounded-lg px-1.5 py-0.5 text-[11px] font-medium"
+                    :class="CATEGORY_COLORS[sug.category]"
+                  >
+                    {{ CATEGORY_LABELS[sug.category] }}
+                  </span>
+                </div>
+                <div class="mt-0.5 flex items-center gap-x-1 text-[11px] text-muted-foreground">
+                  <span v-if="sug.phone">{{ sug.phone }}</span>
+                  <span v-if="sug.phone && sug.createdByName" class="opacity-30">&middot;</span>
+                  <span v-if="sug.createdByName">por {{ sug.createdByName }}</span>
+                  <span v-if="sug.notes" class="opacity-30">&middot;</span>
+                  <span v-if="sug.notes" class="truncate">{{ sug.notes }}</span>
+                  <span class="ml-auto flex shrink-0 items-center gap-1">
+                    <Button
+                      variant="ghost"
+                      class="h-6 px-2 text-[11px] text-primary"
+                      title="Aprobar"
+                      @click="handleApprove(sug.id)"
+                    >
+                      <CheckCircle2 class="mr-1 size-3" />
+                      Aprobar
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      class="h-6 px-2 text-[11px] text-destructive hover:text-destructive"
+                      title="Rechazar"
+                      @click="handleReject(sug.id)"
+                    >
+                      <Trash2 class="mr-1 size-3" />
+                      Rechazar
+                    </Button>
+                  </span>
+                </div>
               </div>
-              <p v-if="sug.notes" class="mt-1 text-xs text-muted-foreground">{{ sug.notes }}</p>
-            </div>
-            <div class="flex shrink-0 gap-1">
-              <Button
-                variant="ghost"
-                size="icon"
-                class="size-8 text-emerald-600"
-                title="Aprobar"
-                @click="handleApprove(sug.id)"
-              >
-                <CheckCircle2 class="size-4" />
-              </Button>
-              <Button
-                variant="ghost"
-                size="icon"
-                class="size-8 text-destructive hover:text-destructive"
-                title="Rechazar"
-                @click="handleReject(sug.id)"
-              >
-                <Trash2 class="size-4" />
-              </Button>
             </div>
           </CardContent>
         </Card>
       </div>
     </div>
 
-    <!-- Search & filters -->
-    <div class="mb-4 space-y-3">
-      <div class="flex gap-2">
-        <div class="relative flex-1">
-          <Search class="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-          <Input
-            v-model="searchQuery"
-            placeholder="Buscar por nombre, telefono..."
-            class="pl-9"
-          />
-        </div>
-        <Button
-          variant="outline"
-          size="icon"
-          :class="{ 'border-primary text-primary': showFilters }"
-          @click="showFilters = !showFilters"
-        >
-          <Filter class="size-4" />
-        </Button>
-      </div>
-
-      <!-- Filter selects -->
-      <div v-if="showFilters" class="grid grid-cols-2 gap-3">
-        <Select v-model="filterCategory">
-          <SelectTrigger>
-            <SelectValue placeholder="Categoria" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">Todas</SelectItem>
-            <SelectItem v-for="cat in PROVIDER_CATEGORIES" :key="cat.key" :value="cat.key">
-              {{ cat.label }}
-            </SelectItem>
-          </SelectContent>
-        </Select>
-
-        <Select v-model="filterStatus">
-          <SelectTrigger>
-            <SelectValue placeholder="Estado" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">Todos</SelectItem>
-            <SelectItem value="active">Activo</SelectItem>
-            <SelectItem value="pending">Pendiente</SelectItem>
-            <SelectItem value="inactive">Inactivo</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
-    </div>
-
     <!-- Loading -->
-    <div v-if="isLoading" class="space-y-2">
-      <Skeleton v-for="i in 5" :key="i" class="h-16 w-full rounded-lg" />
-    </div>
+    <ListSkeleton v-if="isLoading" :count="5" variant="row" />
 
     <!-- Empty state -->
-    <div
+    <EmptyState
       v-else-if="filteredProviders.length === 0"
-      class="flex flex-col items-center gap-4 rounded-lg border border-dashed p-8 text-center"
+      :icon="Wrench"
+      title="No hay proveedores"
+      :description="filterCategory || filterStatus ? 'Prueba cambiando los filtros' : 'Crea el primer proveedor del directorio'"
     >
-      <div class="flex size-12 items-center justify-center rounded-full bg-muted">
-        <Wrench class="size-6 text-muted-foreground" />
-      </div>
-      <div>
-        <p class="font-medium">No hay proveedores</p>
-        <p class="mt-1 text-sm text-muted-foreground">
-          {{ filterCategory !== 'all' || filterStatus !== 'all' ? 'Prueba cambiando los filtros' : 'Crea el primer proveedor del directorio' }}
-        </p>
-      </div>
-      <Button size="sm" @click="openCreateDialog">
-        <Plus class="mr-1.5 size-4" />
-        Nuevo Proveedor
-      </Button>
-    </div>
+      <template #action>
+        <Button @click="openCreateDialog">
+          <Plus class="mr-1.5 size-4" />
+          Nuevo Proveedor
+        </Button>
+      </template>
+    </EmptyState>
 
     <!-- Table (desktop) / Cards (mobile) -->
     <div v-else>
@@ -457,7 +383,7 @@ function renderStars(rating: number | undefined): number[] {
               </TableCell>
               <TableCell>
                 <span
-                  class="inline-flex rounded-full px-2 py-0.5 text-xs font-medium"
+                  class="inline-flex rounded-lg px-2 py-0.5 text-xs font-medium"
                   :class="CATEGORY_COLORS[item.category]"
                 >
                   {{ CATEGORY_LABELS[item.category] }}
@@ -479,7 +405,7 @@ function renderStars(rating: number | undefined): number[] {
               </TableCell>
               <TableCell>
                 <span
-                  class="inline-flex rounded-full px-2 py-0.5 text-xs font-medium"
+                  class="inline-flex rounded-lg px-2 py-0.5 text-xs font-medium"
                   :class="STATUS_CONFIG[item.status].class"
                 >
                   {{ STATUS_CONFIG[item.status].label }}
@@ -490,19 +416,19 @@ function renderStars(rating: number | undefined): number[] {
                   <Button
                     variant="ghost"
                     size="icon"
-                    class="size-8"
+                    class="size-10"
                     :title="item.status === 'active' ? 'Desactivar' : 'Activar'"
                     @click="handleToggleStatus(item)"
                   >
                     <CheckCircle2
                       class="size-4"
-                      :class="item.status === 'active' ? 'text-emerald-600' : 'text-muted-foreground'"
+                      :class="item.status === 'active' ? 'text-primary' : 'text-muted-foreground'"
                     />
                   </Button>
                   <Button
                     variant="ghost"
                     size="icon"
-                    class="size-8"
+                    class="size-10"
                     title="Editar"
                     @click="openEditDialog(item)"
                   >
@@ -511,7 +437,7 @@ function renderStars(rating: number | undefined): number[] {
                   <Button
                     variant="ghost"
                     size="icon"
-                    class="size-8 text-destructive hover:text-destructive"
+                    class="size-10 text-destructive hover:text-destructive"
                     title="Eliminar"
                     @click="confirmDelete(item.id)"
                   >
@@ -525,133 +451,107 @@ function renderStars(rating: number | undefined): number[] {
       </div>
 
       <!-- Mobile cards -->
-      <div class="space-y-3 md:hidden">
+      <div class="space-y-2 md:hidden">
         <Card v-for="item in filteredProviders" :key="item.id">
-          <CardContent class="p-4">
-            <div class="flex items-start justify-between gap-2">
-              <div class="min-w-0 flex-1">
-                <NuxtLink
-                  :to="`/mi-chana/proveedores/${item.id}`"
-                  class="text-sm font-medium leading-snug text-primary underline-offset-2 hover:underline"
-                >
-                  {{ item.name }}
-                </NuxtLink>
-                <div class="mt-1 flex items-center gap-1">
-                  <Star
-                    v-for="(filled, idx) in renderStars(item.averageRating)"
-                    :key="idx"
-                    class="size-3"
-                    :class="filled ? 'fill-yellow-400 text-yellow-400' : 'text-gray-300'"
-                  />
-                  <span class="ml-1 text-xs text-muted-foreground">({{ item.reviewCount ?? 0 }})</span>
-                </div>
+          <CardContent class="px-3 py-2.5">
+            <!-- Row 1: Name + stars + category badge -->
+            <div class="flex items-center gap-2">
+              <NuxtLink
+                :to="`/mi-chana/proveedores/${item.id}`"
+                class="truncate text-sm font-semibold text-primary underline-offset-2 hover:underline"
+              >
+                {{ item.name }}
+              </NuxtLink>
+              <div class="flex shrink-0 items-center gap-0.5">
+                <Star
+                  v-for="(filled, idx) in renderStars(item.averageRating)"
+                  :key="idx"
+                  class="size-2.5"
+                  :class="filled ? 'fill-yellow-400 text-yellow-400' : 'text-gray-300'"
+                />
               </div>
-            </div>
-            <div class="mt-2 flex flex-wrap items-center gap-1.5">
               <span
-                class="inline-flex rounded-full px-2 py-0.5 text-xs font-medium"
+                class="ml-auto inline-flex shrink-0 rounded-lg px-1.5 py-0.5 text-[11px] font-medium"
                 :class="CATEGORY_COLORS[item.category]"
               >
                 {{ CATEGORY_LABELS[item.category] }}
               </span>
+            </div>
+            <!-- Row 2: Status · Phone | Actions inline -->
+            <div class="mt-0.5 flex items-center gap-x-1 text-[11px] text-muted-foreground">
               <span
-                class="inline-flex rounded-full px-2 py-0.5 text-xs font-medium"
+                class="inline-flex rounded-lg px-1.5 py-0.5 font-medium"
                 :class="STATUS_CONFIG[item.status].class"
               >
                 {{ STATUS_CONFIG[item.status].label }}
               </span>
-              <span v-if="item.phone" class="inline-flex items-center gap-1 text-xs text-muted-foreground">
-                <Phone class="size-3" />
-                {{ item.phone }}
+              <span v-if="item.phone" class="opacity-30">&middot;</span>
+              <span v-if="item.phone" class="tabular-nums">{{ item.phone }}</span>
+              <span class="ml-auto flex shrink-0 items-center gap-1">
+                <Button
+                  variant="ghost"
+                  class="h-6 px-2 text-[11px]"
+                  :title="item.status === 'active' ? 'Desactivar' : 'Activar'"
+                  @click="handleToggleStatus(item)"
+                >
+                  <CheckCircle2
+                    class="mr-1 size-3"
+                    :class="item.status === 'active' ? 'text-primary' : 'text-muted-foreground'"
+                  />
+                  {{ item.status === 'active' ? 'Desactivar' : 'Activar' }}
+                </Button>
+                <Button
+                  variant="ghost"
+                  class="h-6 px-2 text-[11px]"
+                  title="Editar"
+                  @click="openEditDialog(item)"
+                >
+                  <Pencil class="mr-1 size-3" />
+                  Editar
+                </Button>
+                <Button
+                  variant="ghost"
+                  class="h-6 px-2 text-[11px] text-destructive hover:text-destructive"
+                  title="Eliminar"
+                  @click="confirmDelete(item.id)"
+                >
+                  <Trash2 class="size-3" />
+                </Button>
               </span>
-            </div>
-            <div class="mt-3 flex items-center gap-1">
-              <Button
-                variant="ghost"
-                size="icon"
-                class="size-8"
-                :title="item.status === 'active' ? 'Desactivar' : 'Activar'"
-                @click="handleToggleStatus(item)"
-              >
-                <CheckCircle2
-                  class="size-4"
-                  :class="item.status === 'active' ? 'text-emerald-600' : 'text-muted-foreground'"
-                />
-              </Button>
-              <Button
-                variant="ghost"
-                size="icon"
-                class="size-8"
-                title="Editar"
-                @click="openEditDialog(item)"
-              >
-                <Pencil class="size-4" />
-              </Button>
-              <Button
-                variant="ghost"
-                size="icon"
-                class="size-8 text-destructive hover:text-destructive"
-                title="Eliminar"
-                @click="confirmDelete(item.id)"
-              >
-                <Trash2 class="size-4" />
-              </Button>
             </div>
           </CardContent>
         </Card>
       </div>
 
       <!-- Pagination -->
-      <div v-if="totalPages > 1" class="mt-4 flex items-center justify-between">
-        <Button
-          variant="outline"
-          size="sm"
-          :disabled="currentPage <= 1"
-          @click="currentPage--"
-        >
-          <ChevronLeft class="mr-1 size-4" />
-          Anterior
-        </Button>
-        <span class="text-sm text-muted-foreground">
-          {{ currentPage }} / {{ totalPages }}
-        </span>
-        <Button
-          variant="outline"
-          size="sm"
-          :disabled="currentPage >= totalPages"
-          @click="currentPage++"
-        >
-          Siguiente
-          <ChevronRight class="ml-1 size-4" />
-        </Button>
-      </div>
+      <ListPagination v-model:current-page="currentPage" :total-pages="totalPages" class="mt-4" />
     </div>
 
-    <!-- Create/Edit Dialog -->
-    <Dialog v-model:open="dialogOpen">
-      <DialogContent class="max-h-[90vh] overflow-y-auto sm:max-w-lg">
-        <DialogHeader>
-          <DialogTitle>{{ editingId ? 'Editar Proveedor' : 'Nuevo Proveedor' }}</DialogTitle>
-          <DialogDescription>
+    <!-- Create/Edit Sheet -->
+    <Sheet v-model:open="dialogOpen">
+      <SheetContent class="overflow-y-auto sm:max-w-lg">
+        <SheetHeader>
+          <SheetTitle>{{ editingId ? 'Editar Proveedor' : 'Nuevo Proveedor' }}</SheetTitle>
+          <SheetDescription>
             {{ editingId ? 'Modifica los datos del proveedor' : 'Completa los datos para agregar un proveedor' }}
-          </DialogDescription>
-        </DialogHeader>
+          </SheetDescription>
+        </SheetHeader>
 
-        <form class="space-y-4 py-2" @submit.prevent="handleSubmit">
+        <form class="space-y-4 py-4" @submit.prevent="handleSubmit">
           <div class="space-y-2">
             <Label for="prov-name">Nombre</Label>
-            <Input id="prov-name" v-model="formName" placeholder="Nombre del proveedor" required />
+            <Input id="prov-name" v-model="formName" placeholder="Nombre del proveedor" class="h-12" required />
           </div>
 
           <div class="space-y-2">
             <Label for="prov-phone">Telefono</Label>
-            <Input id="prov-phone" v-model="formPhone" placeholder="0412-1234567" />
+            <Input id="prov-phone" v-model="formPhone" placeholder="0412-1234567" class="h-12" />
           </div>
 
           <div class="space-y-2">
             <Label for="prov-category">Categoria</Label>
             <Select v-model="formCategory">
-              <SelectTrigger id="prov-category">
+              <SelectTrigger id="prov-category" size="lg">
                 <SelectValue placeholder="Seleccionar categoria" />
               </SelectTrigger>
               <SelectContent>
@@ -664,12 +564,12 @@ function renderStars(rating: number | undefined): number[] {
 
           <div class="space-y-2">
             <Label for="prov-address">Direccion</Label>
-            <Input id="prov-address" v-model="formAddress" placeholder="Direccion del proveedor" />
+            <Input id="prov-address" v-model="formAddress" placeholder="Direccion del proveedor" class="h-12" />
           </div>
 
           <div class="space-y-2">
             <Label for="prov-schedule">Horario</Label>
-            <Input id="prov-schedule" v-model="formSchedule" placeholder="Lun-Vie 8:00-17:00" />
+            <Input id="prov-schedule" v-model="formSchedule" placeholder="Lun-Vie 8:00-17:00" class="h-12" />
           </div>
 
           <div class="space-y-2">
@@ -702,8 +602,8 @@ function renderStars(rating: number | undefined): number[] {
             </Button>
           </div>
         </form>
-      </DialogContent>
-    </Dialog>
+      </SheetContent>
+    </Sheet>
 
     <!-- Delete AlertDialog -->
     <AlertDialog v-model:open="deleteDialogOpen">

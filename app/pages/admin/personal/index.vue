@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import {
-  Search,
   Plus,
   Pencil,
   Trash2,
@@ -16,13 +15,22 @@ import {
 import { toast } from 'vue-sonner'
 import type { StaffRole, Staff } from '~~/shared/types/staff'
 
-definePageMeta({ layout: 'default', title: 'Personal' })
+useHead({ title: 'Personal' })
 
 const { staffList, isLoading, isSubmitting, error, fetchStaff, createStaffMember, updateStaffMember, deleteStaffMember } = useStaff()
 
+const { target, isMounted } = useTopbarPortal()
+
 // Filters
-const selectedRole = ref<StaffRole | 'all'>('all')
+const selectedRole = ref<StaffRole | ''>('')
 const searchQuery = ref('')
+
+const roleOptions = [
+  { value: 'conserje', label: 'Conserje' },
+  { value: 'vigilancia', label: 'Vigilancia' },
+  { value: 'mantenimiento', label: 'Mantenimiento' },
+  { value: 'otro', label: 'Otro' },
+]
 
 // Dialog state
 const dialogOpen = ref(false)
@@ -137,7 +145,7 @@ async function handleDelete() {
 }
 
 watch(selectedRole, (role) => {
-  fetchStaff(role === 'all' ? undefined : role)
+  fetchStaff(role || undefined)
 })
 
 onMounted(() => {
@@ -146,70 +154,32 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="mx-auto max-w-5xl">
-    <!-- Header -->
-    <div class="mb-6 flex justify-end">
+  <div>
+    <Teleport :to="target" defer v-if="isMounted">
+      <TopbarSearch v-model="searchQuery" placeholder="Buscar personal...">
+        <TopbarFilters :active="selectedRole !== ''" @clear="selectedRole = ''">
+          <TopbarFilterGroup v-model="selectedRole" label="Rol" :options="roleOptions" />
+        </TopbarFilters>
+      </TopbarSearch>
       <Button size="sm" @click="openCreateDialog">
-        <Plus class="mr-1.5 size-4" />
-        Agregar
+        <Plus class="mr-1.5 size-3.5" />
+        Nuevo
       </Button>
-    </div>
+    </Teleport>
 
     <!-- Error -->
-    <div
-      v-if="error && !isSubmitting"
-      role="alert"
-      class="mb-4 rounded-lg border border-destructive/50 bg-destructive/10 p-3 text-sm text-destructive"
-    >
-      {{ error }}
-    </div>
-
-    <!-- Filter bar -->
-    <div class="mb-4 space-y-3">
-      <div class="flex gap-2">
-        <div class="relative flex-1">
-          <Search class="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-          <Input
-            v-model="searchQuery"
-            placeholder="Buscar por nombre, teléfono o email..."
-            class="pl-9"
-          />
-        </div>
-        <Select v-model="selectedRole">
-          <SelectTrigger class="w-[160px]">
-            <SelectValue placeholder="Todos los roles" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">Todos</SelectItem>
-            <SelectItem value="conserje">Conserje</SelectItem>
-            <SelectItem value="vigilancia">Vigilancia</SelectItem>
-            <SelectItem value="mantenimiento">Mantenimiento</SelectItem>
-            <SelectItem value="otro">Otro</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
-    </div>
+    <ErrorAlert v-if="error && !isSubmitting" :message="error" class="mb-4" />
 
     <!-- Loading -->
-    <div v-if="isLoading" class="space-y-2">
-      <Skeleton v-for="i in 4" :key="i" class="h-16 w-full rounded-lg" />
-    </div>
+    <ListSkeleton v-if="isLoading" :count="4" variant="row" />
 
     <!-- Empty state -->
-    <div
+    <EmptyState
       v-else-if="filteredStaff.length === 0"
-      class="flex flex-col items-center gap-4 rounded-lg border border-dashed p-8 text-center"
-    >
-      <div class="flex size-10 items-center justify-center rounded-lg bg-muted">
-        <Users class="size-5 text-muted-foreground" />
-      </div>
-      <div>
-        <p class="font-medium">No hay personal registrado</p>
-        <p class="mt-1 text-sm text-muted-foreground">
-          {{ selectedRole !== 'all' ? 'Prueba cambiando el filtro de rol' : 'Agrega miembros del personal del condominio' }}
-        </p>
-      </div>
-    </div>
+      :icon="Users"
+      title="No hay personal registrado"
+      :description="selectedRole ? 'Prueba cambiando el filtro de rol' : 'Agrega miembros del personal del condominio'"
+    />
 
     <!-- Table (desktop) / Cards (mobile) -->
     <div v-else>
@@ -242,7 +212,7 @@ onMounted(() => {
                   <Button
                     variant="ghost"
                     size="icon"
-                    class="size-8"
+                    class="size-10"
                     aria-label="Editar personal"
                     @click="openEditDialog(member)"
                   >
@@ -251,7 +221,7 @@ onMounted(() => {
                   <Button
                     variant="ghost"
                     size="icon"
-                    class="size-8 text-destructive hover:text-destructive"
+                    class="size-10 text-destructive hover:text-destructive"
                     aria-label="Desactivar personal"
                     @click="openDeleteDialog(member)"
                   >
@@ -265,66 +235,60 @@ onMounted(() => {
       </div>
 
       <!-- Mobile cards -->
-      <div class="space-y-3 md:hidden">
+      <div class="space-y-2 md:hidden">
         <Card v-for="member in filteredStaff" :key="member.id">
-          <CardContent class="p-3">
-            <div class="flex items-start justify-between gap-2">
-              <div class="min-w-0 flex-1">
-                <p class="text-sm font-medium">{{ member.name }}</p>
-                <div class="mt-1.5 flex flex-wrap items-center gap-1.5">
-                  <Badge :variant="ROLE_CONFIG[member.role].variant" class="text-xs">
-                    {{ ROLE_CONFIG[member.role].label }}
-                  </Badge>
-                  <span v-if="member.shift" class="text-xs text-muted-foreground">
-                    {{ getShiftLabel(member.shift) }}
-                  </span>
-                </div>
-              </div>
-              <div class="flex shrink-0 items-center gap-1">
+          <CardContent class="px-3 py-2.5">
+            <!-- Row 1: Name + Role badge -->
+            <div class="flex items-center gap-1.5">
+              <p class="min-w-0 flex-1 truncate text-sm font-semibold">{{ member.name }}</p>
+              <Badge :variant="ROLE_CONFIG[member.role].variant" class="shrink-0 text-[11px]">
+                {{ ROLE_CONFIG[member.role].label }}
+              </Badge>
+            </div>
+            <!-- Row 2: Phone · Email · Shift | Actions inline -->
+            <div class="mt-0.5 flex items-center gap-x-1 text-[11px] text-muted-foreground">
+              <template v-if="member.phone">
+                <Phone class="size-3 shrink-0" />
+                <span class="shrink-0">{{ member.phone }}</span>
+              </template>
+              <template v-if="member.shift">
+                <span class="opacity-30">·</span>
+                <Clock class="size-3 shrink-0" />
+                <span>{{ getShiftLabel(member.shift) }}</span>
+              </template>
+              <span class="ml-auto flex shrink-0 items-center gap-0.5">
                 <Button
                   variant="ghost"
-                  size="icon"
-                  class="size-8"
+                  class="h-6 px-2 text-[11px] text-muted-foreground hover:text-foreground"
                   aria-label="Editar personal"
                   @click="openEditDialog(member)"
                 >
-                  <Pencil class="size-4" />
+                  <Pencil class="size-3" />
                 </Button>
                 <Button
                   variant="ghost"
-                  size="icon"
-                  class="size-8 text-destructive hover:text-destructive"
+                  class="h-6 px-2 text-[11px] text-destructive hover:text-destructive"
                   aria-label="Desactivar personal"
                   @click="openDeleteDialog(member)"
                 >
-                  <Trash2 class="size-4" />
+                  <Trash2 class="size-3" />
                 </Button>
-              </div>
-            </div>
-            <div class="mt-2 space-y-1">
-              <p v-if="member.phone" class="flex items-center gap-1.5 text-xs text-muted-foreground">
-                <Phone class="size-3" />
-                {{ member.phone }}
-              </p>
-              <p v-if="member.email" class="flex items-center gap-1.5 text-xs text-muted-foreground">
-                <Mail class="size-3" />
-                {{ member.email }}
-              </p>
+              </span>
             </div>
           </CardContent>
         </Card>
       </div>
     </div>
 
-    <!-- Create/Edit Dialog -->
-    <Dialog v-model:open="dialogOpen">
-      <DialogContent class="sm:max-w-md">
-        <DialogHeader>
-          <DialogTitle>{{ editingStaff ? 'Editar personal' : 'Agregar personal' }}</DialogTitle>
-          <DialogDescription>
+    <!-- Create/Edit Sheet -->
+    <Sheet v-model:open="dialogOpen">
+      <SheetContent side="right">
+        <SheetHeader>
+          <SheetTitle>{{ editingStaff ? 'Editar personal' : 'Agregar personal' }}</SheetTitle>
+          <SheetDescription>
             {{ editingStaff ? 'Actualiza la información del miembro del personal' : 'Registra un nuevo miembro del personal del condominio' }}
-          </DialogDescription>
-        </DialogHeader>
+          </SheetDescription>
+        </SheetHeader>
 
         <form class="space-y-4 py-2" @submit.prevent="handleSubmit">
           <div class="space-y-2">
@@ -333,6 +297,7 @@ onMounted(() => {
               id="staff-name"
               v-model="formName"
               placeholder="Nombre completo"
+              class="h-12"
               required
             />
           </div>
@@ -340,7 +305,7 @@ onMounted(() => {
           <div class="space-y-2">
             <Label for="staff-role">Rol *</Label>
             <Select v-model="formRole">
-              <SelectTrigger id="staff-role">
+              <SelectTrigger id="staff-role" size="lg">
                 <SelectValue placeholder="Seleccionar rol" />
               </SelectTrigger>
               <SelectContent>
@@ -358,6 +323,7 @@ onMounted(() => {
               id="staff-document"
               v-model="formDocument"
               placeholder="Cédula o pasaporte"
+              class="h-12"
             />
           </div>
 
@@ -368,6 +334,7 @@ onMounted(() => {
                 id="staff-phone"
                 v-model="formPhone"
                 placeholder="0412-1234567"
+                class="h-12"
               />
             </div>
 
@@ -378,6 +345,7 @@ onMounted(() => {
                 v-model="formEmail"
                 type="email"
                 placeholder="correo@ejemplo.com"
+                class="h-12"
               />
             </div>
           </div>
@@ -385,7 +353,7 @@ onMounted(() => {
           <div class="space-y-2">
             <Label for="staff-shift">Turno</Label>
             <Select v-model="formShift">
-              <SelectTrigger id="staff-shift">
+              <SelectTrigger id="staff-shift" size="lg">
                 <SelectValue placeholder="Seleccionar turno" />
               </SelectTrigger>
               <SelectContent>
@@ -397,7 +365,7 @@ onMounted(() => {
             </Select>
           </div>
 
-          <DialogFooter class="gap-2 sm:gap-0">
+          <SheetFooter class="gap-2 sm:gap-0">
             <Button type="button" variant="outline" @click="dialogOpen = false">
               Cancelar
             </Button>
@@ -408,10 +376,10 @@ onMounted(() => {
               <Loader2 v-if="isSubmitting" class="mr-2 size-4 animate-spin" />
               {{ isSubmitting ? 'Guardando...' : 'Guardar' }}
             </Button>
-          </DialogFooter>
+          </SheetFooter>
         </form>
-      </DialogContent>
-    </Dialog>
+      </SheetContent>
+    </Sheet>
 
     <!-- Delete AlertDialog -->
     <AlertDialog v-model:open="deleteDialogOpen">

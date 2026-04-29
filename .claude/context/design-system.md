@@ -2,36 +2,83 @@
 
 ## Preset shadcn-vue
 - **Estilo**: reka-luma
-- **Font**: Inter (Google Fonts, variable)
-- **Base color**: taupe
-- **CSS Variables**: habilitadas
+- **Font**: Plus Jakarta Sans (Google Fonts, 400/500/600/700)
+- **Base color**: ChanaDomus brand (teal + orange)
+- **CSS Variables**: habilitadas (OKLCH format)
 - **Menu color**: default-translucent
 - **Menu accent**: subtle
 - **Border radius**: 0.625rem (--radius)
 - **RTL**: deshabilitado
 
-## Paleta de Colores (Light)
-- **Primary**: oklch(0.511 0.096 186.391) — teal/verde azulado
-- **Secondary**: oklch(0.967 0.001 286.375)
-- **Destructive**: oklch(0.577 0.245 27.325)
-- **Muted**: oklch(0.96 0.002 17.2)
-- **Background**: oklch(1 0 0) — blanco
-- **Foreground**: oklch(0.147 0.004 49.3) — casi negro
+## Border Radius (Estandarizado)
+- **Todo**: `rounded-lg` — Valor unico para buttons, inputs, selects, dialogs, popovers, dropdowns, badges, avatares, cards, tabs, skeletons, toasts
+- **Dots/Indicadores**: `rounded-full` — SOLO para status dots, ping animations, radio buttons, switches
+- **NO usar**: `rounded-xl`, `rounded-2xl`, `rounded-3xl`, `rounded-4xl` (eliminados del sistema)
 
-## Estrategia Responsive (Mobile-First)
-ChanaDomus es PWA — el diseno movil es la experiencia principal.
+## Paleta de Colores (Light) — Brandbook ChanaDomus
+
+### Core tokens (CSS variables en main.css)
+- **Primary**: oklch(0.738 0.123 193.5) — teal #19C2C0
+- **Secondary**: oklch(0.708 0.176 50.5) — orange #F47A1F (identidad de marca)
+- **Accent**: oklch(0.959 0.024 193.8) — soft teal #E0F7F6
+- **Destructive**: oklch(0.611 0.207 25.8) — error #E53B3B
+- **Muted**: oklch(0.936 0.014 191.7) — neutral teal-tinted
+- **Background**: oklch(0.973 0.004 198.1) — #F3F7F7 (tinte teal sutil)
+- **Foreground**: oklch(0.276 0.023 248.7) — #1F2933
+
+### Brand shades (variables --brand-*)
+- **Primary 800**: #12A7A5 (hover, emphasis)
+- **Primary 700**: #0E8F8D (dark variant)
+- **Secondary 700**: #D96512 (hover orange)
+
+### Status colors (variables --status-*)
+- **Success**: #38B075 | **Warning**: #F5A842 | **Error**: #E53B3B | **Info**: #3A86FF
+
+### Icon backgrounds (variables --icon-bg-*)
+- **Teal**: #E0F7F7 | **Orange**: #FFF4E5 | **Yellow**: #FFF9E1
+
+## Estrategia Responsive (Desktop-First)
+Disenar primero para desktop, luego ajustar a tablet y mobile.
 
 | Rol | Dispositivo principal | Breakpoint foco |
 |-----|----------------------|-----------------|
-| Propietario | Movil | `sm` (default) |
-| Vigilancia | Movil/Tablet | `sm` → `md` |
+| Administrador | Desktop | `lg` → `md` |
 | Conserje | Tablet | `md` |
-| Administrador | Desktop | `md` → `lg` |
-
-Siempre disenar en orden: movil → tablet → desktop.
+| Vigilancia | Movil/Tablet | `md` → `sm` |
+| Propietario | Movil | `sm` (default) |
 
 ## Componentes Instalados
 Ver `.claude/state/installed-components.md` para lista actualizada.
+
+## Patrones UI Validados (Referencia: vigilancia/accesos.vue)
+
+### Card Compacto (Feed/Listado)
+- **Padding**: `px-3 py-2.5` — compacto pero tocable
+- **Spacing entre cards**: `space-y-2`
+- **Row 1**: Nombre (text-sm font-semibold truncate) + Badge unidad (text-[11px]) + Hora (text-[11px] tabular-nums)
+- **Row 2**: Meta inline (text-[11px]) con separadores `·` (opacity-30), items con `gap-x-1`
+- **Acciones inline**: Botones ghost `h-6 px-2 text-[11px]` al final de Row 2 — NUNCA en fila propia
+- **Sin bordes coloreados** en cards — cards limpios del design system
+- **Sin fondos de estado** en cards — el estado se indica con texto coloreado o dots externos
+
+### Timeline (Feed cronologico)
+- **Linea vertical**: `w-px bg-border` posicionada con `absolute left-[5px]`
+- **Dots**: `size-2.5 rounded-full ring-2 ring-background` coloreados por estado
+- **Colores dots**: primary (permitido/ok), destructive (denegado/error), amber-500 (warning)
+- **Offset**: `pl-5` en container, dot posicionado con `absolute -left-5`
+
+### Principios de Compactacion
+1. **Maximo 2 filas** por card en feeds — nombre+badges arriba, meta+acciones abajo
+2. **Acciones inline** — botones ghost pequeños al final de la meta line, nunca en fila separada
+3. **Info que reemplaza accion** — cuando una accion se completa (ej: salida marcada), el resultado ocupa el mismo slot inline
+4. **text-[11px]** para meta, **text-sm** para contenido principal, **text-base** para titulos
+5. **tabular-nums** en todos los datos numericos/hora
+6. **truncate** en nombres y textos largos para evitar wrap
+
+### Topbar Actions
+- Badge de estado (conectado/desconectado) via `useTopbarPortal()`
+- Busqueda via `TopbarSearch` component
+- Acciones secundarias como botones en la action zone
 
 ## Reglas de Uso
 1. Usar SOLO componentes shadcn-vue del registro

@@ -1,18 +1,17 @@
 <script setup lang="ts">
-import { ArrowLeft, Loader2, Share2, Copy, Plus, QrCode } from 'lucide-vue-next'
+import { Loader2, Share2, Plus, QrCode } from 'lucide-vue-next'
 import type { VisitorType } from '~~/shared/types/qr'
 import QRCode from 'qrcode'
 
-definePageMeta({ layout: 'default', title: 'Nueva Visita' })
+useHead({ title: 'Nueva Visita' })
 
-const router = useRouter()
-const { generateQr, units, fetchUnits, isGenerating, error } = useQr()
+const { user } = useAuth()
+const { generateQr, isGenerating, error } = useQr()
 
 // Form state
 const visitorName = ref('')
 const visitorDocument = ref('')
 const visitorType = ref<VisitorType>('invitado')
-const selectedUnitId = ref('')
 const expiresAt = ref('')
 
 // Result state
@@ -34,14 +33,15 @@ function getDefault24h(): string {
   return local.toISOString().slice(0, 16)
 }
 
-onMounted(async () => {
+onMounted(() => {
   expiresAt.value = getDefault24h()
-  await fetchUnits()
 })
+
+const userUnitId = computed(() => (user.value as Record<string, unknown> | null)?.unitId as string | undefined)
 
 const isFormValid = computed(() => {
   return visitorName.value.trim() !== ''
-    && selectedUnitId.value !== ''
+    && !!userUnitId.value
     && expiresAt.value !== ''
 })
 
@@ -55,7 +55,7 @@ async function handleGenerate() {
       visitorName: visitorName.value.trim(),
       visitorDocument: visitorDocument.value.trim() || undefined,
       visitorType: visitorType.value,
-      unitId: selectedUnitId.value,
+      unitId: userUnitId.value!,
       expiresAt: new Date(expiresAt.value).toISOString(),
     })
 
@@ -102,7 +102,19 @@ async function handleShare() {
 
 async function copyToClipboard(text: string) {
   try {
-    await navigator.clipboard.writeText(text)
+    if (navigator.clipboard?.writeText) {
+      await navigator.clipboard.writeText(text)
+    }
+    else {
+      const textarea = document.createElement('textarea')
+      textarea.value = text
+      textarea.style.position = 'fixed'
+      textarea.style.opacity = '0'
+      document.body.appendChild(textarea)
+      textarea.select()
+      document.execCommand('copy')
+      document.body.removeChild(textarea)
+    }
     shareSuccess.value = 'Enlace copiado al portapapeles'
     setTimeout(() => { shareSuccess.value = null }, 3000)
   }
@@ -116,7 +128,6 @@ function handleReset() {
   visitorName.value = ''
   visitorDocument.value = ''
   visitorType.value = 'invitado'
-  selectedUnitId.value = ''
   expiresAt.value = getDefault24h()
   generatedToken.value = null
   generatedData.value = null
@@ -125,62 +136,46 @@ function handleReset() {
   error.value = null
 }
 
-function formatDate(dateStr: string): string {
-  return new Date(dateStr).toLocaleString('es-VE', {
-    dateStyle: 'medium',
-    timeStyle: 'short',
-  })
-}
+const { formatDateTime } = useFormatDate()
 </script>
 
 <template>
-  <div class="mx-auto max-w-lg">
-    <!-- Header -->
-    <div class="mb-6">
-      <Button variant="ghost" size="sm" class="-ml-2" @click="router.back()">
-        <ArrowLeft class="mr-1 size-4" />
-        Volver
-      </Button>
-    </div>
-
+  <div>
     <!-- Error alert -->
-    <div
-      v-if="error"
-      role="alert"
-      class="mb-4 rounded-lg border border-destructive/50 bg-destructive/10 p-3 text-sm text-destructive"
-    >
-      {{ error }}
-    </div>
+    <ErrorAlert :message="error" class="mb-4" />
 
     <!-- Form (hidden after generation) -->
-    <Card v-if="!generatedToken">
-      <CardContent class="space-y-4 pt-6">
+    <form v-if="!generatedToken" @submit.prevent="handleGenerate">
+      <Card>
+      <CardContent class="space-y-6 p-4">
         <!-- Nombre del visitante -->
-        <div class="space-y-2">
+        <div class="space-y-1.5">
           <Label for="visitor-name">Nombre del visitante <span class="text-destructive">*</span></Label>
           <Input
             id="visitor-name"
             v-model="visitorName"
             placeholder="Nombre completo"
             required
+            class="h-12 text-base"
           />
         </div>
 
         <!-- Cédula -->
-        <div class="space-y-2">
-          <Label for="visitor-document">Cedula <span class="text-xs text-muted-foreground">(opcional)</span></Label>
+        <div class="space-y-1.5">
+          <Label for="visitor-document">Cédula <span class="text-xs text-muted-foreground">(opcional)</span></Label>
           <Input
             id="visitor-document"
             v-model="visitorDocument"
             placeholder="V-12345678"
+            class="h-12 text-base"
           />
         </div>
 
         <!-- Tipo de visitante -->
-        <div class="space-y-2">
-          <Label for="visitor-type">Tipo de visitante</Label>
+        <div class="space-y-1.5">
+          <Label for="visitor-type">Tipo de visita</Label>
           <Select v-model="visitorType">
-            <SelectTrigger id="visitor-type" class="w-full">
+            <SelectTrigger id="visitor-type" size="lg" class="w-full text-base">
               <SelectValue placeholder="Seleccionar tipo" />
             </SelectTrigger>
             <SelectContent>
@@ -190,53 +185,40 @@ function formatDate(dateStr: string): string {
           </Select>
         </div>
 
-        <!-- Unidad destino -->
-        <div class="space-y-2">
-          <Label for="unit-select">Unidad destino <span class="text-destructive">*</span></Label>
-          <Select v-model="selectedUnitId">
-            <SelectTrigger id="unit-select" class="w-full">
-              <SelectValue placeholder="Seleccionar unidad" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem v-for="unit in units" :key="unit.id" :value="unit.id">
-                {{ unit.number }}{{ unit.label ? ` — ${unit.label}` : '' }}
-              </SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-
         <!-- Fecha y hora límite -->
-        <div class="space-y-2">
-          <Label for="expires-at">Valido hasta <span class="text-destructive">*</span></Label>
+        <div class="space-y-1.5">
+          <Label for="expires-at">Válido hasta <span class="text-destructive">*</span></Label>
           <Input
             id="expires-at"
             v-model="expiresAt"
             type="datetime-local"
+            class="h-12 text-base"
           />
         </div>
 
         <!-- Submit -->
         <Button
-          class="w-full"
+          type="submit"
+          class="mt-3 h-12 w-full text-base font-semibold"
           :disabled="!isFormValid || isGenerating"
-          @click="handleGenerate"
         >
           <Loader2 v-if="isGenerating" class="size-4 animate-spin" />
           <QrCode v-else class="size-4" />
-          {{ isGenerating ? 'Generando...' : 'Generar Codigo QR' }}
+          {{ isGenerating ? 'Creando...' : 'Crear pase de acceso' }}
         </Button>
       </CardContent>
-    </Card>
+      </Card>
+    </form>
 
     <!-- Result -->
     <div v-else class="space-y-4">
       <Card>
-        <CardContent class="flex flex-col items-center space-y-4 pt-6">
+        <CardContent class="flex flex-col items-center space-y-4 p-4">
           <!-- QR Image -->
           <img
             v-if="qrDataUrl"
             :src="qrDataUrl"
-            alt="Codigo QR de acceso"
+            alt="Pase de acceso"
             class="size-64 rounded-lg"
           />
 
@@ -255,8 +237,8 @@ function formatDate(dateStr: string): string {
               </Badge>
             </div>
             <div class="flex justify-between">
-              <span class="text-muted-foreground">Valido hasta</span>
-              <span class="text-xs">{{ generatedData ? formatDate(generatedData.expiresAt) : '' }}</span>
+              <span class="text-muted-foreground">Válido hasta</span>
+              <span class="text-xs">{{ generatedData ? formatDateTime(generatedData.expiresAt) : '' }}</span>
             </div>
           </div>
         </CardContent>
@@ -273,13 +255,13 @@ function formatDate(dateStr: string): string {
 
       <!-- Actions -->
       <div class="space-y-3">
-        <Button class="w-full" @click="handleShare">
+        <Button class="h-12 w-full text-base" @click="handleShare">
           <Share2 class="size-4" />
-          Compartir por WhatsApp
+          Compartir con tu visitante
         </Button>
-        <Button variant="outline" class="w-full" @click="handleReset">
+        <Button variant="outline" class="h-12 w-full text-base" @click="handleReset">
           <Plus class="size-4" />
-          Generar otra visita
+          Crear otro pase
         </Button>
       </div>
     </div>

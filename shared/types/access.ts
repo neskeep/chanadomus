@@ -18,5 +18,6 @@ export interface AccessEvent {
   unitNumber: string | null
   unitLabel: string | null
   notes: string | null
+  exitAt: string | null
   createdAt: string
 }

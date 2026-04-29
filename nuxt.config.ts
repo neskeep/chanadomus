@@ -5,13 +5,14 @@ export default defineNuxtConfig({
   devtools: { enabled: false },
 
   app: {
+    pageTransition: { name: 'page', mode: 'out-in' },
     head: {
       link: [
         { rel: 'manifest', href: '/manifest.webmanifest' },
         { rel: 'apple-touch-icon', href: '/icons/icon-192.png' },
       ],
       meta: [
-        { name: 'theme-color', content: '#a08b7a' },
+        { name: 'theme-color', content: '#19C2C0' },
         { name: 'apple-mobile-web-app-capable', content: 'yes' },
         { name: 'apple-mobile-web-app-status-bar-style', content: 'default' },
       ],
@@ -28,6 +29,19 @@ export default defineNuxtConfig({
     plugins: [
       (await import('@tailwindcss/vite')).default(),
     ],
+    optimizeDeps: {
+      include: [
+        'lucide-vue-next',
+        'vue-sonner',
+        'clsx',
+        'tailwind-merge',
+        'reka-ui',
+        'better-auth/vue',
+        'better-auth/client/plugins',
+        'class-variance-authority',
+        'better-auth/plugins/access',
+      ],
+    },
   },
 
   components: [
@@ -42,6 +56,15 @@ export default defineNuxtConfig({
   nitro: {
     experimental: {
       websocket: true,
+    },
+    imports: {
+      imports: [
+        {
+          name: 'useAppConfig',
+          from: '#app-config',
+          priority: 10,
+        },
+      ],
     },
   },
 })

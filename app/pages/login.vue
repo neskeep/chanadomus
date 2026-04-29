@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { Eye, EyeOff } from 'lucide-vue-next'
+
 definePageMeta({ layout: 'auth' })
 
 const { signIn } = useAuth()
@@ -6,6 +8,7 @@ const email = ref('')
 const password = ref('')
 const error = ref('')
 const loading = ref(false)
+const showPassword = ref(false)
 
 async function handleSubmit() {
   error.value = ''
@@ -23,56 +26,66 @@ async function handleSubmit() {
 <template>
   <div>
     <!-- Branding -->
-    <div class="mb-6 text-center">
-      <h1 class="text-2xl font-bold tracking-tight text-primary">ChanaDomus</h1>
-      <p class="mt-1 text-sm text-muted-foreground">Gestión Condominial</p>
+    <div class="mb-8 flex justify-center md:mb-10">
+      <AppLogo :height="48" />
     </div>
 
-    <Card>
-      <CardHeader>
-        <CardTitle>Iniciar Sesión</CardTitle>
-        <CardDescription>Ingresa tus credenciales para continuar</CardDescription>
-      </CardHeader>
-      <CardContent>
-        <form class="flex flex-col gap-4" @submit.prevent="handleSubmit">
-          <!-- Error -->
-          <div v-if="error" class="rounded-lg bg-destructive/10 px-3 py-2 text-sm text-destructive">
-            {{ error }}
-          </div>
+    <!-- Form -->
+    <form class="flex flex-col gap-5 md:gap-6" @submit.prevent="handleSubmit">
+      <!-- Error -->
+      <div
+        v-if="error"
+        role="alert"
+        class="rounded-lg bg-destructive/10 px-4 py-3 text-base text-destructive"
+      >
+        {{ error }}
+      </div>
 
-          <div class="flex flex-col gap-2">
-            <Label for="email">Correo electrónico</Label>
-            <Input
-              id="email"
-              v-model="email"
-              type="email"
-              placeholder="tu@email.com"
-              required
-              autocomplete="email"
-            />
-          </div>
+      <div class="flex flex-col gap-2">
+        <Label for="email" class="text-sm font-medium md:text-base">Correo electrónico</Label>
+        <Input
+          id="email"
+          v-model="email"
+          type="email"
+          placeholder="joe.doe@chanadomus.com"
+          required
+          autocomplete="email"
+          class="h-11 text-base md:h-14 md:text-lg"
+        />
+      </div>
 
-          <div class="flex flex-col gap-2">
-            <Label for="password">Contraseña</Label>
-            <Input
-              id="password"
-              v-model="password"
-              type="password"
-              placeholder="••••••••"
-              required
-              autocomplete="current-password"
-            />
-          </div>
+      <div class="flex flex-col gap-2">
+        <Label for="password" class="text-sm font-medium md:text-base">Contraseña</Label>
+        <div class="relative">
+          <Input
+            id="password"
+            v-model="password"
+            :type="showPassword ? 'text' : 'password'"
+            placeholder="••••••••"
+            required
+            autocomplete="current-password"
+            class="h-11 pr-12 text-base md:h-14 md:text-lg"
+          />
+          <button
+            type="button"
+            class="absolute right-3 top-1/2 -translate-y-1/2 cursor-pointer text-muted-foreground"
+            :aria-label="showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'"
+            @click="showPassword = !showPassword"
+          >
+            <EyeOff v-if="showPassword" class="size-5" />
+            <Eye v-else class="size-5" />
+          </button>
+        </div>
+      </div>
 
-          <Button type="submit" class="mt-2 w-full" :disabled="loading">
-            {{ loading ? 'Ingresando...' : 'Ingresar' }}
-          </Button>
-        </form>
-      </CardContent>
-    </Card>
-
-    <p class="mt-6 text-center text-xs text-muted-foreground">
-      Ranchos de Chana &middot; Acceso exclusivo para residentes
-    </p>
+      <Button
+        type="submit"
+        variant="default"
+        class="mt-2 h-11 w-full text-base font-semibold md:h-14 md:text-lg"
+        :disabled="loading"
+      >
+        {{ loading ? 'Ingresando...' : 'Ingresar' }}
+      </Button>
+    </form>
   </div>
 </template>

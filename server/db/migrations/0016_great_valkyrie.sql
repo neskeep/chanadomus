@@ -1,0 +1,1 @@
+ALTER TABLE "access_logs" ADD COLUMN "exit_at" timestamp;

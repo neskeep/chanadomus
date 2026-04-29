@@ -2,23 +2,22 @@
 import {
   Vote,
   Plus,
-  Search,
-  Filter,
   Pencil,
   Trash2,
   Send,
   Lock,
   Loader2,
   Calendar,
-  ChevronLeft,
-  ChevronRight,
   FileText,
   X,
 } from 'lucide-vue-next'
 import { toast } from 'vue-sonner'
 import type { Poll, PollStatus } from '~~/shared/types/poll'
+import { POLL_STATUS_COLORS, POLL_STATUS_LABELS } from '~/composables/useColorMap'
 
-definePageMeta({ layout: 'default', title: 'Gestion de Votaciones' })
+useHead({ title: 'Gestion de Votaciones' })
+
+const { formatDate } = useFormatDate()
 
 const {
   polls,
@@ -38,8 +37,15 @@ const {
 // Filters & pagination
 const currentPage = ref(1)
 const searchQuery = ref('')
-const filterStatus = ref<PollStatus | 'all'>('all')
-const showFilters = ref(false)
+const filterStatus = ref<PollStatus | ''>('')
+
+const { target, isMounted } = useTopbarPortal()
+
+const statusOptions = [
+  { value: 'draft' as const, label: 'Borrador' },
+  { value: 'active' as const, label: 'Activa' },
+  { value: 'closed' as const, label: 'Cerrada' },
+]
 
 // Create/Edit dialog
 const dialogOpen = ref(false)
@@ -55,9 +61,9 @@ const deleteId = ref<string | null>(null)
 const deleteDialogOpen = ref(false)
 
 const STATUS_CONFIG: Record<PollStatus, { label: string; class: string }> = {
-  draft: { label: 'Borrador', class: 'bg-zinc-100 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400' },
-  active: { label: 'Activa', class: 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-400' },
-  closed: { label: 'Cerrada', class: 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400' },
+  draft: { label: POLL_STATUS_LABELS.draft, class: POLL_STATUS_COLORS.draft },
+  active: { label: POLL_STATUS_LABELS.active, class: POLL_STATUS_COLORS.active },
+  closed: { label: POLL_STATUS_LABELS.closed, class: POLL_STATUS_COLORS.closed },
 }
 
 // Stats
@@ -76,7 +82,7 @@ const filteredPolls = computed(() => {
 
 async function loadPolls() {
   const params: FetchParams = { page: currentPage.value }
-  if (filterStatus.value && filterStatus.value !== 'all') params.status = filterStatus.value
+  if (filterStatus.value) params.status = filterStatus.value
   await fetchPolls(params)
 }
 
@@ -204,121 +210,47 @@ async function handleDelete() {
   }
 }
 
-function formatDate(dateStr: string): string {
-  return new Date(dateStr).toLocaleDateString('es-VE', {
-    day: '2-digit',
-    month: 'short',
-    year: 'numeric',
-  })
-}
-
 function participationText(poll: Poll): string {
   const votes = poll.totalVotes ?? 0
-  const units = poll.totalUnits ?? 86
+  const units = poll.totalUnits ?? 0
   return `${votes}/${units} votos`
 }
 </script>
 
 <template>
-  <div class="mx-auto max-w-5xl">
-    <!-- Header -->
-    <div class="mb-6 flex justify-end">
+  <div>
+    <!-- Topbar actions -->
+    <Teleport :to="target" defer v-if="isMounted">
+      <TopbarSearch v-model="searchQuery" placeholder="Buscar votacion...">
+        <TopbarFilters :active="filterStatus !== ''" @clear="filterStatus = ''">
+          <TopbarFilterGroup v-model="filterStatus" label="Estado" :options="statusOptions" />
+        </TopbarFilters>
+      </TopbarSearch>
       <Button size="sm" @click="openCreateDialog">
-        <Plus class="mr-1.5 size-4" />
-        Nueva Votación
+        <Plus class="mr-1.5 size-3.5" />
+        Nuevo
       </Button>
-    </div>
+    </Teleport>
 
     <!-- Stats cards -->
-    <div class="mb-6 grid grid-cols-2 gap-2">
-      <div class="flex items-center gap-3 rounded-lg border bg-card p-3">
-        <div class="flex size-8 shrink-0 items-center justify-center rounded-md bg-emerald-100 dark:bg-emerald-900/30">
-          <Vote class="size-4 text-emerald-600" />
-        </div>
-        <div>
-          <p v-if="isLoading"><Skeleton class="h-5 w-8" /></p>
-          <p v-else class="text-lg font-bold leading-none">{{ totalActive }}</p>
-          <p class="mt-0.5 text-[11px] text-muted-foreground">Activas</p>
-        </div>
-      </div>
-      <div class="flex items-center gap-3 rounded-lg border bg-card p-3">
-        <div class="flex size-8 shrink-0 items-center justify-center rounded-md bg-zinc-100 dark:bg-zinc-800">
-          <FileText class="size-4 text-zinc-600 dark:text-zinc-400" />
-        </div>
-        <div>
-          <p v-if="isLoading"><Skeleton class="h-5 w-8" /></p>
-          <p v-else class="text-lg font-bold leading-none">{{ totalDrafts }}</p>
-          <p class="mt-0.5 text-[11px] text-muted-foreground">Borradores</p>
-        </div>
-      </div>
+    <div class="mb-6 grid grid-cols-2 gap-3">
+      <StatCard label="Activas" :value="totalActive" :icon="Vote" icon-bg-class="bg-primary/10 text-primary" :is-loading="isLoading" />
+      <StatCard label="Borradores" :value="totalDrafts" :icon="FileText" icon-bg-class="bg-muted text-muted-foreground" :is-loading="isLoading" />
     </div>
 
     <!-- Error -->
-    <div
-      v-if="error"
-      role="alert"
-      class="mb-4 rounded-lg border border-destructive/50 bg-destructive/10 p-3 text-sm text-destructive"
-    >
-      {{ error }}
-    </div>
-
-    <!-- Search & filters -->
-    <div class="mb-4 space-y-3">
-      <div class="flex gap-2">
-        <div class="relative flex-1">
-          <Search class="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-          <Input
-            v-model="searchQuery"
-            placeholder="Buscar por título o autor..."
-            class="pl-9"
-          />
-        </div>
-        <Button
-          variant="outline"
-          size="icon"
-          :class="{ 'border-primary text-primary': showFilters }"
-          @click="showFilters = !showFilters"
-        >
-          <Filter class="size-4" />
-        </Button>
-      </div>
-
-      <!-- Filter selects -->
-      <div v-if="showFilters" class="grid grid-cols-1 gap-3">
-        <Select v-model="filterStatus">
-          <SelectTrigger>
-            <SelectValue placeholder="Estado" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">Todos</SelectItem>
-            <SelectItem value="draft">Borrador</SelectItem>
-            <SelectItem value="active">Activa</SelectItem>
-            <SelectItem value="closed">Cerrada</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
-    </div>
+    <ErrorAlert v-if="error" :message="error" class="mb-4" />
 
     <!-- Loading -->
-    <div v-if="isLoading" class="space-y-2">
-      <Skeleton v-for="i in 5" :key="i" class="h-16 w-full rounded-lg" />
-    </div>
+    <ListSkeleton v-if="isLoading" :count="5" variant="row" />
 
     <!-- Empty state -->
-    <div
+    <EmptyState
       v-else-if="filteredPolls.length === 0"
-      class="flex flex-col items-center gap-4 rounded-lg border border-dashed p-8 text-center"
-    >
-      <div class="flex size-12 items-center justify-center rounded-full bg-muted">
-        <Vote class="size-6 text-muted-foreground" />
-      </div>
-      <div>
-        <p class="font-medium">No hay votaciones</p>
-        <p class="mt-1 text-sm text-muted-foreground">
-          {{ filterStatus !== 'all' ? 'Prueba cambiando los filtros' : 'Las votaciones aparecerán aquí' }}
-        </p>
-      </div>
-    </div>
+      :icon="Vote"
+      title="No hay votaciones"
+      :description="filterStatus ? 'Prueba cambiando los filtros' : 'Las votaciones aparecerán aquí'"
+    />
 
     <!-- Table (desktop) / Cards (mobile) -->
     <div v-else>
@@ -350,7 +282,7 @@ function participationText(poll: Poll): string {
               </TableCell>
               <TableCell>
                 <span
-                  class="inline-flex rounded-full px-2 py-0.5 text-xs font-medium"
+                  class="inline-flex rounded-lg px-2 py-0.5 text-xs font-medium"
                   :class="STATUS_CONFIG[poll.status].class"
                 >
                   {{ STATUS_CONFIG[poll.status].label }}
@@ -371,26 +303,26 @@ function participationText(poll: Poll): string {
                     v-if="poll.status === 'draft'"
                     variant="ghost"
                     size="icon"
-                    class="size-8"
+                    class="size-10"
                     title="Publicar"
                     @click="handlePublish(poll.id)"
                   >
-                    <Send class="size-4 text-emerald-600" />
+                    <Send class="size-4 text-primary" />
                   </Button>
                   <Button
                     v-if="poll.status === 'active'"
                     variant="ghost"
                     size="icon"
-                    class="size-8"
+                    class="size-10"
                     title="Cerrar votación"
                     @click="handleClose(poll.id)"
                   >
-                    <Lock class="size-4 text-blue-600" />
+                    <Lock class="size-4 text-muted-foreground" />
                   </Button>
                   <Button
                     variant="ghost"
                     size="icon"
-                    class="size-8"
+                    class="size-10"
                     title="Editar"
                     @click="openEditDialog(poll)"
                   >
@@ -399,7 +331,7 @@ function participationText(poll: Poll): string {
                   <Button
                     variant="ghost"
                     size="icon"
-                    class="size-8 text-destructive hover:text-destructive"
+                    class="size-10 text-destructive hover:text-destructive"
                     title="Eliminar"
                     @click="confirmDelete(poll.id)"
                   >
@@ -413,120 +345,102 @@ function participationText(poll: Poll): string {
       </div>
 
       <!-- Mobile cards -->
-      <div class="space-y-3 md:hidden">
-        <Card v-for="poll in filteredPolls" :key="poll.id">
-          <CardContent class="p-4">
-            <div class="flex items-start justify-between gap-2">
-              <div class="min-w-0 flex-1">
-                <p class="text-sm font-medium leading-snug">{{ poll.title }}</p>
-                <p class="mt-1 text-xs text-muted-foreground">
-                  {{ participationText(poll) }} · {{ formatDate(poll.createdAt) }}
-                </p>
-              </div>
-            </div>
-            <div class="mt-2 flex flex-wrap items-center gap-1.5">
+      <div class="space-y-2 md:hidden">
+        <Card v-for="poll in filteredPolls" :key="poll.id" class="min-w-0">
+          <CardContent class="px-3 py-2.5">
+            <!-- Row 1: Title + Status badge + Date -->
+            <div class="flex items-center gap-1.5">
+              <p class="min-w-0 flex-1 truncate text-sm font-semibold">{{ poll.title }}</p>
               <span
-                class="inline-flex rounded-full px-2 py-0.5 text-xs font-medium"
+                class="shrink-0 inline-flex rounded-lg px-2 py-0.5 text-[11px] font-medium"
                 :class="STATUS_CONFIG[poll.status].class"
               >
                 {{ STATUS_CONFIG[poll.status].label }}
               </span>
-              <span v-if="poll.deadline" class="inline-flex items-center gap-1 text-xs text-muted-foreground">
-                <Calendar class="size-3" />
-                {{ formatDate(poll.deadline) }}
+              <span class="shrink-0 text-[11px] tabular-nums text-muted-foreground">
+                {{ formatDate(poll.createdAt) }}
               </span>
             </div>
 
-            <!-- Results for active/closed -->
-            <div v-if="poll.status !== 'draft' && poll.options?.length" class="mt-3 space-y-1.5">
-              <div v-for="opt in poll.options" :key="opt.id" class="space-y-0.5">
-                <div class="flex items-center justify-between text-xs">
-                  <span class="truncate text-muted-foreground">{{ opt.text }}</span>
-                  <span class="ml-2 shrink-0 font-medium">{{ opt.percentage ?? 0 }}%</span>
-                </div>
-                <Progress :model-value="opt.percentage ?? 0" class="h-2" />
+            <!-- Row 2: Participation · Deadline | Actions inline -->
+            <div class="mt-0.5 flex items-center gap-x-1 text-[11px] text-muted-foreground">
+              <span>{{ participationText(poll) }}</span>
+              <template v-if="poll.deadline">
+                <span class="opacity-30">&middot;</span>
+                <Calendar class="size-3 shrink-0" />
+                <span class="shrink-0">{{ formatDate(poll.deadline) }}</span>
+              </template>
+
+              <!-- Inline actions -->
+              <div class="ml-auto flex items-center gap-0.5">
+                <Button
+                  v-if="poll.status === 'draft'"
+                  variant="ghost"
+                  class="h-6 px-2 text-[11px] text-primary"
+                  title="Publicar"
+                  @click="handlePublish(poll.id)"
+                >
+                  <Send class="mr-1 size-3" />
+                  Publicar
+                </Button>
+                <Button
+                  v-if="poll.status === 'active'"
+                  variant="ghost"
+                  class="h-6 px-2 text-[11px] text-muted-foreground"
+                  title="Cerrar votación"
+                  @click="handleClose(poll.id)"
+                >
+                  <Lock class="mr-1 size-3" />
+                  Cerrar
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  class="size-6"
+                  title="Editar"
+                  @click="openEditDialog(poll)"
+                >
+                  <Pencil class="size-3" />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  class="size-6 text-destructive hover:text-destructive"
+                  title="Eliminar"
+                  @click="confirmDelete(poll.id)"
+                >
+                  <Trash2 class="size-3" />
+                </Button>
               </div>
             </div>
 
-            <div class="mt-3 flex items-center gap-1">
-              <Button
-                v-if="poll.status === 'draft'"
-                variant="ghost"
-                size="icon"
-                class="size-8"
-                title="Publicar"
-                @click="handlePublish(poll.id)"
-              >
-                <Send class="size-4 text-emerald-600" />
-              </Button>
-              <Button
-                v-if="poll.status === 'active'"
-                variant="ghost"
-                size="icon"
-                class="size-8"
-                title="Cerrar votación"
-                @click="handleClose(poll.id)"
-              >
-                <Lock class="size-4 text-blue-600" />
-              </Button>
-              <Button
-                variant="ghost"
-                size="icon"
-                class="size-8"
-                title="Editar"
-                @click="openEditDialog(poll)"
-              >
-                <Pencil class="size-4" />
-              </Button>
-              <Button
-                variant="ghost"
-                size="icon"
-                class="size-8 text-destructive hover:text-destructive"
-                title="Eliminar"
-                @click="confirmDelete(poll.id)"
-              >
-                <Trash2 class="size-4" />
-              </Button>
+            <!-- Results for active/closed (compact) -->
+            <div v-if="poll.status !== 'draft' && poll.options?.length" class="mt-1.5 space-y-1">
+              <div v-for="opt in poll.options" :key="opt.id" class="space-y-0.5">
+                <div class="flex items-center justify-between text-[11px]">
+                  <span class="truncate text-muted-foreground">{{ opt.text }}</span>
+                  <span class="ml-2 shrink-0 font-medium tabular-nums">{{ opt.percentage ?? 0 }}%</span>
+                </div>
+                <Progress :model-value="opt.percentage ?? 0" class="h-1.5" />
+              </div>
             </div>
           </CardContent>
         </Card>
       </div>
 
       <!-- Pagination -->
-      <div v-if="totalPages > 1" class="mt-4 flex items-center justify-between">
-        <Button
-          variant="outline"
-          size="sm"
-          :disabled="currentPage <= 1"
-          @click="currentPage--"
-        >
-          <ChevronLeft class="mr-1 size-4" />
-          Anterior
-        </Button>
-        <span class="text-sm text-muted-foreground">
-          {{ currentPage }} / {{ totalPages }}
-        </span>
-        <Button
-          variant="outline"
-          size="sm"
-          :disabled="currentPage >= totalPages"
-          @click="currentPage++"
-        >
-          Siguiente
-          <ChevronRight class="ml-1 size-4" />
-        </Button>
-      </div>
+      <ListPagination v-model:current-page="currentPage" :total-pages="totalPages" class="mt-4" />
     </div>
 
-    <!-- Create/Edit Dialog -->
-    <Dialog v-model:open="dialogOpen">
-      <DialogContent class="max-h-[90vh] overflow-y-auto sm:max-w-lg">
-        <DialogHeader>
-          <DialogTitle>{{ editingId ? 'Editar Votación' : 'Nueva Votación' }}</DialogTitle>
-          <DialogDescription>
+    <!-- Create/Edit Sheet -->
+    <Sheet v-model:open="dialogOpen">
+      <SheetContent side="right" class="overflow-y-auto sm:max-w-lg">
+        <SheetHeader>
+          <SheetTitle>{{ editingId ? 'Editar Votación' : 'Nueva Votación' }}</SheetTitle>
+          <SheetDescription>
             {{ editingId ? 'Modifica los datos de la votación' : 'Completa los datos para crear una nueva votación' }}
-          </DialogDescription>
-        </DialogHeader>
+          </SheetDescription>
+        </SheetHeader>
 
         <form class="space-y-4 py-2" @submit.prevent="handleSubmit">
           <div>
@@ -535,7 +449,7 @@ function participationText(poll: Poll): string {
               id="poll-title"
               v-model="formTitle"
               placeholder="Título de la votación"
-              class="mt-1.5"
+              class="h-12 mt-1.5"
               required
             />
           </div>
@@ -559,7 +473,7 @@ function participationText(poll: Poll): string {
                 <Input
                   v-model="formOptions[index]"
                   :placeholder="`Opción ${index + 1}`"
-                  class="flex-1"
+                  class="h-12 flex-1"
                   required
                 />
                 <Button
@@ -576,8 +490,7 @@ function participationText(poll: Poll): string {
               <Button
                 type="button"
                 variant="outline"
-                size="sm"
-                class="w-full"
+                class="h-12 w-full"
                 @click="addOption"
               >
                 <Plus class="mr-1.5 size-4" />
@@ -594,7 +507,7 @@ function participationText(poll: Poll): string {
                 id="poll-deadline"
                 v-model="formDeadline"
                 type="date"
-                class="pl-9"
+                class="h-12 pl-9"
               />
             </div>
           </div>
@@ -602,7 +515,7 @@ function participationText(poll: Poll): string {
           <div>
             <Label for="poll-status">Estado</Label>
             <Select v-model="formStatus">
-              <SelectTrigger id="poll-status" class="mt-1.5">
+              <SelectTrigger id="poll-status" size="lg" class="mt-1.5">
                 <SelectValue placeholder="Seleccionar estado" />
               </SelectTrigger>
               <SelectContent>
@@ -622,8 +535,8 @@ function participationText(poll: Poll): string {
             </Button>
           </div>
         </form>
-      </DialogContent>
-    </Dialog>
+      </SheetContent>
+    </Sheet>
 
     <!-- Delete AlertDialog -->
     <AlertDialog v-model:open="deleteDialogOpen">
