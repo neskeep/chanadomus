@@ -18,6 +18,7 @@ const PAGE_MAP: Record<string, PageInfo> = {
   '/admin/incidencias': { title: 'Incidencias', description: 'Gestión de reportes y problemas' },
   '/admin/unidades': { title: 'Unidades', description: 'Directorio de viviendas del condominio' },
   '/admin/personal': { title: 'Personal', description: 'Equipo de trabajo del condominio' },
+  '/admin/personal/crear': { title: 'Agregar Personal', description: 'Registra un nuevo miembro del equipo', breadcrumbs: [{ label: 'Personal', to: '/admin/personal' }] },
   '/admin/proveedores': { title: 'Proveedores', description: 'Directorio de servicios contratados' },
   '/admin/cartelera': { title: 'Cartelera', description: 'Anuncios y comunicados oficiales' },
   '/admin/votaciones': { title: 'Votaciones', description: 'Consultas y decisiones comunitarias' },
