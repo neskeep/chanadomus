@@ -213,7 +213,11 @@ defineExpose({ connected })
           <!-- Other's messages (left-aligned) -->
           <div v-else class="max-w-3/4">
             <div class="mb-1 flex items-center gap-1.5 pl-1">
+              <div v-if="group.userImage" class="size-5 shrink-0 overflow-hidden rounded-full">
+                <img :src="group.userImage" :alt="group.userName" class="size-full object-cover" />
+              </div>
               <div
+                v-else
                 class="flex size-5 shrink-0 items-center justify-center rounded-full bg-primary/15 text-[9px] font-bold text-primary"
               >
                 {{ getInitials(group.userName) }}

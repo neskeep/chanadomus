@@ -24,6 +24,7 @@ const initials = computed(() => {
         <DropdownMenuTrigger as-child>
           <SidebarMenuButton size="lg" class="cursor-pointer">
             <Avatar class="size-8">
+              <AvatarImage v-if="user?.image" :src="user.image" :alt="user.name" />
               <AvatarFallback class="bg-primary/10 text-primary text-sm font-semibold">
                 {{ initials }}
               </AvatarFallback>
