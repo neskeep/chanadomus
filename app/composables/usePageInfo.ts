@@ -57,6 +57,7 @@ const PAGE_MAP: Record<string, PageInfo> = {
 }
 
 const DYNAMIC_ROUTES: Array<{ prefix: string; info: PageInfo }> = [
+  { prefix: '/admin/incidencias/', info: { title: 'Detalle de Incidencia', description: 'Información y estado del reporte', breadcrumbs: [{ label: 'Incidencias', to: '/admin/incidencias' }] } },
   { prefix: '/admin/unidades/', info: { title: 'Detalle de Unidad', description: 'Miembros, vehículos e información', breadcrumbs: [{ label: 'Unidades', to: '/admin/unidades' }] } },
   { prefix: '/mi-chana/chat/', info: { title: 'Chat', description: 'Conversación', breadcrumbs: [{ label: 'Chat', to: '/mi-chana/chat' }] } },
   { prefix: '/mi-chana/proveedores/', info: { title: 'Detalle de Proveedor', description: 'Información y reseñas', breadcrumbs: [{ label: 'Proveedores', to: '/mi-chana/proveedores' }] } },

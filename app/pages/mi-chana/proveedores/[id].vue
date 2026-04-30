@@ -18,15 +18,6 @@ const { target, isMounted } = useTopbarPortal()
 const route = useRoute()
 const router = useRouter()
 
-// Breadcrumb navigation
-const providerPageOverride = computed(() => {
-  if (!provider.value) return null
-  return {
-    title: provider.value.name,
-    breadcrumbs: [{ label: 'Proveedores', to: '/mi-chana/proveedores' }],
-  }
-})
-usePageInfoOverride(providerPageOverride)
 const { role } = useAuth()
 const {
   isLoading,
@@ -42,6 +33,16 @@ const canManage = computed(() => role.value === 'admin' || role.value === 'conse
 const canReview = computed(() => role.value === 'propietario')
 
 const provider = ref<Provider | null>(null)
+
+// Breadcrumb navigation (must be after provider ref)
+const providerPageOverride = computed(() => {
+  if (!provider.value) return null
+  return {
+    title: provider.value.name,
+    breadcrumbs: [{ label: 'Proveedores', to: '/mi-chana/proveedores' }],
+  }
+})
+usePageInfoOverride(providerPageOverride)
 const providerId = computed(() => route.params.id as string)
 
 // Edit dialog
