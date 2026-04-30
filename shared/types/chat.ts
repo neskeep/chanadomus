@@ -1,5 +1,11 @@
 export type ChatRoomType = 'general' | 'unit' | 'vigilancia' | 'admin'
 
+export interface ChatRoomLastMessage {
+  content: string
+  createdAt: string
+  userName: string
+}
+
 export interface ChatRoom {
   id: string
   name: string
@@ -7,6 +13,7 @@ export interface ChatRoom {
   unitId: string | null
   tenantId: string
   createdAt: string
+  lastMessage?: ChatRoomLastMessage | null
 }
 
 export interface ChatMessage {

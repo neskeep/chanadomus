@@ -1,13 +1,52 @@
 import { db } from '~~/server/db'
-import { chatRooms } from '~~/server/db/schema/chat'
-import { eq, and, or, inArray, sql } from 'drizzle-orm'
+import { chatRooms, messages } from '~~/server/db/schema/chat'
+import { user } from '~~/server/db/schema/auth'
+import { eq, and, or, inArray, desc, sql } from 'drizzle-orm'
 import { requireTenant } from '~~/server/utils/auth'
-import type { ChatRoomType } from '~~/shared/types/chat'
+import type { ChatRoomType, ChatRoom, ChatRoomLastMessage } from '~~/shared/types/chat'
+
+async function attachLastMessages(rooms: { id: string; name: string; type: string; unitId: string | null; tenantId: string; createdAt: Date }[]): Promise<ChatRoom[]> {
+  if (rooms.length === 0) return []
+
+  const roomIds = rooms.map(r => r.id)
+
+  // PostgreSQL DISTINCT ON to get latest message per room
+  const lastMessages = await db
+    .selectDistinctOn([messages.roomId], {
+      roomId: messages.roomId,
+      content: messages.content,
+      createdAt: messages.createdAt,
+      userName: user.name,
+    })
+    .from(messages)
+    .innerJoin(user, eq(messages.userId, user.id))
+    .where(inArray(messages.roomId, roomIds))
+    .orderBy(messages.roomId, desc(messages.createdAt))
+
+  const lastMessageMap = new Map<string, ChatRoomLastMessage>()
+  for (const msg of lastMessages) {
+    lastMessageMap.set(msg.roomId, {
+      content: msg.content,
+      createdAt: msg.createdAt.toISOString(),
+      userName: msg.userName,
+    })
+  }
+
+  return rooms.map(r => ({
+    id: r.id,
+    name: r.name,
+    type: r.type as ChatRoomType,
+    unitId: r.unitId,
+    tenantId: r.tenantId,
+    createdAt: r.createdAt instanceof Date ? r.createdAt.toISOString() : String(r.createdAt),
+    lastMessage: lastMessageMap.get(r.id) ?? null,
+  }))
+}
 
 export default defineEventHandler(async (event) => {
-  const { user, tenantId } = await requireTenant(event)
-  const role = user.role ?? 'propietario'
-  const unitId = (user as Record<string, unknown>).unitId as string | null
+  const { user: authUser, tenantId } = await requireTenant(event)
+  const role = authUser.role ?? 'propietario'
+  const unitId = (authUser as Record<string, unknown>).unitId as string | null
 
   // Admin gets all rooms for the tenant
   if (role === 'admin') {
@@ -16,7 +55,7 @@ export default defineEventHandler(async (event) => {
       .from(chatRooms)
       .where(eq(chatRooms.tenantId, tenantId))
 
-    return { data: rooms }
+    return { data: await attachLastMessages(rooms) }
   }
 
   // Build accessible room types based on role
@@ -51,5 +90,5 @@ export default defineEventHandler(async (event) => {
     .from(chatRooms)
     .where(or(...conditions))
 
-  return { data: rooms }
+  return { data: await attachLastMessages(rooms) }
 })
