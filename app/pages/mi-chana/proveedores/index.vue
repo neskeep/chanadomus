@@ -4,9 +4,7 @@ import {
   Phone,
   Wrench,
   Plus,
-  Loader2,
 } from 'lucide-vue-next'
-import { toast } from 'vue-sonner'
 import type { ProviderCategory } from '~~/shared/types/provider'
 import { PROVIDER_CATEGORIES } from '~~/shared/types/provider'
 
@@ -18,11 +16,9 @@ const {
   providers,
   meta,
   isLoading,
-  isSubmitting,
   error,
   totalPages,
   fetchProviders,
-  suggestProvider,
 } = useProviders()
 
 const canCreate = computed(() => role.value === 'admin' || role.value === 'conserje')
@@ -35,13 +31,6 @@ const filterCategory = ref<ProviderCategory | ''>('')
 const categoryOptions = computed(() => [
   ...PROVIDER_CATEGORIES.map(c => ({ value: c.key as ProviderCategory | '', label: c.label })),
 ])
-
-// Suggest dialog
-const suggestOpen = ref(false)
-const suggestName = ref('')
-const suggestPhone = ref('')
-const suggestCategory = ref<ProviderCategory>('otro')
-const suggestNote = ref('')
 
 import { PROVIDER_CATEGORY_COLORS as CATEGORY_COLORS } from '~/composables/useColorMap'
 
@@ -86,39 +75,6 @@ onMounted(() => {
   loadProviders()
 })
 
-function resetSuggestForm() {
-  suggestName.value = ''
-  suggestPhone.value = ''
-  suggestCategory.value = 'otro'
-  suggestNote.value = ''
-}
-
-function openSuggestDialog() {
-  resetSuggestForm()
-  suggestOpen.value = true
-}
-
-const canSuggest = computed(() =>
-  suggestName.value.trim().length > 0 && !isSubmitting.value,
-)
-
-async function handleSuggest() {
-  if (!canSuggest.value) return
-  try {
-    await suggestProvider({
-      name: suggestName.value.trim(),
-      phone: suggestPhone.value.trim() || undefined,
-      category: suggestCategory.value,
-      notes: suggestNote.value.trim() || undefined,
-    })
-    toast.success('Sugerencia enviada. El administrador la revisara.')
-    suggestOpen.value = false
-  }
-  catch {
-    toast.error(error.value ?? 'Error al enviar sugerencia')
-  }
-}
-
 function renderStars(rating: number | undefined): number[] {
   const r = Math.round(rating ?? 0)
   return [1, 2, 3, 4, 5].map(i => (i <= r ? 1 : 0))
@@ -133,13 +89,13 @@ function renderStars(rating: number | undefined): number[] {
           <TopbarFilterGroup v-model="filterCategory" label="Categoria" :options="categoryOptions" />
         </TopbarFilters>
       </TopbarSearch>
-      <Button v-if="role === 'propietario'" size="sm" variant="outline" @click="openSuggestDialog">
+      <Button v-if="role === 'propietario'" size="sm" variant="outline" @click="navigateTo('/mi-chana/proveedores/sugerir')">
         <Plus class="mr-1.5 size-3.5" />
         Sugerir
       </Button>
-      <Button v-if="canCreate" size="sm" @click="navigateTo('/admin/proveedores')">
+      <Button v-if="canCreate" size="sm" @click="navigateTo(role === 'admin' ? '/admin/proveedores' : '/mi-chana/proveedores/crear')">
         <Plus class="mr-1.5 size-3.5" />
-        Gestionar
+        {{ role === 'admin' ? 'Gestionar' : 'Crear' }}
       </Button>
     </Teleport>
 
@@ -157,7 +113,7 @@ function renderStars(rating: number | undefined): number[] {
       :description="filterCategory ? 'Prueba cambiando los filtros' : 'Los proveedores aparecerán aquí'"
     >
       <template v-if="role === 'propietario'" #action>
-        <Button size="sm" variant="outline" @click="openSuggestDialog">
+        <Button size="sm" variant="outline" @click="navigateTo('/mi-chana/proveedores/sugerir')">
           Sugerir proveedor
         </Button>
       </template>
@@ -222,71 +178,5 @@ function renderStars(rating: number | undefined): number[] {
       <ListPagination v-model:current-page="currentPage" :total-pages="totalPages" class="mt-4" />
     </div>
 
-    <!-- Suggest Dialog -->
-    <Dialog v-model:open="suggestOpen">
-      <DialogContent class="sm:max-w-md">
-        <DialogHeader>
-          <DialogTitle>Sugerir Proveedor</DialogTitle>
-          <DialogDescription>
-            Sugiere un proveedor de confianza. El administrador lo revisara.
-          </DialogDescription>
-        </DialogHeader>
-
-        <form class="space-y-4 py-2" @submit.prevent="handleSuggest">
-          <div class="space-y-2">
-            <Label for="suggest-name">Nombre</Label>
-            <Input
-              id="suggest-name"
-              v-model="suggestName"
-              placeholder="Nombre del proveedor"
-              required
-            />
-          </div>
-
-          <div class="space-y-2">
-            <Label for="suggest-phone">Telefono (opcional)</Label>
-            <Input
-              id="suggest-phone"
-              v-model="suggestPhone"
-              placeholder="0412-1234567"
-            />
-          </div>
-
-          <div class="space-y-2">
-            <Label for="suggest-category">Categoria</Label>
-            <Select v-model="suggestCategory">
-              <SelectTrigger id="suggest-category">
-                <SelectValue placeholder="Seleccionar categoria" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem v-for="cat in PROVIDER_CATEGORIES" :key="cat.key" :value="cat.key">
-                  {{ cat.label }}
-                </SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div class="space-y-2">
-            <Label for="suggest-note">Nota (opcional)</Label>
-            <Textarea
-              id="suggest-note"
-              v-model="suggestNote"
-              placeholder="Comentarios adicionales..."
-              rows="2"
-            />
-          </div>
-
-          <div class="flex justify-end gap-2 pt-2">
-            <Button type="button" variant="outline" @click="suggestOpen = false">
-              Cancelar
-            </Button>
-            <Button type="submit" :disabled="!canSuggest">
-              <Loader2 v-if="isSubmitting" class="mr-2 size-4 animate-spin" />
-              {{ isSubmitting ? 'Enviando...' : 'Enviar sugerencia' }}
-            </Button>
-          </div>
-        </form>
-      </DialogContent>
-    </Dialog>
   </div>
 </template>

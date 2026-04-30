@@ -42,6 +42,8 @@ const PAGE_MAP: Record<string, PageInfo> = {
   '/mi-chana/cartelera': { title: 'Cartelera', description: 'Anuncios y comunicados' },
   '/mi-chana/votaciones': { title: 'Votaciones', description: 'Participa en las decisiones' },
   '/mi-chana/proveedores': { title: 'Proveedores', description: 'Servicios recomendados' },
+  '/mi-chana/proveedores/sugerir': { title: 'Sugerir Proveedor', description: 'Recomienda un proveedor de confianza', breadcrumbs: [{ label: 'Proveedores', to: '/mi-chana/proveedores' }] },
+  '/mi-chana/proveedores/crear': { title: 'Nuevo Proveedor', description: 'Registra un nuevo proveedor', breadcrumbs: [{ label: 'Proveedores', to: '/mi-chana/proveedores' }] },
   '/mi-chana/reuniones': { title: 'Reuniones', description: 'Próximas asambleas y juntas' },
   '/mi-chana/notificaciones': { title: 'Notificaciones', description: 'Tus alertas recientes' },
 
