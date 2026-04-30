@@ -246,6 +246,16 @@ onMounted(() => {
       </Button>
     </Teleport>
 
+    <!-- Mobile action button -->
+    <TopbarMobileAction>
+      <Button v-if="activeTab === 'members'" size="icon" variant="ghost" class="size-9" @click="openMemberDialog()">
+        <Plus class="size-4" />
+      </Button>
+      <Button v-else size="icon" variant="ghost" class="size-9" @click="openVehicleDialog()">
+        <Plus class="size-4" />
+      </Button>
+    </TopbarMobileAction>
+
     <!-- Unit header -->
     <div class="mb-6">
       <div v-if="unitLoading" class="space-y-2">

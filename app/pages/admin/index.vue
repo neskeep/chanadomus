@@ -126,6 +126,16 @@ const groupedChartOpts = {
       </Button>
     </Teleport>
 
+    <!-- Mobile action buttons -->
+    <TopbarMobileAction>
+      <Button variant="ghost" size="icon" class="size-9" @click="exportCsv" title="Exportar CSV">
+        <Download class="size-4" />
+      </Button>
+      <Button variant="ghost" size="icon" class="size-9" @click="exportPdf" title="Exportar PDF">
+        <FileText class="size-4" />
+      </Button>
+    </TopbarMobileAction>
+
     <!-- Financial hero: 3 stat cards + collection rate with progress -->
     <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
       <StatCard

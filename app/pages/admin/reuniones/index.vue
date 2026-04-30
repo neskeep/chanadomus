@@ -221,6 +221,15 @@ async function handleDelete() {
       </NuxtLink>
     </Teleport>
 
+    <!-- Mobile action button -->
+    <TopbarMobileAction>
+      <Button size="icon" variant="ghost" class="size-9" as-child>
+        <NuxtLink to="/admin/reuniones/crear">
+          <Plus class="size-4" />
+        </NuxtLink>
+      </Button>
+    </TopbarMobileAction>
+
     <!-- Stats cards -->
     <div class="mb-6 grid grid-cols-2 gap-3">
       <StatCard label="Programadas" :value="totalProgramadas" :icon="Calendar" icon-bg-class="bg-primary/10 text-primary" :is-loading="isLoading" />

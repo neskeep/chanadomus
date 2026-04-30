@@ -44,6 +44,13 @@ const statusConfig: Record<ValidationStatus, { label: string; bg: string; icon: 
       </Button>
     </Teleport>
 
+    <!-- Mobile action button -->
+    <TopbarMobileAction>
+      <Button variant="ghost" size="icon" class="size-9" @click="toggleCamera">
+        <SwitchCamera class="size-4" />
+      </Button>
+    </TopbarMobileAction>
+
     <!-- Full viewport camera -->
     <div class="relative flex-1 overflow-hidden">
       <video

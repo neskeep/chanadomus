@@ -99,6 +99,16 @@ function renderStars(rating: number | undefined): number[] {
       </Button>
     </Teleport>
 
+    <!-- Mobile action button -->
+    <TopbarMobileAction>
+      <Button v-if="role === 'propietario'" size="icon" variant="ghost" class="size-9" @click="navigateTo('/mi-chana/proveedores/sugerir')">
+        <Plus class="size-4" />
+      </Button>
+      <Button v-else-if="canCreate" size="icon" variant="ghost" class="size-9" @click="navigateTo(role === 'admin' ? '/admin/proveedores' : '/mi-chana/proveedores/crear')">
+        <Plus class="size-4" />
+      </Button>
+    </TopbarMobileAction>
+
     <!-- Error -->
     <ErrorAlert :message="error" class="mb-4" />
 
