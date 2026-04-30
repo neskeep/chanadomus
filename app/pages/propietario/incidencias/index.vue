@@ -55,13 +55,20 @@ const { formatDate, formatDateTime } = useFormatDate()
 
 <template>
   <div>
-    <!-- Topbar actions -->
+    <!-- Topbar actions (desktop) -->
     <Teleport :to="target" defer v-if="isMounted">
       <Button size="sm" @click="navigateTo('/propietario/incidencias/nueva')">
         <Plus class="mr-1.5 size-3.5" />
         Reportar
       </Button>
     </Teleport>
+
+    <!-- Mobile action button -->
+    <TopbarMobileAction>
+      <Button size="icon" variant="ghost" class="size-9" @click="navigateTo('/propietario/incidencias/nueva')">
+        <Plus class="size-4" />
+      </Button>
+    </TopbarMobileAction>
 
     <!-- Error -->
     <ErrorAlert :message="error" class="mb-4" />

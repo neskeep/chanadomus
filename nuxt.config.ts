@@ -40,6 +40,8 @@ export default defineNuxtConfig({
         'better-auth/client/plugins',
         'class-variance-authority',
         'better-auth/plugins/access',
+        'vue-chartjs',
+        'chart.js',
       ],
     },
   },

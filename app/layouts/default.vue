@@ -18,6 +18,7 @@ useContentResize(contentRef)
         <AppIsotipo :height="24" />
         <span class="text-sm font-semibold text-muted-foreground truncate">{{ usePageInfo().title }}</span>
         <div class="flex items-center gap-1">
+          <div id="topbar-actions-mobile" class="flex items-center gap-1" />
           <PanicButton />
           <NuxtLink to="/mi-chana/notificaciones">
             <Button variant="ghost" size="icon" class="size-9">

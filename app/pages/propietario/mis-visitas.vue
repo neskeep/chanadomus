@@ -99,7 +99,7 @@ const statusConfig: Record<QrStatus, { label: string; variant: 'default' | 'seco
 
 <template>
   <div>
-    <!-- Topbar actions -->
+    <!-- Topbar actions (desktop) -->
     <Teleport :to="target" defer v-if="isMounted">
       <TopbarFilters :active="activeFilter !== ''" @clear="activeFilter = ''">
         <TopbarFilterGroup v-model="activeFilter" label="Estado" :options="filterOptions" />
@@ -109,6 +109,13 @@ const statusConfig: Record<QrStatus, { label: string; variant: 'default' | 'seco
         Nueva
       </Button>
     </Teleport>
+
+    <!-- Mobile action button -->
+    <TopbarMobileAction>
+      <Button size="icon" variant="ghost" class="size-9" @click="navigateTo('/propietario/nueva-visita')">
+        <Plus class="size-4" />
+      </Button>
+    </TopbarMobileAction>
 
     <!-- Error alert -->
     <ErrorAlert :message="error" class="mb-4" />

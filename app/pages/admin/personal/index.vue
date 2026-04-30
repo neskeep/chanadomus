@@ -17,7 +17,7 @@ import type { StaffRole, Staff } from '~~/shared/types/staff'
 
 useHead({ title: 'Personal' })
 
-const { staffList, isLoading, isSubmitting, error, fetchStaff, createStaffMember, updateStaffMember, deleteStaffMember } = useStaff()
+const { staffList, isLoading, isSubmitting, error, fetchStaff, updateStaffMember, deleteStaffMember } = useStaff()
 
 const { target, isMounted } = useTopbarPortal()
 
@@ -76,17 +76,6 @@ const filteredStaff = computed(() => {
   )
 })
 
-function openCreateDialog() {
-  editingStaff.value = null
-  formName.value = ''
-  formRole.value = ''
-  formDocument.value = ''
-  formPhone.value = ''
-  formEmail.value = ''
-  formShift.value = 'none'
-  dialogOpen.value = true
-}
-
 function openEditDialog(staff: Staff) {
   editingStaff.value = staff
   formName.value = staff.name
@@ -116,14 +105,9 @@ async function handleSubmit() {
   }
 
   try {
-    if (editingStaff.value) {
-      await updateStaffMember(editingStaff.value.id, data)
-      toast.success('Personal actualizado correctamente')
-    }
-    else {
-      await createStaffMember(data)
-      toast.success('Personal agregado correctamente')
-    }
+    if (!editingStaff.value) return
+    await updateStaffMember(editingStaff.value.id, data)
+    toast.success('Personal actualizado correctamente')
     dialogOpen.value = false
   }
   catch {
@@ -161,11 +145,22 @@ onMounted(() => {
           <TopbarFilterGroup v-model="selectedRole" label="Rol" :options="roleOptions" />
         </TopbarFilters>
       </TopbarSearch>
-      <Button size="sm" @click="openCreateDialog">
-        <Plus class="mr-1.5 size-3.5" />
-        Nuevo
-      </Button>
+      <NuxtLink to="/admin/personal/crear">
+        <Button size="sm">
+          <Plus class="mr-1.5 size-3.5" />
+          Nuevo
+        </Button>
+      </NuxtLink>
     </Teleport>
+
+    <!-- Mobile action button -->
+    <TopbarMobileAction>
+      <Button size="icon" variant="ghost" class="size-9" as-child>
+        <NuxtLink to="/admin/personal/crear">
+          <Plus class="size-4" />
+        </NuxtLink>
+      </Button>
+    </TopbarMobileAction>
 
     <!-- Error -->
     <ErrorAlert v-if="error && !isSubmitting" :message="error" class="mb-4" />
@@ -284,9 +279,9 @@ onMounted(() => {
     <Sheet v-model:open="dialogOpen">
       <SheetContent side="right">
         <SheetHeader>
-          <SheetTitle>{{ editingStaff ? 'Editar personal' : 'Agregar personal' }}</SheetTitle>
+          <SheetTitle>Editar personal</SheetTitle>
           <SheetDescription>
-            {{ editingStaff ? 'Actualiza la información del miembro del personal' : 'Registra un nuevo miembro del personal del condominio' }}
+            Actualiza la información del miembro del personal
           </SheetDescription>
         </SheetHeader>
 

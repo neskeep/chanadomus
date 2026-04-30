@@ -15,7 +15,6 @@ import type {
   Meeting,
   MeetingType,
   MeetingStatus,
-  CreateMeeting,
   UpdateMeeting,
 } from '~~/shared/types/meeting'
 import { MEETING_TYPES, MEETING_STATUSES } from '~~/shared/types/meeting'
@@ -31,7 +30,6 @@ const {
   isSubmitting,
   error,
   fetchMeetings,
-  createMeeting,
   updateMeeting,
   deleteMeeting,
 } = useMeetings()
@@ -140,12 +138,6 @@ function resetForm() {
   formStatus.value = 'programada'
 }
 
-function openCreateDialog() {
-  editingId.value = null
-  resetForm()
-  dialogOpen.value = true
-}
-
 function openEditDialog(meeting: Meeting) {
   editingId.value = meeting.id
   formTitle.value = meeting.title
@@ -166,41 +158,25 @@ const canSubmit = computed(() =>
 )
 
 async function handleSubmit() {
-  if (!canSubmit.value) return
+  if (!canSubmit.value || !editingId.value) return
   try {
     const dateISO = new Date(formDate.value).toISOString()
     const endDateISO = formEndDate.value ? new Date(formEndDate.value).toISOString() : undefined
 
-    if (editingId.value) {
-      const data: UpdateMeeting = {
-        title: formTitle.value.trim(),
-        description: formDescription.value.trim() || undefined,
-        date: dateISO,
-        endDate: endDateISO,
-        location: formLocation.value.trim() || undefined,
-        meetingLink: formMeetingLink.value.trim() || undefined,
-        type: formType.value,
-        status: formStatus.value,
-        agenda: formAgenda.value.trim() || undefined,
-        minutes: formMinutes.value.trim() || undefined,
-      }
-      await updateMeeting(editingId.value, data)
-      toast.success('Reunion actualizada')
+    const data: UpdateMeeting = {
+      title: formTitle.value.trim(),
+      description: formDescription.value.trim() || undefined,
+      date: dateISO,
+      endDate: endDateISO,
+      location: formLocation.value.trim() || undefined,
+      meetingLink: formMeetingLink.value.trim() || undefined,
+      type: formType.value,
+      status: formStatus.value,
+      agenda: formAgenda.value.trim() || undefined,
+      minutes: formMinutes.value.trim() || undefined,
     }
-    else {
-      const data: CreateMeeting = {
-        title: formTitle.value.trim(),
-        description: formDescription.value.trim() || undefined,
-        date: dateISO,
-        endDate: endDateISO,
-        location: formLocation.value.trim() || undefined,
-        meetingLink: formMeetingLink.value.trim() || undefined,
-        type: formType.value,
-        agenda: formAgenda.value.trim() || undefined,
-      }
-      await createMeeting(data)
-      toast.success('Reunion creada')
-    }
+    await updateMeeting(editingId.value, data)
+    toast.success('Reunion actualizada')
     dialogOpen.value = false
     await loadMeetings()
   }
@@ -237,11 +213,22 @@ async function handleDelete() {
         <TopbarFilterGroup v-model="filterType" label="Tipo" :options="typeOptions" />
         <TopbarFilterGroup v-model="filterStatus" label="Estado" :options="meetingStatusOptions" />
       </TopbarFilters>
-      <Button size="sm" @click="openCreateDialog">
-        <Plus class="mr-1.5 size-3.5" />
-        Nuevo
-      </Button>
+      <NuxtLink to="/admin/reuniones/crear">
+        <Button size="sm">
+          <Plus class="mr-1.5 size-3.5" />
+          Nuevo
+        </Button>
+      </NuxtLink>
     </Teleport>
+
+    <!-- Mobile action button -->
+    <TopbarMobileAction>
+      <Button size="icon" variant="ghost" class="size-9" as-child>
+        <NuxtLink to="/admin/reuniones/crear">
+          <Plus class="size-4" />
+        </NuxtLink>
+      </Button>
+    </TopbarMobileAction>
 
     <!-- Stats cards -->
     <div class="mb-6 grid grid-cols-2 gap-3">
@@ -263,10 +250,12 @@ async function handleDelete() {
       :description="filterType || filterStatus ? 'Prueba cambiando los filtros' : 'Crea la primera reunion del condominio'"
     >
       <template #action>
-        <Button @click="openCreateDialog">
-          <Plus class="mr-1.5 size-4" />
-          Nueva Reunion
-        </Button>
+        <NuxtLink to="/admin/reuniones/crear">
+          <Button>
+            <Plus class="mr-1.5 size-4" />
+            Nueva Reunion
+          </Button>
+        </NuxtLink>
       </template>
     </EmptyState>
 
@@ -411,9 +400,9 @@ async function handleDelete() {
     <Sheet v-model:open="dialogOpen">
       <SheetContent side="right" class="overflow-y-auto sm:max-w-lg">
         <SheetHeader>
-          <SheetTitle>{{ editingId ? 'Editar Reunion' : 'Nueva Reunion' }}</SheetTitle>
+          <SheetTitle>Editar Reunion</SheetTitle>
           <SheetDescription>
-            {{ editingId ? 'Modifica los datos de la reunion' : 'Completa los datos para programar una reunion' }}
+            Modifica los datos de la reunion
           </SheetDescription>
         </SheetHeader>
 
@@ -468,27 +457,24 @@ async function handleDelete() {
             <Textarea id="meet-agenda" v-model="formAgenda" placeholder="Puntos a tratar..." rows="3" />
           </div>
 
-          <!-- Only when editing -->
-          <template v-if="editingId">
-            <div class="space-y-2">
-              <Label for="meet-minutes">Acta / Minuta</Label>
-              <Textarea id="meet-minutes" v-model="formMinutes" placeholder="Registro de la reunion..." rows="3" />
-            </div>
+          <div class="space-y-2">
+            <Label for="meet-minutes">Acta / Minuta</Label>
+            <Textarea id="meet-minutes" v-model="formMinutes" placeholder="Registro de la reunion..." rows="3" />
+          </div>
 
-            <div class="space-y-2">
-              <Label for="meet-status">Estado</Label>
-              <Select v-model="formStatus">
-                <SelectTrigger id="meet-status" size="lg">
-                  <SelectValue placeholder="Seleccionar estado" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem v-for="s in MEETING_STATUSES" :key="s.key" :value="s.key">
-                    {{ s.label }}
-                  </SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </template>
+          <div class="space-y-2">
+            <Label for="meet-status">Estado</Label>
+            <Select v-model="formStatus">
+              <SelectTrigger id="meet-status" size="lg">
+                <SelectValue placeholder="Seleccionar estado" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem v-for="s in MEETING_STATUSES" :key="s.key" :value="s.key">
+                  {{ s.label }}
+                </SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
 
           <div class="flex justify-end gap-2 pt-2">
             <Button type="button" variant="outline" @click="dialogOpen = false">
@@ -496,7 +482,7 @@ async function handleDelete() {
             </Button>
             <Button type="submit" :disabled="!canSubmit">
               <Loader2 v-if="isSubmitting" class="mr-2 size-4 animate-spin" />
-              {{ isSubmitting ? 'Guardando...' : (editingId ? 'Guardar cambios' : 'Crear reunion') }}
+              {{ isSubmitting ? 'Guardando...' : 'Guardar cambios' }}
             </Button>
           </div>
         </form>

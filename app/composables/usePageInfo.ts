@@ -18,10 +18,15 @@ const PAGE_MAP: Record<string, PageInfo> = {
   '/admin/incidencias': { title: 'Incidencias', description: 'Gestión de reportes y problemas' },
   '/admin/unidades': { title: 'Unidades', description: 'Directorio de viviendas del condominio' },
   '/admin/personal': { title: 'Personal', description: 'Equipo de trabajo del condominio' },
+  '/admin/personal/crear': { title: 'Agregar Personal', description: 'Registra un nuevo miembro del equipo', breadcrumbs: [{ label: 'Personal', to: '/admin/personal' }] },
   '/admin/proveedores': { title: 'Proveedores', description: 'Directorio de servicios contratados' },
+  '/admin/proveedores/crear': { title: 'Nuevo Proveedor', description: 'Agrega un proveedor al directorio', breadcrumbs: [{ label: 'Proveedores', to: '/admin/proveedores' }] },
   '/admin/cartelera': { title: 'Cartelera', description: 'Anuncios y comunicados oficiales' },
+  '/admin/cartelera/crear': { title: 'Nuevo Anuncio', description: 'Crea un nuevo anuncio para la cartelera', breadcrumbs: [{ label: 'Cartelera', to: '/admin/cartelera' }] },
   '/admin/votaciones': { title: 'Votaciones', description: 'Consultas y decisiones comunitarias' },
+  '/admin/votaciones/crear': { title: 'Nueva Votación', description: 'Crea una nueva votación para la comunidad', breadcrumbs: [{ label: 'Votaciones', to: '/admin/votaciones' }] },
   '/admin/reuniones': { title: 'Reuniones', description: 'Calendario de asambleas y juntas' },
+  '/admin/reuniones/crear': { title: 'Nueva Reunión', description: 'Programa una nueva reunión o asamblea', breadcrumbs: [{ label: 'Reuniones', to: '/admin/reuniones' }] },
 
   // Propietario
   '/propietario': { title: 'Mi Vivienda', description: 'Tu resumen personal' },
@@ -37,6 +42,8 @@ const PAGE_MAP: Record<string, PageInfo> = {
   '/mi-chana/cartelera': { title: 'Cartelera', description: 'Anuncios y comunicados' },
   '/mi-chana/votaciones': { title: 'Votaciones', description: 'Participa en las decisiones' },
   '/mi-chana/proveedores': { title: 'Proveedores', description: 'Servicios recomendados' },
+  '/mi-chana/proveedores/sugerir': { title: 'Sugerir Proveedor', description: 'Recomienda un proveedor de confianza', breadcrumbs: [{ label: 'Proveedores', to: '/mi-chana/proveedores' }] },
+  '/mi-chana/proveedores/crear': { title: 'Nuevo Proveedor', description: 'Registra un nuevo proveedor', breadcrumbs: [{ label: 'Proveedores', to: '/mi-chana/proveedores' }] },
   '/mi-chana/reuniones': { title: 'Reuniones', description: 'Próximas asambleas y juntas' },
   '/mi-chana/notificaciones': { title: 'Notificaciones', description: 'Tus alertas recientes' },
 
@@ -52,6 +59,7 @@ const PAGE_MAP: Record<string, PageInfo> = {
 }
 
 const DYNAMIC_ROUTES: Array<{ prefix: string; info: PageInfo }> = [
+  { prefix: '/admin/incidencias/', info: { title: 'Detalle de Incidencia', description: 'Información y estado del reporte', breadcrumbs: [{ label: 'Incidencias', to: '/admin/incidencias' }] } },
   { prefix: '/admin/unidades/', info: { title: 'Detalle de Unidad', description: 'Miembros, vehículos e información', breadcrumbs: [{ label: 'Unidades', to: '/admin/unidades' }] } },
   { prefix: '/mi-chana/chat/', info: { title: 'Chat', description: 'Conversación', breadcrumbs: [{ label: 'Chat', to: '/mi-chana/chat' }] } },
   { prefix: '/mi-chana/proveedores/', info: { title: 'Detalle de Proveedor', description: 'Información y reseñas', breadcrumbs: [{ label: 'Proveedores', to: '/mi-chana/proveedores' }] } },

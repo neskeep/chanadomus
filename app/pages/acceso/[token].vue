@@ -1,16 +1,12 @@
 <script setup lang="ts">
 import { CheckCircle, Clock, Info, XCircle, Loader2 } from 'lucide-vue-next'
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '~/components/ui/card'
-import { Badge } from '~/components/ui/badge'
-import { Separator } from '~/components/ui/separator'
-import { ACCESS_STATUS_COLORS } from '~/composables/useColorMap'
+import QRCode from 'qrcode'
 
 definePageMeta({ layout: false })
 
-interface ValidationResult {
+interface LookupResult {
   status: 'valid' | 'expired' | 'already_used' | 'invalid'
   visitorName?: string
-  visitorDocument?: string | null
   visitorType?: 'invitado' | 'proveedor'
   unitNumber?: string
   unitLabel?: string | null
@@ -22,8 +18,8 @@ const route = useRoute()
 const token = route.params.token as string
 
 const loading = ref(true)
-const result = ref<ValidationResult | null>(null)
-const errorOccurred = ref(false)
+const result = ref<LookupResult | null>(null)
+const qrDataUrl = ref<string | null>(null)
 
 const { formatDateTime } = useFormatDate()
 
@@ -32,47 +28,21 @@ const visitorTypeLabel = computed(() => {
   return result.value.visitorType === 'invitado' ? 'Invitado' : 'Proveedor'
 })
 
-const statusConfig = computed(() => {
-  const status = result.value?.status
-  switch (status) {
-    case 'valid':
-      return {
-        icon: CheckCircle,
-        ...ACCESS_STATUS_COLORS.valid,
-        title: 'ACCESO AUTORIZADO',
-      }
-    case 'expired':
-      return {
-        icon: Clock,
-        ...ACCESS_STATUS_COLORS.expired,
-        title: 'ACCESO EXPIRADO',
-      }
-    case 'already_used':
-      return {
-        icon: Info,
-        ...ACCESS_STATUS_COLORS.already_used,
-        title: 'CODIGO YA UTILIZADO',
-      }
-    case 'invalid':
-    default:
-      return {
-        icon: XCircle,
-        ...ACCESS_STATUS_COLORS.invalid,
-        title: 'CODIGO INVALIDO',
-      }
-  }
-})
-
 onMounted(async () => {
   try {
-    const response = await $fetch<{ data: ValidationResult }>('/api/qr/validate', {
+    const response = await $fetch<{ data: LookupResult }>('/api/qr/lookup', {
       method: 'POST',
       body: { token },
     })
     result.value = response.data
+
+    // Generate QR image for valid codes
+    if (response.data.status === 'valid') {
+      const accessUrl = `${window.location.origin}/acceso/${token}`
+      qrDataUrl.value = await QRCode.toDataURL(accessUrl, { width: 280, margin: 2 })
+    }
   }
   catch {
-    errorOccurred.value = true
     result.value = { status: 'invalid' }
   }
   finally {
@@ -89,119 +59,95 @@ onMounted(async () => {
         ChanaDomus
       </h1>
       <p class="text-sm text-muted-foreground">
-        Control de acceso
+        Pase de acceso
       </p>
     </div>
 
     <!-- Loading -->
-    <div
-      v-if="loading"
-      class="flex flex-col items-center gap-3"
-    >
+    <div v-if="loading" class="flex flex-col items-center gap-3">
       <Loader2 class="size-10 animate-spin text-muted-foreground" />
-      <p class="text-sm text-muted-foreground">
-        Verificando acceso...
-      </p>
+      <p class="text-sm text-muted-foreground">Cargando pase...</p>
     </div>
 
-    <!-- Result -->
-    <Card
-      v-else-if="result"
-      class="w-full max-w-md border-2"
-      :class="statusConfig.borderColor"
-    >
-      <CardHeader class="items-center text-center">
-        <component
-          :is="statusConfig.icon"
-          class="size-16"
-          :class="statusConfig.iconColor"
-          :stroke-width="1.5"
-        />
-        <CardTitle class="text-xl">
-          {{ statusConfig.title }}
-        </CardTitle>
-      </CardHeader>
+    <!-- Valid: show QR pass -->
+    <template v-else-if="result?.status === 'valid'">
+      <Card class="w-full max-w-sm border-2 border-primary/30">
+        <CardContent class="flex flex-col items-center gap-4 p-6">
+          <!-- QR Code -->
+          <img
+            v-if="qrDataUrl"
+            :src="qrDataUrl"
+            alt="Código QR de acceso"
+            class="size-56 rounded-lg"
+          />
 
-      <CardContent class="space-y-4">
-        <!-- Valid -->
-        <template v-if="result.status === 'valid'">
-          <div class="space-y-3">
-            <div class="flex items-center justify-between">
-              <span class="text-sm text-muted-foreground">Visitante</span>
-              <span class="font-medium">{{ result.visitorName }}</span>
-            </div>
-
-            <Separator />
-
-            <div class="flex items-center justify-between">
-              <span class="text-sm text-muted-foreground">Tipo</span>
-              <Badge variant="secondary">
-                {{ visitorTypeLabel }}
-              </Badge>
-            </div>
-
-            <Separator />
-
-            <div class="flex items-center justify-between">
-              <span class="text-sm text-muted-foreground">Unidad destino</span>
-              <span class="font-medium">
+          <!-- Visitor info -->
+          <div class="w-full space-y-2 text-center">
+            <p class="text-lg font-semibold">{{ result.visitorName }}</p>
+            <div class="flex items-center justify-center gap-2 text-sm text-muted-foreground">
+              <Badge variant="secondary">{{ visitorTypeLabel }}</Badge>
+              <span>→</span>
+              <span class="font-medium text-foreground">
                 {{ result.unitNumber }}
-                <span v-if="result.unitLabel" class="text-muted-foreground">
-                  ({{ result.unitLabel }})
-                </span>
+                <span v-if="result.unitLabel" class="text-muted-foreground">({{ result.unitLabel }})</span>
               </span>
             </div>
-
-            <Separator />
-
-            <div class="flex items-center justify-between">
-              <span class="text-sm text-muted-foreground">Valido hasta</span>
-              <span class="font-medium">{{ result.expiresAt ? formatDateTime(result.expiresAt) : '-' }}</span>
-            </div>
           </div>
-        </template>
 
-        <!-- Expired -->
-        <template v-else-if="result.status === 'expired'">
-          <div class="space-y-3 text-center">
-            <p v-if="result.visitorName" class="font-medium">
-              {{ result.visitorName }}
-            </p>
-            <p class="text-sm text-muted-foreground">
-              Este codigo expiro. Solicite uno nuevo al propietario.
-            </p>
+          <Separator />
+
+          <!-- Validity -->
+          <div class="flex items-center gap-1.5 text-sm text-muted-foreground">
+            <CheckCircle class="size-4 text-primary" />
+            <span>Válido hasta {{ result.expiresAt ? formatDateTime(result.expiresAt) : '-' }}</span>
           </div>
-        </template>
+        </CardContent>
 
-        <!-- Already used -->
-        <template v-else-if="result.status === 'already_used'">
-          <div class="space-y-3 text-center">
-            <p v-if="result.visitorName" class="font-medium">
-              {{ result.visitorName }}
-            </p>
-            <p class="text-sm text-muted-foreground">
-              Usado el: {{ result.usedAt ? formatDateTime(result.usedAt) : '-' }}
-            </p>
-          </div>
-        </template>
-
-        <!-- Invalid -->
-        <template v-else>
+        <CardFooter class="justify-center border-t bg-muted/30 py-3">
           <p class="text-center text-sm text-muted-foreground">
-            Este codigo no existe o no es valido.
+            Presente esta pantalla al vigilante en la alcabala
           </p>
-        </template>
-      </CardContent>
+        </CardFooter>
+      </Card>
+    </template>
 
-      <!-- Footer for valid status -->
-      <CardFooter
-        v-if="result.status === 'valid'"
-        class="justify-center border-t pt-4"
-      >
-        <p class="text-center text-sm text-muted-foreground">
-          Presente esta pantalla al vigilante en la alcabala
+    <!-- Expired -->
+    <Card v-else-if="result?.status === 'expired'" class="w-full max-w-sm border-2 border-yellow-500/30">
+      <CardContent class="flex flex-col items-center gap-3 p-6 text-center">
+        <Clock class="size-12 text-yellow-500" :stroke-width="1.5" />
+        <p class="text-lg font-semibold">Pase expirado</p>
+        <p v-if="result.visitorName" class="text-sm text-muted-foreground">
+          {{ result.visitorName }}
         </p>
-      </CardFooter>
+        <p class="text-sm text-muted-foreground">
+          Solicite un nuevo pase al propietario.
+        </p>
+      </CardContent>
+    </Card>
+
+    <!-- Already used -->
+    <Card v-else-if="result?.status === 'already_used'" class="w-full max-w-sm border-2 border-blue-500/30">
+      <CardContent class="flex flex-col items-center gap-3 p-6 text-center">
+        <Info class="size-12 text-blue-500" :stroke-width="1.5" />
+        <p class="text-lg font-semibold">Pase ya utilizado</p>
+        <p v-if="result.visitorName" class="text-sm text-muted-foreground">
+          {{ result.visitorName }}
+        </p>
+        <p v-if="result.usedAt" class="text-sm text-muted-foreground">
+          Usado el {{ formatDateTime(result.usedAt) }}
+        </p>
+      </CardContent>
+    </Card>
+
+    <!-- Invalid -->
+    <Card v-else class="w-full max-w-sm border-2 border-destructive/30">
+      <CardContent class="flex flex-col items-center gap-3 p-6 text-center">
+        <XCircle class="size-12 text-destructive" :stroke-width="1.5" />
+        <p class="text-lg font-semibold">Pase inválido</p>
+        <p class="text-sm text-muted-foreground">
+          Este código no existe o no es válido.
+        </p>
+      </CardContent>
     </Card>
 
     <!-- Page footer -->

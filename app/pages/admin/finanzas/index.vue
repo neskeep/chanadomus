@@ -129,6 +129,15 @@ onMounted(() => {
       </Button>
     </Teleport>
 
+    <!-- Mobile action button -->
+    <TopbarMobileAction>
+      <Button size="icon" variant="ghost" class="size-9" as-child>
+        <NuxtLink to="/admin/finanzas/registrar">
+          <Plus class="size-4" />
+        </NuxtLink>
+      </Button>
+    </TopbarMobileAction>
+
     <!-- Error alert -->
     <ErrorAlert v-if="error" :message="error" class="mb-4" />
 
