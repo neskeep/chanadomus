@@ -71,6 +71,7 @@ watch(() => route.path, () => {
         <!-- User profile row -->
         <div class="flex items-center gap-3 px-5 pt-1 pb-3">
           <Avatar class="size-9">
+            <AvatarImage v-if="user?.image" :src="user.image" :alt="user.name" />
             <AvatarFallback class="bg-primary/10 text-primary text-xs font-semibold">
               {{ initials }}
             </AvatarFallback>
