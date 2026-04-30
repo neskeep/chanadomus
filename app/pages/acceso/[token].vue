@@ -65,7 +65,7 @@ const statusConfig = computed(() => {
 
 onMounted(async () => {
   try {
-    const response = await $fetch<{ data: ValidationResult }>('/api/qr/validate', {
+    const response = await $fetch<{ data: ValidationResult }>('/api/qr/lookup', {
       method: 'POST',
       body: { token },
     })
