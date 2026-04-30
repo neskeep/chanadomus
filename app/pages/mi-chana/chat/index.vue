@@ -98,13 +98,8 @@ onMounted(() => {
   <div class="absolute inset-0 flex pb-[4.5rem] md:pb-0">
     <!-- Room list: full width on mobile, sidebar on desktop -->
     <div
-      class="flex w-full shrink-0 flex-col overflow-hidden md:w-80 md:border-r lg:w-96"
+      class="flex w-full shrink-0 flex-col overflow-hidden bg-stone-50 md:w-80 md:border-r lg:w-96"
     >
-      <!-- Header -->
-      <div class="flex shrink-0 items-center justify-between border-b px-4 py-3">
-        <h2 class="text-base font-semibold">Mensajes</h2>
-      </div>
-
       <!-- Search (only when many unit rooms) -->
       <div v-if="showSearch" class="shrink-0 border-b px-3 py-2">
         <div class="relative">
@@ -254,11 +249,11 @@ onMounted(() => {
     </div>
 
     <!-- Desktop conversation panel -->
-    <div class="hidden flex-1 flex-col md:flex">
+    <div class="hidden min-h-0 flex-1 flex-col overflow-hidden md:flex">
       <!-- Active conversation -->
       <template v-if="activeRoomId">
         <!-- Conversation header -->
-        <div class="flex shrink-0 items-center justify-between border-b px-4 py-3">
+        <div class="flex shrink-0 items-center justify-between border-b px-4 py-2.5">
           <div class="flex items-center gap-2">
             <div
               v-if="activeRoom"
@@ -290,7 +285,7 @@ onMounted(() => {
           :key="activeRoomId"
           :room-id="activeRoomId"
           :room-name="activeRoomName"
-          class="flex-1"
+          class="min-h-0 flex-1"
           @connection-change="handleConnectionChange"
         />
       </template>

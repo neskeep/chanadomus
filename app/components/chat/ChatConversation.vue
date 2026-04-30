@@ -156,7 +156,7 @@ defineExpose({ connected })
 </script>
 
 <template>
-  <div class="flex h-full flex-col">
+  <div class="flex h-full flex-col overflow-hidden">
     <!-- Messages area -->
     <div
       ref="messagesContainer"
@@ -197,53 +197,37 @@ defineExpose({ connected })
       </div>
 
       <!-- Message groups -->
-      <div v-else class="space-y-4">
+      <div v-else class="space-y-3">
         <div v-for="(group, gi) in messageGroups" :key="gi">
           <!-- Own messages (right-aligned) -->
           <div v-if="group.isOwn" class="flex flex-col items-end gap-0.5">
             <div
-              v-for="(msg, mi) in group.messages"
+              v-for="msg in group.messages"
               :key="msg.id"
-              class="max-w-[80%]"
+              class="max-w-3/4 rounded-xl rounded-br-sm bg-primary px-3.5 py-2 text-primary-foreground"
             >
-              <div class="rounded-lg rounded-br-sm bg-primary px-3 py-2 text-primary-foreground">
-                <p class="text-sm whitespace-pre-wrap break-words">{{ msg.content }}</p>
-              </div>
-              <p
-                v-if="mi === group.messages.length - 1"
-                class="mt-0.5 text-right text-xs text-muted-foreground"
-              >
-                {{ formatTime(msg.createdAt) }}
-              </p>
+              <p class="text-base leading-relaxed whitespace-pre-wrap break-words">{{ msg.content }} <span class="ml-2 inline-block translate-y-px text-[11px] leading-none text-primary-foreground/80">{{ formatTime(msg.createdAt) }}</span></p>
             </div>
           </div>
 
           <!-- Other's messages (left-aligned) -->
-          <div v-else class="flex items-start gap-2">
-            <div
-              class="flex size-7 shrink-0 items-center justify-center rounded-full bg-primary/10 text-xs font-medium text-primary"
-              :aria-label="group.userName"
-            >
-              {{ getInitials(group.userName) }}
+          <div v-else class="max-w-3/4">
+            <div class="mb-1 flex items-center gap-1.5 pl-1">
+              <div
+                class="flex size-5 shrink-0 items-center justify-center rounded-full bg-primary/15 text-[9px] font-bold text-primary"
+              >
+                {{ getInitials(group.userName) }}
+              </div>
+              <span class="text-xs font-semibold text-primary">{{ group.userName }}</span>
             </div>
 
-            <div class="flex min-w-0 flex-col gap-0.5">
-              <p class="text-xs font-medium text-muted-foreground">{{ group.userName }}</p>
-
+            <div class="flex flex-col gap-0.5 pl-6.5">
               <div
-                v-for="(msg, mi) in group.messages"
+                v-for="msg in group.messages"
                 :key="msg.id"
-                class="max-w-[80%]"
+                class="self-start rounded-xl rounded-bl-sm bg-stone-200 px-3.5 py-2"
               >
-                <div class="rounded-lg rounded-bl-sm bg-muted px-3 py-2">
-                  <p class="text-sm whitespace-pre-wrap break-words">{{ msg.content }}</p>
-                </div>
-                <p
-                  v-if="mi === group.messages.length - 1"
-                  class="mt-0.5 text-xs text-muted-foreground"
-                >
-                  {{ formatTime(msg.createdAt) }}
-                </p>
+                <p class="text-base leading-relaxed whitespace-pre-wrap break-words text-foreground">{{ msg.content }} <span class="ml-2 inline-block translate-y-px text-[11px] leading-none text-muted-foreground">{{ formatTime(msg.createdAt) }}</span></p>
               </div>
             </div>
           </div>
@@ -261,7 +245,7 @@ defineExpose({ connected })
     </div>
 
     <!-- Input area -->
-    <div class="flex shrink-0 items-center gap-2 border-t bg-background px-4 py-3">
+    <div class="flex shrink-0 items-center gap-2 bg-background px-4 py-3">
       <Input
         v-model="messageInput"
         placeholder="Escribe un mensaje..."
