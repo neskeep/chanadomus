@@ -65,6 +65,7 @@ const PAGE_MAP: Record<string, PageInfo> = {
   '/vigilancia': { title: 'Panel de Vigilancia', description: 'Control de accesos del día' },
   '/vigilancia/escanear': { title: 'Escanear QR', description: 'Verifica el código del visitante' },
   '/vigilancia/accesos': { title: 'Registro de Accesos', description: 'Historial de entradas y salidas' },
+  '/vigilancia/alertas': { title: 'Alertas de Pánico', description: 'Historial de emergencias', breadcrumbs: [{ label: 'Vigilancia', to: '/vigilancia' }] },
   '/vigilancia/residentes': { title: 'Directorio de Residentes', description: 'Consulta de propietarios' },
 
   // Conserje

@@ -118,7 +118,7 @@ export async function userCanAccessRoom(
     case 'general':
       return true
     case 'unit':
-      return userRole === 'admin' || (userUnitId !== null && userUnitId === room.unitId)
+      return userRole === 'admin' || userRole === 'vigilancia' || (userUnitId !== null && userUnitId === room.unitId)
     case 'vigilancia':
       return ['admin', 'vigilancia', 'conserje'].includes(userRole)
     case 'admin':

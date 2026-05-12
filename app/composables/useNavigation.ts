@@ -3,7 +3,7 @@ import {
   Home, Wallet, AlertTriangle, Building2, Users, Shield,
   MessageCircle, Megaphone, Vote, Wrench, Calendar,
   ScanLine, ClipboardList, QrCode, DoorOpen, FileText, CreditCard, Car,
-  UserCog,
+  UserCog, ShieldAlert,
 } from 'lucide-vue-next'
 import { ROLE_REDIRECTS } from '~~/shared/types/auth'
 
@@ -97,6 +97,7 @@ export function useNavigation() {
               { label: 'Inicio', icon: Home, to: '/vigilancia' },
               { label: 'Escanear', icon: ScanLine, to: '/vigilancia/escanear' },
               { label: 'Accesos', icon: ClipboardList, to: '/vigilancia/accesos' },
+              { label: 'Alertas', icon: ShieldAlert, to: '/vigilancia/alertas' },
             ],
           },
           {

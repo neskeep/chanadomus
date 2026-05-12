@@ -74,13 +74,23 @@ export default defineEventHandler(async (event) => {
     ),
   ]
 
-  // Add unit room access for propietarios who have a unit assigned
+  // Propietarios: only their own unit room
   if (role === 'propietario' && unitId) {
     conditions.push(
       and(
         eq(chatRooms.tenantId, tenantId),
         eq(chatRooms.type, 'unit'),
         eq(chatRooms.unitId, unitId),
+      ),
+    )
+  }
+
+  // Vigilancia: access to ALL unit rooms (can chat with any rancho)
+  if (role === 'vigilancia') {
+    conditions.push(
+      and(
+        eq(chatRooms.tenantId, tenantId),
+        eq(chatRooms.type, 'unit'),
       ),
     )
   }

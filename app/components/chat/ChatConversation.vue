@@ -29,6 +29,7 @@ const {
   closeRoom,
 } = useChatRoom(roomIdRef)
 
+const route = useRoute()
 const messageInput = ref('')
 const messagesContainer = ref<HTMLDivElement | null>(null)
 const isUserScrolledUp = ref(false)
@@ -145,6 +146,12 @@ onMounted(async () => {
   await openRoom()
   await nextTick()
   scrollToBottom()
+
+  // Pre-fill message from query param (e.g. panic alert redirect)
+  const prefill = route.query.msg as string | undefined
+  if (prefill) {
+    messageInput.value = prefill
+  }
 })
 
 onBeforeUnmount(() => {

@@ -35,6 +35,9 @@ const pageInfo = usePageInfo()
       </template>
     </div>
 
-    <div id="topbar-actions" class="ml-auto flex items-center gap-2" />
+    <div class="ml-auto flex items-center gap-2">
+      <div id="topbar-actions" class="flex items-center gap-2" />
+      <PanicButton />
+    </div>
   </header>
 </template>

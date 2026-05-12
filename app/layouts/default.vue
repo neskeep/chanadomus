@@ -19,12 +19,12 @@ useContentResize(contentRef)
         <span class="text-sm font-semibold text-muted-foreground truncate">{{ usePageInfo().title }}</span>
         <div class="flex items-center gap-1">
           <div id="topbar-actions-mobile" class="flex items-center gap-1" />
-          <PanicButton />
           <NuxtLink to="/mi-chana/notificaciones">
             <Button variant="ghost" size="icon" class="size-9">
               <Bell class="size-4" />
             </Button>
           </NuxtLink>
+          <PanicButton />
         </div>
       </header>
 

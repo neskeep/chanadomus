@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ShieldAlert, Loader2 } from 'lucide-vue-next'
+import { toast } from 'vue-sonner'
 
 const HOLD_DURATION = 2000
 
@@ -7,7 +8,6 @@ const isHolding = ref(false)
 const isTriggered = ref(false)
 const isLoading = ref(false)
 const holdProgress = ref(0)
-const error = ref<string | null>(null)
 
 let holdTimer: ReturnType<typeof setTimeout> | null = null
 let progressInterval: ReturnType<typeof setInterval> | null = null
@@ -17,7 +17,6 @@ function startHold() {
 
   isHolding.value = true
   holdProgress.value = 0
-  error.value = null
 
   const startTime = Date.now()
 
@@ -50,16 +49,21 @@ async function triggerPanic() {
   isLoading.value = true
 
   try {
-    await $fetch('/api/panic', { method: 'POST' })
+    const res = await $fetch<{ data: { id: string; createdAt: string; pushSent: number } }>('/api/panic', { method: 'POST' })
     isTriggered.value = true
+
+    if (res.data.pushSent > 0) {
+      toast.success(`Alerta enviada a ${res.data.pushSent} vigilante${res.data.pushSent !== 1 ? 's' : ''}`)
+    } else {
+      toast.warning('Alerta registrada — no hay vigilancia conectada')
+    }
+
     setTimeout(() => {
       isTriggered.value = false
-    }, 5000)
+    }, 2000)
   } catch (e: unknown) {
-    error.value = e instanceof Error ? e.message : 'Error al enviar alerta'
-    setTimeout(() => {
-      error.value = null
-    }, 3000)
+    const msg = e instanceof Error ? e.message : 'Error al enviar alerta'
+    toast.error(msg)
   } finally {
     isLoading.value = false
   }
@@ -71,14 +75,16 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <button
-    class="relative flex size-8 items-center justify-center rounded-md transition-all select-none"
+  <Button
+    variant="ghost"
+    size="icon"
+    class="relative size-9 select-none"
     :class="[
       isTriggered
-        ? 'bg-green-600 text-white'
+        ? 'bg-primary text-primary-foreground hover:bg-primary/90'
         : isHolding
-          ? 'scale-110 bg-red-600 text-white ring-2 ring-red-300'
-          : 'text-red-600 hover:bg-red-100',
+          ? 'scale-110 bg-destructive text-destructive-foreground ring-2 ring-destructive/30 hover:bg-destructive/90'
+          : 'text-destructive hover:bg-destructive/10',
     ]"
     :disabled="isLoading"
     :title="isTriggered ? 'Alerta enviada' : 'Manten presionado para alerta de panico'"
@@ -87,34 +93,35 @@ onUnmounted(() => {
     @pointerleave="cancelHold"
     @contextmenu.prevent
   >
-    <!-- Progress ring (subtle) -->
+    <!-- Progress ring -->
     <svg
       v-if="isHolding"
       class="absolute inset-0 -rotate-90"
-      viewBox="0 0 32 32"
+      viewBox="0 0 36 36"
     >
       <circle
-        cx="16"
-        cy="16"
-        r="14"
+        cx="18"
+        cy="18"
+        r="15"
         fill="none"
-        stroke="rgba(255,255,255,0.3)"
+        stroke="currentColor"
         stroke-width="2"
+        opacity="0.3"
       />
       <circle
-        cx="16"
-        cy="16"
-        r="14"
+        cx="18"
+        cy="18"
+        r="15"
         fill="none"
-        stroke="white"
+        stroke="currentColor"
         stroke-width="2"
         stroke-linecap="round"
-        :stroke-dasharray="87.96"
-        :stroke-dashoffset="87.96 - (87.96 * holdProgress) / 100"
+        :stroke-dasharray="94.25"
+        :stroke-dashoffset="94.25 - (94.25 * holdProgress) / 100"
       />
     </svg>
 
     <Loader2 v-if="isLoading" class="size-4 animate-spin" />
     <ShieldAlert v-else class="size-4" />
-  </button>
+  </Button>
 </template>
