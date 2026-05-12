@@ -56,7 +56,7 @@ async function handleSubmit() {
 </script>
 
 <template>
-  <div class="mx-auto max-w-xl">
+  <div>
     <Card>
       <CardContent class="p-5 md:p-8">
         <form class="space-y-6" @submit.prevent="handleSubmit">
@@ -74,52 +74,52 @@ async function handleSubmit() {
             />
           </div>
 
-          <!-- Teléfono -->
-          <div class="space-y-1.5">
-            <Label for="prov-phone">Teléfono</Label>
-            <Input
-              id="prov-phone"
-              v-model="formPhone"
-              placeholder="0412-1234567"
-              class="h-12 text-base"
-            />
+          <!-- Teléfono + Categoría row -->
+          <div class="grid gap-4 sm:grid-cols-2">
+            <div class="space-y-1.5">
+              <Label for="prov-phone">Teléfono</Label>
+              <Input
+                id="prov-phone"
+                v-model="formPhone"
+                placeholder="0412-1234567"
+                class="h-12 text-base"
+              />
+            </div>
+            <div class="space-y-1.5">
+              <Label for="prov-category">Categoría</Label>
+              <Select v-model="formCategory">
+                <SelectTrigger id="prov-category" size="lg" class="text-base">
+                  <SelectValue placeholder="Seleccionar categoría" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem v-for="cat in PROVIDER_CATEGORIES" :key="cat.key" :value="cat.key">
+                    {{ cat.label }}
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
           </div>
 
-          <!-- Categoría -->
-          <div class="space-y-1.5">
-            <Label for="prov-category">Categoría</Label>
-            <Select v-model="formCategory">
-              <SelectTrigger id="prov-category" size="lg" class="text-base">
-                <SelectValue placeholder="Seleccionar categoría" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem v-for="cat in PROVIDER_CATEGORIES" :key="cat.key" :value="cat.key">
-                  {{ cat.label }}
-                </SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
-          <!-- Dirección -->
-          <div class="space-y-1.5">
-            <Label for="prov-address">Dirección</Label>
-            <Input
-              id="prov-address"
-              v-model="formAddress"
-              placeholder="Dirección del proveedor"
-              class="h-12 text-base"
-            />
-          </div>
-
-          <!-- Horario -->
-          <div class="space-y-1.5">
-            <Label for="prov-schedule">Horario</Label>
-            <Input
-              id="prov-schedule"
-              v-model="formSchedule"
-              placeholder="Lun-Vie 8:00-17:00"
-              class="h-12 text-base"
-            />
+          <!-- Dirección + Horario row -->
+          <div class="grid gap-4 sm:grid-cols-2">
+            <div class="space-y-1.5">
+              <Label for="prov-address">Dirección</Label>
+              <Input
+                id="prov-address"
+                v-model="formAddress"
+                placeholder="Dirección del proveedor"
+                class="h-12 text-base"
+              />
+            </div>
+            <div class="space-y-1.5">
+              <Label for="prov-schedule">Horario</Label>
+              <Input
+                id="prov-schedule"
+                v-model="formSchedule"
+                placeholder="Lun-Vie 8:00-17:00"
+                class="h-12 text-base"
+              />
+            </div>
           </div>
 
           <!-- Servicios -->
@@ -134,28 +134,28 @@ async function handleSubmit() {
             />
           </div>
 
-          <!-- Costos -->
-          <div class="space-y-1.5">
-            <Label for="prov-costs">Costos</Label>
-            <Textarea
-              id="prov-costs"
-              v-model="formCosts"
-              placeholder="Descripción de costos..."
-              rows="2"
-              class="text-base"
-            />
-          </div>
-
-          <!-- Notas -->
-          <div class="space-y-1.5">
-            <Label for="prov-notes">Notas</Label>
-            <Textarea
-              id="prov-notes"
-              v-model="formNotes"
-              placeholder="Notas adicionales..."
-              rows="2"
-              class="text-base"
-            />
+          <!-- Costos + Notas row -->
+          <div class="grid gap-4 sm:grid-cols-2">
+            <div class="space-y-1.5">
+              <Label for="prov-costs">Costos</Label>
+              <Textarea
+                id="prov-costs"
+                v-model="formCosts"
+                placeholder="Descripción de costos..."
+                rows="2"
+                class="text-base"
+              />
+            </div>
+            <div class="space-y-1.5">
+              <Label for="prov-notes">Notas</Label>
+              <Textarea
+                id="prov-notes"
+                v-model="formNotes"
+                placeholder="Notas adicionales..."
+                rows="2"
+                class="text-base"
+              />
+            </div>
           </div>
 
           <!-- Submit -->

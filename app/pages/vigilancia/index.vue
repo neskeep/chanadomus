@@ -56,8 +56,8 @@ onMounted(async () => {
           </div>
           <Badge variant="secondary" class="gap-1.5">
             <span class="relative flex size-2">
-              <span class="absolute inline-flex size-full animate-ping rounded-full bg-emerald-400 opacity-75" />
-              <span class="relative inline-flex size-2 rounded-full bg-emerald-500" />
+              <span class="absolute inline-flex size-full animate-ping rounded-lg bg-emerald-400 opacity-75" />
+              <span class="relative inline-flex size-2 rounded-lg bg-emerald-500" />
             </span>
             En vivo
           </Badge>

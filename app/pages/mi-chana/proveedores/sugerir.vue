@@ -37,7 +37,7 @@ async function handleSubmit() {
 </script>
 
 <template>
-  <div class="mx-auto max-w-xl">
+  <div>
     <Card>
       <CardContent class="p-5 md:p-8">
         <form class="space-y-6" @submit.prevent="handleSubmit">
@@ -55,30 +55,30 @@ async function handleSubmit() {
             />
           </div>
 
-          <!-- Teléfono -->
-          <div class="space-y-1.5">
-            <Label for="suggest-phone">Teléfono</Label>
-            <Input
-              id="suggest-phone"
-              v-model="formPhone"
-              placeholder="0412-1234567"
-              class="h-12 text-base"
-            />
-          </div>
-
-          <!-- Categoría -->
-          <div class="space-y-1.5">
-            <Label for="suggest-category">Categoría</Label>
-            <Select v-model="formCategory">
-              <SelectTrigger id="suggest-category" size="lg" class="text-base">
-                <SelectValue placeholder="Seleccionar categoría" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem v-for="cat in PROVIDER_CATEGORIES" :key="cat.key" :value="cat.key">
-                  {{ cat.label }}
-                </SelectItem>
-              </SelectContent>
-            </Select>
+          <!-- Teléfono + Categoría row -->
+          <div class="grid gap-4 sm:grid-cols-2">
+            <div class="space-y-1.5">
+              <Label for="suggest-phone">Teléfono</Label>
+              <Input
+                id="suggest-phone"
+                v-model="formPhone"
+                placeholder="0412-1234567"
+                class="h-12 text-base"
+              />
+            </div>
+            <div class="space-y-1.5">
+              <Label for="suggest-category">Categoría</Label>
+              <Select v-model="formCategory">
+                <SelectTrigger id="suggest-category" size="lg" class="text-base">
+                  <SelectValue placeholder="Seleccionar categoría" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem v-for="cat in PROVIDER_CATEGORIES" :key="cat.key" :value="cat.key">
+                    {{ cat.label }}
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
           </div>
 
           <!-- Nota -->

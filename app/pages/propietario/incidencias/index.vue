@@ -201,7 +201,7 @@ const { formatDate, formatDateTime } = useFormatDate()
                   class="rounded-lg bg-muted/50 p-2.5"
                 >
                   <div class="flex items-center gap-2">
-                    <div class="size-1.5 shrink-0 rounded-full bg-primary" />
+                    <div class="size-1.5 shrink-0 rounded-lg bg-primary" />
                     <span class="text-xs font-medium">
                       {{ STATUS_CONFIG[update.oldStatus].label }} → {{ STATUS_CONFIG[update.newStatus].label }}
                     </span>

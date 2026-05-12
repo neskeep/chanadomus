@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { SwitchCamera, CheckCircle2, XCircle, AlertTriangle, Camera, ScanLine, User, Home, Clock, RotateCcw } from 'lucide-vue-next'
+import { SwitchCamera, CheckCircle2, XCircle, AlertTriangle, Camera, ScanLine, User, Home, Clock, RotateCcw, Car, HardHat } from 'lucide-vue-next'
 import type { ValidationStatus } from '~~/shared/types/qr'
 import { VALIDATION_STATUS_COLORS, VALIDATION_STATUS_LABELS } from '~/composables/useColorMap'
 
@@ -83,7 +83,7 @@ const statusConfig: Record<ValidationStatus, { label: string; bg: string; icon: 
             <div class="absolute bottom-0 right-0 h-10 w-10 border-b-[3px] border-r-[3px] border-white rounded-br-lg" />
 
             <!-- Scan line animation -->
-            <div class="absolute inset-x-3 top-3 h-0.5 animate-[scan_2s_ease-in-out_infinite] rounded-full bg-white/80 shadow-[0_0_8px_rgba(255,255,255,0.5)]" />
+            <div class="absolute inset-x-3 top-3 h-0.5 animate-[scan_2s_ease-in-out_infinite] rounded-lg bg-white/80 shadow-[0_0_8px_rgba(255,255,255,0.5)]" />
           </div>
 
           <!-- Hint text -->
@@ -98,7 +98,7 @@ const statusConfig: Record<ValidationStatus, { label: string; bg: string; icon: 
         v-if="isProcessing"
         class="absolute inset-0 flex flex-col items-center justify-center bg-black/70 backdrop-blur-sm"
       >
-        <div class="size-14 animate-spin rounded-full border-[3px] border-white/20 border-t-white" />
+        <div class="size-14 animate-spin rounded-lg border-[3px] border-white/20 border-t-white" />
         <p class="mt-5 text-lg font-medium text-white">Validando código...</p>
       </div>
 
@@ -115,7 +115,7 @@ const statusConfig: Record<ValidationStatus, { label: string; bg: string; icon: 
           <!-- Status icon -->
           <div
             :class="[statusConfig[scanResult.status].accent]"
-            class="flex size-24 items-center justify-center rounded-full bg-white/10 ring-2 backdrop-blur-sm"
+            class="flex size-24 items-center justify-center rounded-lg bg-white/10 ring-2 backdrop-blur-sm"
           >
             <CheckCircle2
               v-if="scanResult.status === 'valid'"
@@ -137,14 +137,14 @@ const statusConfig: Record<ValidationStatus, { label: string; bg: string; icon: 
           <!-- Status label -->
           <div
             :class="statusConfig[scanResult.status].bg"
-            class="mt-5 rounded-full px-5 py-1.5 text-sm font-semibold text-white"
+            class="mt-5 rounded-lg px-5 py-1.5 text-sm font-semibold text-white"
           >
             {{ statusConfig[scanResult.status].label }}
           </div>
 
-          <!-- Visitor details -->
+          <!-- Visitor details (standard QR) -->
           <div
-            v-if="scanResult.visitorName || scanResult.unitNumber"
+            v-if="(scanResult.visitorName || scanResult.unitNumber) && !scanResult.isVehiclePass && !scanResult.isResidentPass && !scanResult.isStaffPass"
             class="mt-6 w-full max-w-xs space-y-3 rounded-lg bg-white/10 p-4 backdrop-blur-sm"
           >
             <div v-if="scanResult.visitorName" class="flex items-center gap-3">
@@ -163,6 +163,73 @@ const statusConfig: Record<ValidationStatus, { label: string; bg: string; icon: 
                 {{ scanResult.visitorType === 'invitado' ? 'Invitado' : 'Proveedor' }}
               </span>
             </div>
+          </div>
+
+          <!-- Vehicle pass details -->
+          <div
+            v-if="scanResult.isVehiclePass"
+            class="mt-6 w-full max-w-xs space-y-3 rounded-lg bg-white/10 p-4 backdrop-blur-sm"
+          >
+            <div class="flex items-center gap-3">
+              <Car class="size-4 shrink-0 text-white/50" />
+              <span class="font-mono text-base font-bold tracking-wider text-white">{{ scanResult.vehiclePlate }}</span>
+            </div>
+            <div class="flex items-center gap-3">
+              <span class="text-sm text-white/80">{{ scanResult.vehicleBrand }} {{ scanResult.vehicleModel }} · {{ scanResult.vehicleColor }}</span>
+            </div>
+            <div v-if="scanResult.unitNumber" class="flex items-center gap-3">
+              <Home class="size-4 shrink-0 text-white/50" />
+              <span class="text-sm text-white/80">
+                {{ scanResult.unitNumber }}{{ scanResult.unitLabel ? ` — ${scanResult.unitLabel}` : '' }}
+              </span>
+            </div>
+            <div class="flex items-center gap-3">
+              <Badge variant="secondary" class="text-xs">
+                {{ scanResult.passType === 'resident' ? 'Residente' : 'Invitado' }}
+              </Badge>
+              <span v-if="scanResult.occupantLimit" class="text-xs text-white/60">
+                Max. {{ scanResult.occupantLimit }} ocupantes
+              </span>
+            </div>
+          </div>
+
+          <!-- Resident pass details -->
+          <div
+            v-if="scanResult.isResidentPass"
+            class="mt-6 w-full max-w-xs space-y-3 rounded-lg bg-white/10 p-4 backdrop-blur-sm"
+          >
+            <div class="flex items-center gap-3">
+              <User class="size-4 shrink-0 text-white/50" />
+              <span class="text-base font-medium text-white">{{ scanResult.residentName }}</span>
+            </div>
+            <div v-if="scanResult.unitNumber" class="flex items-center gap-3">
+              <Home class="size-4 shrink-0 text-white/50" />
+              <span class="text-sm text-white/80">
+                {{ scanResult.unitNumber }}{{ scanResult.unitLabel ? ` — ${scanResult.unitLabel}` : '' }}
+              </span>
+            </div>
+            <Badge variant="secondary" class="text-xs">Pase de Residente</Badge>
+          </div>
+
+          <!-- Service staff pass details -->
+          <div
+            v-if="scanResult.isStaffPass"
+            class="mt-6 w-full max-w-xs space-y-3 rounded-lg bg-white/10 p-4 backdrop-blur-sm"
+          >
+            <div class="flex items-center gap-3">
+              <HardHat class="size-4 shrink-0 text-white/50" />
+              <span class="text-base font-medium text-white">{{ scanResult.staffName }}</span>
+            </div>
+            <div v-if="scanResult.staffRole" class="flex items-center gap-3">
+              <Badge variant="secondary" class="text-xs">{{ scanResult.staffRole }}</Badge>
+            </div>
+            <div v-if="scanResult.unitNumber" class="flex items-center gap-3">
+              <Home class="size-4 shrink-0 text-white/50" />
+              <span class="text-sm text-white/80">
+                {{ scanResult.unitNumber }}{{ scanResult.unitLabel ? ` — ${scanResult.unitLabel}` : '' }}
+              </span>
+            </div>
+            <Badge variant="outline" class="border-white/20 text-xs text-white/80">Personal de Servicio</Badge>
           </div>
 
           <!-- Scan again button -->
@@ -200,7 +267,7 @@ const statusConfig: Record<ValidationStatus, { label: string; bg: string; icon: 
         class="absolute inset-0 flex flex-col items-center justify-center gap-5 bg-black/80"
         @click="startScanning"
       >
-        <div class="flex size-20 items-center justify-center rounded-full bg-white/10 ring-2 ring-white/20">
+        <div class="flex size-20 items-center justify-center rounded-lg bg-white/10 ring-2 ring-white/20">
           <Camera class="size-10 text-white/70" />
         </div>
         <p class="text-lg font-medium text-white/80">Toque para iniciar</p>

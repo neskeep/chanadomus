@@ -29,6 +29,10 @@ Actualizar este archivo cada vez que se ejecute `shadcn add`.
 | Collapsible | 2026-04-27 | Sidebar groups colapsables |
 | Breadcrumb | 2026-04-27 | AppTopbar.vue — navegacion contextual |
 | DropdownMenu | 2026-04-27 | UserMenu.vue — menu de usuario con logout |
+| Checkbox | 2026-05-11 | (removido de nueva-visita, disponible) |
+| Calendar | 2026-05-11 | nueva-visita.vue — date picker para fecha límite |
+| Popover | 2026-05-11 | nueva-visita.vue — contenedor del date picker |
+| NativeSelect | 2026-05-11 | Calendar internals (month/year selectors) |
 
 ## Notas
 - El preset a6PDm8yA (reka-luma) esta configurado

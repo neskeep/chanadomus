@@ -7,7 +7,9 @@ useHead({ title: 'Mis Visitas' })
 
 const { target, isMounted } = useTopbarPortal()
 const { myCodes, fetchMyCodes, isLoading, error } = useQr()
+const { formatDateTime } = useFormatDate()
 
+// --- QR codes state ---
 const activeFilter = ref<QrStatus | ''>('')
 const expandedId = ref<string | null>(null)
 const expandedQrUrl = ref<string | null>(null)
@@ -88,8 +90,6 @@ async function copyToClipboard(text: string) {
   }
 }
 
-const { formatDateTime } = useFormatDate()
-
 const statusConfig: Record<QrStatus, { label: string; variant: 'default' | 'secondary' | 'outline' }> = {
   active: { label: 'Activo', variant: 'default' },
   used: { label: 'Usado', variant: 'secondary' },
@@ -129,14 +129,14 @@ const statusConfig: Record<QrStatus, { label: string; variant: 'default' | 'seco
       {{ shareSuccess }}
     </div>
 
-    <!-- Loading skeleton -->
+    <!-- Loading -->
     <ListSkeleton v-if="isLoading" :count="3" />
 
     <!-- Empty state -->
     <EmptyState
       v-else-if="myCodes.length === 0"
       :icon="User"
-      title="Aún no has registrado visitas"
+      title="Aun no has registrado visitas"
       description="Crea un pase de acceso para tu primer visitante"
     >
       <template #action>
@@ -147,7 +147,7 @@ const statusConfig: Record<QrStatus, { label: string; variant: 'default' | 'seco
       </template>
     </EmptyState>
 
-    <!-- Codes list -->
+    <!-- Visits list -->
     <div v-else class="space-y-2">
       <Card
         v-for="code in myCodes"
@@ -157,7 +157,6 @@ const statusConfig: Record<QrStatus, { label: string; variant: 'default' | 'seco
         @click="code.status === 'active' ? toggleExpand(code.id, code.token) : undefined"
       >
         <CardContent class="px-3 py-2.5">
-          <!-- Row 1: Name + badges + chevron -->
           <div class="flex items-center gap-2">
             <p class="min-w-0 flex-1 truncate text-sm font-semibold">{{ code.visitorName }}</p>
             <Badge :variant="statusConfig[code.status].variant" class="shrink-0 text-[11px]">
@@ -173,14 +172,12 @@ const statusConfig: Record<QrStatus, { label: string; variant: 'default' | 'seco
             />
           </div>
 
-          <!-- Row 2: Unit + date -->
           <div class="mt-1 flex items-center gap-x-1 text-[11px] text-muted-foreground">
             <span class="truncate">{{ code.unitNumber }}{{ code.unitLabel ? ` — ${code.unitLabel}` : '' }}</span>
             <span class="opacity-30">&middot;</span>
             <span class="shrink-0 tabular-nums">{{ code.usedAt ? formatDateTime(code.usedAt) : formatDateTime(code.expiresAt) }}</span>
           </div>
 
-          <!-- Expanded QR (active codes only) -->
           <div
             v-if="expandedId === code.id && code.status === 'active'"
             class="mt-3 flex flex-col items-center gap-3 border-t pt-3"

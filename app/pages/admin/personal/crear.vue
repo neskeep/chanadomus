@@ -43,7 +43,7 @@ async function handleSubmit() {
 </script>
 
 <template>
-  <div class="mx-auto max-w-xl">
+  <div>
     <Card>
       <CardContent class="p-5 md:p-8">
         <form class="space-y-6" @submit.prevent="handleSubmit">
@@ -62,31 +62,31 @@ async function handleSubmit() {
             />
           </div>
 
-          <!-- Rol -->
-          <div class="space-y-1.5">
-            <Label for="staff-role">Rol <span class="text-destructive">*</span></Label>
-            <Select v-model="formRole">
-              <SelectTrigger id="staff-role" size="lg" class="text-base">
-                <SelectValue placeholder="Seleccionar rol" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="conserje">Conserje</SelectItem>
-                <SelectItem value="vigilancia">Vigilancia</SelectItem>
-                <SelectItem value="mantenimiento">Mantenimiento</SelectItem>
-                <SelectItem value="otro">Otro</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
-          <!-- Documento -->
-          <div class="space-y-1.5">
-            <Label for="staff-document">Documento de identidad</Label>
-            <Input
-              id="staff-document"
-              v-model="formDocument"
-              placeholder="Cédula o pasaporte"
-              class="h-12 text-base"
-            />
+          <!-- Rol + Documento row -->
+          <div class="grid gap-4 sm:grid-cols-2">
+            <div class="space-y-1.5">
+              <Label for="staff-role">Rol <span class="text-destructive">*</span></Label>
+              <Select v-model="formRole">
+                <SelectTrigger id="staff-role" size="lg" class="text-base">
+                  <SelectValue placeholder="Seleccionar rol" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="conserje">Conserje</SelectItem>
+                  <SelectItem value="vigilancia">Vigilancia</SelectItem>
+                  <SelectItem value="mantenimiento">Mantenimiento</SelectItem>
+                  <SelectItem value="otro">Otro</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div class="space-y-1.5">
+              <Label for="staff-document">Documento de identidad</Label>
+              <Input
+                id="staff-document"
+                v-model="formDocument"
+                placeholder="Cédula o pasaporte"
+                class="h-12 text-base"
+              />
+            </div>
           </div>
 
           <!-- Teléfono + Email row -->

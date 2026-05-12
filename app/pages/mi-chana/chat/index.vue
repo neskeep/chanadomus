@@ -120,7 +120,7 @@ onMounted(() => {
         <!-- Loading -->
         <div v-else-if="isLoading" class="divide-y">
           <div v-for="i in 6" :key="i" class="flex items-center gap-3 px-4 py-3">
-            <Skeleton class="size-10 shrink-0 rounded-full" />
+            <Skeleton class="size-10 shrink-0 rounded-lg" />
             <div class="flex-1 space-y-1.5">
               <Skeleton class="h-4 w-2/3" />
               <Skeleton class="h-3 w-full" />
@@ -154,7 +154,7 @@ onMounted(() => {
                 @click="selectRoom(room)"
               >
                 <div
-                  class="flex size-10 shrink-0 items-center justify-center rounded-full"
+                  class="flex size-10 shrink-0 items-center justify-center rounded-lg"
                   :class="ROOM_TYPE_CONFIG[room.type].iconBg"
                 >
                   <component
@@ -212,7 +212,7 @@ onMounted(() => {
                 @click="selectRoom(room)"
               >
                 <div
-                  class="flex size-10 shrink-0 items-center justify-center rounded-full"
+                  class="flex size-10 shrink-0 items-center justify-center rounded-lg"
                   :class="ROOM_TYPE_CONFIG.unit.iconBg"
                 >
                   <Home
@@ -257,7 +257,7 @@ onMounted(() => {
           <div class="flex items-center gap-2">
             <div
               v-if="activeRoom"
-              class="flex size-8 items-center justify-center rounded-full"
+              class="flex size-8 items-center justify-center rounded-lg"
               :class="ROOM_TYPE_CONFIG[activeRoom.type].iconBg"
             >
               <component
@@ -292,7 +292,7 @@ onMounted(() => {
 
       <!-- Empty state: no room selected -->
       <div v-else class="flex flex-1 flex-col items-center justify-center gap-3 text-center">
-        <div class="flex size-16 items-center justify-center rounded-full bg-muted">
+        <div class="flex size-16 items-center justify-center rounded-lg bg-muted">
           <MessageCircle class="size-7 text-muted-foreground" />
         </div>
         <div>

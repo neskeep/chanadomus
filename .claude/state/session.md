@@ -1,67 +1,55 @@
 # Estado de Sesion — ChanaDomus
 
 ## Ultima Sesion
-- **Fecha**: 2026-04-29
-- **Sesion #**: 38
-- **Fase**: Fase 5 — Rediseno UI, Ola 5 COMPLETADA + Refactor Finanzas
-- **Version**: v0.16.1 (sin tag nuevo, cambios en dev)
+- **Fecha**: 2026-05-12
+- **Sesion #**: 43
 - **Branch**: dev
-- **Tag**: v0.16.1
-- **Push**: pendiente
+- **Estado**: Módulos 1-4 de 5 completados
 
-## Resumen Session 38
+## Completado Sesion 43
 
-### Ola 5: Paginas Especiales — COMPLETADA
-- `vigilancia/escanear.vue`: 7 fixes (rounded-lg, ring-2, style tag eliminado → main.css)
-- `mi-chana/chat/[roomId].vue`: 3 fixes (rounded-lg en bubbles y skeletons)
-- `mi-chana/chat/index.vue`: 2x rounded-xl → rounded-lg (polish pass)
+### Módulo 4: QR Multi-uso para Personal de Servicio
+- Schema `serviceStaffPasses` + migración 0022 aplicada
+- 3 API endpoints en `server/api/my-unit/service-staff/[id]/pass` (POST generar, GET consultar, DELETE revocar)
+- GET service-staff actualizado con LEFT JOIN para devolver `hasPass` y `passToken`
+- Integración en `POST /api/qr/validate` como Pass 4 (después de visitor, resident, vehicle)
+- `validateStaffPass()` — multi-uso, nunca marca `usedAt`, broadcast WebSocket
+- Composable `useMyUnit()` extendido con `generateStaffPass`, `getStaffPass`, `revokeStaffPass`
+- Tipo `ValidationResult` extendido con `isStaffPass`, `staffName`, `staffRole`
+- Tipo `ServiceStaffPass` agregado en `shared/types/unit-service-staff.ts`
 
-### Polish Pass Cross-Page
-- 0 rounded-2xl/3xl/4xl residuales
-- 0 ring-4 residuales
-- 0 `<style>` tags en componentes app/
-- 0 border-l-4 anti-patterns en cards
+### UI Propietario (Mi Unidad > Personal)
+- Desktop: columna "Pase QR" en tabla con botón "Generar" (default) o "Ver QR" (outline)
+- Mobile: icono QR inline en cards compactas (teal si tiene pase activo)
+- Dialog QR con imagen generada client-side (qrcode lib), botones Compartir y Revocar
+- AlertDialog de confirmación para revocar pase
 
-### Commits Ola 1-5 (6 commits atomicos)
-- `ccce0b6` Ola 1 Layout (5 files)
-- `c7aa454` Ola 2 Componentes (6 files, 2 deleted)
-- `8d5d989` Ola 3 Dashboards (4 files)
-- `8154adf` Ola 4 Listados (24 files)
-- `42bac21` Ola 5 Especiales (4 files)
-- `4e34695` Docs state
+### UI Vigilancia (Escanear)
+- Sección "Personal de Servicio" en resultado de escaneo con nombre, rol, unidad
+- Badge "Personal de Servicio" para diferenciar de otros tipos de pase
+- Condición actualizada para excluir staff pass del card de visitante genérico
 
-### Refactor Finanzas — EN PROGRESO (sin commit)
-**Cambios listos para commit:**
+### UX: Tabs con URL params
+- Mi Unidad tabs sincronizan con `?tab=members|vehicles|staff`
+- Navegación directa a tab via URL, `router.replace` sin recarga
 
-1. **Split monolito**: `admin/finanzas.vue` (517 lineas) → 3 archivos:
-   - `admin/finanzas/index.vue` — Layout 2-col: tabla saldos (lg:col-span-7) + informes (lg:col-span-5)
-   - `admin/finanzas/registrar.vue` — Form dedicado con cards tipo cargo/abono, canSubmit, form submit
-   - `admin/finanzas/subir-informe.vue` — Form dedicado con dropzone PDF, file preview, canSubmit
+### Testing Playwright verificado
+- Login propietario OK
+- Tab Personal: 2 staff visibles con columna Pase QR
+- Generar QR: Dialog con imagen QR, compartir, revocar
+- Botón cambia de "Generar" a "Ver QR" post-generación
+- Mobile cards: iconos QR inline correctos
+- 0 errores consola, build exitoso
 
-2. **Tabla paginada**: Client-side 15 items/page con ListPagination, reset on filter change
+## Plan Pendiente
 
-3. **Filtros reales**: TopbarFilters con estado (en mora / al dia), sin sort misterioso
+| # | Módulo | Estado |
+|---|--------|--------|
+| 1 | Admin User CRUD | ✅ |
+| 2 | Perfil Usuario | ✅ |
+| 3 | Autoservicio Propietario (Mi Unidad) | ✅ |
+| 4 | QR Multi-uso Staff + Personal Servicio | ✅ |
+| 5 | Tracking de Asistencia | Pendiente |
 
-4. **Inline summary**: "86 unidades · 3 en mora (4%)" reemplaza StatCards
-
-5. **SelectTrigger fix global**: `w-fit` → `w-full` en componente base, nuevo `size="lg"` (h-12) con data-attribute para ganar especificidad sobre data-[size=default]:h-9. 14 instancias migradas en toda la app.
-
-6. **Formularios mejorados**:
-   - Required markers `*`, `canSubmit` computed, `<form>` con @submit.prevent
-   - Tipo cargo/abono como cards horizontales con icon-box (no dropdown)
-   - Dropzone con border-dashed para PDF upload + file preview con size
-   - Character counter en descripcion/titulo
-   - Botón submit dentro del card (consistente con incidencias/nueva)
-   - `text-base` para elderly, spacing `space-y-6`
-
-7. **usePageInfo.ts**: 3 rutas nuevas (index, registrar, subir-informe)
-
-### Build: PASSING
-### Errores pre-existentes: server/api/finance/ (TypeScript strict)
-
-## Pendientes para Session 39
-1. **Commit del refactor finanzas** (cambios sin commitear)
-2. **Verificar visualmente** los formularios en navegador
-3. **Aplicar mismo patron** a otros modulos con tabs/forms inline si los hay
-4. **Merge dev → main** + tag v0.17.0 cuando rediseno completo
-5. **Revisar otros formularios** de la app para consistencia (nueva-visita, nueva-entrada, etc.)
+## Siguiente: Módulo 5
+Tracking de Asistencia para personal de servicio (registro de entrada/salida, historial)

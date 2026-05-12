@@ -19,7 +19,7 @@ const emit = defineEmits<{
         <SlidersHorizontal class="size-3.5" />
         <span
           v-if="active"
-          class="absolute -right-0.5 -top-0.5 size-2 rounded-full bg-primary"
+          class="absolute -right-0.5 -top-0.5 size-2 rounded-lg bg-primary"
         />
       </button>
     </PopoverTrigger>

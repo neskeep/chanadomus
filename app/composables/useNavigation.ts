@@ -2,7 +2,8 @@ import type { Component } from 'vue'
 import {
   Home, Wallet, AlertTriangle, Building2, Users, Shield,
   MessageCircle, Megaphone, Vote, Wrench, Calendar,
-  ScanLine, ClipboardList, QrCode, DoorOpen, FileText, CreditCard,
+  ScanLine, ClipboardList, QrCode, DoorOpen, FileText, CreditCard, Car,
+  UserCog,
 } from 'lucide-vue-next'
 import { ROLE_REDIRECTS } from '~~/shared/types/auth'
 
@@ -38,8 +39,11 @@ export function useNavigation() {
             label: 'Gestion',
             items: [
               { label: 'Unidades', icon: Building2, to: '/admin/unidades' },
+              { label: 'Usuarios', icon: UserCog, to: '/admin/usuarios' },
               { label: 'Personal', icon: Users, to: '/admin/personal' },
               { label: 'Proveedores', icon: Wrench, to: '/admin/proveedores' },
+              { label: 'Roles de Servicio', icon: Users, to: '/admin/roles-servicio' },
+              { label: 'Pases Vehiculares', icon: Car, to: '/admin/pases-vehiculares' },
             ],
           },
           {
@@ -66,7 +70,10 @@ export function useNavigation() {
           {
             label: 'Gestiones',
             items: [
+              { label: 'Mi Unidad', icon: Building2, to: '/propietario/mi-unidad' },
+              { label: 'Mi QR', icon: ScanLine, to: '/propietario/mi-qr' },
               { label: 'Mis Visitas', icon: QrCode, to: '/propietario/mis-visitas' },
+              { label: 'Frecuentes', icon: Users, to: '/propietario/visitantes-frecuentes' },
               { label: 'Incidencias', icon: AlertTriangle, to: '/propietario/incidencias' },
             ],
           },

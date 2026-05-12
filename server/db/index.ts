@@ -19,6 +19,12 @@ import * as pollSchema from './schema/poll'
 import * as pushPreferencesSchema from './schema/push-preferences'
 import * as providerSchema from './schema/provider'
 import * as meetingSchema from './schema/meeting'
+import * as frequentVisitorSchema from './schema/frequent-visitor'
+import * as residentPassSchema from './schema/resident-pass'
+import * as vehiclePassSchema from './schema/vehicle-pass'
+import * as serviceStaffRoleSchema from './schema/service-staff-role'
+import * as unitServiceStaffSchema from './schema/unit-service-staff'
+import * as serviceStaffPassSchema from './schema/service-staff-pass'
 
 const connectionString = process.env.DATABASE_URL!
 
@@ -45,5 +51,11 @@ export const db = drizzle(client, {
     ...pushPreferencesSchema,
     ...providerSchema,
     ...meetingSchema,
+    ...frequentVisitorSchema,
+    ...residentPassSchema,
+    ...vehiclePassSchema,
+    ...serviceStaffRoleSchema,
+    ...unitServiceStaffSchema,
+    ...serviceStaffPassSchema,
   },
 })

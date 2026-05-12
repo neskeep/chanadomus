@@ -6,7 +6,7 @@ useHead({ title: 'Sin conexión — ChanaDomus' })
 <template>
   <div class="flex min-h-dvh items-center justify-center px-6">
     <div class="text-center space-y-4">
-      <div class="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-muted">
+      <div class="mx-auto flex h-16 w-16 items-center justify-center rounded-lg bg-muted">
         <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-muted-foreground" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <line x1="2" x2="22" y1="2" y2="22" />
           <path d="M8.5 16.5a5 5 0 0 1 7 0" />

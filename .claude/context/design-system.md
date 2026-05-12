@@ -12,30 +12,12 @@
 
 ## Border Radius (Estandarizado)
 - **Todo**: `rounded-lg` — Valor unico para buttons, inputs, selects, dialogs, popovers, dropdowns, badges, avatares, cards, tabs, skeletons, toasts
-- **Dots/Indicadores**: `rounded-full` — SOLO para status dots, ping animations, radio buttons, switches
-- **NO usar**: `rounded-xl`, `rounded-2xl`, `rounded-3xl`, `rounded-4xl` (eliminados del sistema)
+- **Dots/Indicadores**: `rounded-lg` — SOLO para status dots, ping animations, radio buttons, switches
+- **NO usar**: `rounded-xl`, `rounded-2xl`, `rounded-3xl`, `rounded-lg` (eliminados del sistema)
 
-## Paleta de Colores (Light) — Brandbook ChanaDomus
+## Paleta de Colores
 
-### Core tokens (CSS variables en main.css)
-- **Primary**: oklch(0.738 0.123 193.5) — teal #19C2C0
-- **Secondary**: oklch(0.708 0.176 50.5) — orange #F47A1F (identidad de marca)
-- **Accent**: oklch(0.959 0.024 193.8) — soft teal #E0F7F6
-- **Destructive**: oklch(0.611 0.207 25.8) — error #E53B3B
-- **Muted**: oklch(0.936 0.014 191.7) — neutral teal-tinted
-- **Background**: oklch(0.973 0.004 198.1) — #F3F7F7 (tinte teal sutil)
-- **Foreground**: oklch(0.276 0.023 248.7) — #1F2933
-
-### Brand shades (variables --brand-*)
-- **Primary 800**: #12A7A5 (hover, emphasis)
-- **Primary 700**: #0E8F8D (dark variant)
-- **Secondary 700**: #D96512 (hover orange)
-
-### Status colors (variables --status-*)
-- **Success**: #38B075 | **Warning**: #F5A842 | **Error**: #E53B3B | **Info**: #3A86FF
-
-### Icon backgrounds (variables --icon-bg-*)
-- **Teal**: #E0F7F7 | **Orange**: #FFF4E5 | **Yellow**: #FFF9E1
+Ver `.claude/context/branding.md` para la paleta completa (tokens OKLCH, brand shades, status colors, icon backgrounds).
 
 ## Estrategia Responsive (Desktop-First)
 Disenar primero para desktop, luego ajustar a tablet y mobile.
@@ -63,7 +45,7 @@ Ver `.claude/state/installed-components.md` para lista actualizada.
 
 ### Timeline (Feed cronologico)
 - **Linea vertical**: `w-px bg-border` posicionada con `absolute left-[5px]`
-- **Dots**: `size-2.5 rounded-full ring-2 ring-background` coloreados por estado
+- **Dots**: `size-2.5 rounded-lg ring-2 ring-background` coloreados por estado
 - **Colores dots**: primary (permitido/ok), destructive (denegado/error), amber-500 (warning)
 - **Offset**: `pl-5` en container, dot posicionado con `absolute -left-5`
 

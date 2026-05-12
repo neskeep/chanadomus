@@ -62,7 +62,7 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="mx-auto max-w-xl">
+  <div>
     <!-- Loading -->
     <div v-if="isLoading" class="space-y-4">
       <Skeleton class="h-8 w-3/4" />
@@ -193,7 +193,7 @@ onMounted(() => {
               class="rounded-lg bg-muted/50 p-3"
             >
               <div class="flex items-center gap-2">
-                <div class="size-2 shrink-0 rounded-full bg-primary" />
+                <div class="size-2 shrink-0 rounded-lg bg-primary" />
                 <span class="text-sm font-medium">
                   {{ STATUS_CONFIG[update.oldStatus].label }} → {{ STATUS_CONFIG[update.newStatus].label }}
                 </span>

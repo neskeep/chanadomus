@@ -229,7 +229,7 @@ onMounted(async () => {
               <Car class="size-5 text-muted-foreground" />
               <span
                 v-if="resolveColor(vehicle.color)"
-                class="absolute -right-1 -top-1 size-4 rounded-full border-2 border-background"
+                class="absolute -right-1 -top-1 size-4 rounded-lg border-2 border-background"
                 :style="{ backgroundColor: resolveColor(vehicle.color)! }"
                 :aria-label="`Color: ${vehicle.color}`"
               />

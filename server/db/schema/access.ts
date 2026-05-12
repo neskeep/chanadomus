@@ -1,8 +1,10 @@
-import { pgTable, pgEnum, uuid, text, timestamp, index } from 'drizzle-orm/pg-core'
+import { pgTable, pgEnum, uuid, text, timestamp, integer, index } from 'drizzle-orm/pg-core'
 import { tenants } from './tenant'
 import { user } from './auth'
 import { units } from './unit'
 import { devices } from './device'
+import { vehiclePasses } from './vehicle-pass'
+import { serviceStaffPasses } from './service-staff-pass'
 
 // Enums
 export const visitorTypeEnum = pgEnum('visitor_type', ['invitado', 'proveedor'])
@@ -42,6 +44,9 @@ export const accessLogs = pgTable('access_logs', {
   visitorDocument: text('visitor_document'), // cedula para entries manuales
   unitId: uuid('unit_id').references(() => units.id), // unidad destino para entries manuales
   deviceId: uuid('device_id').references(() => devices.id), // dispositivo que origino el webhook
+  vehiclePassId: uuid('vehicle_pass_id').references(() => vehiclePasses.id), // pase vehicular, nullable
+  staffPassId: uuid('staff_pass_id').references(() => serviceStaffPasses.id), // pase de staff, nullable
+  occupantCount: integer('occupant_count'), // cantidad de ocupantes, nullable
   exitAt: timestamp('exit_at'), // hora de salida del visitante, null = aun dentro
   createdAt: timestamp('created_at').notNull().defaultNow(),
 }, (table) => [
@@ -49,4 +54,5 @@ export const accessLogs = pgTable('access_logs', {
   index('access_log_qr_idx').on(table.qrCodeId),
   index('access_log_created_idx').on(table.createdAt),
   index('access_log_device_idx').on(table.deviceId),
+  index('access_log_staff_pass_idx').on(table.staffPassId),
 ])

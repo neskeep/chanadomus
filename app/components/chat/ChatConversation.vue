@@ -179,7 +179,7 @@ defineExpose({ connected })
       <!-- Loading skeleton -->
       <div v-if="isLoading" class="space-y-4">
         <div v-for="i in 5" :key="i" class="flex gap-2" :class="i % 2 === 0 ? 'justify-end' : ''">
-          <Skeleton v-if="i % 2 !== 0" class="size-7 shrink-0 rounded-full" />
+          <Skeleton v-if="i % 2 !== 0" class="size-7 shrink-0 rounded-lg" />
           <div :class="i % 2 === 0 ? 'items-end' : 'items-start'" class="flex flex-col gap-1">
             <Skeleton v-if="i % 2 !== 0" class="h-3 w-16" />
             <Skeleton class="h-8 rounded-lg" :class="i % 2 === 0 ? 'w-40' : 'w-48'" />
@@ -213,12 +213,12 @@ defineExpose({ connected })
           <!-- Other's messages (left-aligned) -->
           <div v-else class="max-w-3/4">
             <div class="mb-1 flex items-center gap-1.5 pl-1">
-              <div v-if="group.userImage" class="size-5 shrink-0 overflow-hidden rounded-full">
+              <div v-if="group.userImage" class="size-5 shrink-0 overflow-hidden rounded-lg">
                 <img :src="group.userImage" :alt="group.userName" class="size-full object-cover" />
               </div>
               <div
                 v-else
-                class="flex size-5 shrink-0 items-center justify-center rounded-full bg-primary/15 text-[9px] font-bold text-primary"
+                class="flex size-5 shrink-0 items-center justify-center rounded-lg bg-primary/15 text-[9px] font-bold text-primary"
               >
                 {{ getInitials(group.userName) }}
               </div>

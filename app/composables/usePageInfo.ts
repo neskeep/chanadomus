@@ -27,13 +27,26 @@ const PAGE_MAP: Record<string, PageInfo> = {
   '/admin/votaciones/crear': { title: 'Nueva Votación', description: 'Crea una nueva votación para la comunidad', breadcrumbs: [{ label: 'Votaciones', to: '/admin/votaciones' }] },
   '/admin/reuniones': { title: 'Reuniones', description: 'Calendario de asambleas y juntas' },
   '/admin/reuniones/crear': { title: 'Nueva Reunión', description: 'Programa una nueva reunión o asamblea', breadcrumbs: [{ label: 'Reuniones', to: '/admin/reuniones' }] },
+  '/admin/usuarios': { title: 'Usuarios', description: 'Gestión de cuentas del condominio' },
+  '/admin/usuarios/crear': { title: 'Nuevo Usuario', description: 'Crea una cuenta de acceso al sistema', breadcrumbs: [{ label: 'Usuarios', to: '/admin/usuarios' }] },
+  '/admin/usuarios/editar': { title: 'Editar Usuario', description: 'Actualiza la información del usuario', breadcrumbs: [{ label: 'Usuarios', to: '/admin/usuarios' }] },
+  '/admin/roles-servicio': { title: 'Roles de Servicio', description: 'Catálogo de roles para personal de servicio' },
+  '/admin/roles-servicio/crear': { title: 'Nuevo Rol', description: 'Agrega un rol al catálogo', breadcrumbs: [{ label: 'Roles de Servicio', to: '/admin/roles-servicio' }] },
+  '/admin/pases-vehiculares': { title: 'Pases Vehiculares', description: 'Control de pases QR para vehículos' },
+  '/admin/pases-vehiculares/nuevo': { title: 'Nuevo Pase Vehicular', description: 'Asigna un pase QR a un vehículo registrado', breadcrumbs: [{ label: 'Pases Vehiculares', to: '/admin/pases-vehiculares' }] },
 
   // Propietario
   '/propietario': { title: 'Mi Vivienda', description: 'Tu resumen personal' },
   '/propietario/estado-cuenta': { title: 'Estado de Cuenta', description: 'Tu saldo y pagos realizados' },
   '/propietario/informes': { title: 'Informes Financieros', description: 'Reportes y documentos del condominio' },
+  '/propietario/mi-unidad': { title: 'Mi Unidad', description: 'Integrantes, vehículos y personal de tu hogar' },
+  '/propietario/mi-unidad/crear-miembro': { title: 'Agregar Integrante', description: 'Registra un nuevo miembro del hogar', breadcrumbs: [{ label: 'Mi Unidad', to: '/propietario/mi-unidad' }] },
+  '/propietario/mi-unidad/crear-vehiculo': { title: 'Agregar Vehículo', description: 'Registra un nuevo vehículo', breadcrumbs: [{ label: 'Mi Unidad', to: '/propietario/mi-unidad' }] },
+  '/propietario/mi-unidad/crear-personal': { title: 'Agregar Personal', description: 'Registra personal de servicio', breadcrumbs: [{ label: 'Mi Unidad', to: '/propietario/mi-unidad' }] },
   '/propietario/mis-visitas': { title: 'Mis Visitas', description: 'Invitaciones y códigos de acceso' },
   '/propietario/nueva-visita': { title: 'Nueva Visita', description: 'Genera un código QR para tu visitante', breadcrumbs: [{ label: 'Mis Visitas', to: '/propietario/mis-visitas' }] },
+  '/propietario/visitantes-frecuentes': { title: 'Visitantes Frecuentes', description: 'Directorio de visitantes recurrentes' },
+  '/propietario/visitantes-frecuentes/nuevo': { title: 'Agregar Visitante', description: 'Registra un visitante frecuente', breadcrumbs: [{ label: 'Frecuentes', to: '/propietario/visitantes-frecuentes' }] },
   '/propietario/incidencias': { title: 'Mis Incidencias', description: 'Reportes que has enviado' },
   '/propietario/incidencias/nueva': { title: 'Reportar Incidencia', description: 'Describe el problema que observas', breadcrumbs: [{ label: 'Mis Incidencias', to: '/propietario/incidencias' }] },
 
@@ -46,6 +59,7 @@ const PAGE_MAP: Record<string, PageInfo> = {
   '/mi-chana/proveedores/crear': { title: 'Nuevo Proveedor', description: 'Registra un nuevo proveedor', breadcrumbs: [{ label: 'Proveedores', to: '/mi-chana/proveedores' }] },
   '/mi-chana/reuniones': { title: 'Reuniones', description: 'Próximas asambleas y juntas' },
   '/mi-chana/notificaciones': { title: 'Notificaciones', description: 'Tus alertas recientes' },
+  '/mi-chana/perfil': { title: 'Mi Perfil', description: 'Tu informacion personal' },
 
   // Vigilancia
   '/vigilancia': { title: 'Panel de Vigilancia', description: 'Control de accesos del día' },
@@ -59,6 +73,7 @@ const PAGE_MAP: Record<string, PageInfo> = {
 }
 
 const DYNAMIC_ROUTES: Array<{ prefix: string; info: PageInfo }> = [
+  { prefix: '/admin/usuarios/', info: { title: 'Editar Usuario', description: 'Actualiza la información del usuario', breadcrumbs: [{ label: 'Usuarios', to: '/admin/usuarios' }] } },
   { prefix: '/admin/incidencias/', info: { title: 'Detalle de Incidencia', description: 'Información y estado del reporte', breadcrumbs: [{ label: 'Incidencias', to: '/admin/incidencias' }] } },
   { prefix: '/admin/unidades/', info: { title: 'Detalle de Unidad', description: 'Miembros, vehículos e información', breadcrumbs: [{ label: 'Unidades', to: '/admin/unidades' }] } },
   { prefix: '/mi-chana/chat/', info: { title: 'Chat', description: 'Conversación', breadcrumbs: [{ label: 'Chat', to: '/mi-chana/chat' }] } },

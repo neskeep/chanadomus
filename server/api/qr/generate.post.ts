@@ -1,7 +1,8 @@
 import { db } from '~~/server/db'
 import { qrCodes } from '~~/server/db/schema/access'
+import { frequentVisitors } from '~~/server/db/schema/frequent-visitor'
 import { units } from '~~/server/db/schema/unit'
-import { eq, and } from 'drizzle-orm'
+import { eq, and, sql } from 'drizzle-orm'
 import type { GenerateQrInput } from '~~/shared/types/qr'
 
 export default defineEventHandler(async (event) => {
@@ -70,6 +71,23 @@ export default defineEventHandler(async (event) => {
   const created = rows[0]
   if (!created) {
     throw createError({ statusCode: 500, message: 'Error al crear codigo QR' })
+  }
+
+  // Si viene frequentVisitorId, actualizar lastVisitAt y visitCount
+  if (body.frequentVisitorId) {
+    await db
+      .update(frequentVisitors)
+      .set({
+        lastVisitAt: new Date(),
+        visitCount: sql`${frequentVisitors.visitCount} + 1`,
+      })
+      .where(
+        and(
+          eq(frequentVisitors.id, body.frequentVisitorId),
+          eq(frequentVisitors.ownerId, user.id),
+          eq(frequentVisitors.tenantId, tenantId),
+        ),
+      )
   }
 
   return {

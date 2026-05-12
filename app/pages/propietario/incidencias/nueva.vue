@@ -144,7 +144,7 @@ onUnmounted(() => {
                 />
                 <button
                   type="button"
-                  class="absolute -right-1.5 -top-1.5 flex size-5 items-center justify-center rounded-full bg-destructive text-destructive-foreground shadow-sm"
+                  class="absolute -right-1.5 -top-1.5 flex size-5 items-center justify-center rounded-lg bg-destructive text-destructive-foreground shadow-sm"
                   @click="removePhoto(index)"
                 >
                   <X class="size-3" />

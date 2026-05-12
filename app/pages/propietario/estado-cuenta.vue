@@ -28,7 +28,7 @@ const formattedBalance = computed(() => {
       <div class="animate-pulse rounded-lg border p-6 text-center">
         <div class="mx-auto h-3 w-20 rounded bg-muted" />
         <div class="mx-auto mt-3 h-8 w-32 rounded bg-muted" />
-        <div class="mx-auto mt-3 h-5 w-16 rounded-full bg-muted" />
+        <div class="mx-auto mt-3 h-5 w-16 rounded-lg bg-muted" />
       </div>
       <!-- Movement skeletons -->
       <ListSkeleton :count="3" />

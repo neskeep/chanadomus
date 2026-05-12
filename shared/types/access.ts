@@ -20,4 +20,8 @@ export interface AccessEvent {
   notes: string | null
   exitAt: string | null
   createdAt: string
+  vehiclePassId?: string | null
+  staffPassId?: string | null
+  occupantCount?: number | null
+  vehiclePlate?: string | null
 }
