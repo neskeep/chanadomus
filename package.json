@@ -2,6 +2,7 @@
   "name": "chanadomus",
   "type": "module",
   "private": true,
+  "packageManager": "pnpm@10.26.1",
   "scripts": {
     "build": "nuxt build",
     "dev": "nuxt dev",
@@ -41,6 +42,15 @@
     "vue-router": "^5.0.4",
     "vue-sonner": "^2.0.9",
     "web-push": "^3.6.7"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "@parcel/watcher",
+      "core-js",
+      "esbuild",
+      "sharp",
+      "vue-demi"
+    ]
   },
   "devDependencies": {
     "@types/node": "^25.6.0",
