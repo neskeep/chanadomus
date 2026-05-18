@@ -50,7 +50,7 @@ async function handleSubmit() {
 </script>
 
 <template>
-  <div class="mx-auto max-w-xl">
+  <div>
     <Card>
       <CardContent class="p-5 md:p-8">
         <form class="space-y-6" @submit.prevent="handleSubmit">
@@ -114,40 +114,40 @@ async function handleSubmit() {
             </div>
           </div>
 
-          <!-- Adjunto PDF -->
-          <div class="space-y-1.5">
-            <Label>Adjunto PDF</Label>
-            <div class="flex items-center gap-3">
-              <Button type="button" variant="outline" class="h-12" @click="pdfInputRef?.click()">
-                <Paperclip class="mr-1.5 size-4" />
-                {{ formPdfFile ? 'Cambiar archivo' : 'Seleccionar PDF' }}
-              </Button>
-              <input
-                ref="pdfInputRef"
-                type="file"
-                accept="application/pdf"
-                class="hidden"
-                @change="handlePdfSelect"
-              />
-              <span v-if="formPdfFile" class="text-sm text-muted-foreground">
-                {{ formPdfFile.name }} ({{ (formPdfFile.size / 1024 / 1024).toFixed(1) }} MB)
-              </span>
+          <!-- Adjunto PDF + Fecha de expiración row -->
+          <div class="grid gap-4 sm:grid-cols-2">
+            <div class="space-y-1.5">
+              <Label>Adjunto PDF</Label>
+              <div class="flex items-center gap-3">
+                <Button type="button" variant="outline" class="h-12" @click="pdfInputRef?.click()">
+                  <Paperclip class="mr-1.5 size-4" />
+                  {{ formPdfFile ? 'Cambiar' : 'Seleccionar PDF' }}
+                </Button>
+                <input
+                  ref="pdfInputRef"
+                  type="file"
+                  accept="application/pdf"
+                  class="hidden"
+                  @change="handlePdfSelect"
+                />
+                <span v-if="formPdfFile" class="truncate text-sm text-muted-foreground">
+                  {{ formPdfFile.name }}
+                </span>
+              </div>
             </div>
-          </div>
-
-          <!-- Fecha de expiración -->
-          <div class="space-y-1.5">
-            <Label for="ann-expires">Fecha de expiración</Label>
-            <div class="relative">
-              <Calendar class="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-              <Input
-                id="ann-expires"
-                v-model="formExpiresAt"
-                type="date"
-                class="h-12 pl-9 text-base"
-              />
+            <div class="space-y-1.5">
+              <Label for="ann-expires">Fecha de expiración</Label>
+              <div class="relative">
+                <Calendar class="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+                <Input
+                  id="ann-expires"
+                  v-model="formExpiresAt"
+                  type="date"
+                  class="h-12 pl-9 text-base"
+                />
+              </div>
+              <p class="text-xs text-muted-foreground">Se archiva automáticamente en esta fecha</p>
             </div>
-            <p class="text-xs text-muted-foreground">Opcional — el anuncio se archiva automáticamente en esta fecha</p>
           </div>
 
           <!-- Submit -->

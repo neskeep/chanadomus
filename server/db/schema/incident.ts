@@ -1,4 +1,4 @@
-import { pgTable, pgEnum, uuid, text, timestamp, index } from 'drizzle-orm/pg-core'
+import { pgTable, pgEnum, uuid, text, timestamp, index, boolean } from 'drizzle-orm/pg-core'
 import { tenants } from './tenant'
 import { user } from './auth'
 import { units } from './unit'
@@ -19,6 +19,7 @@ export const incidents = pgTable('incidents', {
   tenantId: uuid('tenant_id').notNull().references(() => tenants.id),
   createdAt: timestamp('created_at').notNull().defaultNow(),
   updatedAt: timestamp('updated_at').notNull().defaultNow(),
+  isAnonymous: boolean('is_anonymous').notNull().default(false),
   resolvedAt: timestamp('resolved_at'),
 }, (table) => [
   index('incident_tenant_idx').on(table.tenantId),

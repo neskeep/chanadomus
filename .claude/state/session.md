@@ -1,67 +1,62 @@
 # Estado de Sesion — ChanaDomus
 
 ## Ultima Sesion
-- **Fecha**: 2026-04-29
-- **Sesion #**: 38
-- **Fase**: Fase 5 — Rediseno UI, Ola 5 COMPLETADA + Refactor Finanzas
-- **Version**: v0.16.1 (sin tag nuevo, cambios en dev)
+- **Fecha**: 2026-05-12
+- **Sesion #**: 46
 - **Branch**: dev
-- **Tag**: v0.16.1
-- **Push**: pendiente
+- **Estado**: Chat routing + imágenes PARCIAL — routing completo, upload pendiente test E2E
 
-## Resumen Session 38
+## Completado Sesion 46
 
-### Ola 5: Paginas Especiales — COMPLETADA
-- `vigilancia/escanear.vue`: 7 fixes (rounded-lg, ring-2, style tag eliminado → main.css)
-- `mi-chana/chat/[roomId].vue`: 3 fixes (rounded-lg en bubbles y skeletons)
-- `mi-chana/chat/index.vue`: 2x rounded-xl → rounded-lg (polish pass)
+### Chat Routing Completo (nested routes)
+- **Página padre `chat.vue`**: sidebar + `<NuxtPage :transition="false" />` — SSR-safe sin useMediaQuery
+- **`index.vue`** simplificado: solo empty state desktop
+- **`[roomId].vue`** simplificado: header con icono/tipo + ChatConversation
+- **Routing real**: URL se actualiza a `/mi-chana/chat/{roomId}` al seleccionar room (antes solo cambiaba ref)
+- **Fix hydration**: eliminado `useMediaQuery`, usado CSS `md:!flex` + `:class` basado en route (SSR-safe)
+- **Fix transición**: `<NuxtPage :transition="false" />` — la transición global `out-in` impedía render del hijo
 
-### Polish Pass Cross-Page
-- 0 rounded-2xl/3xl/4xl residuales
-- 0 ring-4 residuales
-- 0 `<style>` tags en componentes app/
-- 0 border-l-4 anti-patterns en cards
+### Sistema de Imágenes en Chat (backend completo, UI integrada, test E2E pendiente)
+- **Schema**: `chat_attachments` tabla (messageId, filePath, width, height, fileSize) — migración 0027 ejecutada
+- **Sharp processing**: `server/utils/image-processing.ts` — convierte cualquier formato a WebP optimizado (max 1920px, quality 80)
+- **Upload API**: `POST /api/chat/upload` — multipart, max 5 imágenes, 10MB cada una, broadcast WS
+- **Serve API**: `GET /api/chat/attachments/[filename]` — cache immutable
+- **Messages API**: actualizado con JOIN a chat_attachments (batch query eficiente)
+- **Tipos**: `ChatAttachment` interface + `attachments[]` en ChatMessage
+- **Composable**: `sendImages()`, `validateImages()`, `isUploading` en useChatRoom
+- **UI**: botón ImagePlus, preview strip pendientes, render imágenes en burbujas (clickables)
 
-### Commits Ola 1-5 (6 commits atomicos)
-- `ccce0b6` Ola 1 Layout (5 files)
-- `c7aa454` Ola 2 Componentes (6 files, 2 deleted)
-- `8d5d989` Ola 3 Dashboards (4 files)
-- `8154adf` Ola 4 Listados (24 files)
-- `42bac21` Ola 5 Especiales (4 files)
-- `4e34695` Docs state
+### Archivos creados
+- `app/pages/mi-chana/chat.vue` — Página padre nested routing
+- `server/utils/image-processing.ts` — Sharp WebP processing
+- `server/api/chat/upload.post.ts` — Upload endpoint
+- `server/api/chat/attachments/[filename].get.ts` — Serve endpoint
+- `server/db/migrations/0027_chat_attachments.sql` — Migración
 
-### Refactor Finanzas — EN PROGRESO (sin commit)
-**Cambios listos para commit:**
+### Archivos modificados
+- `app/pages/mi-chana/chat/index.vue` — Simplificado a empty state
+- `app/pages/mi-chana/chat/[roomId].vue` — Simplificado, back button CSS md:hidden
+- `app/components/chat/ChatConversation.vue` — Imágenes upload + render
+- `app/composables/useChatRoom.ts` — sendImages, validateImages, isUploading
+- `server/api/chat/[roomId]/messages.get.ts` — Incluye attachments
+- `server/db/schema/chat.ts` — chatAttachments tabla
+- `shared/types/chat.ts` — ChatAttachment interface
+- `server/db/migrations/meta/_journal.json` — Entry 0027
 
-1. **Split monolito**: `admin/finanzas.vue` (517 lineas) → 3 archivos:
-   - `admin/finanzas/index.vue` — Layout 2-col: tabla saldos (lg:col-span-7) + informes (lg:col-span-5)
-   - `admin/finanzas/registrar.vue` — Form dedicado con cards tipo cargo/abono, canSubmit, form submit
-   - `admin/finanzas/subir-informe.vue` — Form dedicado con dropzone PDF, file preview, canSubmit
+## Pendiente
+1. **Test E2E upload imagen**: Playwright file upload → verificar processing sharp → render en chat
+2. **Test mobile viewport**: verificar sidebar oculto, back button visible
+3. **Sistema de comandos/mentions**: `/incidencia:`, `/anuncio:`, `/reunion:`, `/votacion:`, `/proveedor:`, `/normativa:` + `@usuario`
+4. **Mentions de usuarios**: `@nombre` con dropdown search
 
-2. **Tabla paginada**: Client-side 15 items/page con ListPagination, reset on filter change
+## Siguiente Paso
+- Verificar upload de imagen E2E (sharp processing + render)
+- Comenzar sistema de comandos/mentions interactivos con search contra DB
+- Los comandos respetan permisos por rol
 
-3. **Filtros reales**: TopbarFilters con estado (en mora / al dia), sin sort misterioso
-
-4. **Inline summary**: "86 unidades · 3 en mora (4%)" reemplaza StatCards
-
-5. **SelectTrigger fix global**: `w-fit` → `w-full` en componente base, nuevo `size="lg"` (h-12) con data-attribute para ganar especificidad sobre data-[size=default]:h-9. 14 instancias migradas en toda la app.
-
-6. **Formularios mejorados**:
-   - Required markers `*`, `canSubmit` computed, `<form>` con @submit.prevent
-   - Tipo cargo/abono como cards horizontales con icon-box (no dropdown)
-   - Dropzone con border-dashed para PDF upload + file preview con size
-   - Character counter en descripcion/titulo
-   - Botón submit dentro del card (consistente con incidencias/nueva)
-   - `text-base` para elderly, spacing `space-y-6`
-
-7. **usePageInfo.ts**: 3 rutas nuevas (index, registrar, subir-informe)
-
-### Build: PASSING
-### Errores pre-existentes: server/api/finance/ (TypeScript strict)
-
-## Pendientes para Session 39
-1. **Commit del refactor finanzas** (cambios sin commitear)
-2. **Verificar visualmente** los formularios en navegador
-3. **Aplicar mismo patron** a otros modulos con tabs/forms inline si los hay
-4. **Merge dev → main** + tag v0.17.0 cuando rediseno completo
-5. **Revisar otros formularios** de la app para consistencia (nueva-visita, nueva-entrada, etc.)
+## Entorno
+- Docker PostgreSQL corriendo
+- `npx nuxi dev --port 3000` para dev
+- Build verificado: `npx nuxi build` OK
+- Migración 0027 aplicada en DB local
+- sharp@0.34.5 instalado

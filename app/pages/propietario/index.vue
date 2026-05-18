@@ -1,10 +1,12 @@
 <script setup lang="ts">
 import {
   AlertTriangle,
+  Building2,
   Calendar,
   ClipboardList,
   Megaphone,
   MessageCircle,
+  ScanLine,
   Vote,
 } from 'lucide-vue-next'
 import { buttonVariants } from '~/components/ui/button'
@@ -37,6 +39,8 @@ onMounted(async () => {
 })
 
 const quickActions = [
+  { label: 'Mi Unidad', to: '/propietario/mi-unidad', icon: Building2 },
+  { label: 'Mi QR', to: '/propietario/mi-qr', icon: ScanLine },
   { label: 'Reportar Incidencia', to: '/propietario/incidencias', icon: ClipboardList },
   { label: 'Ver Cartelera', to: '/mi-chana/cartelera', icon: Megaphone },
   { label: 'Votaciones', to: '/mi-chana/votaciones', icon: Vote },

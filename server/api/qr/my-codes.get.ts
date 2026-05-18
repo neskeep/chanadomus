@@ -12,13 +12,23 @@ function computeStatus(expiresAt: Date, usedAt: Date | null): QrStatus {
 
 export default defineEventHandler(async (event) => {
   const { tenantId, user } = await requireTenant(event)
-  await requireRole(event, ['propietario', 'admin'])
+  const session = await requireRole(event, ['propietario', 'admin', 'conserje'])
+  const role = session.user.role
 
   const query = getQuery(event)
   const statusFilter = (query.status as string) || 'all'
 
   if (!['all', 'active', 'used', 'expired'].includes(statusFilter)) {
     throw createError({ statusCode: 400, message: 'status debe ser "all", "active", "used" o "expired"' })
+  }
+
+  // Conserje filtra por unitId de su staff record; propietario/admin por ownerId
+  let unitFilter
+  if (role === 'conserje') {
+    const staffUnitId = await getStaffUnitId(user.id, tenantId)
+    unitFilter = eq(qrCodes.unitId, staffUnitId)
+  } else {
+    unitFilter = eq(qrCodes.ownerId, user.id)
   }
 
   const rows = await db
@@ -37,7 +47,7 @@ export default defineEventHandler(async (event) => {
     })
     .from(qrCodes)
     .innerJoin(units, eq(units.id, qrCodes.unitId))
-    .where(and(eq(qrCodes.ownerId, user.id), eq(qrCodes.tenantId, tenantId)))
+    .where(and(unitFilter, eq(qrCodes.tenantId, tenantId)))
     .orderBy(desc(qrCodes.createdAt))
 
   const records: QrCodeRecord[] = rows.map((row) => {

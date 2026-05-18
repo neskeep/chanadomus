@@ -16,6 +16,8 @@
 |----------|-----------|
 | Stack tecnico | `.claude/context/stack.md` |
 | Sistema de diseno | `.claude/context/design-system.md` |
+| Branding y paleta | `.claude/context/branding.md` |
+| Auth y permisos | `.claude/context/auth-permissions.md` |
 | Convenciones | `.claude/context/conventions.md` |
 | Esquema de datos | `.claude/context/data-schema.md` |
 | Versionado y releases | `.claude/context/versioning.md` |
@@ -37,8 +39,10 @@
 
 1. **SOLO shadcn-vue** — No crear componentes UI custom sin autorizacion explicita del usuario en la conversacion actual.
 2. **SOLO Tailwind** — No CSS custom sin autorizacion explicita. Cero archivos .css adicionales, cero `<style>` en componentes Vue.
-3. **Si falta un patron UI** en shadcn-vue, PREGUNTAR al usuario antes de crear una alternativa custom.
-4. **Registrar componentes** — Actualizar `.claude/state/installed-components.md` despues de cada `shadcn add`.
+3. **Zero elementos nativos** — Todo input interactivo usa shadcn-vue. Nunca `<select>`, `<input type="date">`, `alert()`, `confirm()`.
+4. **Colores solo via tokens** — Nunca `text-[#hex]`, nunca colores Tailwind genericos (`text-red-500`). Usar tokens: `text-primary`, `bg-destructive`, etc.
+5. **Si falta un patron UI** en shadcn-vue, PREGUNTAR al usuario antes de crear una alternativa custom.
+6. **Registrar componentes** — Actualizar `.claude/state/installed-components.md` despues de cada `shadcn add`.
 
 ## Reglas de Codigo (No Negociables)
 
@@ -84,10 +88,12 @@
 
 | Comando | Cuando usar | Que inyecta |
 |---------|-------------|-------------|
-| `/design <prompt>` | Trabajo de UI | Contexto visual + reglas + agentes/skills UI |
-| `/backend <prompt>` | APIs, schemas, server routes | Convenciones + schema + update docs obligatorio |
+| `/design <prompt>` | Trabajo de UI | Contexto visual + branding + skills UI |
+| `/backend <prompt>` | APIs, composables, server routes | Convenciones + schema + update docs obligatorio |
+| `/db <prompt>` | Schemas Drizzle y migraciones | Schema + auth-permissions + reglas additive-only |
 | `/fix <prompt>` | Bug fixes | Diagnose → fix → verify (build+dev) |
 | `/review <prompt>` | QA post-implementacion | Playwright MCP + verificacion visual/funcional |
+| `/handoff` | Cierre de sesion | Actualiza state + genera prompt para siguiente sesion |
 
 **Regla**: Usar el comando apropiado ANTES de empezar. No implementar directamente.
 
@@ -117,6 +123,21 @@
 | `/clarify` | Mejora de UX copy, labels, errores, empty states |
 | `ui-ux-pro-max` | Revision general UX post-implementacion |
 
+## MCP
+
+| MCP | Uso |
+|-----|-----|
+| `playwright` | Testing E2E: navegar, click, fill forms, screenshots |
+| `context7` | Docs actualizados de librerias (Nuxt, Vue, Tailwind, Drizzle) |
+
+### Playwright screenshots
+
+Todos los screenshots de `browser_take_screenshot` deben guardarse en `.playwright-mcp/`. Siempre pasar `filename` con prefijo `.playwright-mcp/`:
+```
+filename: ".playwright-mcp/descripcion-corta.png"
+```
+Nunca guardar screenshots en la raiz del proyecto.
+
 ---
 
-*Este archivo debe mantenerse bajo 100 lineas. Detalles en `.claude/context/`*
+*Este archivo debe mantenerse bajo 130 lineas. Detalles en `.claude/context/`*

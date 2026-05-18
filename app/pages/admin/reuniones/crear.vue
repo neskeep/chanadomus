@@ -52,7 +52,7 @@ async function handleSubmit() {
 </script>
 
 <template>
-  <div class="mx-auto max-w-xl">
+  <div>
     <Card>
       <CardContent class="p-5 md:p-8">
         <form class="space-y-6" @submit.prevent="handleSubmit">

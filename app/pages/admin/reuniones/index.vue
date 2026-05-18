@@ -5,7 +5,6 @@ import {
   Plus,
   Pencil,
   Trash2,
-  Loader2,
   Video,
   MapPin,
   Clock,
@@ -15,9 +14,7 @@ import type {
   Meeting,
   MeetingType,
   MeetingStatus,
-  UpdateMeeting,
 } from '~~/shared/types/meeting'
-import { MEETING_TYPES, MEETING_STATUSES } from '~~/shared/types/meeting'
 
 useHead({ title: 'Gestion de Reuniones' })
 
@@ -27,10 +24,8 @@ const {
   meetings,
   meta,
   isLoading,
-  isSubmitting,
   error,
   fetchMeetings,
-  updateMeeting,
   deleteMeeting,
 } = useMeetings()
 
@@ -53,20 +48,6 @@ const meetingStatusOptions = [
   { value: 'completada' as const, label: 'Completada' },
   { value: 'cancelada' as const, label: 'Cancelada' },
 ]
-
-// Create/Edit dialog
-const dialogOpen = ref(false)
-const editingId = ref<string | null>(null)
-const formTitle = ref('')
-const formDescription = ref('')
-const formDate = ref('')
-const formEndDate = ref('')
-const formLocation = ref('')
-const formMeetingLink = ref('')
-const formType = ref<MeetingType>('ordinaria')
-const formAgenda = ref('')
-const formMinutes = ref('')
-const formStatus = ref<MeetingStatus>('programada')
 
 // Delete dialog
 const deleteId = ref<string | null>(null)
@@ -103,13 +84,6 @@ const totalEsteMes = computed(() => {
   }).length
 })
 
-function toLocalInput(iso: string): string {
-  const d = new Date(iso)
-  const offset = d.getTimezoneOffset()
-  const local = new Date(d.getTime() - offset * 60000)
-  return local.toISOString().slice(0, 16)
-}
-
 async function loadMeetings() {
   const params: { type?: MeetingType; status?: MeetingStatus } = {}
   if (filterType.value) params.type = filterType.value
@@ -124,66 +98,6 @@ watch([filterType, filterStatus], () => {
 onMounted(() => {
   loadMeetings()
 })
-
-function resetForm() {
-  formTitle.value = ''
-  formDescription.value = ''
-  formDate.value = ''
-  formEndDate.value = ''
-  formLocation.value = ''
-  formMeetingLink.value = ''
-  formType.value = 'ordinaria'
-  formAgenda.value = ''
-  formMinutes.value = ''
-  formStatus.value = 'programada'
-}
-
-function openEditDialog(meeting: Meeting) {
-  editingId.value = meeting.id
-  formTitle.value = meeting.title
-  formDescription.value = meeting.description ?? ''
-  formDate.value = toLocalInput(meeting.date)
-  formEndDate.value = meeting.endDate ? toLocalInput(meeting.endDate) : ''
-  formLocation.value = meeting.location ?? ''
-  formMeetingLink.value = meeting.meetingLink ?? ''
-  formType.value = meeting.type
-  formAgenda.value = meeting.agenda ?? ''
-  formMinutes.value = meeting.minutes ?? ''
-  formStatus.value = meeting.status
-  dialogOpen.value = true
-}
-
-const canSubmit = computed(() =>
-  formTitle.value.trim().length > 0 && formDate.value.length > 0 && !isSubmitting.value,
-)
-
-async function handleSubmit() {
-  if (!canSubmit.value || !editingId.value) return
-  try {
-    const dateISO = new Date(formDate.value).toISOString()
-    const endDateISO = formEndDate.value ? new Date(formEndDate.value).toISOString() : undefined
-
-    const data: UpdateMeeting = {
-      title: formTitle.value.trim(),
-      description: formDescription.value.trim() || undefined,
-      date: dateISO,
-      endDate: endDateISO,
-      location: formLocation.value.trim() || undefined,
-      meetingLink: formMeetingLink.value.trim() || undefined,
-      type: formType.value,
-      status: formStatus.value,
-      agenda: formAgenda.value.trim() || undefined,
-      minutes: formMinutes.value.trim() || undefined,
-    }
-    await updateMeeting(editingId.value, data)
-    toast.success('Reunion actualizada')
-    dialogOpen.value = false
-    await loadMeetings()
-  }
-  catch {
-    toast.error(error.value ?? 'Error al guardar reunion')
-  }
-}
 
 function confirmDelete(id: string) {
   deleteId.value = id
@@ -325,9 +239,11 @@ async function handleDelete() {
                     size="icon"
                     class="size-10"
                     title="Editar"
-                    @click="openEditDialog(item)"
+                    as-child
                   >
-                    <Pencil class="size-4" />
+                    <NuxtLink :to="`/admin/reuniones/${item.id}`">
+                      <Pencil class="size-4" />
+                    </NuxtLink>
                   </Button>
                   <Button
                     variant="ghost"
@@ -383,9 +299,11 @@ async function handleDelete() {
               <span class="truncate">{{ item.location }}</span>
             </template>
             <span class="flex-1" />
-            <Button variant="ghost" class="h-6 px-2 text-[11px]" @click="openEditDialog(item)">
-              <Pencil class="mr-1 size-3" />
-              Editar
+            <Button variant="ghost" class="h-6 px-2 text-[11px]" as-child>
+              <NuxtLink :to="`/admin/reuniones/${item.id}`">
+                <Pencil class="mr-1 size-3" />
+                Editar
+              </NuxtLink>
             </Button>
             <Button variant="ghost" class="h-6 px-2 text-[11px] text-destructive hover:text-destructive" @click="confirmDelete(item.id)">
               <Trash2 class="mr-1 size-3" />
@@ -395,99 +313,6 @@ async function handleDelete() {
         </Card>
       </div>
     </div>
-
-    <!-- Create/Edit Sheet -->
-    <Sheet v-model:open="dialogOpen">
-      <SheetContent side="right" class="overflow-y-auto sm:max-w-lg">
-        <SheetHeader>
-          <SheetTitle>Editar Reunion</SheetTitle>
-          <SheetDescription>
-            Modifica los datos de la reunion
-          </SheetDescription>
-        </SheetHeader>
-
-        <form class="space-y-4 py-2" @submit.prevent="handleSubmit">
-          <div class="space-y-2">
-            <Label for="meet-title">Titulo</Label>
-            <Input id="meet-title" v-model="formTitle" placeholder="Titulo de la reunion" class="h-12" required />
-          </div>
-
-          <div class="space-y-2">
-            <Label for="meet-description">Descripcion</Label>
-            <Textarea id="meet-description" v-model="formDescription" placeholder="Descripcion opcional..." rows="2" />
-          </div>
-
-          <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            <div class="space-y-2">
-              <Label for="meet-date">Fecha y Hora</Label>
-              <Input id="meet-date" v-model="formDate" type="datetime-local" class="h-12" required />
-            </div>
-            <div class="space-y-2">
-              <Label for="meet-end-date">Hora de Fin</Label>
-              <Input id="meet-end-date" v-model="formEndDate" type="datetime-local" class="h-12" />
-            </div>
-          </div>
-
-          <div class="space-y-2">
-            <Label for="meet-location">Ubicacion</Label>
-            <Input id="meet-location" v-model="formLocation" placeholder="Salon de usos multiples" class="h-12" />
-          </div>
-
-          <div class="space-y-2">
-            <Label for="meet-link">Link de Reunion</Label>
-            <Input id="meet-link" v-model="formMeetingLink" placeholder="https://meet.google.com/..." class="h-12" />
-          </div>
-
-          <div class="space-y-2">
-            <Label for="meet-type">Tipo</Label>
-            <Select v-model="formType">
-              <SelectTrigger id="meet-type" size="lg">
-                <SelectValue placeholder="Seleccionar tipo" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem v-for="t in MEETING_TYPES" :key="t.key" :value="t.key">
-                  {{ t.label }}
-                </SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div class="space-y-2">
-            <Label for="meet-agenda">Agenda</Label>
-            <Textarea id="meet-agenda" v-model="formAgenda" placeholder="Puntos a tratar..." rows="3" />
-          </div>
-
-          <div class="space-y-2">
-            <Label for="meet-minutes">Acta / Minuta</Label>
-            <Textarea id="meet-minutes" v-model="formMinutes" placeholder="Registro de la reunion..." rows="3" />
-          </div>
-
-          <div class="space-y-2">
-            <Label for="meet-status">Estado</Label>
-            <Select v-model="formStatus">
-              <SelectTrigger id="meet-status" size="lg">
-                <SelectValue placeholder="Seleccionar estado" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem v-for="s in MEETING_STATUSES" :key="s.key" :value="s.key">
-                  {{ s.label }}
-                </SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div class="flex justify-end gap-2 pt-2">
-            <Button type="button" variant="outline" @click="dialogOpen = false">
-              Cancelar
-            </Button>
-            <Button type="submit" :disabled="!canSubmit">
-              <Loader2 v-if="isSubmitting" class="mr-2 size-4 animate-spin" />
-              {{ isSubmitting ? 'Guardando...' : 'Guardar cambios' }}
-            </Button>
-          </div>
-        </form>
-      </SheetContent>
-    </Sheet>
 
     <!-- Delete AlertDialog -->
     <AlertDialog v-model:open="deleteDialogOpen">

@@ -1,4 +1,4 @@
-import { PUBLIC_ROUTES, ROLE_REDIRECTS, ROUTE_ROLE_MAP } from '~~/shared/types/auth'
+import { PUBLIC_ROUTES, HYBRID_ROUTES, ROLE_REDIRECTS, ROUTE_ROLE_MAP } from '~~/shared/types/auth'
 import type { UserRole } from '~~/shared/types/auth'
 
 interface SessionUser {
@@ -34,6 +34,11 @@ export default defineNuxtRouteMiddleware(async (to) => {
   }
 
   const session = sessionState.value
+  const isHybrid = HYBRID_ROUTES.some((route) => to.path === route || to.path.startsWith(route + '/'))
+
+  // Hybrid routes are accessible regardless of auth state
+  if (isHybrid) return
+
   const isPublic = PUBLIC_ROUTES.some((route) => to.path === route || to.path.startsWith(route + '/'))
 
   // Not authenticated -> redirect to login
@@ -44,7 +49,7 @@ export default defineNuxtRouteMiddleware(async (to) => {
     return
   }
 
-  // Authenticated user on public page -> redirect to role home
+  // Authenticated user on public page (e.g. /login) -> redirect to role home
   if (isPublic) {
     const userRole = session.user.role as UserRole
     return navigateTo(ROLE_REDIRECTS[userRole] ?? '/admin')

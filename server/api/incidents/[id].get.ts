@@ -26,6 +26,7 @@ export default defineEventHandler(async (event) => {
       tenantId: incidents.tenantId,
       createdAt: incidents.createdAt,
       updatedAt: incidents.updatedAt,
+      isAnonymous: incidents.isAnonymous,
       resolvedAt: incidents.resolvedAt,
       unitNumber: units.number,
       reportedByName: user.name,
@@ -42,11 +43,11 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 404, message: 'Incidencia no encontrada' })
   }
 
-  // Propietarios can only see their own incidents
   const userRole = session.user.role ?? ''
-  if (userRole === 'propietario' && row.reportedById !== session.user.id) {
-    throw createError({ statusCode: 403, message: 'Sin permisos para ver esta incidencia' })
-  }
+  const isAdmin = userRole === 'admin'
+
+  // Hide reporter identity for anonymous incidents (admin and own author can see)
+  const hideReporter = row.isAnonymous && !isAdmin && row.reportedById !== session.user.id
 
   // Get photos
   const photoRows = await db
@@ -95,10 +96,11 @@ export default defineEventHandler(async (event) => {
     description: row.description,
     priority: row.priority,
     status: row.status,
-    reportedById: row.reportedById,
-    unitId: row.unitId,
-    unitNumber: row.unitNumber ?? undefined,
-    reportedByName: row.reportedByName ?? undefined,
+    isAnonymous: row.isAnonymous,
+    reportedById: hideReporter ? '' : row.reportedById,
+    unitId: hideReporter ? '' : row.unitId,
+    unitNumber: hideReporter ? undefined : (row.unitNumber ?? undefined),
+    reportedByName: hideReporter ? undefined : (row.reportedByName ?? undefined),
     tenantId: row.tenantId,
     createdAt: row.createdAt.toISOString(),
     updatedAt: row.updatedAt.toISOString(),

@@ -23,4 +23,40 @@ export const ROUTE_ROLE_MAP: Record<string, UserRole[]> = {
   '/vigilancia': ['admin', 'vigilancia'],
 }
 
-export const PUBLIC_ROUTES = ['/login', '/acceso', '/offline']
+/** Routes only for unauthenticated users (authenticated get redirected to role home) */
+export const PUBLIC_ROUTES = ['/login']
+
+/** Routes accessible regardless of auth state */
+export const HYBRID_ROUTES = ['/acceso', '/offline']
+
+export interface UserWithUnit {
+  id: string
+  name: string
+  email: string
+  phone: string | null
+  image: string | null
+  role: UserRole
+  banned: boolean
+  banReason: string | null
+  unitId: string | null
+  unitNumber: string | null
+  unitLabel: string | null
+  createdAt: string
+}
+
+export interface CreateUserPayload {
+  name: string
+  email: string
+  password: string
+  role: UserRole
+  unitId?: string
+  phone?: string
+}
+
+export interface UpdateUserPayload {
+  name?: string
+  email?: string
+  role?: UserRole
+  unitId?: string | null
+  phone?: string | null
+}

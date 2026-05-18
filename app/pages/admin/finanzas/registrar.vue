@@ -50,7 +50,7 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="mx-auto max-w-xl">
+  <div>
     <Card>
       <CardContent class="p-5 md:p-8">
         <form class="space-y-6" @submit.prevent="handleSubmit">
@@ -139,34 +139,34 @@ onMounted(() => {
             </div>
           </div>
 
-          <!-- Amount -->
-          <div class="space-y-1.5">
-            <Label for="amount-input">Monto (Bs) <span class="text-destructive">*</span></Label>
-            <Input
-              id="amount-input"
-              v-model="formAmount"
-              type="number"
-              inputmode="decimal"
-              placeholder="0.00"
-              min="0"
-              step="0.01"
-              class="h-12 text-base font-semibold tabular-nums"
-            />
-            <p class="text-xs text-muted-foreground">Ingresa el monto sin puntos de miles</p>
-          </div>
-
-          <!-- Description -->
-          <div class="space-y-1.5">
-            <Label for="description-input">Descripción <span class="text-destructive">*</span></Label>
-            <Input
-              id="description-input"
-              v-model="formDescription"
-              type="text"
-              placeholder="Ej: Cuota de condominio abril 2026"
-              class="h-12 text-base"
-              maxlength="200"
-            />
-            <p class="text-xs text-muted-foreground">{{ formDescription.length }}/200</p>
+          <!-- Amount + Description row -->
+          <div class="grid gap-4 sm:grid-cols-2">
+            <div class="space-y-1.5">
+              <Label for="amount-input">Monto (Bs) <span class="text-destructive">*</span></Label>
+              <Input
+                id="amount-input"
+                v-model="formAmount"
+                type="number"
+                inputmode="decimal"
+                placeholder="0.00"
+                min="0"
+                step="0.01"
+                class="h-12 text-base font-semibold tabular-nums"
+              />
+              <p class="text-xs text-muted-foreground">Sin puntos de miles</p>
+            </div>
+            <div class="space-y-1.5">
+              <Label for="description-input">Descripción <span class="text-destructive">*</span></Label>
+              <Input
+                id="description-input"
+                v-model="formDescription"
+                type="text"
+                placeholder="Ej: Cuota de condominio abril 2026"
+                class="h-12 text-base"
+                maxlength="200"
+              />
+              <p class="text-xs text-muted-foreground">{{ formDescription.length }}/200</p>
+            </div>
           </div>
 
           <!-- Submit -->

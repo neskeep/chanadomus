@@ -48,7 +48,7 @@ export function useMeetings() {
       meta.value = res.meta
     }
     catch (err: unknown) {
-      const message = err instanceof Error ? err.message : 'Error al cargar reuniones'
+      const message = getApiErrorMessage(err, 'Error al cargar reuniones')
       error.value = message
     }
     finally {
@@ -64,7 +64,7 @@ export function useMeetings() {
       return res.data
     }
     catch (err: unknown) {
-      const message = err instanceof Error ? err.message : 'Error al cargar reunion'
+      const message = getApiErrorMessage(err, 'Error al cargar reunion')
       error.value = message
       throw err
     }
@@ -84,7 +84,7 @@ export function useMeetings() {
       return res.data
     }
     catch (err: unknown) {
-      const message = err instanceof Error ? err.message : 'Error al crear reunion'
+      const message = getApiErrorMessage(err, 'Error al crear reunion')
       error.value = message
       throw err
     }
@@ -104,7 +104,7 @@ export function useMeetings() {
       return res.data
     }
     catch (err: unknown) {
-      const message = err instanceof Error ? err.message : 'Error al actualizar reunion'
+      const message = getApiErrorMessage(err, 'Error al actualizar reunion')
       error.value = message
       throw err
     }
@@ -122,7 +122,7 @@ export function useMeetings() {
       })
     }
     catch (err: unknown) {
-      const message = err instanceof Error ? err.message : 'Error al eliminar reunion'
+      const message = getApiErrorMessage(err, 'Error al eliminar reunion')
       error.value = message
       throw err
     }

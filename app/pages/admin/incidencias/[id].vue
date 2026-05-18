@@ -6,6 +6,7 @@ import {
   Loader2,
   XCircle,
   Camera,
+  EyeOff,
 } from 'lucide-vue-next'
 import { toast } from 'vue-sonner'
 import type { IncidentStatus, IncidentPriority } from '~~/shared/types/incident'
@@ -62,7 +63,7 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="mx-auto max-w-xl">
+  <div>
     <!-- Loading -->
     <div v-if="isLoading" class="space-y-4">
       <Skeleton class="h-8 w-3/4" />
@@ -99,7 +100,13 @@ onMounted(() => {
             <!-- Meta: unit + reporter + date -->
             <div class="flex flex-wrap gap-x-4 gap-y-1 text-sm text-muted-foreground">
               <span v-if="incident.unitNumber">Unidad {{ incident.unitNumber }}</span>
-              <span v-if="incident.reportedByName">Reportado por {{ incident.reportedByName }}</span>
+              <span v-if="incident.reportedByName" class="inline-flex items-center gap-1.5">
+                Reportado por {{ incident.reportedByName }}
+                <span v-if="incident.isAnonymous" class="inline-flex items-center gap-0.5 rounded-lg bg-muted px-1.5 py-0.5 text-[10px] font-medium">
+                  <EyeOff class="size-2.5" />
+                  Anónima
+                </span>
+              </span>
               <span class="tabular-nums">{{ formatDate(incident.createdAt) }}</span>
             </div>
 
@@ -193,7 +200,7 @@ onMounted(() => {
               class="rounded-lg bg-muted/50 p-3"
             >
               <div class="flex items-center gap-2">
-                <div class="size-2 shrink-0 rounded-full bg-primary" />
+                <div class="size-2 shrink-0 rounded-lg bg-primary" />
                 <span class="text-sm font-medium">
                   {{ STATUS_CONFIG[update.oldStatus].label }} → {{ STATUS_CONFIG[update.newStatus].label }}
                 </span>

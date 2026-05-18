@@ -14,59 +14,24 @@ const APP_SHELL = [
   '/icons/icon-512.png',
 ]
 
-// --- Install: pre-cache app shell ---
-self.addEventListener('install', (event) => {
-  event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => {
-      return cache.addAll(APP_SHELL)
-    })
-  )
-  // Activate immediately without waiting for old SW to finish
+// --- Install: skip waiting, no pre-cache in dev ---
+self.addEventListener('install', () => {
   self.skipWaiting()
 })
 
-// --- Activate: clean up old caches + claim clients ---
+// --- Activate: clean old caches + claim clients ---
 self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches.keys().then((cacheNames) => {
-      return Promise.all(
-        cacheNames
-          .filter((name) => name !== CACHE_NAME)
-          .map((name) => caches.delete(name))
-      )
+      return Promise.all(cacheNames.map((name) => caches.delete(name)))
     }).then(() => self.clients.claim())
   )
 })
 
-// --- Fetch: caching strategies ---
-self.addEventListener('fetch', (event) => {
-  const { request } = event
-  const url = new URL(request.url)
-
-  // Only handle same-origin requests
-  if (url.origin !== self.location.origin) return
-
-  // API calls: network-first, fall back to cache
-  if (url.pathname.startsWith('/api/')) {
-    event.respondWith(networkFirst(request))
-    return
-  }
-
-  // Static assets (Nuxt build output, icons, fonts, images): cache-first
-  if (isStaticAsset(url.pathname)) {
-    event.respondWith(cacheFirst(request))
-    return
-  }
-
-  // HTML pages: network-first with offline fallback
-  if (request.mode === 'navigate') {
-    event.respondWith(networkFirstWithOfflineFallback(request))
-    return
-  }
-
-  // Everything else: network-first
-  event.respondWith(networkFirst(request))
-})
+// --- Fetch: passthrough (no caching in dev) ---
+// All fetch events pass through to the network directly.
+// Caching strategies are commented out for development.
+// self.addEventListener('fetch', ...) — intentionally removed
 
 // --- Caching strategies ---
 
@@ -86,14 +51,20 @@ function cacheFirst(request) {
 function networkFirst(request) {
   return fetch(request)
     .then((response) => {
-      if (response.ok) {
+      if (response.ok && request.method === 'GET') {
         const clone = response.clone()
         caches.open(CACHE_NAME).then((cache) => cache.put(request, clone))
       }
       return response
     })
     .catch(() => {
-      return caches.match(request)
+      if (request.method === 'GET') {
+        return caches.match(request)
+      }
+      return new Response(JSON.stringify({ error: 'Offline' }), {
+        status: 503,
+        headers: { 'Content-Type': 'application/json' },
+      })
     })
 }
 

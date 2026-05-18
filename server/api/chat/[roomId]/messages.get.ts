@@ -1,9 +1,10 @@
 import { db } from '~~/server/db'
-import { messages } from '~~/server/db/schema/chat'
+import { messages, chatAttachments } from '~~/server/db/schema/chat'
 import { user } from '~~/server/db/schema/auth'
-import { eq, and, desc, lt } from 'drizzle-orm'
+import { eq, and, desc, lt, inArray } from 'drizzle-orm'
 import { requireTenant } from '~~/server/utils/auth'
 import { userCanAccessRoom } from '~~/server/utils/ws-chat'
+import type { ChatAttachment } from '~~/shared/types/chat'
 
 const MESSAGES_LIMIT = 50
 
@@ -32,7 +33,6 @@ export default defineEventHandler(async (event) => {
   const conditions = [eq(messages.roomId, roomId)]
 
   if (before) {
-    // Get the created_at of the cursor message
     const [cursorMessage] = await db
       .select({ createdAt: messages.createdAt })
       .from(messages)
@@ -59,12 +59,35 @@ export default defineEventHandler(async (event) => {
     .orderBy(desc(messages.createdAt))
     .limit(MESSAGES_LIMIT)
 
+  // Fetch attachments for all messages in one query
+  const messageIds = result.map(r => r.id)
+  let attachmentMap: Record<string, ChatAttachment[]> = {}
+
+  if (messageIds.length > 0) {
+    const attachmentRows = await db
+      .select()
+      .from(chatAttachments)
+      .where(inArray(chatAttachments.messageId, messageIds))
+
+    for (const a of attachmentRows) {
+      if (!attachmentMap[a.messageId]) attachmentMap[a.messageId] = []
+      attachmentMap[a.messageId].push({
+        id: a.id,
+        filePath: a.filePath,
+        width: a.width,
+        height: a.height,
+        fileSize: a.fileSize,
+      })
+    }
+  }
+
   const data = result.map((row) => ({
     id: row.id,
     roomId: row.roomId,
     userId: row.userId,
     content: row.content,
     createdAt: row.createdAt.toISOString(),
+    attachments: attachmentMap[row.id] ?? [],
     user: {
       id: row.userId,
       name: row.userName,

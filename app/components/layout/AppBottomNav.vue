@@ -5,6 +5,7 @@ import { ROLE_LABELS } from '~~/shared/types/auth'
 const { mobileItems, groups } = useNavigation()
 const { user, role, signOut } = useAuth()
 const route = useRoute()
+const { hasActiveAlert } = usePanicStream()
 
 const moreOpen = ref(false)
 
@@ -95,12 +96,19 @@ watch(() => route.path, () => {
                 v-for="item in group.items"
                 :key="item.to"
                 :to="item.to"
-                class="flex items-center gap-3 rounded-lg px-3 py-2.5 text-foreground transition-colors hover:bg-accent"
+                class="relative flex items-center gap-3 rounded-lg px-3 py-2.5 text-foreground transition-colors hover:bg-accent"
                 active-class="!text-primary !bg-accent"
                 @click="moreOpen = false"
               >
                 <component :is="item.icon" class="size-4 text-muted-foreground" />
                 <span class="text-sm">{{ item.label }}</span>
+                <Badge
+                  v-if="item.to === '/vigilancia/alertas' && hasActiveAlert"
+                  variant="destructive"
+                  class="ml-auto h-5 min-w-5 animate-pulse px-1.5 text-[10px] font-bold"
+                >
+                  !
+                </Badge>
               </NuxtLink>
             </div>
           </div>

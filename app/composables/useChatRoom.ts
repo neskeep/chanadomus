@@ -7,6 +7,13 @@ interface WebSocketMessage {
   message?: string
 }
 
+const ACCEPTED_IMAGE_TYPES = [
+  'image/jpeg', 'image/png', 'image/webp', 'image/heic',
+  'image/heif', 'image/avif', 'image/tiff', 'image/gif',
+]
+const MAX_IMAGE_SIZE = 10 * 1024 * 1024 // 10MB
+const MAX_IMAGES = 5
+
 export function useChatRoom(roomId: Ref<string> | string) {
   const messages = ref<ChatMessage[]>([])
   const isLoading = ref(false)
@@ -146,6 +153,8 @@ export function useChatRoom(roomId: Ref<string> | string) {
 
   // --- Send ---
 
+  const isUploading = ref(false)
+
   function sendMessage(content: string) {
     if (!ws || ws.readyState !== WebSocket.OPEN) {
       error.value = 'No conectado'
@@ -157,6 +166,48 @@ export function useChatRoom(roomId: Ref<string> | string) {
 
     ws.send(JSON.stringify({ type: 'message', content: trimmed }))
     return true
+  }
+
+  function validateImages(files: File[]): string | null {
+    if (files.length > MAX_IMAGES) return `Máximo ${MAX_IMAGES} imágenes`
+    for (const f of files) {
+      if (!ACCEPTED_IMAGE_TYPES.includes(f.type)) return `Tipo no soportado: ${f.name}`
+      if (f.size > MAX_IMAGE_SIZE) return `${f.name} excede 10MB`
+    }
+    return null
+  }
+
+  async function sendImages(files: File[], content = ''): Promise<boolean> {
+    const rid = unref(roomId)
+    if (!rid) return false
+
+    const validationError = validateImages(files)
+    if (validationError) {
+      error.value = validationError
+      return false
+    }
+
+    isUploading.value = true
+    error.value = null
+
+    try {
+      const formData = new FormData()
+      formData.append('roomId', rid)
+      formData.append('content', content)
+      files.forEach((f, i) => formData.append(`image_${i}`, f))
+
+      // Upload via HTTP — server broadcasts to WS peers
+      await $fetch('/api/chat/upload', { method: 'POST', body: formData })
+      return true
+    }
+    catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Error al subir imágenes'
+      error.value = message
+      return false
+    }
+    finally {
+      isUploading.value = false
+    }
   }
 
   // --- Keepalive ---
@@ -179,6 +230,17 @@ export function useChatRoom(roomId: Ref<string> | string) {
 
   // --- Lifecycle ---
 
+  async function markAsRead() {
+    const rid = unref(roomId)
+    if (!rid) return
+    try {
+      await $fetch(`/api/chat/${rid}/read`, { method: 'POST' })
+    }
+    catch {
+      // Silent fail — non-critical
+    }
+  }
+
   function openRoom() {
     messages.value = []
     hasMore.value = true
@@ -186,9 +248,11 @@ export function useChatRoom(roomId: Ref<string> | string) {
     fetchHistory()
     connect()
     startPing()
+    markAsRead()
   }
 
   function closeRoom() {
+    markAsRead()
     disconnect()
     stopPing()
     messages.value = []
@@ -211,6 +275,7 @@ export function useChatRoom(roomId: Ref<string> | string) {
   return {
     messages,
     isLoading,
+    isUploading,
     connected,
     error,
     hasMore,
@@ -219,6 +284,8 @@ export function useChatRoom(roomId: Ref<string> | string) {
     connect,
     disconnect,
     sendMessage,
+    sendImages,
+    validateImages,
     startPing,
     stopPing,
     openRoom,

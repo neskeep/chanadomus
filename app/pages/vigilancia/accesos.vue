@@ -110,10 +110,10 @@ function formatDuration(entryDate: string, exitDate: string): string {
         <span class="relative flex size-2">
           <span
             v-if="isConnected"
-            class="absolute inline-flex size-full animate-ping rounded-full bg-primary opacity-75"
+            class="absolute inline-flex size-full animate-ping rounded-lg bg-primary opacity-75"
           />
           <span
-            class="relative inline-flex size-2 rounded-full"
+            class="relative inline-flex size-2 rounded-lg"
             :class="isConnected ? 'bg-primary' : 'bg-destructive'"
           />
         </span>
@@ -142,7 +142,7 @@ function formatDuration(entryDate: string, exitDate: string): string {
         >
           <!-- Dot -->
           <div
-            class="absolute -left-5 top-3.5 z-10 size-2.5 rounded-full ring-2 ring-background"
+            class="absolute -left-5 top-3.5 z-10 size-2.5 rounded-lg ring-2 ring-background"
             :class="RESULT_CONFIG[event.result].dotClass"
           />
 
@@ -173,6 +173,14 @@ function formatDuration(entryDate: string, exitDate: string): string {
                 <template v-if="event.visitorDocument">
                   <span class="opacity-30">·</span>
                   <span class="truncate">{{ event.visitorDocument }}</span>
+                </template>
+                <template v-if="event.vehiclePlate">
+                  <span class="opacity-30">·</span>
+                  <span class="font-mono text-[11px] font-semibold tracking-wider">{{ event.vehiclePlate }}</span>
+                </template>
+                <template v-if="event.occupantCount">
+                  <span class="opacity-30">·</span>
+                  <span>{{ event.occupantCount }} ocup.</span>
                 </template>
                 <span class="ml-auto shrink-0 tabular-nums">{{ formatRelativeTime(event.createdAt) }}</span>
 

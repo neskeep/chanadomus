@@ -6,6 +6,7 @@ import { ROLE_REDIRECTS } from '~~/shared/types/auth'
 const { role } = useAuth()
 const route = useRoute()
 const { groups } = useNavigation()
+const { hasActiveAlert } = usePanicStream()
 
 const roleHome = computed(() => role.value ? ROLE_REDIRECTS[role.value] : '/')
 
@@ -45,6 +46,13 @@ watch(() => route.path, () => {
                 <NuxtLink :to="item.to">
                   <component :is="item.icon" />
                   <span>{{ item.label }}</span>
+                  <Badge
+                    v-if="item.to === '/vigilancia/alertas' && hasActiveAlert"
+                    variant="destructive"
+                    class="ml-auto h-5 min-w-5 animate-pulse px-1.5 text-[10px] font-bold"
+                  >
+                    !
+                  </Badge>
                 </NuxtLink>
               </SidebarMenuButton>
             </SidebarMenuItem>

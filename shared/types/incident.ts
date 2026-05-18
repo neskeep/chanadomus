@@ -11,6 +11,7 @@ export interface Incident {
   unitId: string
   unitNumber?: string // joined from units
   reportedByName?: string // joined from users
+  isAnonymous: boolean
   tenantId: string
   createdAt: string
   updatedAt: string

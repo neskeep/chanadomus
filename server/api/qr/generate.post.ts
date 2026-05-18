@@ -1,12 +1,13 @@
 import { db } from '~~/server/db'
 import { qrCodes } from '~~/server/db/schema/access'
+import { frequentVisitors } from '~~/server/db/schema/frequent-visitor'
 import { units } from '~~/server/db/schema/unit'
-import { eq, and } from 'drizzle-orm'
+import { eq, and, sql } from 'drizzle-orm'
 import type { GenerateQrInput } from '~~/shared/types/qr'
 
 export default defineEventHandler(async (event) => {
   const { tenantId, user } = await requireTenant(event)
-  await requireRole(event, ['propietario', 'admin'])
+  const session = await requireRole(event, ['propietario', 'admin', 'conserje'])
 
   const body = await readBody<GenerateQrInput>(event)
 
@@ -43,6 +44,14 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 404, message: 'Unidad no encontrada' })
   }
 
+  // Conserje solo puede generar QR para su unidad asignada
+  if (session.user.role === 'conserje') {
+    const staffUnitId = await getStaffUnitId(user.id, tenantId)
+    if (staffUnitId !== body.unitId) {
+      throw createError({ statusCode: 403, message: 'Solo puedes generar QR para tu unidad asignada' })
+    }
+  }
+
   // Generar token y crear registro
   const token = crypto.randomUUID()
 
@@ -70,6 +79,23 @@ export default defineEventHandler(async (event) => {
   const created = rows[0]
   if (!created) {
     throw createError({ statusCode: 500, message: 'Error al crear codigo QR' })
+  }
+
+  // Si viene frequentVisitorId, actualizar lastVisitAt y visitCount
+  if (body.frequentVisitorId) {
+    await db
+      .update(frequentVisitors)
+      .set({
+        lastVisitAt: new Date(),
+        visitCount: sql`${frequentVisitors.visitCount} + 1`,
+      })
+      .where(
+        and(
+          eq(frequentVisitors.id, body.frequentVisitorId),
+          eq(frequentVisitors.ownerId, user.id),
+          eq(frequentVisitors.tenantId, tenantId),
+        ),
+      )
   }
 
   return {

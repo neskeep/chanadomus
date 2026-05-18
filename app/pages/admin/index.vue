@@ -177,7 +177,7 @@ const groupedChartOpts = {
           </div>
         </div>
         <Progress v-if="!isLoading" :model-value="collectionRate" class="mt-3 h-1.5" />
-        <Skeleton v-else class="mt-3 h-1.5 w-full rounded-full" />
+        <Skeleton v-else class="mt-3 h-1.5 w-full rounded-lg" />
       </Card>
     </div>
 
@@ -228,11 +228,11 @@ const groupedChartOpts = {
           </div>
           <div v-if="!isLoading" class="flex items-center gap-3 text-xs text-muted-foreground">
             <span class="flex items-center gap-1.5">
-              <span class="size-2 rounded-full bg-amber-500" />
+              <span class="size-2 rounded-lg bg-amber-500" />
               {{ stats?.openIncidents ?? 0 }} abiertas
             </span>
             <span class="flex items-center gap-1.5">
-              <span class="size-2 rounded-full bg-blue-500" />
+              <span class="size-2 rounded-lg bg-blue-500" />
               {{ stats?.inProgressIncidents ?? 0 }} en progreso
             </span>
           </div>

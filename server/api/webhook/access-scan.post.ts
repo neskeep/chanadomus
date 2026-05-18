@@ -6,6 +6,7 @@ import { qrCodes, accessLogs } from '~~/server/db/schema/access'
 import { units } from '~~/server/db/schema/unit'
 import type { WebhookScanPayload, AccessEvent, AccessResult } from '~~/shared/types/access'
 import { broadcastAccessEvent } from '~~/server/utils/ws-access'
+import { checkOpenEntry } from '~~/server/utils/access-entry-exit'
 
 export default defineEventHandler(async (event) => {
   // 1. Read and validate device key
@@ -104,20 +105,42 @@ export default defineEventHandler(async (event) => {
   const now = new Date()
   let result: AccessResult
   let qrCodeId: string | null = null
+  let direction: 'entry' | 'exit' = 'entry'
 
   if (!qrRecord) {
     // Token not found
     result = 'denied'
   } else if (qrRecord.usedAt) {
+    // Already used — check for open entry (exit scan)
+    const openEntry = await checkOpenEntry(token, device.tenantId)
+    if (openEntry.action === 'exit') {
+      // Exit was already handled by checkOpenEntry (exitAt set, WS broadcast done)
+      return {
+        data: {
+          id: openEntry.logId,
+          entryType: 'webhook',
+          result: 'allowed',
+          visitorName: qrRecord.visitorName,
+          visitorDocument: qrRecord.visitorDocument,
+          unitNumber: qrRecord.unitNumber,
+          unitLabel: qrRecord.unitLabel,
+          notes: null,
+          exitAt: openEntry.exitAt,
+          createdAt: openEntry.entryAt,
+          direction: 'exit',
+        },
+      }
+    }
     result = 'already_used'
     qrCodeId = qrRecord.id
   } else if (qrRecord.expiresAt <= now) {
     result = 'expired'
     qrCodeId = qrRecord.id
   } else {
-    // Valid — mark as used
+    // Valid — mark as used (entry)
     result = 'allowed'
     qrCodeId = qrRecord.id
+    direction = 'entry'
     await db
       .update(qrCodes)
       .set({ usedAt: now })
@@ -136,6 +159,7 @@ export default defineEventHandler(async (event) => {
       visitorName: qrRecord?.visitorName ?? null,
       visitorDocument: qrRecord?.visitorDocument ?? null,
       unitId: qrRecord?.unitId ?? null,
+      passToken: token,
     })
     .returning({ id: accessLogs.id, createdAt: accessLogs.createdAt })
 
@@ -152,6 +176,7 @@ export default defineEventHandler(async (event) => {
     notes: null,
     exitAt: null,
     createdAt: qrLog.createdAt.toISOString(),
+    direction,
   }
 
   broadcastAccessEvent(accessEvent)

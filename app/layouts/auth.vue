@@ -1,7 +1,7 @@
 <template>
   <div class="relative grid min-h-dvh grid-rows-[1fr_auto] bg-background">
     <!-- Decorative teal glow -->
-    <div class="pointer-events-none absolute left-1/2 top-0 h-[500px] w-[600px] -translate-x-1/2 rounded-full bg-accent/50 blur-3xl" />
+    <div class="pointer-events-none absolute left-1/2 top-0 h-[500px] w-[600px] -translate-x-1/2 rounded-lg bg-accent/50 blur-3xl" />
 
     <!-- Content — centered in available space (viewport - footer) -->
     <div class="relative flex items-center justify-center px-6">

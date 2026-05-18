@@ -11,6 +11,7 @@ interface StaffCreateBody {
   email?: string
   shift?: string
   userId?: string
+  unitId?: string
 }
 
 export default defineEventHandler(async (event) => {
@@ -36,6 +37,7 @@ export default defineEventHandler(async (event) => {
       email: body.email?.trim() || null,
       shift: body.shift?.trim() || null,
       userId: body.userId || null,
+      unitId: body.unitId || null,
       tenantId,
     })
     .returning()

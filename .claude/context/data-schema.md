@@ -37,6 +37,8 @@ tenant_id: uuid (FK -> tenants.id, NOT NULL)
 | `provider.ts` | providers, provider_reviews | Proveedores |
 | `meeting.ts` | meetings | Reuniones |
 | `panic.ts` | panic_alerts | Panico |
+| `regulation.ts` | regulations | Normativas |
+| `staff.ts` | staff | Personal condominal |
 | `notification.ts` | push_subscriptions | Notificaciones |
 
 ## Convenciones Drizzle

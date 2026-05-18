@@ -20,6 +20,7 @@ export const user = pgTable('user', {
   // Custom: tenant scope
   tenantId: uuid('tenant_id').notNull().references(() => tenants.id),
   unitId: uuid('unit_id').references(() => units.id), // nullable — no todos los roles tienen unidad
+  phone: text('phone'),
 }, (table) => [
   index('user_tenant_idx').on(table.tenantId),
   index('user_email_idx').on(table.email),

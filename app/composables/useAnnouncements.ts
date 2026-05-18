@@ -46,6 +46,23 @@ export function useAnnouncements() {
     }
   }
 
+  async function fetchAnnouncement(id: string): Promise<Announcement> {
+    isLoading.value = true
+    error.value = null
+    try {
+      const res = await $fetch<{ data: Announcement }>(`/api/announcements/${id}`)
+      return res.data
+    }
+    catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Error al cargar anuncio'
+      error.value = message
+      throw err
+    }
+    finally {
+      isLoading.value = false
+    }
+  }
+
   async function createAnnouncement(formData: FormData): Promise<Announcement> {
     isSubmitting.value = true
     error.value = null
@@ -122,6 +139,7 @@ export function useAnnouncements() {
     error,
     totalPages,
     fetchAnnouncements,
+    fetchAnnouncement,
     createAnnouncement,
     updateAnnouncement,
     publishAnnouncement,

@@ -120,6 +120,125 @@
       "when": 1777345954235,
       "tag": "0016_great_valkyrie",
       "breakpoints": true
+    },
+    {
+      "idx": 17,
+      "version": "7",
+      "when": 1778541897258,
+      "tag": "0017_superb_ikaris",
+      "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "7",
+      "when": 1778542810924,
+      "tag": "0018_loving_celestials",
+      "breakpoints": true
+    },
+    {
+      "idx": 19,
+      "version": "7",
+      "when": 1778591463596,
+      "tag": "0019_gray_iron_monger",
+      "breakpoints": true
+    },
+    {
+      "idx": 20,
+      "version": "7",
+      "when": 1778594251199,
+      "tag": "0020_stiff_preak",
+      "breakpoints": true
+    },
+    {
+      "idx": 21,
+      "version": "7",
+      "when": 1778680000000,
+      "tag": "0021_service_staff_roles_catalog",
+      "breakpoints": true
+    },
+    {
+      "idx": 22,
+      "version": "7",
+      "when": 1778766400000,
+      "tag": "0022_service_staff_passes",
+      "breakpoints": true
+    },
+    {
+      "idx": 23,
+      "version": "7",
+      "when": 1778852800000,
+      "tag": "0023_staff_attendance_tracking",
+      "breakpoints": true
+    },
+    {
+      "idx": 24,
+      "version": "7",
+      "when": 1778939200000,
+      "tag": "0024_panic_resolve",
+      "breakpoints": true
+    },
+    {
+      "idx": 25,
+      "version": "7",
+      "when": 1779025600000,
+      "tag": "0025_incident_anonymous",
+      "breakpoints": true
+    },
+    {
+      "idx": 26,
+      "version": "7",
+      "when": 1779112000000,
+      "tag": "0026_regulations",
+      "breakpoints": true
+    },
+    {
+      "idx": 27,
+      "version": "7",
+      "when": 1779198400000,
+      "tag": "0027_chat_attachments",
+      "breakpoints": true
+    },
+    {
+      "idx": 28,
+      "version": "7",
+      "when": 1779284800000,
+      "tag": "0028_chat_read_status",
+      "breakpoints": true
+    },
+    {
+      "idx": 29,
+      "version": "7",
+      "when": 1779371200000,
+      "tag": "0029_staff_avatar_qr",
+      "breakpoints": true
+    },
+    {
+      "idx": 30,
+      "version": "7",
+      "when": 1779457600000,
+      "tag": "0030_chat_conserjeria_channel",
+      "breakpoints": true
+    },
+    {
+      "idx": 31,
+      "version": "7",
+      "when": 1779544000000,
+      "tag": "0031_household_member_passes",
+      "breakpoints": true
+    },
+    {
+      "idx": 32,
+      "version": "7",
+      "when": 1779630400000,
+      "tag": "0032_staff_unit_id",
+      "breakpoints": true
+    },
+    {
+      "idx": 33,
+      "version": "7",
+      "when": 1779716800000,
+      "tag": "0033_access_entry_exit",
+      "breakpoints": true
     }
   ]
 }

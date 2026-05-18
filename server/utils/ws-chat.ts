@@ -117,12 +117,18 @@ export async function userCanAccessRoom(
   switch (room.type) {
     case 'general':
       return true
+    case 'incidencias':
+      return true
     case 'unit':
-      return userRole === 'admin' || (userUnitId !== null && userUnitId === room.unitId)
+      return userRole === 'admin' || userRole === 'vigilancia' || (userUnitId !== null && userUnitId === room.unitId)
     case 'vigilancia':
-      return ['admin', 'vigilancia', 'conserje'].includes(userRole)
+      return ['admin', 'vigilancia', 'conserje', 'propietario'].includes(userRole)
+    case 'conserjeria':
+      return ['admin', 'conserje', 'vigilancia', 'propietario'].includes(userRole)
     case 'admin':
-      return userRole === 'admin'
+      return ['admin', 'propietario'].includes(userRole)
+    case 'propietarios':
+      return ['admin', 'propietario'].includes(userRole)
     default:
       return false
   }

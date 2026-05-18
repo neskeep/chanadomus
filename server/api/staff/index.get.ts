@@ -1,5 +1,6 @@
 import { db } from '~~/server/db'
 import { staff } from '~~/server/db/schema/staff'
+import { units } from '~~/server/db/schema/unit'
 import { eq, and, asc } from 'drizzle-orm'
 
 const VALID_ROLES = ['conserje', 'vigilancia', 'mantenimiento', 'otro'] as const
@@ -25,8 +26,26 @@ export default defineEventHandler(async (event) => {
   }
 
   const rows = await db
-    .select()
+    .select({
+      id: staff.id,
+      name: staff.name,
+      role: staff.role,
+      idDocument: staff.idDocument,
+      phone: staff.phone,
+      email: staff.email,
+      shift: staff.shift,
+      isActive: staff.isActive,
+      avatar: staff.avatar,
+      qrToken: staff.qrToken,
+      userId: staff.userId,
+      unitId: staff.unitId,
+      tenantId: staff.tenantId,
+      createdAt: staff.createdAt,
+      unitNumber: units.number,
+      unitLabel: units.label,
+    })
     .from(staff)
+    .leftJoin(units, eq(units.id, staff.unitId))
     .where(and(...conditions))
     .orderBy(asc(staff.name))
 

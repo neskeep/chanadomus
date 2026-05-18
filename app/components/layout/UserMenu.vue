@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Bell, LogOut, ChevronsUpDown } from 'lucide-vue-next'
+import { Bell, LogOut, ChevronsUpDown, User } from 'lucide-vue-next'
 import { ROLE_LABELS } from '~~/shared/types/auth'
 
 const { user, role, signOut } = useAuth()
@@ -39,6 +39,12 @@ const initials = computed(() => {
         <DropdownMenuContent side="top" align="start" class="w-56">
           <DropdownMenuLabel>Mi cuenta</DropdownMenuLabel>
           <DropdownMenuSeparator />
+          <DropdownMenuItem as-child>
+            <NuxtLink to="/mi-chana/perfil">
+              <User class="size-4" />
+              Mi Perfil
+            </NuxtLink>
+          </DropdownMenuItem>
           <DropdownMenuItem as-child>
             <NuxtLink to="/mi-chana/notificaciones">
               <Bell class="size-4" />

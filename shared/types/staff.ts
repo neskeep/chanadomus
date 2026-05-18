@@ -8,8 +8,13 @@ export interface Staff {
   phone: string | null
   email: string | null
   shift: string | null
+  avatar: string | null
+  qrToken: string | null
   isActive: boolean
   userId: string | null
+  unitId: string | null
+  unitNumber: string | null
+  unitLabel: string | null
   tenantId: string
   createdAt: string
 }

@@ -7,11 +7,9 @@ import {
   Archive,
   Pencil,
   Trash2,
-  Loader2,
-  Calendar,
 } from 'lucide-vue-next'
 import { toast } from 'vue-sonner'
-import type { Announcement, AnnouncementCategory, AnnouncementStatus } from '~~/shared/types/announcement'
+import type { AnnouncementCategory, AnnouncementStatus } from '~~/shared/types/announcement'
 import { ANNOUNCEMENT_CATEGORY_COLORS, ANNOUNCEMENT_CATEGORY_LABELS, ANNOUNCEMENT_STATUS_COLORS, ANNOUNCEMENT_STATUS_LABELS } from '~/composables/useColorMap'
 
 useHead({ title: 'Gestion de Anuncios' })
@@ -22,11 +20,9 @@ const {
   announcements,
   meta,
   isLoading,
-  isSubmitting,
   error,
   totalPages,
   fetchAnnouncements,
-  updateAnnouncement,
   publishAnnouncement,
   archiveAnnouncement,
   deleteAnnouncement,
@@ -48,14 +44,6 @@ const categoryOptions = [
   { value: 'urgente' as const, label: 'Urgente' },
 ]
 
-// Create/Edit dialog
-const dialogOpen = ref(false)
-const editingId = ref<string | null>(null)
-const formTitle = ref('')
-const formBody = ref('')
-const formCategory = ref<AnnouncementCategory>('general')
-const formStatus = ref<AnnouncementStatus>('draft')
-const formExpiresAt = ref('')
 // Delete dialog
 const deleteId = ref<string | null>(null)
 const deleteDialogOpen = ref(false)
@@ -102,44 +90,6 @@ watch([currentPage, filterCategory], () => {
 onMounted(() => {
   loadAnnouncements()
 })
-
-function resetForm() {
-  formTitle.value = ''
-  formBody.value = ''
-  formCategory.value = 'general'
-  formStatus.value = 'draft'
-  formExpiresAt.value = ''
-}
-
-function openEditDialog(announcement: Announcement) {
-  editingId.value = announcement.id
-  formTitle.value = announcement.title
-  formBody.value = announcement.body
-  formCategory.value = announcement.category
-  formStatus.value = announcement.status
-  formExpiresAt.value = announcement.expiresAt ? announcement.expiresAt.split('T')[0] : ''
-  dialogOpen.value = true
-}
-
-async function handleSubmit() {
-  if (!editingId.value) return
-  try {
-    const data: Partial<Pick<Announcement, 'title' | 'body' | 'category' | 'status' | 'expiresAt'>> = {
-      title: formTitle.value,
-      body: formBody.value,
-      category: formCategory.value,
-      status: formStatus.value,
-    }
-    if (formExpiresAt.value) data.expiresAt = formExpiresAt.value
-    await updateAnnouncement(editingId.value, data)
-    toast.success('Anuncio actualizado correctamente')
-    dialogOpen.value = false
-    await loadAnnouncements()
-  }
-  catch {
-    toast.error(error.value ?? 'Error al guardar anuncio')
-  }
-}
 
 async function handlePublish(id: string) {
   try {
@@ -295,9 +245,11 @@ async function handleDelete() {
                     size="icon"
                     class="size-10"
                     title="Editar"
-                    @click="openEditDialog(item)"
+                    as-child
                   >
-                    <Pencil class="size-4" />
+                    <NuxtLink :to="`/admin/cartelera/${item.id}`">
+                      <Pencil class="size-4" />
+                    </NuxtLink>
                   </Button>
                   <Button
                     v-if="item.status === 'published'"
@@ -365,9 +317,11 @@ async function handleDelete() {
                   variant="ghost"
                   class="h-6 px-2 text-[11px] text-muted-foreground hover:text-foreground"
                   title="Editar"
-                  @click="openEditDialog(item)"
+                  as-child
                 >
-                  <Pencil class="size-3" />
+                  <NuxtLink :to="`/admin/cartelera/${item.id}`">
+                    <Pencil class="size-3" />
+                  </NuxtLink>
                 </Button>
                 <Button
                   variant="ghost"
@@ -386,96 +340,6 @@ async function handleDelete() {
       <!-- Pagination -->
       <ListPagination v-model:current-page="currentPage" :total-pages="totalPages" class="mt-4" />
     </div>
-
-    <!-- Create/Edit Sheet -->
-    <Sheet v-model:open="dialogOpen">
-      <SheetContent side="right" class="overflow-y-auto sm:max-w-lg">
-        <SheetHeader>
-          <SheetTitle>Editar Anuncio</SheetTitle>
-          <SheetDescription>
-            Modifica los datos del anuncio
-          </SheetDescription>
-        </SheetHeader>
-
-        <form class="space-y-4 py-2" @submit.prevent="handleSubmit">
-          <div>
-            <label for="ann-title" class="text-sm font-medium">Título</label>
-            <Input
-              id="ann-title"
-              v-model="formTitle"
-              placeholder="Título del anuncio"
-              class="h-12 mt-1.5"
-              required
-            />
-          </div>
-
-          <div>
-            <label for="ann-body" class="text-sm font-medium">Cuerpo</label>
-            <Textarea
-              id="ann-body"
-              v-model="formBody"
-              placeholder="Contenido del anuncio..."
-              rows="6"
-              class="mt-1.5"
-              required
-            />
-          </div>
-
-          <div>
-            <label for="ann-category" class="text-sm font-medium">Categoría</label>
-            <Select v-model="formCategory">
-              <SelectTrigger id="ann-category" size="lg" class="mt-1.5">
-                <SelectValue placeholder="Seleccionar categoría" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="general">General</SelectItem>
-                <SelectItem value="mantenimiento">Mantenimiento</SelectItem>
-                <SelectItem value="seguridad">Seguridad</SelectItem>
-                <SelectItem value="financiero">Financiero</SelectItem>
-                <SelectItem value="evento">Evento</SelectItem>
-                <SelectItem value="urgente">Urgente</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div>
-            <label for="ann-status" class="text-sm font-medium">Estado</label>
-            <Select v-model="formStatus">
-              <SelectTrigger id="ann-status" size="lg" class="mt-1.5">
-                <SelectValue placeholder="Seleccionar estado" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="draft">Borrador</SelectItem>
-                <SelectItem value="published">Publicado</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div>
-            <label for="ann-expires" class="text-sm font-medium">Fecha de expiración (opcional)</label>
-            <div class="relative mt-1.5">
-              <Calendar class="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-              <Input
-                id="ann-expires"
-                v-model="formExpiresAt"
-                type="date"
-                class="h-12 pl-9"
-              />
-            </div>
-          </div>
-
-          <div class="flex justify-end gap-2 pt-2">
-            <Button type="button" variant="outline" @click="dialogOpen = false">
-              Cancelar
-            </Button>
-            <Button type="submit" :disabled="isSubmitting || !formTitle.trim() || !formBody.trim()">
-              <Loader2 v-if="isSubmitting" class="mr-2 size-4 animate-spin" />
-              {{ isSubmitting ? 'Guardando...' : 'Guardar cambios' }}
-            </Button>
-          </div>
-        </form>
-      </SheetContent>
-    </Sheet>
 
     <!-- Delete AlertDialog -->
     <AlertDialog v-model:open="deleteDialogOpen">
