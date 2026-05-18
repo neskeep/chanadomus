@@ -42,6 +42,13 @@
     "vue-sonner": "^2.0.9",
     "web-push": "^3.6.7"
   },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "@parcel/watcher",
+      "esbuild",
+      "sharp"
+    ]
+  },
   "devDependencies": {
     "@types/node": "^25.6.0",
     "@types/qrcode": "^1.5.6",
