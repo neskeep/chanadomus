@@ -4,14 +4,24 @@ import { eq, and, desc } from 'drizzle-orm'
 
 export default defineEventHandler(async (event) => {
   const { tenantId, user } = await requireTenant(event)
-  await requireRole(event, ['propietario', 'admin'])
+  const session = await requireRole(event, ['propietario', 'admin', 'conserje'])
+  const role = session.user.role
+
+  // Conserje ve todos los visitantes frecuentes de su unidad; propietario solo los suyos
+  let ownerFilter
+  if (role === 'conserje') {
+    const staffUnitId = await getStaffUnitId(user.id, tenantId)
+    ownerFilter = eq(frequentVisitors.unitId, staffUnitId)
+  } else {
+    ownerFilter = eq(frequentVisitors.ownerId, user.id)
+  }
 
   const rows = await db
     .select()
     .from(frequentVisitors)
     .where(
       and(
-        eq(frequentVisitors.ownerId, user.id),
+        ownerFilter,
         eq(frequentVisitors.tenantId, tenantId),
       ),
     )

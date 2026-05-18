@@ -9,24 +9,28 @@ export default defineEventHandler(async (event) => {
   const session = await requireAuth(event)
 
   const role = session.user.role ?? ''
-  if (!['propietario', 'admin'].includes(role)) {
+  if (!['propietario', 'admin', 'conserje'].includes(role)) {
     throw createError({ statusCode: 403, message: 'Sin permisos' })
   }
 
   const userId = session.user.id
 
-  // Get user's unitId
-  const [userData] = await db
-    .select({ unitId: user.unitId })
-    .from(user)
-    .where(eq(user.id, userId))
-    .limit(1)
+  // Get unitId: from user for propietario/admin, from staff for conserje
+  let unitId: string
+  if (role === 'conserje') {
+    unitId = await getStaffUnitId(userId, tenantId)
+  } else {
+    const [userData] = await db
+      .select({ unitId: user.unitId })
+      .from(user)
+      .where(eq(user.id, userId))
+      .limit(1)
 
-  if (!userData?.unitId) {
-    throw createError({ statusCode: 400, message: 'Usuario sin unidad asignada' })
+    if (!userData?.unitId) {
+      throw createError({ statusCode: 400, message: 'Usuario sin unidad asignada' })
+    }
+    unitId = userData.unitId
   }
-
-  const unitId = userData.unitId
   const now = new Date()
 
   // Deactivate all active passes for this user

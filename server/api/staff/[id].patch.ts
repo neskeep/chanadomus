@@ -12,6 +12,7 @@ interface StaffUpdateBody {
   email?: string
   shift?: string
   userId?: string
+  unitId?: string | null
 }
 
 export default defineEventHandler(async (event) => {
@@ -38,6 +39,7 @@ export default defineEventHandler(async (event) => {
   if (body.email !== undefined) updates.email = body.email?.trim() || null
   if (body.shift !== undefined) updates.shift = body.shift?.trim() || null
   if (body.userId !== undefined) updates.userId = body.userId || null
+  if (body.unitId !== undefined) updates.unitId = body.unitId || null
 
   if (Object.keys(updates).length === 0) {
     throw createError({ statusCode: 400, message: 'No se proporcionaron campos para actualizar' })

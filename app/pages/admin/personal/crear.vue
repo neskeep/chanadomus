@@ -15,6 +15,17 @@ const formDocument = ref('')
 const formPhone = ref('')
 const formEmail = ref('')
 const formShift = ref('none')
+const formUnitId = ref<string | ''>('')
+
+// Units for selector
+const unitOptions = ref<{ id: string; number: string; label: string | null }[]>([])
+onMounted(async () => {
+  try {
+    const res = await $fetch<{ data: { id: string; number: string; label: string | null }[] }>('/api/units')
+    unitOptions.value = res.data
+  }
+  catch { /* selector will be empty */ }
+})
 
 const canSubmit = computed(() =>
   formName.value.trim().length > 0
@@ -32,6 +43,7 @@ async function handleSubmit() {
       phone: formPhone.value.trim() || undefined,
       email: formEmail.value.trim() || undefined,
       shift: formShift.value === 'none' ? undefined : formShift.value || undefined,
+      unitId: formUnitId.value || undefined,
     })
     toast.success('Personal agregado correctamente')
     router.push('/admin/personal')
@@ -112,20 +124,41 @@ async function handleSubmit() {
             </div>
           </div>
 
-          <!-- Turno -->
-          <div class="space-y-1.5">
-            <Label for="staff-shift">Turno</Label>
-            <Select v-model="formShift">
-              <SelectTrigger id="staff-shift" size="lg" class="text-base">
-                <SelectValue placeholder="Seleccionar turno" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="none">Sin asignar</SelectItem>
-                <SelectItem value="mañana">Mañana</SelectItem>
-                <SelectItem value="tarde">Tarde</SelectItem>
-                <SelectItem value="noche">Noche</SelectItem>
-              </SelectContent>
-            </Select>
+          <!-- Turno + Unidad -->
+          <div class="grid gap-4 sm:grid-cols-2">
+            <div class="space-y-1.5">
+              <Label for="staff-shift">Turno</Label>
+              <Select v-model="formShift">
+                <SelectTrigger id="staff-shift" size="lg" class="text-base">
+                  <SelectValue placeholder="Seleccionar turno" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">Sin asignar</SelectItem>
+                  <SelectItem value="mañana">Mañana</SelectItem>
+                  <SelectItem value="tarde">Tarde</SelectItem>
+                  <SelectItem value="noche">Noche</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div class="space-y-1.5">
+              <Label for="staff-unit">Unidad asignada</Label>
+              <Select v-model="formUnitId">
+                <SelectTrigger id="staff-unit" size="lg" class="text-base">
+                  <SelectValue placeholder="Sin unidad" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="">Sin unidad</SelectItem>
+                  <SelectItem
+                    v-for="unit in unitOptions"
+                    :key="unit.id"
+                    :value="unit.id"
+                  >
+                    {{ unit.number }}{{ unit.label ? ` — ${unit.label}` : '' }}
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
           </div>
 
           <!-- Submit -->

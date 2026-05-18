@@ -4,6 +4,8 @@ import { toast } from 'vue-sonner'
 import type { HouseholdMember, HouseholdRelationship } from '~~/shared/types/household'
 import type { Vehicle } from '~~/shared/types/vehicle'
 
+const router = useRouter()
+
 definePageMeta({ layout: 'default' })
 
 const { target, isMounted } = useTopbarPortal()
@@ -34,8 +36,6 @@ const {
   isLoading: membersLoading,
   isSubmitting: membersSubmitting,
   fetchMembers,
-  createMember,
-  updateMember,
   deleteMember,
 } = useUnitMembers(unitId)
 
@@ -72,55 +72,13 @@ const RELATIONSHIP_CONFIG: Record<HouseholdRelationship, { label: string, varian
   other: { label: 'Otro', variant: 'outline' },
 }
 
-// ---- Member Dialog ----
-const memberDialogOpen = ref(false)
-const editingMember = ref<HouseholdMember | null>(null)
-const memberForm = ref({
-  name: '',
-  relationship: 'owner' as HouseholdRelationship,
-  idDocument: '',
-  phone: '',
-})
-
-function openMemberDialog(member?: HouseholdMember) {
-  if (member) {
-    editingMember.value = member
-    memberForm.value = {
-      name: member.name,
-      relationship: member.relationship,
-      idDocument: member.idDocument ?? '',
-      phone: member.phone ?? '',
-    }
-  }
-  else {
-    editingMember.value = null
-    memberForm.value = { name: '', relationship: 'owner', idDocument: '', phone: '' }
-  }
-  memberDialogOpen.value = true
+// ---- Member Navigation ----
+function navigateToAddMember() {
+  router.push(`/admin/unidades/${unitId}/miembros/nuevo`)
 }
 
-async function handleSaveMember() {
-  const data = {
-    name: memberForm.value.name.trim(),
-    relationship: memberForm.value.relationship,
-    idDocument: memberForm.value.idDocument.trim() || undefined,
-    phone: memberForm.value.phone.trim() || undefined,
-  }
-
-  try {
-    if (editingMember.value) {
-      await updateMember(editingMember.value.id, data)
-      toast.success('Miembro actualizado')
-    }
-    else {
-      await createMember(data)
-      toast.success('Miembro agregado')
-    }
-    memberDialogOpen.value = false
-  }
-  catch {
-    toast.error('Error al guardar miembro')
-  }
+function navigateToEditMember(member: HouseholdMember) {
+  router.push(`/admin/unidades/${unitId}/miembros/${member.id}`)
 }
 
 // ---- Delete Member ----
@@ -236,7 +194,7 @@ onMounted(() => {
 <template>
   <div>
     <Teleport :to="target" defer v-if="isMounted">
-      <Button v-if="activeTab === 'members'" size="sm" @click="openMemberDialog()">
+      <Button v-if="activeTab === 'members'" size="sm" @click="navigateToAddMember()">
         <Plus class="mr-1 size-4" />
         Agregar
       </Button>
@@ -248,7 +206,7 @@ onMounted(() => {
 
     <!-- Mobile action button -->
     <TopbarMobileAction>
-      <Button v-if="activeTab === 'members'" size="icon" variant="ghost" class="size-9" @click="openMemberDialog()">
+      <Button v-if="activeTab === 'members'" size="icon" variant="ghost" class="size-9" @click="navigateToAddMember()">
         <Plus class="size-4" />
       </Button>
       <Button v-else size="icon" variant="ghost" class="size-9" @click="openVehicleDialog()">
@@ -326,7 +284,7 @@ onMounted(() => {
                 <TableCell class="text-muted-foreground">{{ member.idDocument ?? '—' }}</TableCell>
                 <TableCell>
                   <div class="flex items-center gap-1">
-                    <Button variant="ghost" size="icon" class="size-10" @click="openMemberDialog(member)">
+                    <Button variant="ghost" size="icon" class="size-10" @click="navigateToEditMember(member)">
                       <Pencil class="size-3.5" />
                       <span class="sr-only">Editar</span>
                     </Button>
@@ -360,7 +318,7 @@ onMounted(() => {
                   <span class="truncate">{{ member.idDocument }}</span>
                 </template>
                 <span class="ml-auto flex shrink-0 items-center gap-0.5">
-                  <Button variant="ghost" class="h-6 px-2 text-[11px]" @click="openMemberDialog(member)">
+                  <Button variant="ghost" class="h-6 px-2 text-[11px]" @click="navigateToEditMember(member)">
                     <Pencil class="size-3" />
                   </Button>
                   <Button variant="ghost" class="h-6 px-2 text-[11px] text-destructive hover:text-destructive" @click="confirmDeleteMember(member)">
@@ -449,78 +407,6 @@ onMounted(() => {
         </div>
       </TabsContent>
     </Tabs>
-
-    <!-- Member Sheet -->
-    <Sheet v-model:open="memberDialogOpen">
-      <SheetContent side="right">
-        <SheetHeader>
-          <SheetTitle>{{ editingMember ? 'Editar miembro' : 'Agregar miembro' }}</SheetTitle>
-          <SheetDescription>
-            {{ editingMember ? 'Modifica los datos del miembro' : 'Registra un nuevo miembro del hogar' }}
-          </SheetDescription>
-        </SheetHeader>
-
-        <form class="space-y-4" @submit.prevent="handleSaveMember">
-          <div class="space-y-2">
-            <Label for="member-name">Nombre</Label>
-            <Input
-              id="member-name"
-              v-model="memberForm.name"
-              placeholder="Nombre completo"
-              required
-              class="h-12"
-            />
-          </div>
-
-          <div class="space-y-2">
-            <Label for="member-relationship">Parentesco</Label>
-            <Select v-model="memberForm.relationship">
-              <SelectTrigger id="member-relationship" size="lg">
-                <SelectValue placeholder="Seleccionar parentesco" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="owner">Propietario</SelectItem>
-                <SelectItem value="spouse">Conyuge</SelectItem>
-                <SelectItem value="child">Hijo/a</SelectItem>
-                <SelectItem value="tenant">Inquilino</SelectItem>
-                <SelectItem value="other">Otro</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div class="space-y-2">
-            <Label for="member-id-document">Documento de identidad</Label>
-            <Input
-              id="member-id-document"
-              v-model="memberForm.idDocument"
-              placeholder="Opcional"
-              class="h-12"
-            />
-          </div>
-
-          <div class="space-y-2">
-            <Label for="member-phone">Telefono</Label>
-            <Input
-              id="member-phone"
-              v-model="memberForm.phone"
-              placeholder="Opcional"
-              type="tel"
-              class="h-12"
-            />
-          </div>
-
-          <SheetFooter class="gap-2 sm:gap-0">
-            <Button type="button" variant="outline" class="h-12" @click="memberDialogOpen = false">
-              Cancelar
-            </Button>
-            <Button type="submit" class="h-12" :disabled="!memberForm.name.trim() || membersSubmitting">
-              <Loader2 v-if="membersSubmitting" class="mr-2 size-4 animate-spin" />
-              {{ membersSubmitting ? 'Guardando...' : 'Guardar' }}
-            </Button>
-          </SheetFooter>
-        </form>
-      </SheetContent>
-    </Sheet>
 
     <!-- Delete Member AlertDialog -->
     <AlertDialog v-model:open="deleteMemberDialogOpen">

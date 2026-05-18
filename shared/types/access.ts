@@ -9,6 +9,8 @@ export interface WebhookScanPayload {
   timestamp?: string // ISO 8601, opcional — usa server time si no viene
 }
 
+export type AccessDirection = 'entry' | 'exit'
+
 export interface AccessEvent {
   id: string
   entryType: EntryType
@@ -24,4 +26,6 @@ export interface AccessEvent {
   staffPassId?: string | null
   occupantCount?: number | null
   vehiclePlate?: string | null
+  /** Whether this event was an entry or exit scan */
+  direction?: AccessDirection
 }

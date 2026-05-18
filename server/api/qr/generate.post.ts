@@ -7,7 +7,7 @@ import type { GenerateQrInput } from '~~/shared/types/qr'
 
 export default defineEventHandler(async (event) => {
   const { tenantId, user } = await requireTenant(event)
-  await requireRole(event, ['propietario', 'admin'])
+  const session = await requireRole(event, ['propietario', 'admin', 'conserje'])
 
   const body = await readBody<GenerateQrInput>(event)
 
@@ -42,6 +42,14 @@ export default defineEventHandler(async (event) => {
 
   if (!unit) {
     throw createError({ statusCode: 404, message: 'Unidad no encontrada' })
+  }
+
+  // Conserje solo puede generar QR para su unidad asignada
+  if (session.user.role === 'conserje') {
+    const staffUnitId = await getStaffUnitId(user.id, tenantId)
+    if (staffUnitId !== body.unitId) {
+      throw createError({ statusCode: 403, message: 'Solo puedes generar QR para tu unidad asignada' })
+    }
   }
 
   // Generar token y crear registro

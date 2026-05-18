@@ -72,6 +72,21 @@ export function useProfile() {
     }
   }
 
+  async function changePassword(data: { currentPassword: string; newPassword: string }) {
+    isSubmitting.value = true
+    error.value = null
+    try {
+      await $fetch('/api/me/password', { method: 'POST', body: data })
+    }
+    catch (err: unknown) {
+      error.value = err instanceof Error ? err.message : 'Error al cambiar contraseña'
+      throw err
+    }
+    finally {
+      isSubmitting.value = false
+    }
+  }
+
   return {
     profile,
     isLoading,
@@ -80,5 +95,6 @@ export function useProfile() {
     fetchProfile,
     updateProfile,
     uploadAvatar,
+    changePassword,
   }
 }

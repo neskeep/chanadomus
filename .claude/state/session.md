@@ -2,54 +2,61 @@
 
 ## Ultima Sesion
 - **Fecha**: 2026-05-12
-- **Sesion #**: 43
+- **Sesion #**: 46
 - **Branch**: dev
-- **Estado**: Módulos 1-4 de 5 completados
+- **Estado**: Chat routing + imágenes PARCIAL — routing completo, upload pendiente test E2E
 
-## Completado Sesion 43
+## Completado Sesion 46
 
-### Módulo 4: QR Multi-uso para Personal de Servicio
-- Schema `serviceStaffPasses` + migración 0022 aplicada
-- 3 API endpoints en `server/api/my-unit/service-staff/[id]/pass` (POST generar, GET consultar, DELETE revocar)
-- GET service-staff actualizado con LEFT JOIN para devolver `hasPass` y `passToken`
-- Integración en `POST /api/qr/validate` como Pass 4 (después de visitor, resident, vehicle)
-- `validateStaffPass()` — multi-uso, nunca marca `usedAt`, broadcast WebSocket
-- Composable `useMyUnit()` extendido con `generateStaffPass`, `getStaffPass`, `revokeStaffPass`
-- Tipo `ValidationResult` extendido con `isStaffPass`, `staffName`, `staffRole`
-- Tipo `ServiceStaffPass` agregado en `shared/types/unit-service-staff.ts`
+### Chat Routing Completo (nested routes)
+- **Página padre `chat.vue`**: sidebar + `<NuxtPage :transition="false" />` — SSR-safe sin useMediaQuery
+- **`index.vue`** simplificado: solo empty state desktop
+- **`[roomId].vue`** simplificado: header con icono/tipo + ChatConversation
+- **Routing real**: URL se actualiza a `/mi-chana/chat/{roomId}` al seleccionar room (antes solo cambiaba ref)
+- **Fix hydration**: eliminado `useMediaQuery`, usado CSS `md:!flex` + `:class` basado en route (SSR-safe)
+- **Fix transición**: `<NuxtPage :transition="false" />` — la transición global `out-in` impedía render del hijo
 
-### UI Propietario (Mi Unidad > Personal)
-- Desktop: columna "Pase QR" en tabla con botón "Generar" (default) o "Ver QR" (outline)
-- Mobile: icono QR inline en cards compactas (teal si tiene pase activo)
-- Dialog QR con imagen generada client-side (qrcode lib), botones Compartir y Revocar
-- AlertDialog de confirmación para revocar pase
+### Sistema de Imágenes en Chat (backend completo, UI integrada, test E2E pendiente)
+- **Schema**: `chat_attachments` tabla (messageId, filePath, width, height, fileSize) — migración 0027 ejecutada
+- **Sharp processing**: `server/utils/image-processing.ts` — convierte cualquier formato a WebP optimizado (max 1920px, quality 80)
+- **Upload API**: `POST /api/chat/upload` — multipart, max 5 imágenes, 10MB cada una, broadcast WS
+- **Serve API**: `GET /api/chat/attachments/[filename]` — cache immutable
+- **Messages API**: actualizado con JOIN a chat_attachments (batch query eficiente)
+- **Tipos**: `ChatAttachment` interface + `attachments[]` en ChatMessage
+- **Composable**: `sendImages()`, `validateImages()`, `isUploading` en useChatRoom
+- **UI**: botón ImagePlus, preview strip pendientes, render imágenes en burbujas (clickables)
 
-### UI Vigilancia (Escanear)
-- Sección "Personal de Servicio" en resultado de escaneo con nombre, rol, unidad
-- Badge "Personal de Servicio" para diferenciar de otros tipos de pase
-- Condición actualizada para excluir staff pass del card de visitante genérico
+### Archivos creados
+- `app/pages/mi-chana/chat.vue` — Página padre nested routing
+- `server/utils/image-processing.ts` — Sharp WebP processing
+- `server/api/chat/upload.post.ts` — Upload endpoint
+- `server/api/chat/attachments/[filename].get.ts` — Serve endpoint
+- `server/db/migrations/0027_chat_attachments.sql` — Migración
 
-### UX: Tabs con URL params
-- Mi Unidad tabs sincronizan con `?tab=members|vehicles|staff`
-- Navegación directa a tab via URL, `router.replace` sin recarga
+### Archivos modificados
+- `app/pages/mi-chana/chat/index.vue` — Simplificado a empty state
+- `app/pages/mi-chana/chat/[roomId].vue` — Simplificado, back button CSS md:hidden
+- `app/components/chat/ChatConversation.vue` — Imágenes upload + render
+- `app/composables/useChatRoom.ts` — sendImages, validateImages, isUploading
+- `server/api/chat/[roomId]/messages.get.ts` — Incluye attachments
+- `server/db/schema/chat.ts` — chatAttachments tabla
+- `shared/types/chat.ts` — ChatAttachment interface
+- `server/db/migrations/meta/_journal.json` — Entry 0027
 
-### Testing Playwright verificado
-- Login propietario OK
-- Tab Personal: 2 staff visibles con columna Pase QR
-- Generar QR: Dialog con imagen QR, compartir, revocar
-- Botón cambia de "Generar" a "Ver QR" post-generación
-- Mobile cards: iconos QR inline correctos
-- 0 errores consola, build exitoso
+## Pendiente
+1. **Test E2E upload imagen**: Playwright file upload → verificar processing sharp → render en chat
+2. **Test mobile viewport**: verificar sidebar oculto, back button visible
+3. **Sistema de comandos/mentions**: `/incidencia:`, `/anuncio:`, `/reunion:`, `/votacion:`, `/proveedor:`, `/normativa:` + `@usuario`
+4. **Mentions de usuarios**: `@nombre` con dropdown search
 
-## Plan Pendiente
+## Siguiente Paso
+- Verificar upload de imagen E2E (sharp processing + render)
+- Comenzar sistema de comandos/mentions interactivos con search contra DB
+- Los comandos respetan permisos por rol
 
-| # | Módulo | Estado |
-|---|--------|--------|
-| 1 | Admin User CRUD | ✅ |
-| 2 | Perfil Usuario | ✅ |
-| 3 | Autoservicio Propietario (Mi Unidad) | ✅ |
-| 4 | QR Multi-uso Staff + Personal Servicio | ✅ |
-| 5 | Tracking de Asistencia | Pendiente |
-
-## Siguiente: Módulo 5
-Tracking de Asistencia para personal de servicio (registro de entrada/salida, historial)
+## Entorno
+- Docker PostgreSQL corriendo
+- `npx nuxi dev --port 3000` para dev
+- Build verificado: `npx nuxi build` OK
+- Migración 0027 aplicada en DB local
+- sharp@0.34.5 instalado

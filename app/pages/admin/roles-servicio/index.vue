@@ -22,8 +22,8 @@ const isLoading = ref(true)
 const isSubmitting = ref(false)
 const fetchError = ref<string | null>(null)
 
-// --- Edit Sheet ---
-const sheetOpen = ref(false)
+// --- Edit Dialog ---
+const editDialogOpen = ref(false)
 const editingRole = ref<ServiceRole | null>(null)
 const editName = ref('')
 
@@ -51,7 +51,7 @@ async function fetchRoles() {
 function openEdit(role: ServiceRole) {
   editingRole.value = role
   editName.value = role.name
-  sheetOpen.value = true
+  editDialogOpen.value = true
 }
 
 async function handleEdit() {
@@ -65,7 +65,7 @@ async function handleEdit() {
     const idx = roles.value.findIndex(r => r.id === editingRole.value!.id)
     if (idx !== -1) roles.value[idx] = res.data
     toast.success('Rol actualizado correctamente')
-    sheetOpen.value = false
+    editDialogOpen.value = false
   }
   catch {
     toast.error('Error al actualizar el rol')
@@ -222,31 +222,31 @@ onMounted(fetchRoles)
       </div>
     </div>
 
-    <!-- Edit Sheet -->
-    <Sheet v-model:open="sheetOpen">
-      <SheetContent side="right">
-        <SheetHeader>
-          <SheetTitle>Editar rol</SheetTitle>
-          <SheetDescription>
+    <!-- Edit Dialog -->
+    <Dialog v-model:open="editDialogOpen">
+      <DialogContent class="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle>Editar rol</DialogTitle>
+          <DialogDescription>
             Cambia el nombre del rol de servicio
-          </SheetDescription>
-        </SheetHeader>
+          </DialogDescription>
+        </DialogHeader>
 
-        <form class="space-y-4 py-2" @submit.prevent="handleEdit">
-          <div class="space-y-2">
+        <form class="space-y-4" @submit.prevent="handleEdit">
+          <div class="space-y-1.5">
             <Label for="edit-role-name">Nombre del rol <span class="text-destructive">*</span></Label>
             <Input
               id="edit-role-name"
               v-model="editName"
               placeholder="Ej: Jardinero, Electricista..."
-              class="h-12"
+              class="h-12 text-base"
               required
               autofocus
             />
           </div>
 
-          <SheetFooter class="gap-2 sm:gap-0">
-            <Button type="button" variant="outline" @click="sheetOpen = false">
+          <DialogFooter class="gap-2 sm:gap-0">
+            <Button type="button" variant="outline" @click="editDialogOpen = false">
               Cancelar
             </Button>
             <Button
@@ -256,10 +256,10 @@ onMounted(fetchRoles)
               <Loader2 v-if="isSubmitting" class="mr-2 size-4 animate-spin" />
               {{ isSubmitting ? 'Guardando...' : 'Guardar' }}
             </Button>
-          </SheetFooter>
+          </DialogFooter>
         </form>
-      </SheetContent>
-    </Sheet>
+      </DialogContent>
+    </Dialog>
 
     <!-- Delete AlertDialog -->
     <AlertDialog v-model:open="deleteDialogOpen">

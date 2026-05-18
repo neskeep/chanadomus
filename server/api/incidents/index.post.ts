@@ -26,6 +26,7 @@ export default defineEventHandler(async (event) => {
   let title = ''
   let description = ''
   let priority = ''
+  let isAnonymous = false
   const photos: { filename: string; data: Buffer; type: string }[] = []
 
   for (const part of formData) {
@@ -35,6 +36,8 @@ export default defineEventHandler(async (event) => {
       description = part.data.toString('utf-8').trim()
     } else if (part.name === 'priority') {
       priority = part.data.toString('utf-8').trim()
+    } else if (part.name === 'is_anonymous') {
+      isAnonymous = part.data.toString('utf-8').trim() === 'true'
     } else if (part.name?.startsWith('photo_') && part.data.length > 0) {
       if (photos.length < MAX_PHOTOS) {
         photos.push({
@@ -104,6 +107,7 @@ export default defineEventHandler(async (event) => {
       description,
       priority: priority as IncidentPriority,
       status: 'open',
+      isAnonymous,
       reportedById: session.user.id,
       unitId: userData.unitId,
       tenantId: session.tenantId,
@@ -125,11 +129,14 @@ export default defineEventHandler(async (event) => {
     )
   }
 
-  // Send push to admins
+  // Send push to admins (admin always sees reporter, even for anonymous)
   const userName = userData.name ?? 'Un propietario'
+  const pushBody = isAnonymous
+    ? `Reporte anónimo: ${title}`
+    : `${userName} reportó: ${title}`
   await sendPushToRole(session.tenantId, 'admin', {
     title: 'Nueva incidencia',
-    body: `${userName} reporto: ${title}`,
+    body: pushBody,
     url: '/admin/incidencias',
     category: 'incident',
   }).catch(() => {
@@ -142,6 +149,7 @@ export default defineEventHandler(async (event) => {
     description: row.description,
     priority: row.priority,
     status: row.status,
+    isAnonymous: row.isAnonymous,
     reportedById: row.reportedById,
     unitId: row.unitId,
     tenantId: row.tenantId,

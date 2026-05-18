@@ -31,9 +31,10 @@ export default defineEventHandler(async (event) => {
   // Build conditions
   const conditions = [eq(incidents.tenantId, session.tenantId)]
 
-  // Role-based filtering: propietarios only see their own
   const userRole = session.user.role ?? ''
-  if (mine || userRole === 'propietario') {
+  const isAdmin = userRole === 'admin'
+
+  if (mine) {
     conditions.push(eq(incidents.reportedById, session.user.id))
   }
 
@@ -70,6 +71,7 @@ export default defineEventHandler(async (event) => {
       tenantId: incidents.tenantId,
       createdAt: incidents.createdAt,
       updatedAt: incidents.updatedAt,
+      isAnonymous: incidents.isAnonymous,
       resolvedAt: incidents.resolvedAt,
       unitNumber: units.number,
       reportedByName: user.name,
@@ -82,21 +84,27 @@ export default defineEventHandler(async (event) => {
     .limit(limit)
     .offset(offset)
 
-  const data: Incident[] = rows.map((row) => ({
-    id: row.id,
-    title: row.title,
-    description: row.description,
-    priority: row.priority,
-    status: row.status,
-    reportedById: row.reportedById,
-    unitId: row.unitId,
-    unitNumber: row.unitNumber ?? undefined,
-    reportedByName: row.reportedByName ?? undefined,
-    tenantId: row.tenantId,
-    createdAt: row.createdAt.toISOString(),
-    updatedAt: row.updatedAt.toISOString(),
-    resolvedAt: row.resolvedAt?.toISOString() ?? null,
-  }))
+  const data: Incident[] = rows.map((row) => {
+    // Hide reporter identity for anonymous incidents (admin and own author can see)
+    const hideReporter = row.isAnonymous && !isAdmin && row.reportedById !== session.user.id
+
+    return {
+      id: row.id,
+      title: row.title,
+      description: row.description,
+      priority: row.priority,
+      status: row.status,
+      reportedById: hideReporter ? '' : row.reportedById,
+      unitId: hideReporter ? '' : row.unitId,
+      unitNumber: hideReporter ? undefined : (row.unitNumber ?? undefined),
+      reportedByName: hideReporter ? undefined : (row.reportedByName ?? undefined),
+      isAnonymous: row.isAnonymous,
+      tenantId: row.tenantId,
+      createdAt: row.createdAt.toISOString(),
+      updatedAt: row.updatedAt.toISOString(),
+      resolvedAt: row.resolvedAt?.toISOString() ?? null,
+    }
+  })
 
   return { data, meta: { total, page, limit } }
 })

@@ -4,7 +4,10 @@ import {
   Plus,
   Upload,
   FileText,
+  CalendarIcon,
 } from 'lucide-vue-next'
+import { getLocalTimeZone, today, CalendarDate } from '@internationalized/date'
+import type { DateValue } from 'reka-ui'
 
 useHead({ title: 'Panel Financiero' })
 
@@ -22,11 +25,35 @@ const { target, isMounted } = useTopbarPortal()
 // --- Search & filters ---
 const searchQuery = ref('')
 const filterStatus = ref<'in_debt' | 'up_to_date' | ''>('')
+const filterFrom = shallowRef<DateValue | undefined>()
+const filterTo = shallowRef<DateValue | undefined>()
+const fromPickerOpen = ref(false)
+const toPickerOpen = ref(false)
 
 const statusOptions = [
   { value: 'in_debt', label: 'En mora' },
   { value: 'up_to_date', label: 'Al dia' },
 ]
+
+const hasActiveFilters = computed(() =>
+  filterStatus.value !== '' || filterFrom.value !== undefined || filterTo.value !== undefined,
+)
+
+function clearAllFilters() {
+  filterStatus.value = ''
+  filterFrom.value = undefined
+  filterTo.value = undefined
+}
+
+function dateValueToISO(d: DateValue | undefined): string | undefined {
+  if (!d) return undefined
+  return `${d.year}-${String(d.month).padStart(2, '0')}-${String(d.day).padStart(2, '0')}`
+}
+
+function formatPickerDate(d: DateValue): string {
+  const date = new Date(d.year, d.month - 1, d.day)
+  return formatDate(date)
+}
 
 const filteredSummaries = computed(() => {
   let result = summaries.value
@@ -68,6 +95,21 @@ watch([searchQuery, filterStatus], () => {
   currentTablePage.value = 1
 })
 
+// Refetch summary when date filters change
+watch([filterStatus, filterFrom, filterTo], () => {
+  currentTablePage.value = 1
+  fetchSummary({
+    from: dateValueToISO(filterFrom.value),
+    to: dateValueToISO(filterTo.value),
+  })
+})
+
+const router = useRouter()
+
+function openUnitDetail(summary: typeof summaries.value[number]) {
+  router.push(`/admin/finanzas/${summary.unitId}`)
+}
+
 // --- Reports pagination ---
 const currentReportsPage = ref(1)
 
@@ -85,7 +127,7 @@ function getMonthLabel(month: number): string {
 }
 
 // --- Money formatting ---
-const { formatCurrency } = useFormatDate()
+const { formatCurrency, formatDate } = useFormatDate()
 
 function formatBalance(balance: string): string {
   const num = parseFloat(balance)
@@ -109,10 +151,57 @@ onMounted(() => {
 <template>
   <div>
     <!-- Topbar actions -->
-    <Teleport :to="target" defer v-if="isMounted">
+    <Teleport v-if="isMounted" :to="target" defer>
       <TopbarSearch v-model="searchQuery" placeholder="Buscar unidad...">
-        <TopbarFilters :active="filterStatus !== ''" @clear="filterStatus = ''">
+        <TopbarFilters :active="hasActiveFilters" @clear="clearAllFilters">
           <TopbarFilterGroup v-model="filterStatus" label="Estado" :options="statusOptions" />
+
+          <!-- Date range filter -->
+          <div>
+            <p class="mb-1.5 text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
+              Rango de fechas
+            </p>
+            <div class="space-y-1.5">
+              <div>
+                <Label class="text-[11px] text-muted-foreground">Desde</Label>
+                <Popover v-model:open="fromPickerOpen">
+                  <PopoverTrigger as-child>
+                    <Button variant="outline" class="mt-0.5 h-7 w-full justify-start text-xs font-normal">
+                      <CalendarIcon class="mr-1.5 size-3 shrink-0 text-muted-foreground" />
+                      <span v-if="filterFrom" class="truncate">{{ formatPickerDate(filterFrom) }}</span>
+                      <span v-else class="text-muted-foreground">Seleccionar</span>
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent class="w-auto p-0" align="start">
+                    <Calendar
+                      :model-value="filterFrom"
+                      locale="es"
+                      @update:model-value="(v: DateValue | undefined) => { filterFrom = v; fromPickerOpen = false }"
+                    />
+                  </PopoverContent>
+                </Popover>
+              </div>
+              <div>
+                <Label class="text-[11px] text-muted-foreground">Hasta</Label>
+                <Popover v-model:open="toPickerOpen">
+                  <PopoverTrigger as-child>
+                    <Button variant="outline" class="mt-0.5 h-7 w-full justify-start text-xs font-normal">
+                      <CalendarIcon class="mr-1.5 size-3 shrink-0 text-muted-foreground" />
+                      <span v-if="filterTo" class="truncate">{{ formatPickerDate(filterTo) }}</span>
+                      <span v-else class="text-muted-foreground">Seleccionar</span>
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent class="w-auto p-0" align="start">
+                    <Calendar
+                      :model-value="filterTo"
+                      locale="es"
+                      @update:model-value="(v: DateValue | undefined) => { filterTo = v; toPickerOpen = false }"
+                    />
+                  </PopoverContent>
+                </Popover>
+              </div>
+            </div>
+          </div>
         </TopbarFilters>
       </TopbarSearch>
       <Button variant="outline" size="sm" as-child>
@@ -164,7 +253,7 @@ onMounted(() => {
           v-else-if="filteredSummaries.length === 0"
           :icon="Wallet"
           title="No se encontraron unidades"
-          :description="searchQuery || filterStatus ? 'Intenta con otros filtros de busqueda' : 'No hay unidades registradas'"
+          :description="searchQuery || hasActiveFilters ? 'Intenta con otros filtros de busqueda' : 'No hay unidades registradas'"
         />
 
         <!-- Summary table -->
@@ -180,7 +269,12 @@ onMounted(() => {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                <TableRow v-for="summary in paginatedSummaries" :key="summary.unitId">
+                <TableRow
+                  v-for="summary in paginatedSummaries"
+                  :key="summary.unitId"
+                  class="cursor-pointer transition-colors hover:bg-muted/50"
+                  @click="openUnitDetail(summary)"
+                >
                   <TableCell class="font-medium">
                     {{ summary.unitNumber }}
                   </TableCell>
@@ -269,5 +363,6 @@ onMounted(() => {
         </div>
       </section>
     </div>
+
   </div>
 </template>

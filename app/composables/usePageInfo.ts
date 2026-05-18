@@ -22,6 +22,8 @@ const PAGE_MAP: Record<string, PageInfo> = {
   '/admin/proveedores': { title: 'Proveedores', description: 'Directorio de servicios contratados' },
   '/admin/proveedores/crear': { title: 'Nuevo Proveedor', description: 'Agrega un proveedor al directorio', breadcrumbs: [{ label: 'Proveedores', to: '/admin/proveedores' }] },
   '/admin/cartelera': { title: 'Cartelera', description: 'Anuncios y comunicados oficiales' },
+  '/admin/normativas': { title: 'Normativas', description: 'Documentos permanentes del condominio' },
+  '/admin/normativas/subir': { title: 'Subir Normativa', description: 'Publica un documento normativo', breadcrumbs: [{ label: 'Normativas', to: '/admin/normativas' }] },
   '/admin/cartelera/crear': { title: 'Nuevo Anuncio', description: 'Crea un nuevo anuncio para la cartelera', breadcrumbs: [{ label: 'Cartelera', to: '/admin/cartelera' }] },
   '/admin/votaciones': { title: 'Votaciones', description: 'Consultas y decisiones comunitarias' },
   '/admin/votaciones/crear': { title: 'Nueva Votación', description: 'Crea una nueva votación para la comunidad', breadcrumbs: [{ label: 'Votaciones', to: '/admin/votaciones' }] },
@@ -47,12 +49,14 @@ const PAGE_MAP: Record<string, PageInfo> = {
   '/propietario/nueva-visita': { title: 'Nueva Visita', description: 'Genera un código QR para tu visitante', breadcrumbs: [{ label: 'Mis Visitas', to: '/propietario/mis-visitas' }] },
   '/propietario/visitantes-frecuentes': { title: 'Visitantes Frecuentes', description: 'Directorio de visitantes recurrentes' },
   '/propietario/visitantes-frecuentes/nuevo': { title: 'Agregar Visitante', description: 'Registra un visitante frecuente', breadcrumbs: [{ label: 'Frecuentes', to: '/propietario/visitantes-frecuentes' }] },
-  '/propietario/incidencias': { title: 'Mis Incidencias', description: 'Reportes que has enviado' },
+  '/propietario/mi-qr': { title: 'Mi QR Personal', description: 'Tu código de acceso al condominio' },
+  '/propietario/incidencias': { title: 'Incidencias', description: 'Reportes de la comunidad' },
   '/propietario/incidencias/nueva': { title: 'Reportar Incidencia', description: 'Describe el problema que observas', breadcrumbs: [{ label: 'Mis Incidencias', to: '/propietario/incidencias' }] },
 
   // Mi-Chana (shared pages)
   '/mi-chana/chat': { title: 'Chat', description: 'Conversaciones de la comunidad' },
   '/mi-chana/cartelera': { title: 'Cartelera', description: 'Anuncios y comunicados' },
+  '/mi-chana/normativas': { title: 'Normativas', description: 'Normas, horarios y reglas del condominio' },
   '/mi-chana/votaciones': { title: 'Votaciones', description: 'Participa en las decisiones' },
   '/mi-chana/proveedores': { title: 'Proveedores', description: 'Servicios recomendados' },
   '/mi-chana/proveedores/sugerir': { title: 'Sugerir Proveedor', description: 'Recomienda un proveedor de confianza', breadcrumbs: [{ label: 'Proveedores', to: '/mi-chana/proveedores' }] },
@@ -70,12 +74,13 @@ const PAGE_MAP: Record<string, PageInfo> = {
 
   // Conserje
   '/conserje': { title: 'Panel de Conserjería', description: 'Tu resumen de actividad' },
-  '/conserje/nueva-entrada': { title: 'Registrar Entrada', description: 'Ingresa un nuevo visitante' },
+  '/conserje/nueva-entrada': { title: 'Registrar Entrada', description: 'Ingresa un nuevo visitante', breadcrumbs: [{ label: 'Conserjería', to: '/conserje' }] },
 }
 
 const DYNAMIC_ROUTES: Array<{ prefix: string; info: PageInfo }> = [
   { prefix: '/admin/usuarios/', info: { title: 'Editar Usuario', description: 'Actualiza la información del usuario', breadcrumbs: [{ label: 'Usuarios', to: '/admin/usuarios' }] } },
   { prefix: '/admin/incidencias/', info: { title: 'Detalle de Incidencia', description: 'Información y estado del reporte', breadcrumbs: [{ label: 'Incidencias', to: '/admin/incidencias' }] } },
+  { prefix: '/propietario/incidencias/', info: { title: 'Detalle de Incidencia', description: 'Información y estado del reporte', breadcrumbs: [{ label: 'Incidencias', to: '/propietario/incidencias' }] } },
   { prefix: '/admin/unidades/', info: { title: 'Detalle de Unidad', description: 'Miembros, vehículos e información', breadcrumbs: [{ label: 'Unidades', to: '/admin/unidades' }] } },
   { prefix: '/mi-chana/chat/', info: { title: 'Chat', description: 'Conversación', breadcrumbs: [{ label: 'Chat', to: '/mi-chana/chat' }] } },
   { prefix: '/mi-chana/proveedores/', info: { title: 'Detalle de Proveedor', description: 'Información y reseñas', breadcrumbs: [{ label: 'Proveedores', to: '/mi-chana/proveedores' }] } },

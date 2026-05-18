@@ -1,5 +1,6 @@
 import { db } from '~~/server/db'
 import { vehicles } from '~~/server/db/schema/vehicle'
+import { vehiclePasses } from '~~/server/db/schema/vehicle-pass'
 import { eq, and, asc } from 'drizzle-orm'
 
 export default defineEventHandler(async (event) => {
@@ -12,8 +13,26 @@ export default defineEventHandler(async (event) => {
   }
 
   const rows = await db
-    .select()
+    .select({
+      id: vehicles.id,
+      unitId: vehicles.unitId,
+      ownerMemberId: vehicles.ownerMemberId,
+      plate: vehicles.plate,
+      brand: vehicles.brand,
+      model: vehicles.model,
+      color: vehicles.color,
+      tenantId: vehicles.tenantId,
+      createdAt: vehicles.createdAt,
+      passToken: vehiclePasses.token,
+    })
     .from(vehicles)
+    .leftJoin(
+      vehiclePasses,
+      and(
+        eq(vehiclePasses.vehicleId, vehicles.id),
+        eq(vehiclePasses.isActive, true),
+      ),
+    )
     .where(
       and(
         eq(vehicles.unitId, unitId),
@@ -22,5 +41,10 @@ export default defineEventHandler(async (event) => {
     )
     .orderBy(asc(vehicles.plate))
 
-  return { data: rows }
+  const data = rows.map(row => ({
+    ...row,
+    hasPass: !!row.passToken,
+  }))
+
+  return { data }
 })

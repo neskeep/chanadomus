@@ -4,7 +4,7 @@ import type { IncidentPriority, IncidentStatus } from '~~/shared/types/incident'
 import type { MeetingStatus, MeetingType } from '~~/shared/types/meeting'
 import type { PollStatus } from '~~/shared/types/poll'
 import type { ProviderCategory, ProviderStatus } from '~~/shared/types/provider'
-import type { ValidationStatus } from '~~/shared/types/qr'
+import type { AccessDirection, ValidationStatus } from '~~/shared/types/qr'
 
 // ─── Incident ────────────────────────────────────────────
 export const INCIDENT_STATUS_COLORS: Record<IncidentStatus, string> = {
@@ -133,6 +133,17 @@ export const VALIDATION_STATUS_LABELS: Record<ValidationStatus, string> = {
   invalid: 'Código inválido',
 }
 
+// ─── Access Direction ───────────────────────────────────
+export const ACCESS_DIRECTION_COLORS: Record<AccessDirection, { bg: string; icon: string; accent: string }> = {
+  entry: { bg: 'bg-green-500', icon: 'text-green-500', accent: 'ring-green-500/30' },
+  exit: { bg: 'bg-blue-500', icon: 'text-blue-500', accent: 'ring-blue-500/30' },
+}
+
+export const ACCESS_DIRECTION_LABELS: Record<AccessDirection, string> = {
+  entry: 'Entrada registrada',
+  exit: 'Salida registrada',
+}
+
 // ─── Access Page ─────────────────────────────────────────
 export const ACCESS_STATUS_COLORS = {
   valid: { iconColor: 'text-green-500', borderColor: 'border-green-500' },
@@ -147,6 +158,9 @@ export const CHAT_CHANNEL_COLORS: Record<ChatRoomType, { iconBg: string; iconCol
   unit: { iconBg: 'bg-purple-100', iconColor: 'text-purple-700' },
   vigilancia: { iconBg: 'bg-blue-100', iconColor: 'text-blue-700' },
   admin: { iconBg: 'bg-emerald-100', iconColor: 'text-emerald-700' },
+  conserjeria: { iconBg: 'bg-orange-100', iconColor: 'text-orange-700' },
+  incidencias: { iconBg: 'bg-red-100', iconColor: 'text-red-700' },
+  propietarios: { iconBg: 'bg-teal-100', iconColor: 'text-teal-700' },
 }
 
 // ─── Dashboard Icon Backgrounds ──────────────────────────

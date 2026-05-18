@@ -39,6 +39,30 @@ async function seedChat() {
   }).onConflictDoNothing()
   console.log('  Room: Vigilancia')
 
+  // Create conserjeria room
+  await db.insert(chatRooms).values({
+    name: 'Conserjería',
+    type: 'conserjeria',
+    tenantId: tenant.id,
+  }).onConflictDoNothing()
+  console.log('  Room: Conserjería')
+
+  // Create incidencias room
+  await db.insert(chatRooms).values({
+    name: 'Incidencias',
+    type: 'incidencias',
+    tenantId: tenant.id,
+  }).onConflictDoNothing()
+  console.log('  Room: Incidencias')
+
+  // Create propietarios room
+  await db.insert(chatRooms).values({
+    name: 'Propietarios',
+    type: 'propietarios',
+    tenantId: tenant.id,
+  }).onConflictDoNothing()
+  console.log('  Room: Propietarios')
+
   // Create admin room
   await db.insert(chatRooms).values({
     name: 'Administracion',

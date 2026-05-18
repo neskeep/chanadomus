@@ -5,11 +5,13 @@ export function useFinanceSummary() {
   const isLoading = ref(false)
   const error = ref<string | null>(null)
 
-  async function fetchSummary() {
+  async function fetchSummary(params?: { from?: string, to?: string }) {
     isLoading.value = true
     error.value = null
     try {
-      const res = await $fetch<{ data: UnitSummary[] }>('/api/finance/summary')
+      const res = await $fetch<{ data: UnitSummary[] }>('/api/finance/summary', {
+        query: params,
+      })
       summaries.value = res.data
     }
     catch (err: unknown) {

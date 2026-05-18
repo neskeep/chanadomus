@@ -42,7 +42,10 @@ Usar `requireRole(event, roles[])` en cada endpoint. Patron actual:
 | Proveedores | `providers/index.post`, `providers/[id].patch` | admin, conserje |
 | Proveedores | `providers/[id].delete` | admin |
 | Proveedores | `providers/suggestions.post`, `providers/[id]/reviews.post` | propietario |
-| Personal | `staff/*` | admin |
+| QR Codes | `qr/my-codes.get`, `qr/generate.post` | admin, propietario, conserje |
+| Visitantes Frecuentes | `frequent-visitors/*` | admin, propietario, conserje |
+| Staff Unit | `staff/my-unit.get` | conserje |
+| Personal | `staff/*` (crud) | admin |
 | Reuniones | `meetings/index.post`, `meetings/[id].patch`, `meetings/[id].delete` | admin |
 | Unidades | `units/[id]/members.post`, `units/[id]/vehicles.post` | admin |
 | Miembros | `members/[id].patch`, `members/[id].delete` | admin |

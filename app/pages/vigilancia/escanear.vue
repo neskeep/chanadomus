@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import { SwitchCamera, CheckCircle2, XCircle, AlertTriangle, Camera, ScanLine, User, Home, Clock, RotateCcw, Car, HardHat } from 'lucide-vue-next'
+import { SwitchCamera, CheckCircle2, XCircle, AlertTriangle, Camera, ScanLine, User, Home, Clock, RotateCcw, Car, HardHat, LogIn, LogOut } from 'lucide-vue-next'
 import type { ValidationStatus } from '~~/shared/types/qr'
-import { VALIDATION_STATUS_COLORS, VALIDATION_STATUS_LABELS } from '~/composables/useColorMap'
+import { VALIDATION_STATUS_COLORS, VALIDATION_STATUS_LABELS, ACCESS_DIRECTION_COLORS, ACCESS_DIRECTION_LABELS } from '~/composables/useColorMap'
 
 useHead({ title: 'Escanear QR' })
 
@@ -33,6 +33,19 @@ const statusConfig: Record<ValidationStatus, { label: string; bg: string; icon: 
   already_used: { label: VALIDATION_STATUS_LABELS.already_used, ...VALIDATION_STATUS_COLORS.already_used },
   invalid: { label: VALIDATION_STATUS_LABELS.invalid, ...VALIDATION_STATUS_COLORS.invalid },
 }
+
+/** Resolved config: uses direction-specific colors for valid scans with direction */
+const resolvedConfig = computed(() => {
+  if (!scanResult.value) return statusConfig.invalid
+  const direction = scanResult.value.direction
+  if (scanResult.value.status === 'valid' && direction) {
+    return {
+      label: ACCESS_DIRECTION_LABELS[direction],
+      ...ACCESS_DIRECTION_COLORS[direction],
+    }
+  }
+  return statusConfig[scanResult.value.status]
+})
 </script>
 
 <template>
@@ -114,32 +127,42 @@ const statusConfig: Record<ValidationStatus, { label: string; bg: string; icon: 
         >
           <!-- Status icon -->
           <div
-            :class="[statusConfig[scanResult.status].accent]"
+            :class="[resolvedConfig.accent]"
             class="flex size-24 items-center justify-center rounded-lg bg-white/10 ring-2 backdrop-blur-sm"
           >
+            <LogOut
+              v-if="scanResult.status === 'valid' && scanResult.direction === 'exit'"
+              :class="resolvedConfig.icon"
+              class="size-12"
+            />
+            <LogIn
+              v-else-if="scanResult.status === 'valid' && scanResult.direction === 'entry'"
+              :class="resolvedConfig.icon"
+              class="size-12"
+            />
             <CheckCircle2
-              v-if="scanResult.status === 'valid'"
-              :class="statusConfig[scanResult.status].icon"
+              v-else-if="scanResult.status === 'valid'"
+              :class="resolvedConfig.icon"
               class="size-12"
             />
             <AlertTriangle
               v-else-if="scanResult.status === 'expired' || scanResult.status === 'already_used'"
-              :class="statusConfig[scanResult.status].icon"
+              :class="resolvedConfig.icon"
               class="size-12"
             />
             <XCircle
               v-else
-              :class="statusConfig[scanResult.status].icon"
+              :class="resolvedConfig.icon"
               class="size-12"
             />
           </div>
 
           <!-- Status label -->
           <div
-            :class="statusConfig[scanResult.status].bg"
+            :class="resolvedConfig.bg"
             class="mt-5 rounded-lg px-5 py-1.5 text-sm font-semibold text-white"
           >
-            {{ statusConfig[scanResult.status].label }}
+            {{ resolvedConfig.label }}
           </div>
 
           <!-- Visitor details (standard QR) -->

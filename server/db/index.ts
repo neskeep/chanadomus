@@ -25,6 +25,8 @@ import * as vehiclePassSchema from './schema/vehicle-pass'
 import * as serviceStaffRoleSchema from './schema/service-staff-role'
 import * as unitServiceStaffSchema from './schema/unit-service-staff'
 import * as serviceStaffPassSchema from './schema/service-staff-pass'
+import * as householdMemberPassSchema from './schema/household-member-pass'
+import * as regulationSchema from './schema/regulation'
 
 const connectionString = process.env.DATABASE_URL!
 
@@ -57,5 +59,7 @@ export const db = drizzle(client, {
     ...serviceStaffRoleSchema,
     ...unitServiceStaffSchema,
     ...serviceStaffPassSchema,
+    ...householdMemberPassSchema,
+    ...regulationSchema,
   },
 })

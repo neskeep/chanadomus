@@ -1,12 +1,10 @@
 <script setup lang="ts">
 import {
   Star,
-  Phone,
   Plus,
   Pencil,
   Trash2,
   Wrench,
-  Loader2,
   CheckCircle2,
 } from 'lucide-vue-next'
 import { toast } from 'vue-sonner'
@@ -14,7 +12,6 @@ import type {
   Provider,
   ProviderCategory,
   ProviderStatus,
-  UpdateProvider,
 } from '~~/shared/types/provider'
 import { PROVIDER_CATEGORIES } from '~~/shared/types/provider'
 
@@ -24,7 +21,6 @@ const {
   providers,
   meta,
   isLoading,
-  isSubmitting,
   error,
   totalPages,
   fetchProviders,
@@ -49,18 +45,6 @@ const providerStatusOptions = [
   { value: 'pending' as const, label: 'Pendiente' },
   { value: 'inactive' as const, label: 'Inactivo' },
 ]
-
-// Create/Edit dialog
-const dialogOpen = ref(false)
-const editingId = ref<string | null>(null)
-const formName = ref('')
-const formPhone = ref('')
-const formCategory = ref<ProviderCategory>('otro')
-const formAddress = ref('')
-const formSchedule = ref('')
-const formServices = ref('')
-const formCosts = ref('')
-const formNotes = ref('')
 
 // Delete dialog
 const deleteId = ref<string | null>(null)
@@ -123,61 +107,6 @@ watch([currentPage, filterCategory, filterStatus], () => {
 onMounted(() => {
   loadProviders()
 })
-
-function resetForm() {
-  formName.value = ''
-  formPhone.value = ''
-  formCategory.value = 'otro'
-  formAddress.value = ''
-  formSchedule.value = ''
-  formServices.value = ''
-  formCosts.value = ''
-  formNotes.value = ''
-}
-
-function openEditDialog(provider: Provider) {
-  editingId.value = provider.id
-  formName.value = provider.name
-  formPhone.value = provider.phone ?? ''
-  formCategory.value = provider.category
-  formAddress.value = provider.address ?? ''
-  formSchedule.value = provider.schedule ?? ''
-  formServices.value = provider.services?.join('\n') ?? ''
-  formCosts.value = provider.costs ?? ''
-  formNotes.value = provider.notes ?? ''
-  dialogOpen.value = true
-}
-
-const canSubmit = computed(() =>
-  formName.value.trim().length > 0 && !isSubmitting.value,
-)
-
-async function handleSubmit() {
-  if (!canSubmit.value || !editingId.value) return
-  try {
-    const services = formServices.value.trim()
-      ? formServices.value.trim().split('\n').filter(Boolean)
-      : undefined
-
-    const data: UpdateProvider = {
-      name: formName.value.trim(),
-      phone: formPhone.value.trim() || null,
-      category: formCategory.value,
-      address: formAddress.value.trim() || null,
-      schedule: formSchedule.value.trim() || null,
-      services: services ?? null,
-      costs: formCosts.value.trim() || null,
-      notes: formNotes.value.trim() || null,
-    }
-    await updateProvider(editingId.value, data)
-    toast.success('Proveedor actualizado')
-    dialogOpen.value = false
-    await loadProviders()
-  }
-  catch {
-    toast.error(error.value ?? 'Error al guardar proveedor')
-  }
-}
 
 function confirmDelete(id: string) {
   deleteId.value = id
@@ -419,9 +348,11 @@ function renderStars(rating: number | undefined): number[] {
                     size="icon"
                     class="size-10"
                     title="Editar"
-                    @click="openEditDialog(item)"
+                    as-child
                   >
-                    <Pencil class="size-4" />
+                    <NuxtLink :to="`/admin/proveedores/${item.id}`">
+                      <Pencil class="size-4" />
+                    </NuxtLink>
                   </Button>
                   <Button
                     variant="ghost"
@@ -493,10 +424,12 @@ function renderStars(rating: number | undefined): number[] {
                   variant="ghost"
                   class="h-6 px-2 text-[11px]"
                   title="Editar"
-                  @click="openEditDialog(item)"
+                  as-child
                 >
-                  <Pencil class="mr-1 size-3" />
-                  Editar
+                  <NuxtLink :to="`/admin/proveedores/${item.id}`">
+                    <Pencil class="mr-1 size-3" />
+                    Editar
+                  </NuxtLink>
                 </Button>
                 <Button
                   variant="ghost"
@@ -515,84 +448,6 @@ function renderStars(rating: number | undefined): number[] {
       <!-- Pagination -->
       <ListPagination v-model:current-page="currentPage" :total-pages="totalPages" class="mt-4" />
     </div>
-
-    <!-- Create/Edit Sheet -->
-    <Sheet v-model:open="dialogOpen">
-      <SheetContent class="overflow-y-auto sm:max-w-lg">
-        <SheetHeader>
-          <SheetTitle>Editar Proveedor</SheetTitle>
-          <SheetDescription>
-            Modifica los datos del proveedor
-          </SheetDescription>
-        </SheetHeader>
-
-        <form class="space-y-4 py-4" @submit.prevent="handleSubmit">
-          <div class="space-y-2">
-            <Label for="prov-name">Nombre</Label>
-            <Input id="prov-name" v-model="formName" placeholder="Nombre del proveedor" class="h-12" required />
-          </div>
-
-          <div class="space-y-2">
-            <Label for="prov-phone">Telefono</Label>
-            <Input id="prov-phone" v-model="formPhone" placeholder="0412-1234567" class="h-12" />
-          </div>
-
-          <div class="space-y-2">
-            <Label for="prov-category">Categoria</Label>
-            <Select v-model="formCategory">
-              <SelectTrigger id="prov-category" size="lg">
-                <SelectValue placeholder="Seleccionar categoria" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem v-for="cat in PROVIDER_CATEGORIES" :key="cat.key" :value="cat.key">
-                  {{ cat.label }}
-                </SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div class="space-y-2">
-            <Label for="prov-address">Direccion</Label>
-            <Input id="prov-address" v-model="formAddress" placeholder="Direccion del proveedor" class="h-12" />
-          </div>
-
-          <div class="space-y-2">
-            <Label for="prov-schedule">Horario</Label>
-            <Input id="prov-schedule" v-model="formSchedule" placeholder="Lun-Vie 8:00-17:00" class="h-12" />
-          </div>
-
-          <div class="space-y-2">
-            <Label for="prov-services">Servicios (uno por linea)</Label>
-            <Textarea
-              id="prov-services"
-              v-model="formServices"
-              placeholder="Reparacion de tuberias&#10;Destape de drenajes"
-              rows="3"
-            />
-          </div>
-
-          <div class="space-y-2">
-            <Label for="prov-costs">Costos</Label>
-            <Textarea id="prov-costs" v-model="formCosts" placeholder="Descripcion de costos..." rows="2" />
-          </div>
-
-          <div class="space-y-2">
-            <Label for="prov-notes">Notas</Label>
-            <Textarea id="prov-notes" v-model="formNotes" placeholder="Notas adicionales..." rows="2" />
-          </div>
-
-          <div class="flex justify-end gap-2 pt-2">
-            <Button type="button" variant="outline" @click="dialogOpen = false">
-              Cancelar
-            </Button>
-            <Button type="submit" :disabled="!canSubmit">
-              <Loader2 v-if="isSubmitting" class="mr-2 size-4 animate-spin" />
-              {{ isSubmitting ? 'Guardando...' : 'Guardar cambios' }}
-            </Button>
-          </div>
-        </form>
-      </SheetContent>
-    </Sheet>
 
     <!-- Delete AlertDialog -->
     <AlertDialog v-model:open="deleteDialogOpen">

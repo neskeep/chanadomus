@@ -2,8 +2,8 @@ import type { Component } from 'vue'
 import {
   Home, Wallet, AlertTriangle, Building2, Users, Shield,
   MessageCircle, Megaphone, Vote, Wrench, Calendar,
-  ScanLine, ClipboardList, QrCode, DoorOpen, FileText, CreditCard, Car,
-  UserCog, ShieldAlert,
+  ScanLine, ClipboardList, QrCode, FileText, CreditCard, Car,
+  UserCog, ShieldAlert, BookOpen,
 } from 'lucide-vue-next'
 import { ROLE_REDIRECTS } from '~~/shared/types/auth'
 
@@ -51,6 +51,7 @@ export function useNavigation() {
             items: [
               { label: 'Chat', icon: MessageCircle, to: '/mi-chana/chat' },
               { label: 'Cartelera', icon: Megaphone, to: '/admin/cartelera' },
+              { label: 'Normativas', icon: BookOpen, to: '/admin/normativas' },
               { label: 'Votaciones', icon: Vote, to: '/admin/votaciones' },
               { label: 'Reuniones', icon: Calendar, to: '/admin/reuniones' },
             ],
@@ -82,6 +83,7 @@ export function useNavigation() {
             items: [
               { label: 'Chat', icon: MessageCircle, to: '/mi-chana/chat' },
               { label: 'Cartelera', icon: Megaphone, to: '/mi-chana/cartelera' },
+              { label: 'Normativas', icon: BookOpen, to: '/mi-chana/normativas' },
               { label: 'Votaciones', icon: Vote, to: '/mi-chana/votaciones' },
               { label: 'Proveedores', icon: Wrench, to: '/mi-chana/proveedores' },
               { label: 'Reuniones', icon: Calendar, to: '/mi-chana/reuniones' },
@@ -123,14 +125,23 @@ export function useNavigation() {
             label: 'Principal',
             items: [
               { label: 'Inicio', icon: Home, to: '/conserje' },
-              { label: 'Nueva Entrada', icon: DoorOpen, to: '/conserje/nueva-entrada' },
+              { label: 'Incidencias', icon: AlertTriangle, to: '/conserje/incidencias' },
+            ],
+          },
+          {
+            label: 'Mi Rancho',
+            items: [
+              { label: 'Chat', icon: MessageCircle, to: '/mi-chana/chat' },
+              { label: 'Mi QR', icon: ScanLine, to: '/conserje/mi-qr' },
+              { label: 'Visitas', icon: QrCode, to: '/conserje/mis-visitas' },
+              { label: 'Frecuentes', icon: Users, to: '/conserje/visitantes-frecuentes' },
             ],
           },
           {
             label: 'Comunidad',
             items: [
-              { label: 'Chat', icon: MessageCircle, to: '/mi-chana/chat' },
               { label: 'Cartelera', icon: Megaphone, to: '/mi-chana/cartelera' },
+              { label: 'Normativas', icon: BookOpen, to: '/mi-chana/normativas' },
               { label: 'Proveedores', icon: Wrench, to: '/mi-chana/proveedores' },
               { label: 'Reuniones', icon: Calendar, to: '/mi-chana/reuniones' },
             ],
@@ -171,8 +182,8 @@ export function useNavigation() {
       case 'conserje':
         return [
           { label: 'Inicio', icon: Home, to: '/conserje' },
-          { label: 'Entrada', icon: DoorOpen, to: '/conserje/nueva-entrada' },
-          { label: 'Cartelera', icon: Megaphone, to: '/mi-chana/cartelera' },
+          { label: 'Incidencias', icon: AlertTriangle, to: '/conserje/incidencias' },
+          { label: 'Visitas', icon: QrCode, to: '/conserje/mis-visitas' },
           { label: 'Chat', icon: MessageCircle, to: '/mi-chana/chat' },
         ]
 

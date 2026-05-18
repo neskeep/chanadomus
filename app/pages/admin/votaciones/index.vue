@@ -6,7 +6,6 @@ import {
   Trash2,
   Send,
   Lock,
-  Loader2,
   Calendar,
   FileText,
 } from 'lucide-vue-next'
@@ -22,11 +21,9 @@ const {
   polls,
   meta,
   isLoading,
-  isSubmitting,
   error,
   totalPages,
   fetchPolls,
-  updatePoll,
   publishPoll,
   closePoll,
   deletePoll,
@@ -44,14 +41,6 @@ const statusOptions = [
   { value: 'active' as const, label: 'Activa' },
   { value: 'closed' as const, label: 'Cerrada' },
 ]
-
-// Create/Edit dialog
-const dialogOpen = ref(false)
-const editingId = ref<string | null>(null)
-const formTitle = ref('')
-const formDescription = ref('')
-const formStatus = ref<'draft' | 'active'>('draft')
-const formDeadline = ref('')
 
 // Delete dialog
 const deleteId = ref<string | null>(null)
@@ -96,44 +85,6 @@ watch([currentPage, filterStatus], () => {
 onMounted(() => {
   loadPolls()
 })
-
-function resetForm() {
-  formTitle.value = ''
-  formDescription.value = ''
-  formStatus.value = 'draft'
-  formDeadline.value = ''
-}
-
-function openEditDialog(poll: Poll) {
-  editingId.value = poll.id
-  formTitle.value = poll.title
-  formDescription.value = poll.description ?? ''
-  formStatus.value = poll.status === 'closed' ? 'draft' : poll.status
-  formDeadline.value = poll.deadline ? poll.deadline.split('T')[0] : ''
-  dialogOpen.value = true
-}
-
-const canSubmit = computed(() =>
-  formTitle.value.trim().length > 0 && !isSubmitting.value,
-)
-
-async function handleSubmit() {
-  if (!editingId.value) return
-  try {
-    await updatePoll(editingId.value, {
-      title: formTitle.value,
-      description: formDescription.value || null,
-      status: formStatus.value,
-      deadline: formDeadline.value || null,
-    })
-    toast.success('Votación actualizada correctamente')
-    dialogOpen.value = false
-    await loadPolls()
-  }
-  catch {
-    toast.error(error.value ?? 'Error al guardar votación')
-  }
-}
 
 async function handlePublish(id: string) {
   try {
@@ -301,9 +252,11 @@ function participationText(poll: Poll): string {
                     size="icon"
                     class="size-10"
                     title="Editar"
-                    @click="openEditDialog(poll)"
+                    as-child
                   >
-                    <Pencil class="size-4" />
+                    <NuxtLink :to="`/admin/votaciones/${poll.id}`">
+                      <Pencil class="size-4" />
+                    </NuxtLink>
                   </Button>
                   <Button
                     variant="ghost"
@@ -375,9 +328,11 @@ function participationText(poll: Poll): string {
                   size="icon"
                   class="size-6"
                   title="Editar"
-                  @click="openEditDialog(poll)"
+                  as-child
                 >
-                  <Pencil class="size-3" />
+                  <NuxtLink :to="`/admin/votaciones/${poll.id}`">
+                    <Pencil class="size-3" />
+                  </NuxtLink>
                 </Button>
                 <Button
                   variant="ghost"
@@ -408,78 +363,6 @@ function participationText(poll: Poll): string {
       <!-- Pagination -->
       <ListPagination v-model:current-page="currentPage" :total-pages="totalPages" class="mt-4" />
     </div>
-
-    <!-- Edit Sheet -->
-    <Sheet v-model:open="dialogOpen">
-      <SheetContent side="right" class="overflow-y-auto sm:max-w-lg">
-        <SheetHeader>
-          <SheetTitle>Editar Votación</SheetTitle>
-          <SheetDescription>
-            Modifica los datos de la votación
-          </SheetDescription>
-        </SheetHeader>
-
-        <form class="space-y-4 py-2" @submit.prevent="handleSubmit">
-          <div>
-            <Label for="poll-title">Título</Label>
-            <Input
-              id="poll-title"
-              v-model="formTitle"
-              placeholder="Título de la votación"
-              class="h-12 mt-1.5"
-              required
-            />
-          </div>
-
-          <div>
-            <Label for="poll-description">Descripción (opcional)</Label>
-            <Textarea
-              id="poll-description"
-              v-model="formDescription"
-              placeholder="Descripción de la votación..."
-              rows="3"
-              class="mt-1.5"
-            />
-          </div>
-
-          <div>
-            <Label for="poll-deadline">Fecha límite (opcional)</Label>
-            <div class="relative mt-1.5">
-              <Calendar class="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-              <Input
-                id="poll-deadline"
-                v-model="formDeadline"
-                type="date"
-                class="h-12 pl-9"
-              />
-            </div>
-          </div>
-
-          <div>
-            <Label for="poll-status">Estado</Label>
-            <Select v-model="formStatus">
-              <SelectTrigger id="poll-status" size="lg" class="mt-1.5">
-                <SelectValue placeholder="Seleccionar estado" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="draft">Borrador</SelectItem>
-                <SelectItem value="active">Activa</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div class="flex justify-end gap-2 pt-2">
-            <Button type="button" variant="outline" @click="dialogOpen = false">
-              Cancelar
-            </Button>
-            <Button type="submit" :disabled="!canSubmit">
-              <Loader2 v-if="isSubmitting" class="mr-2 size-4 animate-spin" />
-              {{ isSubmitting ? 'Guardando...' : 'Guardar cambios' }}
-            </Button>
-          </div>
-        </form>
-      </SheetContent>
-    </Sheet>
 
     <!-- Delete AlertDialog -->
     <AlertDialog v-model:open="deleteDialogOpen">

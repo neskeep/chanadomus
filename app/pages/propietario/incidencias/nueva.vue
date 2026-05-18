@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Camera, X, Loader2 } from 'lucide-vue-next'
+import { Camera, X, Loader2, EyeOff } from 'lucide-vue-next'
 import { toast } from 'vue-sonner'
 import type { IncidentPriority } from '~~/shared/types/incident'
 
@@ -11,6 +11,7 @@ const { isCreating, error, createIncident } = useIncidents()
 const title = ref('')
 const description = ref('')
 const priority = ref<IncidentPriority>('medium')
+const isAnonymous = ref(false)
 const photos = ref<{ file: File, preview: string }[]>([])
 
 const MAX_PHOTOS = 3
@@ -59,6 +60,7 @@ async function handleSubmit() {
   formData.append('title', title.value.trim())
   formData.append('description', description.value.trim())
   formData.append('priority', priority.value)
+  formData.append('is_anonymous', String(isAnonymous.value))
 
   photos.value.forEach((photo, i) => {
     formData.append(`photo_${i}`, photo.file)
@@ -124,6 +126,18 @@ onUnmounted(() => {
                 <SelectItem value="high">Alta — Urgente</SelectItem>
               </SelectContent>
             </Select>
+          </div>
+
+          <!-- Anonymous toggle -->
+          <div class="flex items-center justify-between rounded-lg border p-3">
+            <div class="flex items-center gap-2.5">
+              <EyeOff class="size-4 text-muted-foreground" />
+              <div>
+                <p class="text-sm font-medium">Reportar como anónima</p>
+                <p class="text-xs text-muted-foreground">Tu identidad solo será visible para la administración</p>
+              </div>
+            </div>
+            <Switch v-model="isAnonymous" />
           </div>
 
           <!-- Photos -->

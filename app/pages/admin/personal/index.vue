@@ -1,23 +1,12 @@
 <script setup lang="ts">
-import {
-  Plus,
-  Pencil,
-  Trash2,
-  Shield,
-  Wrench,
-  User,
-  Users,
-  Phone,
-  Mail,
-  Clock,
-  Loader2,
-} from 'lucide-vue-next'
+import { Plus, Pencil, Trash2, Users, Phone, Clock, Loader2, QrCode, Share2, Ban, Home } from 'lucide-vue-next'
 import { toast } from 'vue-sonner'
+import QRCode from 'qrcode'
 import type { StaffRole, Staff } from '~~/shared/types/staff'
 
 useHead({ title: 'Personal' })
 
-const { staffList, isLoading, isSubmitting, error, fetchStaff, updateStaffMember, deleteStaffMember } = useStaff()
+const { staffList, isLoading, isSubmitting, error, fetchStaff, deleteStaffMember, generateQr } = useStaff()
 
 const { target, isMounted } = useTopbarPortal()
 
@@ -31,18 +20,6 @@ const roleOptions = [
   { value: 'mantenimiento', label: 'Mantenimiento' },
   { value: 'otro', label: 'Otro' },
 ]
-
-// Dialog state
-const dialogOpen = ref(false)
-const editingStaff = ref<Staff | null>(null)
-
-// Form state
-const formName = ref('')
-const formRole = ref<StaffRole | ''>('')
-const formDocument = ref('')
-const formPhone = ref('')
-const formEmail = ref('')
-const formShift = ref('none')
 
 // Delete dialog
 const deleteDialogOpen = ref(false)
@@ -76,43 +53,13 @@ const filteredStaff = computed(() => {
   )
 })
 
-function openEditDialog(staff: Staff) {
-  editingStaff.value = staff
-  formName.value = staff.name
-  formRole.value = staff.role
-  formDocument.value = staff.idDocument ?? ''
-  formPhone.value = staff.phone ?? ''
-  formEmail.value = staff.email ?? ''
-  formShift.value = staff.shift ?? 'none'
-  dialogOpen.value = true
+function navigateToEdit(staff: Staff) {
+  navigateTo(`/admin/personal/${staff.id}`)
 }
 
 function openDeleteDialog(staff: Staff) {
   staffToDelete.value = staff
   deleteDialogOpen.value = true
-}
-
-async function handleSubmit() {
-  if (!formName.value.trim() || !formRole.value) return
-
-  const data = {
-    name: formName.value.trim(),
-    role: formRole.value as StaffRole,
-    idDocument: formDocument.value.trim() || undefined,
-    phone: formPhone.value.trim() || undefined,
-    email: formEmail.value.trim() || undefined,
-    shift: formShift.value === 'none' ? undefined : formShift.value || undefined,
-  }
-
-  try {
-    if (!editingStaff.value) return
-    await updateStaffMember(editingStaff.value.id, data)
-    toast.success('Personal actualizado correctamente')
-    dialogOpen.value = false
-  }
-  catch {
-    toast.error(error.value ?? 'Error al guardar')
-  }
 }
 
 async function handleDelete() {
@@ -125,6 +72,84 @@ async function handleDelete() {
   }
   catch {
     toast.error(error.value ?? 'Error al desactivar')
+  }
+}
+
+// QR dialog
+const qrDialogOpen = ref(false)
+const qrStaff = ref<Staff | null>(null)
+const qrImageUrl = ref('')
+const qrAccessUrl = ref('')
+const isGeneratingQr = ref(false)
+
+function getInitials(name: string): string {
+  return name
+    .split(' ')
+    .map(n => n[0])
+    .join('')
+    .toUpperCase()
+    .slice(0, 2)
+}
+
+async function handleGenerateQr(member: Staff) {
+  qrStaff.value = member
+  isGeneratingQr.value = true
+  qrDialogOpen.value = true
+
+  try {
+    const result = await generateQr(member.id)
+    const origin = window.location.origin
+    qrAccessUrl.value = `${origin}/acceso/${result.qrToken}`
+    qrImageUrl.value = await QRCode.toDataURL(qrAccessUrl.value, {
+      width: 280,
+      margin: 2,
+      color: { dark: '#1F2933' },
+    })
+  }
+  catch {
+    toast.error('Error al generar pase QR')
+    qrDialogOpen.value = false
+  }
+  finally {
+    isGeneratingQr.value = false
+  }
+}
+
+async function handleShowQr(member: Staff) {
+  if (!member.qrToken) return
+  qrStaff.value = member
+  qrDialogOpen.value = true
+  isGeneratingQr.value = true
+
+  try {
+    const origin = window.location.origin
+    qrAccessUrl.value = `${origin}/acceso/${member.qrToken}`
+    qrImageUrl.value = await QRCode.toDataURL(qrAccessUrl.value, {
+      width: 280,
+      margin: 2,
+      color: { dark: '#1F2933' },
+    })
+  }
+  catch {
+    toast.error('Error al cargar QR')
+    qrDialogOpen.value = false
+  }
+  finally {
+    isGeneratingQr.value = false
+  }
+}
+
+async function handleSharePass() {
+  if (!qrAccessUrl.value) return
+  try {
+    await navigator.share({
+      title: `Pase de acceso — ${qrStaff.value?.name}`,
+      url: qrAccessUrl.value,
+    })
+  }
+  catch {
+    await navigator.clipboard.writeText(qrAccessUrl.value)
+    toast.success('Enlace copiado al portapapeles')
   }
 }
 
@@ -186,41 +211,71 @@ onMounted(() => {
               <TableHead>Nombre</TableHead>
               <TableHead>Rol</TableHead>
               <TableHead>Teléfono</TableHead>
-              <TableHead>Email</TableHead>
+              <TableHead>Unidad</TableHead>
               <TableHead>Turno</TableHead>
-              <TableHead class="w-[100px]">Acciones</TableHead>
+              <TableHead>Pase QR</TableHead>
+              <TableHead class="w-24">Acciones</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             <TableRow v-for="member in filteredStaff" :key="member.id">
-              <TableCell class="font-medium">{{ member.name }}</TableCell>
+              <TableCell>
+                <div class="flex items-center gap-2">
+                  <Avatar class="size-7 shrink-0">
+                    <AvatarImage v-if="member.avatar" :src="member.avatar" :alt="member.name" />
+                    <AvatarFallback class="bg-primary/10 text-[10px] font-semibold text-primary">
+                      {{ getInitials(member.name) }}
+                    </AvatarFallback>
+                  </Avatar>
+                  <span class="font-medium">{{ member.name }}</span>
+                </div>
+              </TableCell>
               <TableCell>
                 <Badge :variant="ROLE_CONFIG[member.role].variant">
                   {{ ROLE_CONFIG[member.role].label }}
                 </Badge>
               </TableCell>
               <TableCell class="text-muted-foreground">{{ member.phone ?? '—' }}</TableCell>
-              <TableCell class="text-muted-foreground">{{ member.email ?? '—' }}</TableCell>
+              <TableCell class="text-muted-foreground">
+                {{ member.unitNumber ? `${member.unitNumber}${member.unitLabel ? ` — ${member.unitLabel}` : ''}` : '—' }}
+              </TableCell>
               <TableCell class="text-muted-foreground">{{ getShiftLabel(member.shift) }}</TableCell>
               <TableCell>
+                <Button
+                  v-if="member.qrToken"
+                  variant="outline"
+                  size="sm"
+                  class="gap-1.5"
+                  @click="handleShowQr(member)"
+                >
+                  <QrCode class="size-3.5" />
+                  Ver QR
+                </Button>
+                <Button
+                  v-else
+                  variant="default"
+                  size="sm"
+                  class="gap-1.5"
+                  @click="handleGenerateQr(member)"
+                >
+                  <QrCode class="size-3.5" />
+                  Generar
+                </Button>
+              </TableCell>
+              <TableCell>
                 <div class="flex items-center gap-1">
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    class="size-10"
-                    aria-label="Editar personal"
-                    @click="openEditDialog(member)"
-                  >
-                    <Pencil class="size-4" />
+                  <Button variant="ghost" size="icon" class="size-10" @click="navigateToEdit(member)">
+                    <Pencil class="size-3.5" />
+                    <span class="sr-only">Editar</span>
                   </Button>
                   <Button
                     variant="ghost"
                     size="icon"
                     class="size-10 text-destructive hover:text-destructive"
-                    aria-label="Desactivar personal"
                     @click="openDeleteDialog(member)"
                   >
-                    <Trash2 class="size-4" />
+                    <Trash2 class="size-3.5" />
+                    <span class="sr-only">Desactivar</span>
                   </Button>
                 </div>
               </TableCell>
@@ -233,18 +288,29 @@ onMounted(() => {
       <div class="space-y-2 md:hidden">
         <Card v-for="member in filteredStaff" :key="member.id">
           <CardContent class="px-3 py-2.5">
-            <!-- Row 1: Name + Role badge -->
-            <div class="flex items-center gap-1.5">
+            <!-- Row 1: Avatar + Name + Role badge -->
+            <div class="flex items-center gap-2">
+              <Avatar class="size-7 shrink-0">
+                <AvatarImage v-if="member.avatar" :src="member.avatar" :alt="member.name" />
+                <AvatarFallback class="bg-primary/10 text-[10px] font-semibold text-primary">
+                  {{ getInitials(member.name) }}
+                </AvatarFallback>
+              </Avatar>
               <p class="min-w-0 flex-1 truncate text-sm font-semibold">{{ member.name }}</p>
               <Badge :variant="ROLE_CONFIG[member.role].variant" class="shrink-0 text-[11px]">
                 {{ ROLE_CONFIG[member.role].label }}
               </Badge>
             </div>
-            <!-- Row 2: Phone · Email · Shift | Actions inline -->
-            <div class="mt-0.5 flex items-center gap-x-1 text-[11px] text-muted-foreground">
+            <!-- Row 2: Phone · Shift | QR + Actions inline -->
+            <div class="mt-0.5 flex items-center gap-x-1 pl-9 text-[11px] text-muted-foreground">
               <template v-if="member.phone">
                 <Phone class="size-3 shrink-0" />
-                <span class="shrink-0">{{ member.phone }}</span>
+                <span class="shrink-0 tabular-nums">{{ member.phone }}</span>
+              </template>
+              <template v-if="member.unitNumber">
+                <span class="opacity-30">·</span>
+                <Home class="size-3 shrink-0" />
+                <span>{{ member.unitNumber }}</span>
               </template>
               <template v-if="member.shift">
                 <span class="opacity-30">·</span>
@@ -253,19 +319,25 @@ onMounted(() => {
               </template>
               <span class="ml-auto flex shrink-0 items-center gap-0.5">
                 <Button
+                  v-if="member.qrToken"
                   variant="ghost"
-                  class="h-6 px-2 text-[11px] text-muted-foreground hover:text-foreground"
-                  aria-label="Editar personal"
-                  @click="openEditDialog(member)"
+                  class="h-6 px-2 text-[11px] text-primary"
+                  @click="handleShowQr(member)"
                 >
-                  <Pencil class="size-3" />
+                  <QrCode class="size-3" />
                 </Button>
                 <Button
+                  v-else
                   variant="ghost"
-                  class="h-6 px-2 text-[11px] text-destructive hover:text-destructive"
-                  aria-label="Desactivar personal"
-                  @click="openDeleteDialog(member)"
+                  class="h-6 px-2 text-[11px]"
+                  @click="handleGenerateQr(member)"
                 >
+                  <QrCode class="size-3" />
+                </Button>
+                <Button variant="ghost" class="h-6 px-2 text-[11px]" @click="navigateToEdit(member)">
+                  <Pencil class="size-3" />
+                </Button>
+                <Button variant="ghost" class="h-6 px-2 text-[11px] text-destructive hover:text-destructive" @click="openDeleteDialog(member)">
                   <Trash2 class="size-3" />
                 </Button>
               </span>
@@ -274,107 +346,6 @@ onMounted(() => {
         </Card>
       </div>
     </div>
-
-    <!-- Create/Edit Sheet -->
-    <Sheet v-model:open="dialogOpen">
-      <SheetContent side="right">
-        <SheetHeader>
-          <SheetTitle>Editar personal</SheetTitle>
-          <SheetDescription>
-            Actualiza la información del miembro del personal
-          </SheetDescription>
-        </SheetHeader>
-
-        <form class="space-y-4 py-2" @submit.prevent="handleSubmit">
-          <div class="space-y-2">
-            <Label for="staff-name">Nombre *</Label>
-            <Input
-              id="staff-name"
-              v-model="formName"
-              placeholder="Nombre completo"
-              class="h-12"
-              required
-            />
-          </div>
-
-          <div class="space-y-2">
-            <Label for="staff-role">Rol *</Label>
-            <Select v-model="formRole">
-              <SelectTrigger id="staff-role" size="lg">
-                <SelectValue placeholder="Seleccionar rol" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="conserje">Conserje</SelectItem>
-                <SelectItem value="vigilancia">Vigilancia</SelectItem>
-                <SelectItem value="mantenimiento">Mantenimiento</SelectItem>
-                <SelectItem value="otro">Otro</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div class="space-y-2">
-            <Label for="staff-document">Documento de identidad</Label>
-            <Input
-              id="staff-document"
-              v-model="formDocument"
-              placeholder="Cédula o pasaporte"
-              class="h-12"
-            />
-          </div>
-
-          <div class="grid grid-cols-2 gap-3">
-            <div class="space-y-2">
-              <Label for="staff-phone">Teléfono</Label>
-              <Input
-                id="staff-phone"
-                v-model="formPhone"
-                placeholder="0412-1234567"
-                class="h-12"
-              />
-            </div>
-
-            <div class="space-y-2">
-              <Label for="staff-email">Email</Label>
-              <Input
-                id="staff-email"
-                v-model="formEmail"
-                type="email"
-                placeholder="correo@ejemplo.com"
-                class="h-12"
-              />
-            </div>
-          </div>
-
-          <div class="space-y-2">
-            <Label for="staff-shift">Turno</Label>
-            <Select v-model="formShift">
-              <SelectTrigger id="staff-shift" size="lg">
-                <SelectValue placeholder="Seleccionar turno" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="none">Sin asignar</SelectItem>
-                <SelectItem value="mañana">Mañana</SelectItem>
-                <SelectItem value="tarde">Tarde</SelectItem>
-                <SelectItem value="noche">Noche</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
-          <SheetFooter class="gap-2 sm:gap-0">
-            <Button type="button" variant="outline" @click="dialogOpen = false">
-              Cancelar
-            </Button>
-            <Button
-              type="submit"
-              :disabled="!formName.trim() || !formRole || isSubmitting"
-            >
-              <Loader2 v-if="isSubmitting" class="mr-2 size-4 animate-spin" />
-              {{ isSubmitting ? 'Guardando...' : 'Guardar' }}
-            </Button>
-          </SheetFooter>
-        </form>
-      </SheetContent>
-    </Sheet>
 
     <!-- Delete AlertDialog -->
     <AlertDialog v-model:open="deleteDialogOpen">
@@ -398,5 +369,48 @@ onMounted(() => {
         </AlertDialogFooter>
       </AlertDialogContent>
     </AlertDialog>
+
+    <!-- QR Pass Dialog -->
+    <Dialog v-model:open="qrDialogOpen">
+      <DialogContent class="sm:max-w-sm">
+        <DialogHeader>
+          <DialogTitle>Pase QR — {{ qrStaff?.name }}</DialogTitle>
+          <DialogDescription>
+            {{ ROLE_CONFIG[qrStaff?.role ?? 'otro'].label }} — pase de acceso multi-uso
+          </DialogDescription>
+        </DialogHeader>
+
+        <div class="flex flex-col items-center gap-4 py-4">
+          <div v-if="isGeneratingQr" class="flex size-[280px] items-center justify-center">
+            <Loader2 class="size-8 animate-spin text-muted-foreground" />
+          </div>
+          <img
+            v-else-if="qrImageUrl"
+            :src="qrImageUrl"
+            :alt="`QR de acceso para ${qrStaff?.name}`"
+            class="size-[280px] rounded-lg"
+          />
+
+          <p class="text-center text-[11px] text-muted-foreground">
+            Este pase permite acceso recurrente. El vigilante lo escanea cada vez que ingresa.
+          </p>
+        </div>
+
+        <div class="flex gap-2">
+          <Button class="flex-1 gap-1.5" @click="handleSharePass">
+            <Share2 class="size-4" />
+            Compartir
+          </Button>
+          <Button
+            variant="outline"
+            class="gap-1.5"
+            @click="handleGenerateQr(qrStaff!)"
+          >
+            <QrCode class="size-4" />
+            Regenerar
+          </Button>
+        </div>
+      </DialogContent>
+    </Dialog>
   </div>
 </template>

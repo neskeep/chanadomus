@@ -6,7 +6,7 @@ import type { CreateFrequentVisitor } from '~~/shared/types/frequent-visitor'
 
 export default defineEventHandler(async (event) => {
   const { tenantId, user } = await requireTenant(event)
-  await requireRole(event, ['propietario', 'admin'])
+  const session = await requireRole(event, ['propietario', 'admin', 'conserje'])
 
   const body = await readBody<CreateFrequentVisitor>(event)
 
@@ -30,6 +30,14 @@ export default defineEventHandler(async (event) => {
 
   if (!unit) {
     throw createError({ statusCode: 404, message: 'Unidad no encontrada' })
+  }
+
+  // Conserje solo puede crear visitantes para su unidad asignada
+  if (session.user.role === 'conserje') {
+    const staffUnitId = await getStaffUnitId(user.id, tenantId)
+    if (staffUnitId !== body.unitId) {
+      throw createError({ statusCode: 403, message: 'Solo puedes agregar visitantes a tu unidad asignada' })
+    }
   }
 
   const rows = await db

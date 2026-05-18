@@ -8,10 +8,14 @@ import { user } from '~~/server/db/schema/auth'
 import { serviceStaffPasses } from '~~/server/db/schema/service-staff-pass'
 import { unitServiceStaff } from '~~/server/db/schema/unit-service-staff'
 import { serviceStaffRoles } from '~~/server/db/schema/service-staff-role'
+import { staff } from '~~/server/db/schema/staff'
+import { householdMemberPasses } from '~~/server/db/schema/household-member-pass'
+import { householdMembers } from '~~/server/db/schema/household'
 import { eq, and } from 'drizzle-orm'
 import type { ValidationResult } from '~~/shared/types/qr'
 import type { AccessEvent, AccessResult } from '~~/shared/types/access'
 import { broadcastAccessEvent } from '~~/server/utils/ws-access'
+import { checkOpenEntry } from '~~/server/utils/access-entry-exit'
 
 export default defineEventHandler(async (event) => {
   const session = await requireAuth(event)
@@ -26,6 +30,8 @@ export default defineEventHandler(async (event) => {
   if (!body.token?.trim()) {
     throw createError({ statusCode: 400, message: 'token es requerido' })
   }
+
+  const token = body.token.trim()
 
   // Buscar QR por token con join a units
   const [record] = await db
@@ -42,42 +48,69 @@ export default defineEventHandler(async (event) => {
     })
     .from(qrCodes)
     .innerJoin(units, eq(units.id, qrCodes.unitId))
-    .where(eq(qrCodes.token, body.token.trim()))
+    .where(eq(qrCodes.token, token))
     .limit(1)
 
-  // Token no encontrado in QR codes — check resident passes
+  // Token no encontrado in QR codes — check other pass types
   if (!record) {
-    const residentPassResult = await validateResidentPass(body.token.trim(), tenantId, session.user.id)
+    const residentPassResult = await validateResidentPass(token, tenantId, session.user.id)
     if (residentPassResult) {
       return { data: residentPassResult }
     }
 
-    // Check vehicle passes
-    const vehiclePassResult = await validateVehiclePass(body.token.trim(), tenantId, session.user.id, body.occupantCount)
+    const memberPassResult = await validateMemberPass(token, tenantId, session.user.id)
+    if (memberPassResult) {
+      return { data: memberPassResult }
+    }
+
+    const vehiclePassResult = await validateVehiclePass(token, tenantId, session.user.id, body.occupantCount)
     if (vehiclePassResult) {
       return { data: vehiclePassResult }
     }
 
-    // Check service staff passes
-    const staffPassResult = await validateStaffPass(body.token.trim(), tenantId, session.user.id)
+    const staffPassResult = await validateStaffPass(token, tenantId, session.user.id)
     if (staffPassResult) {
       return { data: staffPassResult }
     }
 
-    await logAccess({ tenantId, entryType: 'qr', result: 'denied', authorizedBy: session.user.id })
+    const condoStaffResult = await validateCondoStaffPass(token, tenantId, session.user.id)
+    if (condoStaffResult) {
+      return { data: condoStaffResult }
+    }
+
+    await logAccess({ tenantId, entryType: 'qr', result: 'denied', authorizedBy: session.user.id, passToken: token })
     const result: ValidationResult = { status: 'invalid' }
     return { data: result }
   }
 
   const now = new Date()
 
-  // Ya usado
+  // QR single-use: check if already used — but now allow exit scan
   if (record.usedAt) {
+    // Check for open entry — second scan = exit
+    const openEntry = await checkOpenEntry(token, tenantId)
+
+    if (openEntry.action === 'exit') {
+      const result: ValidationResult = {
+        status: 'valid',
+        direction: 'exit',
+        accessLogId: openEntry.logId,
+        visitorName: record.visitorName,
+        visitorDocument: record.visitorDocument,
+        visitorType: record.visitorType,
+        unitNumber: record.unitNumber,
+        unitLabel: record.unitLabel,
+      }
+      return { data: result }
+    }
+
+    // No open entry or expired — report as already_used (no valid entry to close)
     await logAccess({
       tenantId, entryType: 'qr', result: 'already_used', qrCodeId: record.id,
       authorizedBy: session.user.id, visitorName: record.visitorName,
       visitorDocument: record.visitorDocument, unitId: record.unitId,
       unitNumber: record.unitNumber, unitLabel: record.unitLabel,
+      passToken: token,
     })
     const result: ValidationResult = {
       status: 'already_used',
@@ -95,6 +128,7 @@ export default defineEventHandler(async (event) => {
       authorizedBy: session.user.id, visitorName: record.visitorName,
       visitorDocument: record.visitorDocument, unitId: record.unitId,
       unitNumber: record.unitNumber, unitLabel: record.unitLabel,
+      passToken: token,
     })
     const result: ValidationResult = {
       status: 'expired',
@@ -104,7 +138,7 @@ export default defineEventHandler(async (event) => {
     return { data: result }
   }
 
-  // Valido — marcar QR como usado y registrar acceso
+  // Valido — marcar QR como usado y registrar acceso (ENTRY)
   await db.update(qrCodes).set({ usedAt: now }).where(eq(qrCodes.id, record.id))
 
   await logAccess({
@@ -112,10 +146,12 @@ export default defineEventHandler(async (event) => {
     authorizedBy: session.user.id, visitorName: record.visitorName,
     visitorDocument: record.visitorDocument, unitId: record.unitId,
     unitNumber: record.unitNumber, unitLabel: record.unitLabel,
+    passToken: token,
   })
 
   const result: ValidationResult = {
     status: 'valid',
+    direction: 'entry',
     visitorName: record.visitorName,
     visitorDocument: record.visitorDocument,
     visitorType: record.visitorType,
@@ -142,6 +178,7 @@ async function logAccess(params: {
   staffPassId?: string
   occupantCount?: number
   vehiclePlate?: string | null
+  passToken?: string
 }) {
   const rows = await db
     .insert(accessLogs)
@@ -157,6 +194,7 @@ async function logAccess(params: {
       vehiclePassId: params.vehiclePassId ?? null,
       staffPassId: params.staffPassId ?? null,
       occupantCount: params.occupantCount ?? null,
+      passToken: params.passToken ?? null,
     })
     .returning({ id: accessLogs.id, createdAt: accessLogs.createdAt })
 
@@ -178,6 +216,7 @@ async function logAccess(params: {
     staffPassId: params.staffPassId ?? null,
     occupantCount: params.occupantCount ?? null,
     vehiclePlate: params.vehiclePlate ?? null,
+    direction: 'entry',
   }
 
   broadcastAccessEvent(accessEvent)
@@ -226,6 +265,7 @@ async function validateResidentPass(
       unitId: pass.unitId,
       unitNumber: pass.unitNumber,
       unitLabel: pass.unitLabel,
+      passToken: token,
     })
     return {
       status: 'expired',
@@ -236,7 +276,22 @@ async function validateResidentPass(
     }
   }
 
-  // Valid resident pass — log access but do NOT mark as used (multi-use)
+  // Check for open entry — second scan = exit
+  const openEntry = await checkOpenEntry(token, tenantId)
+
+  if (openEntry.action === 'exit') {
+    return {
+      status: 'valid',
+      direction: 'exit',
+      accessLogId: openEntry.logId,
+      residentName: pass.userName,
+      unitNumber: pass.unitNumber,
+      unitLabel: pass.unitLabel,
+      isResidentPass: true,
+    }
+  }
+
+  // Entry — log access (multi-use, never mark as used)
   await logAccess({
     tenantId,
     entryType: 'qr',
@@ -246,15 +301,117 @@ async function validateResidentPass(
     unitId: pass.unitId,
     unitNumber: pass.unitNumber,
     unitLabel: pass.unitLabel,
+    passToken: token,
   })
 
   return {
     status: 'valid',
+    direction: 'entry',
     residentName: pass.userName,
     unitNumber: pass.unitNumber,
     unitLabel: pass.unitLabel,
     expiresAt: pass.expiresAt.toISOString(),
     isResidentPass: true,
+  }
+}
+
+/** Check if token matches an active household member pass */
+async function validateMemberPass(
+  token: string,
+  tenantId: string,
+  authorizedBy: string,
+): Promise<ValidationResult | null> {
+  const [pass] = await db
+    .select({
+      id: householdMemberPasses.id,
+      memberId: householdMemberPasses.memberId,
+      unitId: householdMemberPasses.unitId,
+      isActive: householdMemberPasses.isActive,
+      expiresAt: householdMemberPasses.expiresAt,
+      memberName: householdMembers.name,
+      memberRelationship: householdMembers.relationship,
+      unitNumber: units.number,
+      unitLabel: units.label,
+    })
+    .from(householdMemberPasses)
+    .innerJoin(householdMembers, eq(householdMembers.id, householdMemberPasses.memberId))
+    .innerJoin(units, eq(units.id, householdMemberPasses.unitId))
+    .where(
+      and(
+        eq(householdMemberPasses.token, token),
+        eq(householdMemberPasses.tenantId, tenantId),
+      ),
+    )
+    .limit(1)
+
+  if (!pass) return null
+
+  // Inactive pass
+  if (!pass.isActive) return null
+
+  const now = new Date()
+
+  // Expired member pass
+  if (pass.expiresAt && pass.expiresAt <= now) {
+    await logAccess({
+      tenantId,
+      entryType: 'qr',
+      result: 'expired',
+      authorizedBy,
+      visitorName: pass.memberName,
+      unitId: pass.unitId,
+      unitNumber: pass.unitNumber,
+      unitLabel: pass.unitLabel,
+      passToken: token,
+    })
+    return {
+      status: 'expired',
+      unitNumber: pass.unitNumber,
+      unitLabel: pass.unitLabel,
+      isMemberPass: true,
+      memberName: pass.memberName,
+      memberRelationship: pass.memberRelationship,
+    }
+  }
+
+  // Check for open entry — second scan = exit
+  const openEntry = await checkOpenEntry(token, tenantId)
+
+  if (openEntry.action === 'exit') {
+    return {
+      status: 'valid',
+      direction: 'exit',
+      accessLogId: openEntry.logId,
+      unitNumber: pass.unitNumber,
+      unitLabel: pass.unitLabel,
+      isMemberPass: true,
+      memberName: pass.memberName,
+      memberRelationship: pass.memberRelationship,
+    }
+  }
+
+  // Entry — log access (multi-use, never mark as used)
+  await logAccess({
+    tenantId,
+    entryType: 'qr',
+    result: 'allowed',
+    authorizedBy,
+    visitorName: pass.memberName,
+    unitId: pass.unitId,
+    unitNumber: pass.unitNumber,
+    unitLabel: pass.unitLabel,
+    passToken: token,
+  })
+
+  return {
+    status: 'valid',
+    direction: 'entry',
+    unitNumber: pass.unitNumber,
+    unitLabel: pass.unitLabel,
+    expiresAt: pass.expiresAt?.toISOString(),
+    isMemberPass: true,
+    memberName: pass.memberName,
+    memberRelationship: pass.memberRelationship,
   }
 }
 
@@ -312,6 +469,7 @@ async function validateVehiclePass(
       unitNumber: pass.unitNumber,
       unitLabel: pass.unitLabel,
       vehiclePlate: pass.plate,
+      passToken: token,
     })
     return {
       status: 'expired',
@@ -327,7 +485,27 @@ async function validateVehiclePass(
     }
   }
 
-  // Valid vehicle pass — log access (multi-use, never mark as used)
+  // Check for open entry — second scan = exit
+  const openEntry = await checkOpenEntry(token, tenantId)
+
+  if (openEntry.action === 'exit') {
+    return {
+      status: 'valid',
+      direction: 'exit',
+      accessLogId: openEntry.logId,
+      unitNumber: pass.unitNumber,
+      unitLabel: pass.unitLabel,
+      isVehiclePass: true,
+      vehiclePlate: pass.plate,
+      vehicleBrand: pass.brand,
+      vehicleModel: pass.model,
+      vehicleColor: pass.color,
+      passType: pass.passType,
+      occupantLimit: pass.occupantLimit,
+    }
+  }
+
+  // Entry — log access (multi-use, never mark as used)
   await logAccess({
     tenantId,
     entryType: 'qr',
@@ -340,10 +518,12 @@ async function validateVehiclePass(
     unitNumber: pass.unitNumber,
     unitLabel: pass.unitLabel,
     vehiclePlate: pass.plate,
+    passToken: token,
   })
 
   return {
     status: 'valid',
+    direction: 'entry',
     unitNumber: pass.unitNumber,
     unitLabel: pass.unitLabel,
     expiresAt: pass.expiresAt?.toISOString(),
@@ -406,6 +586,7 @@ async function validateStaffPass(
       unitId: pass.unitId,
       unitNumber: pass.unitNumber,
       unitLabel: pass.unitLabel,
+      passToken: token,
     })
     return {
       status: 'expired',
@@ -417,7 +598,23 @@ async function validateStaffPass(
     }
   }
 
-  // Valid staff pass — log access (multi-use, never mark as used)
+  // Check for open entry — second scan = exit
+  const openEntry = await checkOpenEntry(token, tenantId)
+
+  if (openEntry.action === 'exit') {
+    return {
+      status: 'valid',
+      direction: 'exit',
+      accessLogId: openEntry.logId,
+      unitNumber: pass.unitNumber,
+      unitLabel: pass.unitLabel,
+      isStaffPass: true,
+      staffName: pass.staffName,
+      staffRole: pass.roleName ?? undefined,
+    }
+  }
+
+  // Entry — log access (multi-use, never mark as used)
   await logAccess({
     tenantId,
     entryType: 'qr',
@@ -428,15 +625,74 @@ async function validateStaffPass(
     unitId: pass.unitId,
     unitNumber: pass.unitNumber,
     unitLabel: pass.unitLabel,
+    passToken: token,
   })
 
   return {
     status: 'valid',
+    direction: 'entry',
     unitNumber: pass.unitNumber,
     unitLabel: pass.unitLabel,
     expiresAt: pass.expiresAt?.toISOString(),
     isStaffPass: true,
     staffName: pass.staffName,
     staffRole: pass.roleName ?? undefined,
+  }
+}
+
+/** Check if token matches an active condo staff member (personal del condominio) */
+async function validateCondoStaffPass(
+  token: string,
+  tenantId: string,
+  authorizedBy: string,
+): Promise<ValidationResult | null> {
+  const [member] = await db
+    .select({
+      id: staff.id,
+      name: staff.name,
+      role: staff.role,
+    })
+    .from(staff)
+    .where(
+      and(
+        eq(staff.qrToken, token),
+        eq(staff.tenantId, tenantId),
+        eq(staff.isActive, true),
+      ),
+    )
+    .limit(1)
+
+  if (!member) return null
+
+  // Check for open entry — second scan = exit
+  const openEntry = await checkOpenEntry(token, tenantId)
+
+  if (openEntry.action === 'exit') {
+    return {
+      status: 'valid',
+      direction: 'exit',
+      accessLogId: openEntry.logId,
+      isCondoStaff: true,
+      staffName: member.name,
+      staffRole: member.role,
+    }
+  }
+
+  // Entry — log access (multi-use, never expires)
+  await logAccess({
+    tenantId,
+    entryType: 'qr',
+    result: 'allowed',
+    authorizedBy,
+    visitorName: `${member.name} (${member.role})`,
+    passToken: token,
+  })
+
+  return {
+    status: 'valid',
+    direction: 'entry',
+    isCondoStaff: true,
+    staffName: member.name,
+    staffRole: member.role,
   }
 }

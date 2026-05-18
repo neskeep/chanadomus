@@ -37,6 +37,18 @@ export function useChatRooms() {
     rooms.value.filter(r => r.type === 'vigilancia'),
   )
 
+  const conserjeriaRooms = computed(() =>
+    rooms.value.filter(r => r.type === 'conserjeria'),
+  )
+
+  const incidenciasRooms = computed(() =>
+    rooms.value.filter(r => r.type === 'incidencias'),
+  )
+
+  const propietariosRooms = computed(() =>
+    rooms.value.filter(r => r.type === 'propietarios'),
+  )
+
   function getRoomById(id: string): ChatRoom | undefined {
     return rooms.value.find(r => r.id === id)
   }
@@ -49,6 +61,9 @@ export function useChatRooms() {
     unitRooms,
     adminRooms,
     vigilanciaRooms,
+    conserjeriaRooms,
+    incidenciasRooms,
+    propietariosRooms,
     fetchRooms,
     getRoomById,
   }

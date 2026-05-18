@@ -10,4 +10,17 @@ export interface HouseholdMember {
   isActive: boolean
   tenantId: string
   createdAt: string
+  hasPass?: boolean
+  passToken?: string
+}
+
+export interface HouseholdMemberPass {
+  id: string
+  memberId: string
+  unitId: string
+  token: string
+  isActive: boolean
+  expiresAt: string | null
+  tenantId: string
+  createdAt: string
 }

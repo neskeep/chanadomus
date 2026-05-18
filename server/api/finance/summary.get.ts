@@ -1,12 +1,31 @@
 import { db } from '~~/server/db'
 import { units } from '~~/server/db/schema/unit'
 import { financialRecords } from '~~/server/db/schema/financial'
-import { eq, sql, asc } from 'drizzle-orm'
+import { eq, sql, asc, and, gte, lte } from 'drizzle-orm'
 import type { UnitSummary } from '~~/shared/types/financial'
 
 export default defineEventHandler(async (event) => {
   const session = await requireTenant(event)
   await requireRole(event, ['admin'])
+
+  const query = getQuery(event)
+  const from = typeof query.from === 'string' ? query.from : undefined
+  const to = typeof query.to === 'string' ? query.to : undefined
+
+  // Build JOIN condition: always match unit + tenant, optionally filter by date range
+  const dateConditions: ReturnType<typeof sql>[] = [
+    sql`${units.id} = ${financialRecords.unitId} AND ${financialRecords.tenantId} = ${units.tenantId}`,
+  ]
+  if (from) {
+    dateConditions.push(sql`${financialRecords.date} >= ${new Date(from)}`)
+  }
+  if (to) {
+    dateConditions.push(sql`${financialRecords.date} <= ${new Date(to)}`)
+  }
+
+  const joinCondition = dateConditions.length === 1
+    ? dateConditions[0]
+    : sql.join(dateConditions, sql` AND `)
 
   const rows = await db
     .select({
@@ -24,7 +43,7 @@ export default defineEventHandler(async (event) => {
       )::numeric(12,2)`.as('balance'),
     })
     .from(units)
-    .leftJoin(financialRecords, sql`${units.id} = ${financialRecords.unitId} AND ${financialRecords.tenantId} = ${units.tenantId}`)
+    .leftJoin(financialRecords, joinCondition)
     .where(eq(units.tenantId, session.tenantId))
     .groupBy(units.id, units.number, units.label)
     .orderBy(asc(units.number))

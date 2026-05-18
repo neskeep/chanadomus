@@ -1,5 +1,5 @@
-import type { HouseholdMember, HouseholdRelationship } from '~~/shared/types/household'
-import type { Vehicle } from '~~/shared/types/vehicle'
+import type { HouseholdMember, HouseholdRelationship, HouseholdMemberPass } from '~~/shared/types/household'
+import type { Vehicle, VehiclePass } from '~~/shared/types/vehicle'
 import type { UnitServiceStaff, ServiceStaffRole, ServiceStaffPass, StaffAttendanceLog } from '~~/shared/types/unit-service-staff'
 
 // --- Member types ---
@@ -267,6 +267,74 @@ export function useMyUnit() {
     }
   }
 
+  // --- Member Passes ---
+  async function generateMemberPass(memberId: string): Promise<HouseholdMemberPass> {
+    isSubmitting.value = true
+    try {
+      const res = await $fetch<{ data: HouseholdMemberPass }>(`/api/my-unit/members/${memberId}/pass`, {
+        method: 'POST',
+      })
+      await fetchMembers()
+      return res.data
+    }
+    catch (err: unknown) {
+      error.value = err instanceof Error ? err.message : 'Error al generar pase'
+      throw err
+    }
+    finally {
+      isSubmitting.value = false
+    }
+  }
+
+  async function revokeMemberPass(memberId: string): Promise<void> {
+    isSubmitting.value = true
+    try {
+      await $fetch(`/api/my-unit/members/${memberId}/pass`, { method: 'DELETE' })
+      await fetchMembers()
+    }
+    catch (err: unknown) {
+      error.value = err instanceof Error ? err.message : 'Error al revocar pase'
+      throw err
+    }
+    finally {
+      isSubmitting.value = false
+    }
+  }
+
+  // --- Vehicle Passes ---
+  async function generateVehiclePass(vehicleId: string): Promise<VehiclePass> {
+    isSubmitting.value = true
+    try {
+      const res = await $fetch<{ data: VehiclePass }>(`/api/my-unit/vehicles/${vehicleId}/pass`, {
+        method: 'POST',
+      })
+      await fetchVehicles()
+      return res.data
+    }
+    catch (err: unknown) {
+      error.value = err instanceof Error ? err.message : 'Error al generar pase'
+      throw err
+    }
+    finally {
+      isSubmitting.value = false
+    }
+  }
+
+  async function revokeVehiclePass(vehicleId: string): Promise<void> {
+    isSubmitting.value = true
+    try {
+      await $fetch(`/api/my-unit/vehicles/${vehicleId}/pass`, { method: 'DELETE' })
+      await fetchVehicles()
+    }
+    catch (err: unknown) {
+      error.value = err instanceof Error ? err.message : 'Error al revocar pase'
+      throw err
+    }
+    finally {
+      isSubmitting.value = false
+    }
+  }
+
   // --- Service Staff Passes ---
   async function generateStaffPass(staffId: string): Promise<ServiceStaffPass> {
     isSubmitting.value = true
@@ -366,6 +434,12 @@ export function useMyUnit() {
     createServiceStaff,
     updateServiceStaff,
     deleteServiceStaff,
+    // Member Passes
+    generateMemberPass,
+    revokeMemberPass,
+    // Vehicle Passes
+    generateVehiclePass,
+    revokeVehiclePass,
     // Staff Passes
     generateStaffPass,
     getStaffPass,

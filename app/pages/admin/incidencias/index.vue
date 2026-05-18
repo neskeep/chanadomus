@@ -5,6 +5,7 @@ import {
   CheckCircle2,
   Loader2,
   XCircle,
+  EyeOff,
 } from 'lucide-vue-next'
 import type { IncidentStatus, IncidentPriority } from '~~/shared/types/incident'
 import { INCIDENT_STATUS_COLORS, INCIDENT_STATUS_LABELS, INCIDENT_PRIORITY_COLORS, INCIDENT_PRIORITY_LABELS } from '~/composables/useColorMap'
@@ -147,7 +148,13 @@ const { formatDate } = useFormatDate()
                   {{ item.title }}
                 </NuxtLink>
               </TableCell>
-              <TableCell class="text-muted-foreground">{{ item.reportedByName ?? '—' }}</TableCell>
+              <TableCell class="text-muted-foreground">
+                <span>{{ item.reportedByName ?? '—' }}</span>
+                <span v-if="item.isAnonymous" class="ml-1.5 inline-flex items-center gap-0.5 rounded-lg bg-muted px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground">
+                  <EyeOff class="size-2.5" />
+                  Anónima
+                </span>
+              </TableCell>
               <TableCell>
                 <span
                   class="inline-flex rounded-lg px-2 py-0.5 text-xs font-medium"
@@ -196,6 +203,13 @@ const { formatDate } = useFormatDate()
                 <span class="shrink-0">{{ item.unitNumber ?? '—' }}</span>
                 <span class="opacity-30">·</span>
                 <span class="truncate">{{ item.reportedByName ?? '—' }}</span>
+                <template v-if="item.isAnonymous">
+                  <span class="opacity-30">·</span>
+                  <span class="inline-flex items-center gap-0.5">
+                    <EyeOff class="size-2.5" />
+                    Anónima
+                  </span>
+                </template>
               </div>
             </CardContent>
           </Card>

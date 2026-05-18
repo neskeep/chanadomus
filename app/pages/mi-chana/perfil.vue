@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Camera, Loader2, ScanLine, Mail, Building2, Phone, Shield } from 'lucide-vue-next'
+import { Camera, Loader2, ScanLine, Mail, Building2, Phone, Shield, Lock, Eye, EyeOff } from 'lucide-vue-next'
 import { toast } from 'vue-sonner'
 import { ROLE_LABELS } from '~~/shared/types/auth'
 import type { UserRole } from '~~/shared/types/auth'
@@ -7,7 +7,7 @@ import QRCode from 'qrcode'
 
 useHead({ title: 'Mi Perfil' })
 
-const { profile, isLoading, isSubmitting, error, fetchProfile, updateProfile, uploadAvatar } = useProfile()
+const { profile, isLoading, isSubmitting, error, fetchProfile, updateProfile, uploadAvatar, changePassword } = useProfile()
 const { role } = useAuth()
 
 // QR pass (only for propietario)
@@ -19,6 +19,23 @@ const formName = ref('')
 const formPhone = ref('')
 const fileInput = ref<HTMLInputElement | null>(null)
 const uploadingAvatar = ref(false)
+
+// Password change
+const currentPassword = ref('')
+const newPassword = ref('')
+const confirmPassword = ref('')
+const showCurrentPassword = ref(false)
+const showNewPassword = ref(false)
+const showConfirmPassword = ref(false)
+const isChangingPassword = ref(false)
+
+const passwordsMatch = computed(() => newPassword.value === confirmPassword.value)
+const canSubmitPassword = computed(() =>
+  currentPassword.value.length > 0
+  && newPassword.value.length >= 8
+  && passwordsMatch.value
+  && !isChangingPassword.value,
+)
 
 const initials = computed(() => {
   if (!profile.value?.name) return '?'
@@ -35,7 +52,7 @@ const roleLabel = computed(() => {
   return ROLE_LABELS[profile.value.role as UserRole] ?? profile.value.role
 })
 
-const isPropietario = computed(() => role.value === 'propietario')
+const hasUnit = computed(() => role.value === 'propietario' || role.value === 'conserje')
 
 const isExpired = computed(() => {
   if (!pass.value?.expiresAt) return false
@@ -87,9 +104,30 @@ async function handleSubmit() {
   }
 }
 
+async function handleChangePassword() {
+  if (!canSubmitPassword.value) return
+  isChangingPassword.value = true
+  try {
+    await changePassword({
+      currentPassword: currentPassword.value,
+      newPassword: newPassword.value,
+    })
+    toast.success('Contraseña actualizada')
+    currentPassword.value = ''
+    newPassword.value = ''
+    confirmPassword.value = ''
+  }
+  catch {
+    toast.error('Error al cambiar la contraseña')
+  }
+  finally {
+    isChangingPassword.value = false
+  }
+}
+
 onMounted(async () => {
   await fetchProfile()
-  if (isPropietario.value) {
+  if (hasUnit.value) {
     await fetchMyPass()
     await generateQrImage()
   }
@@ -188,10 +226,103 @@ onMounted(async () => {
             </form>
           </CardContent>
         </Card>
+
+        <!-- Password change -->
+        <Card>
+          <CardContent class="p-5 md:p-6">
+            <h3 class="mb-4 flex items-center gap-2 text-sm font-semibold">
+              <Lock class="size-4" />
+              Cambiar contraseña
+            </h3>
+            <form class="space-y-4" @submit.prevent="handleChangePassword">
+              <div class="grid gap-4 sm:grid-cols-3">
+                <div class="space-y-1.5">
+                  <Label for="current-password">Contraseña actual</Label>
+                  <div class="relative">
+                    <Input
+                      id="current-password"
+                      v-model="currentPassword"
+                      :type="showCurrentPassword ? 'text' : 'password'"
+                      placeholder="••••••••"
+                      autocomplete="current-password"
+                      class="h-12 pr-10 text-base"
+                    />
+                    <button
+                      type="button"
+                      class="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                      aria-label="Mostrar contraseña actual"
+                      @click="showCurrentPassword = !showCurrentPassword"
+                    >
+                      <Eye v-if="!showCurrentPassword" class="size-4" />
+                      <EyeOff v-else class="size-4" />
+                    </button>
+                  </div>
+                </div>
+                <div class="space-y-1.5">
+                  <Label for="new-password">Nueva contraseña</Label>
+                  <div class="relative">
+                    <Input
+                      id="new-password"
+                      v-model="newPassword"
+                      :type="showNewPassword ? 'text' : 'password'"
+                      placeholder="••••••••"
+                      autocomplete="new-password"
+                      class="h-12 pr-10 text-base"
+                    />
+                    <button
+                      type="button"
+                      class="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                      aria-label="Mostrar nueva contraseña"
+                      @click="showNewPassword = !showNewPassword"
+                    >
+                      <Eye v-if="!showNewPassword" class="size-4" />
+                      <EyeOff v-else class="size-4" />
+                    </button>
+                  </div>
+                </div>
+                <div class="space-y-1.5">
+                  <Label for="confirm-password">Confirmar contraseña</Label>
+                  <div class="relative">
+                    <Input
+                      id="confirm-password"
+                      v-model="confirmPassword"
+                      :type="showConfirmPassword ? 'text' : 'password'"
+                      placeholder="••••••••"
+                      autocomplete="new-password"
+                      class="h-12 pr-10 text-base"
+                    />
+                    <button
+                      type="button"
+                      class="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                      aria-label="Mostrar confirmación de contraseña"
+                      @click="showConfirmPassword = !showConfirmPassword"
+                    >
+                      <Eye v-if="!showConfirmPassword" class="size-4" />
+                      <EyeOff v-else class="size-4" />
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <p v-if="newPassword && confirmPassword && !passwordsMatch" class="text-sm text-destructive">
+                Las contraseñas no coinciden
+              </p>
+
+              <p v-if="newPassword && newPassword.length < 8" class="text-sm text-muted-foreground">
+                Mínimo 8 caracteres
+              </p>
+
+              <Button type="submit" class="h-12 w-full text-base font-semibold sm:w-auto sm:px-8" :disabled="!canSubmitPassword">
+                <Loader2 v-if="isChangingPassword" class="mr-2 size-4 animate-spin" />
+                {{ isChangingPassword ? 'Cambiando...' : 'Cambiar contraseña' }}
+              </Button>
+            </form>
+          </CardContent>
+        </Card>
       </div>
 
       <!-- Right column: QR pass (1/3, only propietario) -->
-      <div v-if="isPropietario" class="space-y-4">
+      <div v-if="hasUnit" class="space-y-4">
         <Card>
           <CardContent class="flex flex-col items-center p-5 md:p-6">
             <!-- Header -->

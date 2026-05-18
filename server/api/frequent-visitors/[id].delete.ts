@@ -4,16 +4,17 @@ import { eq, and } from 'drizzle-orm'
 
 export default defineEventHandler(async (event) => {
   const { tenantId, user } = await requireTenant(event)
-  await requireRole(event, ['propietario', 'admin'])
+  const session = await requireRole(event, ['propietario', 'admin', 'conserje'])
+  const role = session.user.role
 
   const id = getRouterParam(event, 'id')
   if (!id) {
     throw createError({ statusCode: 400, message: 'ID es requerido' })
   }
 
-  // Verificar que el visitante existe y pertenece al usuario
+  // Verificar que el visitante existe y pertenece al usuario/unidad
   const [existing] = await db
-    .select({ id: frequentVisitors.id, ownerId: frequentVisitors.ownerId })
+    .select({ id: frequentVisitors.id, ownerId: frequentVisitors.ownerId, unitId: frequentVisitors.unitId })
     .from(frequentVisitors)
     .where(
       and(
@@ -27,7 +28,13 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 404, message: 'Visitante frecuente no encontrado' })
   }
 
-  if (existing.ownerId !== user.id) {
+  // Conserje puede eliminar visitantes de su unidad; propietario/admin solo los suyos
+  if (role === 'conserje') {
+    const staffUnitId = await getStaffUnitId(user.id, tenantId)
+    if (existing.unitId !== staffUnitId) {
+      throw createError({ statusCode: 403, message: 'No tienes permiso para eliminar este visitante' })
+    }
+  } else if (role !== 'admin' && existing.ownerId !== user.id) {
     throw createError({ statusCode: 403, message: 'No tienes permiso para eliminar este visitante' })
   }
 
