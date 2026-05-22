@@ -5,44 +5,48 @@ import {
   Upload,
   FileText,
   CalendarIcon,
+  ArrowDownRight,
+  ArrowUpRight,
+  AlertTriangle,
+  Users,
 } from 'lucide-vue-next'
-import { getLocalTimeZone, today, CalendarDate } from '@internationalized/date'
 import type { DateValue } from 'reka-ui'
 
 useHead({ title: 'Panel Financiero' })
 
-const { summaries, isLoading, error, totalUnits, totalInDebt, fetchSummary } = useFinanceSummary()
+const { summaries, isLoading: summaryLoading, totalUnits, totalInDebt, fetchSummary } = useFinanceSummary()
+const { movements, isLoading: movementsLoading, error: movementsError, totalPages, fetchMovements } = useFinanceMovements()
 const {
   reports,
   isLoading: reportsLoading,
   error: reportsError,
-  totalPages,
+  totalPages: reportsTotalPages,
   fetchReports,
 } = useFinancialReports()
 
 const { target, isMounted } = useTopbarPortal()
+const { formatCurrency, formatDate } = useFormatDate()
+const router = useRouter()
 
-// --- Search & filters ---
-const searchQuery = ref('')
-const filterStatus = ref<'in_debt' | 'up_to_date' | ''>('')
+// --- Filters ---
 const filterFrom = shallowRef<DateValue | undefined>()
 const filterTo = shallowRef<DateValue | undefined>()
 const fromPickerOpen = ref(false)
 const toPickerOpen = ref(false)
 
-const statusOptions = [
-  { value: 'in_debt', label: 'En mora' },
-  { value: 'up_to_date', label: 'Al dia' },
+const typeOptions = [
+  { value: 'cargo', label: 'Cargos' },
+  { value: 'abono', label: 'Abonos' },
 ]
 
 const hasActiveFilters = computed(() =>
-  filterStatus.value !== '' || filterFrom.value !== undefined || filterTo.value !== undefined,
+  filterFrom.value !== undefined || filterTo.value !== undefined || filterType.value !== '',
 )
 
 function clearAllFilters() {
-  filterStatus.value = ''
   filterFrom.value = undefined
   filterTo.value = undefined
+  filterType.value = ''
 }
 
 function dateValueToISO(d: DateValue | undefined): string | undefined {
@@ -55,79 +59,90 @@ function formatPickerDate(d: DateValue): string {
   return formatDate(date)
 }
 
-const filteredSummaries = computed(() => {
-  let result = summaries.value
+// --- Tabs ---
+const activeTab = ref<'movements' | 'balances'>('movements')
 
-  if (filterStatus.value === 'in_debt') {
-    result = result.filter(s => s.isInDebt)
-  }
-  else if (filterStatus.value === 'up_to_date') {
-    result = result.filter(s => !s.isInDebt)
-  }
+// --- Movements pagination & filter ---
+const currentPage = ref(1)
+const filterType = ref<'cargo' | 'abono' | ''>('')
 
-  if (searchQuery.value.trim()) {
-    const q = searchQuery.value.trim().toLowerCase()
-    result = result.filter(
-      s => s.unitNumber.toLowerCase().includes(q)
-        || (s.unitLabel?.toLowerCase().includes(q)),
-    )
-  }
+function loadMovements() {
+  fetchMovements({
+    page: currentPage.value,
+    from: dateValueToISO(filterFrom.value),
+    to: dateValueToISO(filterTo.value),
+    type: filterType.value || undefined,
+  })
+}
 
-  // Deudores primero
-  return [...result].sort((a, b) => parseFloat(a.balance) - parseFloat(b.balance))
+watch([currentPage], () => loadMovements())
+watch(filterType, () => {
+  currentPage.value = 1
+  loadMovements()
 })
-
-// --- Table pagination (client-side) ---
-const ITEMS_PER_PAGE = 15
-const currentTablePage = ref(1)
-
-const tableTotalPages = computed(() =>
-  Math.max(1, Math.ceil(filteredSummaries.value.length / ITEMS_PER_PAGE)),
-)
-
-const paginatedSummaries = computed(() => {
-  const start = (currentTablePage.value - 1) * ITEMS_PER_PAGE
-  return filteredSummaries.value.slice(start, start + ITEMS_PER_PAGE)
-})
-
-// Reset to page 1 when filters change
-watch([searchQuery, filterStatus], () => {
-  currentTablePage.value = 1
-})
-
-// Refetch summary when date filters change
-watch([filterStatus, filterFrom, filterTo], () => {
-  currentTablePage.value = 1
+watch([filterFrom, filterTo], () => {
+  currentPage.value = 1
+  loadMovements()
   fetchSummary({
     from: dateValueToISO(filterFrom.value),
     to: dateValueToISO(filterTo.value),
   })
 })
 
-const router = useRouter()
+// --- Balances table (client-side pagination) ---
+const ITEMS_PER_PAGE = 15
+const currentBalancePage = ref(1)
+const balanceSearch = ref('')
 
-function openUnitDetail(summary: typeof summaries.value[number]) {
-  router.push(`/admin/finanzas/${summary.unitId}`)
-}
+const filteredSummaries = computed(() => {
+  let result = summaries.value
+  if (balanceSearch.value.trim()) {
+    const q = balanceSearch.value.trim().toLowerCase()
+    result = result.filter(
+      s => s.unitNumber.toLowerCase().includes(q)
+        || (s.unitLabel?.toLowerCase().includes(q)),
+    )
+  }
+  return [...result].sort((a, b) => parseFloat(a.balance) - parseFloat(b.balance))
+})
+
+const balanceTotalPages = computed(() =>
+  Math.max(1, Math.ceil(filteredSummaries.value.length / ITEMS_PER_PAGE)),
+)
+
+const paginatedSummaries = computed(() => {
+  const start = (currentBalancePage.value - 1) * ITEMS_PER_PAGE
+  return filteredSummaries.value.slice(start, start + ITEMS_PER_PAGE)
+})
+
+watch(balanceSearch, () => { currentBalancePage.value = 1 })
 
 // --- Reports pagination ---
 const currentReportsPage = ref(1)
-
-watch(currentReportsPage, (page) => {
-  fetchReports(page)
-})
+watch(currentReportsPage, (page) => fetchReports(page))
 
 const meses = [
   'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
   'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre',
 ]
-
 function getMonthLabel(month: number): string {
   return meses[month - 1] ?? ''
 }
 
-// --- Money formatting ---
-const { formatCurrency, formatDate } = useFormatDate()
+// --- Stats ---
+const totalCollected = computed(() => {
+  return summaries.value.reduce((sum, s) => {
+    const b = parseFloat(s.balance)
+    return b > 0 ? sum + b : sum
+  }, 0)
+})
+
+const totalDebt = computed(() => {
+  return summaries.value.reduce((sum, s) => {
+    const b = parseFloat(s.balance)
+    return b < 0 ? sum + Math.abs(b) : sum
+  }, 0)
+})
 
 function formatBalance(balance: string): string {
   const num = parseFloat(balance)
@@ -135,15 +150,10 @@ function formatBalance(balance: string): string {
   return `${prefix}${formatCurrency(Math.abs(num))}`
 }
 
-// --- Derived stats ---
-const debtPercentage = computed(() => {
-  if (!totalUnits.value) return 0
-  return Math.round((totalInDebt.value / totalUnits.value) * 100)
-})
-
 // --- Init ---
 onMounted(() => {
   fetchSummary()
+  loadMovements()
   fetchReports(1)
 })
 </script>
@@ -152,58 +162,54 @@ onMounted(() => {
   <div>
     <!-- Topbar actions -->
     <Teleport v-if="isMounted" :to="target" defer>
-      <TopbarSearch v-model="searchQuery" placeholder="Buscar unidad...">
-        <TopbarFilters :active="hasActiveFilters" @clear="clearAllFilters">
-          <TopbarFilterGroup v-model="filterStatus" label="Estado" :options="statusOptions" />
-
-          <!-- Date range filter -->
-          <div>
-            <p class="mb-1.5 text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
-              Rango de fechas
-            </p>
-            <div class="space-y-1.5">
-              <div>
-                <Label class="text-[11px] text-muted-foreground">Desde</Label>
-                <Popover v-model:open="fromPickerOpen">
-                  <PopoverTrigger as-child>
-                    <Button variant="outline" class="mt-0.5 h-7 w-full justify-start text-xs font-normal">
-                      <CalendarIcon class="mr-1.5 size-3 shrink-0 text-muted-foreground" />
-                      <span v-if="filterFrom" class="truncate">{{ formatPickerDate(filterFrom) }}</span>
-                      <span v-else class="text-muted-foreground">Seleccionar</span>
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent class="w-auto p-0" align="start">
-                    <Calendar
-                      :model-value="filterFrom"
-                      locale="es"
-                      @update:model-value="(v: DateValue | undefined) => { filterFrom = v; fromPickerOpen = false }"
-                    />
-                  </PopoverContent>
-                </Popover>
-              </div>
-              <div>
-                <Label class="text-[11px] text-muted-foreground">Hasta</Label>
-                <Popover v-model:open="toPickerOpen">
-                  <PopoverTrigger as-child>
-                    <Button variant="outline" class="mt-0.5 h-7 w-full justify-start text-xs font-normal">
-                      <CalendarIcon class="mr-1.5 size-3 shrink-0 text-muted-foreground" />
-                      <span v-if="filterTo" class="truncate">{{ formatPickerDate(filterTo) }}</span>
-                      <span v-else class="text-muted-foreground">Seleccionar</span>
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent class="w-auto p-0" align="start">
-                    <Calendar
-                      :model-value="filterTo"
-                      locale="es"
-                      @update:model-value="(v: DateValue | undefined) => { filterTo = v; toPickerOpen = false }"
-                    />
-                  </PopoverContent>
-                </Popover>
-              </div>
+      <TopbarFilters :active="hasActiveFilters" @clear="clearAllFilters">
+        <TopbarFilterGroup v-model="filterType" label="Tipo" :options="typeOptions" />
+        <div>
+          <p class="mb-1.5 text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
+            Rango de fechas
+          </p>
+          <div class="space-y-1.5">
+            <div>
+              <Label class="text-[11px] text-muted-foreground">Desde</Label>
+              <Popover v-model:open="fromPickerOpen">
+                <PopoverTrigger as-child>
+                  <Button variant="outline" class="mt-0.5 h-7 w-full justify-start text-xs font-normal">
+                    <CalendarIcon class="mr-1.5 size-3 shrink-0 text-muted-foreground" />
+                    <span v-if="filterFrom" class="truncate">{{ formatPickerDate(filterFrom) }}</span>
+                    <span v-else class="text-muted-foreground">Seleccionar</span>
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent class="w-auto p-0" align="start">
+                  <Calendar
+                    :model-value="filterFrom"
+                    locale="es"
+                    @update:model-value="(v: DateValue | undefined) => { filterFrom = v; fromPickerOpen = false }"
+                  />
+                </PopoverContent>
+              </Popover>
+            </div>
+            <div>
+              <Label class="text-[11px] text-muted-foreground">Hasta</Label>
+              <Popover v-model:open="toPickerOpen">
+                <PopoverTrigger as-child>
+                  <Button variant="outline" class="mt-0.5 h-7 w-full justify-start text-xs font-normal">
+                    <CalendarIcon class="mr-1.5 size-3 shrink-0 text-muted-foreground" />
+                    <span v-if="filterTo" class="truncate">{{ formatPickerDate(filterTo) }}</span>
+                    <span v-else class="text-muted-foreground">Seleccionar</span>
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent class="w-auto p-0" align="start">
+                  <Calendar
+                    :model-value="filterTo"
+                    locale="es"
+                    @update:model-value="(v: DateValue | undefined) => { filterTo = v; toPickerOpen = false }"
+                  />
+                </PopoverContent>
+              </Popover>
             </div>
           </div>
-        </TopbarFilters>
-      </TopbarSearch>
+        </div>
+      </TopbarFilters>
       <Button variant="outline" size="sm" as-child>
         <NuxtLink to="/admin/finanzas/subir-informe">
           <Upload class="mr-1.5 size-4" />
@@ -227,86 +233,242 @@ onMounted(() => {
       </Button>
     </TopbarMobileAction>
 
-    <!-- Error alert -->
-    <ErrorAlert v-if="error" :message="error" class="mb-4" />
+    <!-- Stats cards -->
+    <div class="mb-6 grid grid-cols-2 gap-3 lg:grid-cols-4">
+      <StatCard
+        label="Total recaudado"
+        :value="formatCurrency(totalCollected)"
+        :icon="Wallet"
+        icon-bg-class="bg-primary/10 text-primary"
+        :is-loading="summaryLoading"
+      />
+      <StatCard
+        label="Total adeudado"
+        :value="formatCurrency(totalDebt)"
+        :icon="AlertTriangle"
+        icon-bg-class="bg-destructive/10 text-destructive"
+        :is-loading="summaryLoading"
+      />
+      <StatCard
+        label="Unidades"
+        :value="totalUnits"
+        :icon="Users"
+        icon-bg-class="bg-secondary/10 text-secondary"
+        :is-loading="summaryLoading"
+      />
+      <StatCard
+        label="En mora"
+        :value="totalInDebt"
+        :icon="AlertTriangle"
+        icon-bg-class="bg-destructive/10 text-destructive"
+        :is-loading="summaryLoading"
+      />
+    </div>
 
-    <!-- 2-col layout: tabla + informes -->
+    <!-- 2-col layout: main + reports sidebar -->
     <div class="grid gap-6 lg:grid-cols-12">
-      <!-- Tabla de saldos (principal) -->
+      <!-- Main content -->
       <section class="lg:col-span-7">
-        <!-- Inline summary bar -->
-        <div class="mb-3 flex items-center justify-between">
-          <h2 class="text-base font-semibold">Estado de cuenta</h2>
-          <p v-if="!isLoading" class="text-xs text-muted-foreground">
-            <span class="tabular-nums font-medium text-foreground">{{ totalUnits }}</span> unidades
-            <span class="mx-1 opacity-30">&middot;</span>
-            <span class="tabular-nums font-medium text-destructive">{{ totalInDebt }}</span> en mora
-            <span class="text-[11px]">({{ debtPercentage }}%)</span>
-          </p>
+        <!-- Tabs -->
+        <div class="mb-3 flex items-center justify-between border-b">
+          <div class="flex items-center gap-1">
+            <button
+              class="px-3 py-2 text-sm font-medium transition-colors"
+              :class="activeTab === 'movements'
+                ? 'border-b-2 border-primary text-foreground'
+                : 'text-muted-foreground hover:text-foreground'"
+              @click="activeTab = 'movements'"
+            >
+              Movimientos
+            </button>
+            <button
+              class="px-3 py-2 text-sm font-medium transition-colors"
+              :class="activeTab === 'balances'
+                ? 'border-b-2 border-primary text-foreground'
+                : 'text-muted-foreground hover:text-foreground'"
+              @click="activeTab = 'balances'"
+            >
+              Saldos por unidad
+            </button>
+          </div>
+          <Input
+            v-if="activeTab === 'balances'"
+            v-model="balanceSearch"
+            placeholder="Buscar unidad..."
+            class="mb-1 h-7 w-40 text-xs"
+          />
         </div>
 
-        <!-- Loading skeletons -->
-        <ListSkeleton v-if="isLoading" :count="6" variant="row" />
+        <!-- Tab: Movimientos -->
+        <template v-if="activeTab === 'movements'">
+          <ErrorAlert v-if="movementsError" :message="movementsError" class="mb-4" />
 
-        <!-- Empty state -->
-        <EmptyState
-          v-else-if="filteredSummaries.length === 0"
-          :icon="Wallet"
-          title="No se encontraron unidades"
-          :description="searchQuery || hasActiveFilters ? 'Intenta con otros filtros de busqueda' : 'No hay unidades registradas'"
-        />
+          <ListSkeleton v-if="movementsLoading" :count="6" variant="row" />
 
-        <!-- Summary table -->
-        <template v-else>
-          <div class="overflow-x-auto rounded-lg border">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Unidad</TableHead>
-                  <TableHead class="hidden sm:table-cell">Etiqueta</TableHead>
-                  <TableHead class="text-right">Saldo</TableHead>
-                  <TableHead class="text-right">Estado</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                <TableRow
-                  v-for="summary in paginatedSummaries"
-                  :key="summary.unitId"
-                  class="cursor-pointer transition-colors hover:bg-muted/50"
-                  @click="openUnitDetail(summary)"
-                >
-                  <TableCell class="font-medium">
-                    {{ summary.unitNumber }}
-                  </TableCell>
-                  <TableCell class="hidden text-muted-foreground sm:table-cell">
-                    {{ summary.unitLabel ?? '—' }}
-                  </TableCell>
-                  <TableCell
-                    class="text-right font-semibold tabular-nums"
-                    :class="summary.isInDebt ? 'text-destructive' : 'text-primary'"
-                  >
-                    {{ formatBalance(summary.balance) }}
-                  </TableCell>
-                  <TableCell class="text-right">
-                    <Badge :variant="summary.isInDebt ? 'destructive' : 'default'">
-                      {{ summary.isInDebt ? 'En mora' : 'Al dia' }}
-                    </Badge>
-                  </TableCell>
-                </TableRow>
-              </TableBody>
-            </Table>
-          </div>
-
-          <ListPagination
-            v-if="tableTotalPages > 1"
-            v-model:current-page="currentTablePage"
-            :total-pages="tableTotalPages"
-            class="mt-3"
+          <EmptyState
+            v-else-if="movements.length === 0"
+            :icon="Wallet"
+            title="Sin movimientos"
+            :description="hasActiveFilters ? 'Prueba con otro rango de fechas' : 'Los movimientos registrados aparecerán aquí'"
           />
+
+          <template v-else>
+            <!-- Desktop table -->
+            <div class="hidden overflow-x-auto rounded-lg border md:block">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Fecha</TableHead>
+                    <TableHead>Unidad</TableHead>
+                    <TableHead>Descripción</TableHead>
+                    <TableHead>Tipo</TableHead>
+                    <TableHead class="text-right">Monto</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  <TableRow
+                    v-for="mov in movements"
+                    :key="mov.id"
+                    class="cursor-pointer transition-colors hover:bg-muted/50"
+                    @click="router.push(`/admin/finanzas/${mov.unitId}`)"
+                  >
+                    <TableCell class="tabular-nums text-muted-foreground">
+                      {{ formatDate(mov.date) }}
+                    </TableCell>
+                    <TableCell class="font-medium">
+                      {{ mov.unitNumber }}
+                    </TableCell>
+                    <TableCell class="max-w-[200px] truncate">
+                      {{ mov.description }}
+                    </TableCell>
+                    <TableCell>
+                      <Badge
+                        :variant="mov.type === 'cargo' ? 'destructive' : 'default'"
+                        class="text-[11px]"
+                      >
+                        <ArrowDownRight v-if="mov.type === 'cargo'" class="mr-0.5 size-3" />
+                        <ArrowUpRight v-else class="mr-0.5 size-3" />
+                        {{ mov.type === 'cargo' ? 'Cargo' : 'Abono' }}
+                      </Badge>
+                    </TableCell>
+                    <TableCell
+                      class="text-right font-semibold tabular-nums"
+                      :class="mov.type === 'cargo' ? 'text-destructive' : 'text-primary'"
+                    >
+                      {{ mov.type === 'cargo' ? '- ' : '+ ' }}{{ formatCurrency(parseFloat(mov.amount)) }}
+                    </TableCell>
+                  </TableRow>
+                </TableBody>
+              </Table>
+            </div>
+
+            <!-- Mobile cards -->
+            <div class="space-y-2 md:hidden">
+              <Card
+                v-for="mov in movements"
+                :key="mov.id"
+                class="cursor-pointer transition-colors hover:bg-muted/50"
+                @click="router.push(`/admin/finanzas/${mov.unitId}`)"
+              >
+                <CardContent class="px-3 py-2.5">
+                  <div class="flex items-center gap-1.5">
+                    <p class="min-w-0 flex-1 truncate text-sm font-medium">{{ mov.description }}</p>
+                    <Badge
+                      :variant="mov.type === 'cargo' ? 'destructive' : 'default'"
+                      class="shrink-0 text-[11px]"
+                    >
+                      <ArrowDownRight v-if="mov.type === 'cargo'" class="mr-0.5 size-3" />
+                      <ArrowUpRight v-else class="mr-0.5 size-3" />
+                      {{ mov.type === 'cargo' ? 'Cargo' : 'Abono' }}
+                    </Badge>
+                  </div>
+                  <div class="mt-0.5 flex items-center justify-between">
+                    <div class="flex items-center gap-x-1 text-[11px] text-muted-foreground">
+                      <span class="font-medium">{{ mov.unitNumber }}</span>
+                      <span class="opacity-30">&middot;</span>
+                      <span class="tabular-nums">{{ formatDate(mov.date) }}</span>
+                    </div>
+                    <span
+                      class="text-sm font-semibold tabular-nums"
+                      :class="mov.type === 'cargo' ? 'text-destructive' : 'text-primary'"
+                    >
+                      {{ mov.type === 'cargo' ? '-' : '+' }} {{ formatCurrency(parseFloat(mov.amount)) }}
+                    </span>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+
+            <ListPagination v-model:current-page="currentPage" :total-pages="totalPages" class="mt-3" />
+          </template>
+        </template>
+
+        <!-- Tab: Saldos por unidad -->
+        <template v-if="activeTab === 'balances'">
+          <ListSkeleton v-if="summaryLoading" :count="6" variant="row" />
+
+          <EmptyState
+            v-else-if="filteredSummaries.length === 0"
+            :icon="Wallet"
+            title="No se encontraron unidades"
+            :description="balanceSearch ? 'Intenta con otra búsqueda' : 'No hay unidades registradas'"
+          />
+
+          <template v-else>
+            <div class="overflow-x-auto rounded-lg border">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Unidad</TableHead>
+                    <TableHead class="hidden sm:table-cell">Etiqueta</TableHead>
+                    <TableHead class="text-right">Saldo</TableHead>
+                    <TableHead class="hidden sm:table-cell">Último mov.</TableHead>
+                    <TableHead class="text-right">Estado</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  <TableRow
+                    v-for="summary in paginatedSummaries"
+                    :key="summary.unitId"
+                    class="cursor-pointer transition-colors hover:bg-muted/50"
+                    @click="router.push(`/admin/finanzas/${summary.unitId}`)"
+                  >
+                    <TableCell class="font-medium">
+                      {{ summary.unitNumber }}
+                    </TableCell>
+                    <TableCell class="hidden text-muted-foreground sm:table-cell">
+                      {{ summary.unitLabel ?? '—' }}
+                    </TableCell>
+                    <TableCell
+                      class="text-right font-semibold tabular-nums"
+                      :class="summary.isInDebt ? 'text-destructive' : 'text-primary'"
+                    >
+                      {{ formatBalance(summary.balance) }}
+                    </TableCell>
+                    <TableCell class="hidden tabular-nums text-muted-foreground sm:table-cell">
+                      {{ summary.lastMovementDate ? formatDate(summary.lastMovementDate) : '—' }}
+                    </TableCell>
+                    <TableCell class="text-right">
+                      <Badge :variant="summary.isInDebt ? 'destructive' : 'default'">
+                        {{ summary.isInDebt ? 'En mora' : 'Al día' }}
+                      </Badge>
+                    </TableCell>
+                  </TableRow>
+                </TableBody>
+              </Table>
+            </div>
+
+            <ListPagination
+              v-if="balanceTotalPages > 1"
+              v-model:current-page="currentBalancePage"
+              :total-pages="balanceTotalPages"
+              class="mt-3"
+            />
+          </template>
         </template>
       </section>
 
-      <!-- Informes financieros (lateral) -->
+      <!-- Reports sidebar -->
       <section class="lg:col-span-5">
         <div class="mb-3 flex items-center justify-between">
           <h2 class="text-base font-semibold">Informes</h2>
@@ -318,28 +480,22 @@ onMounted(() => {
           </Button>
         </div>
 
-        <!-- Loading -->
         <ListSkeleton v-if="reportsLoading" :count="3" variant="row" />
 
-        <!-- Error -->
         <ErrorAlert v-else-if="reportsError" :message="reportsError" />
 
-        <!-- Empty state -->
         <EmptyState
           v-else-if="reports.length === 0"
           :icon="FileText"
           title="Sin informes"
-          description="Los informes financieros apareceran aqui"
+          description="Los informes financieros aparecerán aquí"
         />
 
-        <!-- Report cards -->
         <div v-else class="space-y-2">
           <Card v-for="report in reports" :key="report.id">
             <CardContent class="flex items-center gap-3 px-3 py-2.5">
               <div class="min-w-0 flex-1">
-                <p class="truncate text-sm font-semibold">
-                  {{ report.title }}
-                </p>
+                <p class="truncate text-sm font-semibold">{{ report.title }}</p>
                 <p class="mt-0.5 text-[11px] text-muted-foreground">
                   {{ getMonthLabel(report.month) }} {{ report.year }}
                 </p>
@@ -358,11 +514,9 @@ onMounted(() => {
             </CardContent>
           </Card>
 
-          <!-- Pagination -->
-          <ListPagination v-model:current-page="currentReportsPage" :total-pages="totalPages" />
+          <ListPagination v-model:current-page="currentReportsPage" :total-pages="reportsTotalPages" />
         </div>
       </section>
     </div>
-
   </div>
 </template>
