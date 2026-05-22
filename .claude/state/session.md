@@ -1,62 +1,65 @@
 # Estado de Sesion — ChanaDomus
 
 ## Ultima Sesion
-- **Fecha**: 2026-05-12
-- **Sesion #**: 46
+- **Fecha**: 2026-05-22
+- **Sesion #**: 47
 - **Branch**: dev
-- **Estado**: Chat routing + imágenes PARCIAL — routing completo, upload pendiente test E2E
+- **Estado**: Completada — Chat reestructurado (Grupos + DMs) + DevRoleSwitcher
 
-## Completado Sesion 46
+## Completado Sesion 47
 
-### Chat Routing Completo (nested routes)
-- **Página padre `chat.vue`**: sidebar + `<NuxtPage :transition="false" />` — SSR-safe sin useMediaQuery
-- **`index.vue`** simplificado: solo empty state desktop
-- **`[roomId].vue`** simplificado: header con icono/tipo + ChatConversation
-- **Routing real**: URL se actualiza a `/mi-chana/chat/{roomId}` al seleccionar room (antes solo cambiaba ref)
-- **Fix hydration**: eliminado `useMediaQuery`, usado CSS `md:!flex` + `:class` basado en route (SSR-safe)
-- **Fix transición**: `<NuxtPage :transition="false" />` — la transición global `out-in` impedía render del hijo
+### Chat: Reestructuración completa (Canales → Grupos + Mensajes Directos 1-a-1)
+- **Renombrado** "Canales" → "Grupos" en toda la UI
+- **Eliminados** chats de rancho (tipo `unit`) — confusos y no útiles
+- **Nuevo tipo `direct`**: mensajería 1-a-1 entre usuarios como contactos
+- **Nueva tabla `chat_room_members`**: membresía para rooms directos (migración 0036)
+- **Nuevo endpoint `GET /api/chat/contacts`**: directorio filtrado por rol con `existingRoomId`
+- **Nuevo endpoint `POST /api/chat/direct`**: crear/obtener DM idempotente
+- **Sidebar reestructurado**: tabs Chat (Grupos + Conversaciones) | Contactos (directorio con búsqueda)
+- **Header condicional**: avatar del contacto en DMs, icono de grupo en rooms grupales
+- **Access control**: `userCanAccessRoom` soporta `direct` via membresía en `chatRoomMembers`
+- **Seed actualizado**: ya no crea unit rooms, solo los 6 grupos predefinidos
+- **Altura alineada**: tabs del sidebar coinciden con header del room
 
-### Sistema de Imágenes en Chat (backend completo, UI integrada, test E2E pendiente)
-- **Schema**: `chat_attachments` tabla (messageId, filePath, width, height, fileSize) — migración 0027 ejecutada
-- **Sharp processing**: `server/utils/image-processing.ts` — convierte cualquier formato a WebP optimizado (max 1920px, quality 80)
-- **Upload API**: `POST /api/chat/upload` — multipart, max 5 imágenes, 10MB cada una, broadcast WS
-- **Serve API**: `GET /api/chat/attachments/[filename]` — cache immutable
-- **Messages API**: actualizado con JOIN a chat_attachments (batch query eficiente)
-- **Tipos**: `ChatAttachment` interface + `attachments[]` en ChatMessage
-- **Composable**: `sendImages()`, `validateImages()`, `isUploading` en useChatRoom
-- **UI**: botón ImagePlus, preview strip pendientes, render imágenes en burbujas (clickables)
+### DevRoleSwitcher (solo dev)
+- **Componente flotante** `app/components/dev/DevRoleSwitcher.vue` — bottom-right
+- **4 usuarios demo**: admin, propietario, conserje, vigilancia — click para switchear sesión
+- **Solo en dev**: `import.meta.dev` en `app.vue`, tree-shaken en producción
+- **Credenciales**: `Yolo2026!` para todos los demo users
 
 ### Archivos creados
-- `app/pages/mi-chana/chat.vue` — Página padre nested routing
-- `server/utils/image-processing.ts` — Sharp WebP processing
-- `server/api/chat/upload.post.ts` — Upload endpoint
-- `server/api/chat/attachments/[filename].get.ts` — Serve endpoint
-- `server/db/migrations/0027_chat_attachments.sql` — Migración
+- `server/db/migrations/0036_chat_direct_members.sql`
+- `server/api/chat/contacts.get.ts`
+- `server/api/chat/direct.post.ts`
+- `app/composables/useChatContacts.ts`
+- `app/components/dev/DevRoleSwitcher.vue`
 
 ### Archivos modificados
-- `app/pages/mi-chana/chat/index.vue` — Simplificado a empty state
-- `app/pages/mi-chana/chat/[roomId].vue` — Simplificado, back button CSS md:hidden
-- `app/components/chat/ChatConversation.vue` — Imágenes upload + render
-- `app/composables/useChatRoom.ts` — sendImages, validateImages, isUploading
-- `server/api/chat/[roomId]/messages.get.ts` — Incluye attachments
-- `server/db/schema/chat.ts` — chatAttachments tabla
-- `shared/types/chat.ts` — ChatAttachment interface
-- `server/db/migrations/meta/_journal.json` — Entry 0027
+- `server/db/schema/chat.ts` — enum `direct` + tabla `chatRoomMembers`
+- `shared/types/chat.ts` — `ChatRoomOtherUser`, `ChatContact`, `direct` en type
+- `server/utils/ws-chat.ts` — case `direct` en access control
+- `server/api/chat/rooms.get.ts` — elimina unit rooms, agrega direct rooms + otherUser
+- `server/db/seed-chat.ts` — sin unit rooms
+- `app/composables/useColorMap.ts` — color `direct`
+- `app/composables/useChatRooms.ts` — `groupRooms` + `directRooms`
+- `app/pages/mi-chana/chat.vue` — sidebar con tabs + Grupos + Conversaciones + Contactos
+- `app/pages/mi-chana/chat/[roomId].vue` — header condicional DM/grupo
+- `app/pages/mi-chana/chat/index.vue` — texto actualizado
+- `app/app.vue` — DevRoleSwitcher condicional
 
 ## Pendiente
-1. **Test E2E upload imagen**: Playwright file upload → verificar processing sharp → render en chat
-2. **Test mobile viewport**: verificar sidebar oculto, back button visible
-3. **Sistema de comandos/mentions**: `/incidencia:`, `/anuncio:`, `/reunion:`, `/votacion:`, `/proveedor:`, `/normativa:` + `@usuario`
-4. **Mentions de usuarios**: `@nombre` con dropdown search
+1. **QR: Selección manual entrada/salida** — diseño definido: seleccionar antes de escanear, reiniciar cada vez, roles vigilancia + admin
+2. **Commit pendiente** — todos los cambios de sesión 47 sin commitear
 
-## Siguiente Paso
-- Verificar upload de imagen E2E (sharp processing + render)
-- Comenzar sistema de comandos/mentions interactivos con search contra DB
-- Los comandos respetan permisos por rol
+## Decisiones tomadas (para próxima sesión)
+### QR Entrada/Salida
+- **Flujo**: seleccionar tipo (entrada/salida) ANTES de escanear
+- **Persistencia**: reiniciar cada escaneo (no persiste el modo)
+- **Roles**: vigilancia y admin pueden escanear
+- **UX**: pantalla previa con 2 botones grandes, luego scanner, luego resultado
 
 ## Entorno
-- Docker PostgreSQL corriendo
-- `npx nuxi dev --port 3000` para dev
-- Build verificado: `npx nuxi build` OK
-- Migración 0027 aplicada en DB local
-- sharp@0.34.5 instalado
+- Docker `chanadomus-db-1` es el contenedor correcto (NO `chanadomuscom-db-1`)
+- `vamsi-db-1` está detenido (otro proyecto, mismo puerto 5432)
+- Migración 0036 aplicada via SQL directo (DB usa `push`, no `migrate`)
+- `pnpm dev` para verificar
