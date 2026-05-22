@@ -1,9 +1,9 @@
 import type { Peer } from 'crossws'
 import type { ChatMessage } from '~~/shared/types/chat'
 import { db } from '~~/server/db'
-import { messages, chatRooms } from '~~/server/db/schema/chat'
+import { messages, chatRooms, chatRoomMembers } from '~~/server/db/schema/chat'
 import { user } from '~~/server/db/schema/auth'
-import { eq } from 'drizzle-orm'
+import { eq, and } from 'drizzle-orm'
 
 export interface ChatPeerInfo {
   userId: string
@@ -129,6 +129,18 @@ export async function userCanAccessRoom(
       return ['admin', 'propietario'].includes(userRole)
     case 'propietarios':
       return ['admin', 'propietario'].includes(userRole)
+    case 'direct': {
+      const [membership] = await db
+        .select({ id: chatRoomMembers.id })
+        .from(chatRoomMembers)
+        .where(
+          and(
+            eq(chatRoomMembers.roomId, roomId),
+            eq(chatRoomMembers.userId, userId),
+          ),
+        )
+      return !!membership
+    }
     default:
       return false
   }

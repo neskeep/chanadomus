@@ -21,32 +21,18 @@ export function useChatRooms() {
     }
   }
 
-  const generalRooms = computed(() =>
-    rooms.value.filter(r => r.type === 'general'),
+  const groupRooms = computed(() =>
+    rooms.value.filter(r => r.type !== 'direct' && r.type !== 'unit'),
   )
 
-  const unitRooms = computed(() =>
-    rooms.value.filter(r => r.type === 'unit'),
-  )
-
-  const adminRooms = computed(() =>
-    rooms.value.filter(r => r.type === 'admin'),
-  )
-
-  const vigilanciaRooms = computed(() =>
-    rooms.value.filter(r => r.type === 'vigilancia'),
-  )
-
-  const conserjeriaRooms = computed(() =>
-    rooms.value.filter(r => r.type === 'conserjeria'),
-  )
-
-  const incidenciasRooms = computed(() =>
-    rooms.value.filter(r => r.type === 'incidencias'),
-  )
-
-  const propietariosRooms = computed(() =>
-    rooms.value.filter(r => r.type === 'propietarios'),
+  const directRooms = computed(() =>
+    rooms.value
+      .filter(r => r.type === 'direct')
+      .sort((a, b) => {
+        const ta = a.lastMessage?.createdAt ?? a.createdAt
+        const tb = b.lastMessage?.createdAt ?? b.createdAt
+        return tb.localeCompare(ta)
+      }),
   )
 
   function getRoomById(id: string): ChatRoom | undefined {
@@ -57,13 +43,8 @@ export function useChatRooms() {
     rooms,
     isLoading,
     error,
-    generalRooms,
-    unitRooms,
-    adminRooms,
-    vigilanciaRooms,
-    conserjeriaRooms,
-    incidenciasRooms,
-    propietariosRooms,
+    groupRooms,
+    directRooms,
     fetchRooms,
     getRoomById,
   }

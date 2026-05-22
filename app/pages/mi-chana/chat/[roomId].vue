@@ -7,6 +7,7 @@ import {
   HardHat,
   AlertTriangle,
   Users,
+  MessageCircle,
   Wifi,
   WifiOff,
   ArrowLeft,
@@ -25,7 +26,12 @@ const activeRoom = computed(() =>
   rooms.value.find(r => r.id === roomId.value) ?? null,
 )
 
-const roomName = computed(() => activeRoom.value?.name ?? 'Chat')
+const isDirect = computed(() => activeRoom.value?.type === 'direct')
+const otherUser = computed(() => activeRoom.value?.otherUser ?? null)
+const roomName = computed(() => {
+  if (isDirect.value && otherUser.value) return otherUser.value.name
+  return activeRoom.value?.name ?? 'Chat'
+})
 const roomType = computed(() => activeRoom.value?.type ?? 'general')
 
 const ROOM_TYPE_CONFIG: Record<ChatRoomType, { icon: typeof Globe; iconBg: string; iconColor: string }> = {
@@ -36,6 +42,16 @@ const ROOM_TYPE_CONFIG: Record<ChatRoomType, { icon: typeof Globe; iconBg: strin
   conserjeria: { icon: HardHat, ...CHAT_CHANNEL_COLORS.conserjeria },
   incidencias: { icon: AlertTriangle, ...CHAT_CHANNEL_COLORS.incidencias },
   propietarios: { icon: Users, ...CHAT_CHANNEL_COLORS.propietarios },
+  direct: { icon: MessageCircle, ...CHAT_CHANNEL_COLORS.direct },
+}
+
+function getInitials(name: string): string {
+  return name
+    .split(' ')
+    .slice(0, 2)
+    .map(w => w[0])
+    .join('')
+    .toUpperCase()
 }
 
 // Override page info for breadcrumbs
@@ -77,17 +93,30 @@ onMounted(() => {
           <ArrowLeft class="size-4" />
         </Button>
 
-        <div
-          v-if="activeRoom"
-          class="flex size-8 items-center justify-center rounded-lg"
-          :class="ROOM_TYPE_CONFIG[roomType].iconBg"
-        >
-          <component
-            :is="ROOM_TYPE_CONFIG[roomType].icon"
-            class="size-4"
-            :class="ROOM_TYPE_CONFIG[roomType].iconColor"
-          />
-        </div>
+        <!-- Direct message: show user avatar -->
+        <template v-if="isDirect && otherUser">
+          <Avatar class="size-8">
+            <AvatarImage v-if="otherUser.image" :src="otherUser.image" :alt="otherUser.name" />
+            <AvatarFallback class="bg-violet-100 text-xs font-medium text-violet-700">
+              {{ getInitials(otherUser.name) }}
+            </AvatarFallback>
+          </Avatar>
+        </template>
+
+        <!-- Group room: show type icon -->
+        <template v-else-if="activeRoom">
+          <div
+            class="flex size-8 items-center justify-center rounded-lg"
+            :class="ROOM_TYPE_CONFIG[roomType].iconBg"
+          >
+            <component
+              :is="ROOM_TYPE_CONFIG[roomType].icon"
+              class="size-4"
+              :class="ROOM_TYPE_CONFIG[roomType].iconColor"
+            />
+          </div>
+        </template>
+
         <p class="text-sm font-semibold">{{ roomName }}</p>
       </div>
       <div class="flex items-center gap-1.5 text-xs text-muted-foreground">

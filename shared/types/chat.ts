@@ -1,9 +1,16 @@
-export type ChatRoomType = 'general' | 'unit' | 'vigilancia' | 'admin' | 'conserjeria' | 'incidencias' | 'propietarios'
+export type ChatRoomType = 'general' | 'unit' | 'vigilancia' | 'admin' | 'conserjeria' | 'incidencias' | 'propietarios' | 'direct'
 
 export interface ChatRoomLastMessage {
   content: string
   createdAt: string
   userName: string
+}
+
+export interface ChatRoomOtherUser {
+  id: string
+  name: string
+  image: string | null
+  role: string
 }
 
 export interface ChatRoom {
@@ -15,6 +22,16 @@ export interface ChatRoom {
   createdAt: string
   lastMessage?: ChatRoomLastMessage | null
   unreadCount?: number
+  otherUser?: ChatRoomOtherUser | null
+}
+
+export interface ChatContact {
+  id: string
+  name: string
+  image: string | null
+  role: string
+  unitLabel: string | null
+  existingRoomId: string | null
 }
 
 export interface ChatAttachment {
