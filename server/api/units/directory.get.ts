@@ -2,6 +2,7 @@ import { db } from '~~/server/db'
 import { units } from '~~/server/db/schema/unit'
 import { householdMembers } from '~~/server/db/schema/household'
 import { vehicles } from '~~/server/db/schema/vehicle'
+import { unitServiceStaff } from '~~/server/db/schema/unit-service-staff'
 import { eq, and, sql, asc } from 'drizzle-orm'
 
 export default defineEventHandler(async (event) => {
@@ -14,6 +15,7 @@ export default defineEventHandler(async (event) => {
       label: units.label,
       memberCount: sql<number>`count(distinct ${householdMembers.id})`.as('member_count'),
       vehicleCount: sql<number>`count(distinct ${vehicles.id})`.as('vehicle_count'),
+      staffCount: sql<number>`count(distinct ${unitServiceStaff.id})`.as('staff_count'),
     })
     .from(units)
     .leftJoin(
@@ -27,9 +29,16 @@ export default defineEventHandler(async (event) => {
       vehicles,
       eq(vehicles.unitId, units.id),
     )
+    .leftJoin(
+      unitServiceStaff,
+      and(
+        eq(unitServiceStaff.unitId, units.id),
+        eq(unitServiceStaff.isActive, true),
+      ),
+    )
     .where(eq(units.tenantId, tenantId))
     .groupBy(units.id)
-    .orderBy(asc(units.number))
+    .orderBy(asc(units.label))
 
   return { data: rows }
 })

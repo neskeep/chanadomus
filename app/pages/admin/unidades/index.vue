@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import { Users, Car, Home } from 'lucide-vue-next'
+import { Users, Car, Home, HardHat } from 'lucide-vue-next'
 
-useHead({ title: 'Unidades' })
+useHead({ title: 'Ranchos' })
 
 interface UnitDirectory {
   id: string
@@ -9,6 +9,11 @@ interface UnitDirectory {
   label: string | null
   memberCount: number
   vehicleCount: number
+  staffCount: number
+}
+
+function hasActivity(unit: UnitDirectory) {
+  return unit.memberCount > 1 || unit.vehicleCount > 0 || unit.staffCount > 0
 }
 
 const { target, isMounted } = useTopbarPortal()
@@ -78,20 +83,22 @@ onMounted(() => {
         @click="navigateTo(`/admin/unidades/${unit.id}`)"
       >
         <CardContent class="px-3 py-2.5">
-          <div class="flex items-baseline gap-2">
-            <p class="text-base font-bold tabular-nums">{{ unit.number }}</p>
-            <p v-if="unit.label" class="min-w-0 truncate text-sm text-muted-foreground">{{ unit.label }}</p>
-          </div>
-          <div class="mt-1 flex items-center gap-3 text-[11px] text-muted-foreground">
+          <p class="truncate text-sm font-semibold">{{ unit.label || unit.number }}</p>
+          <div v-if="hasActivity(unit)" class="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-0.5 text-[11px] text-muted-foreground">
             <span class="inline-flex items-center gap-1">
               <Users class="size-3" />
-              {{ unit.memberCount }} residentes
+              {{ unit.memberCount }}
             </span>
-            <span class="inline-flex items-center gap-1">
+            <span v-if="unit.vehicleCount > 0" class="inline-flex items-center gap-1">
               <Car class="size-3" />
               {{ unit.vehicleCount }}
             </span>
+            <span v-if="unit.staffCount > 0" class="inline-flex items-center gap-1">
+              <HardHat class="size-3" />
+              {{ unit.staffCount }}
+            </span>
           </div>
+          <p v-else class="mt-1.5 text-[11px] text-muted-foreground/50">Sin actividad</p>
         </CardContent>
       </Card>
     </div>
