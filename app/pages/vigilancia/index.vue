@@ -1,54 +1,53 @@
 <script setup lang="ts">
-import { AlertTriangle, Calendar, DoorOpen, Megaphone, QrCode, Shield, Users } from 'lucide-vue-next'
+import { AlertTriangle, ClipboardList, DoorOpen, LogIn, LogOut, QrCode, Shield, ShieldAlert, Users } from 'lucide-vue-next'
+import { buttonVariants } from '~/components/ui/button'
 import { ICON_BG } from '~/composables/useColorMap'
 
 useHead({ title: 'Panel Vigilancia' })
 
-const { formatDateTime } = useFormatDate()
-
-interface DashboardStats {
-  openIncidents: number
-  todayAccessCount: number
-  publishedAnnouncements: number
-  upcomingMeetings: number
-  nextMeeting: { title: string; date: string } | null
-}
-
-const stats = ref<DashboardStats | null>(null)
-const isLoading = ref(true)
-
+const { stats, isLoading } = useDashboard()
+const { events, isConnected, loadInitialEvents } = useAccessStream()
 
 const quickActions = [
   { label: 'Registrar Acceso', icon: DoorOpen, to: '/vigilancia/accesos' },
-  { label: 'Escanear QR', icon: QrCode, to: '/vigilancia/escanear' },
+  { label: 'Reportar Incidencia', icon: ClipboardList, to: '/vigilancia/incidencias' },
   { label: 'Residentes', icon: Users, to: '/vigilancia/residentes' },
 ] as const
 
-onMounted(async () => {
-  try {
-    const res = await $fetch<{ data: DashboardStats }>('/api/dashboard/stats')
-    stats.value = res.data
-  } catch {
-    // silent
-  } finally {
-    isLoading.value = false
-  }
+function timeAgo(dateStr: string): string {
+  const diff = Date.now() - new Date(dateStr).getTime()
+  const mins = Math.floor(diff / 60000)
+  if (mins < 1) return 'ahora'
+  if (mins < 60) return `hace ${mins}m`
+  const hrs = Math.floor(mins / 60)
+  if (hrs < 24) return `hace ${hrs}h`
+  return `hace ${Math.floor(hrs / 24)}d`
+}
+
+onMounted(() => {
+  loadInitialEvents()
 })
 </script>
 
 <template>
-  <div class="space-y-8">
-    <!-- Hero: Accesos Hoy -->
+  <div class="space-y-6">
+    <!-- 1. Hero: Accesos Hoy -->
     <Card class="p-6">
       <div class="flex items-center justify-between">
         <div>
           <p class="text-sm text-muted-foreground">Accesos Hoy</p>
           <template v-if="isLoading">
             <Skeleton class="mt-2 h-12 w-20" />
+            <Skeleton class="mt-1.5 h-4 w-32" />
           </template>
-          <p v-else class="mt-1 text-4xl font-bold tabular-nums tracking-tight">
-            {{ stats?.todayAccessCount ?? 0 }}
-          </p>
+          <template v-else>
+            <p class="mt-1 text-4xl font-bold tabular-nums tracking-tight">
+              {{ stats?.todayAccessCount ?? 0 }}
+            </p>
+            <p class="mt-0.5 text-sm text-muted-foreground">
+              {{ stats?.todayEntryCount ?? 0 }} entradas · {{ stats?.todayExitCount ?? 0 }} salidas
+            </p>
+          </template>
         </div>
         <div class="flex flex-col items-end gap-3">
           <div :class="['flex size-12 items-center justify-center rounded-lg', ICON_BG.teal]">
@@ -65,64 +64,76 @@ onMounted(async () => {
       </div>
     </Card>
 
-    <!-- Stats grid -->
-    <div class="grid grid-cols-3 gap-4">
-      <Card class="p-4">
-        <div class="flex items-start justify-between">
-          <div class="flex flex-col gap-1">
-            <template v-if="isLoading">
-              <Skeleton class="h-5 w-16" />
-              <Skeleton class="h-8 w-12" />
-            </template>
-            <template v-else>
-              <p class="text-sm text-muted-foreground">Incidencias</p>
-              <p class="text-2xl font-bold tabular-nums tracking-tight">{{ stats?.openIncidents ?? 0 }}</p>
-            </template>
-          </div>
-          <div :class="['flex size-10 items-center justify-center rounded-lg', ICON_BG.warning]">
-            <AlertTriangle class="size-5" />
-          </div>
-        </div>
-      </Card>
+    <!-- 2. Escanear QR — Botón prominente -->
+    <NuxtLink
+      to="/vigilancia/escanear"
+      :class="buttonVariants({ variant: 'default', size: 'lg' })"
+      class="w-full h-14 gap-3 text-base font-semibold"
+    >
+      <QrCode class="size-6" />
+      Escanear QR
+    </NuxtLink>
 
-      <Card class="p-4">
-        <div class="flex items-start justify-between">
-          <div class="flex flex-col gap-1">
-            <template v-if="isLoading">
-              <Skeleton class="h-5 w-16" />
-              <Skeleton class="h-8 w-12" />
-            </template>
-            <template v-else>
-              <p class="text-sm text-muted-foreground">Anuncios</p>
-              <p class="text-2xl font-bold tabular-nums tracking-tight">{{ stats?.publishedAnnouncements ?? 0 }}</p>
-            </template>
-          </div>
-          <div :class="['flex size-10 items-center justify-center rounded-lg', ICON_BG.teal]">
-            <Megaphone class="size-5" />
-          </div>
-        </div>
-      </Card>
+    <!-- 3. Feed en vivo: Últimos accesos -->
+    <Card class="p-5">
+      <div class="mb-4 flex items-center justify-between">
+        <h2 class="text-sm font-semibold">Accesos recientes</h2>
+        <Badge v-if="isConnected" variant="secondary" class="gap-1.5">
+          <span class="relative flex size-2">
+            <span class="absolute inline-flex size-full animate-ping rounded-lg bg-emerald-400 opacity-75" />
+            <span class="relative inline-flex size-2 rounded-lg bg-emerald-500" />
+          </span>
+          En vivo
+        </Badge>
+      </div>
 
-      <Card class="p-4">
-        <div class="flex items-start justify-between">
-          <div class="flex flex-col gap-1">
-            <template v-if="isLoading">
-              <Skeleton class="h-5 w-16" />
-              <Skeleton class="h-8 w-12" />
-            </template>
-            <template v-else>
-              <p class="text-sm text-muted-foreground">Reuniones</p>
-              <p class="text-2xl font-bold tabular-nums tracking-tight">{{ stats?.upcomingMeetings ?? 0 }}</p>
-            </template>
+      <div v-if="events.length > 0" class="divide-y divide-border">
+        <div
+          v-for="event in events.slice(0, 5)"
+          :key="event.id"
+          class="flex items-center gap-3 py-2.5"
+        >
+          <LogOut v-if="event.exitAt" class="size-5 shrink-0 text-muted-foreground" />
+          <LogIn v-else class="size-5 shrink-0 text-emerald-500" />
+          <div class="min-w-0 flex-1">
+            <p class="truncate text-sm font-medium">{{ event.visitorName || 'Sin nombre' }}</p>
+            <p class="text-xs text-muted-foreground">{{ event.unitLabel || event.unitNumber }}</p>
           </div>
-          <div :class="['flex size-10 items-center justify-center rounded-lg', ICON_BG.success]">
-            <Calendar class="size-5" />
-          </div>
+          <span class="shrink-0 text-xs tabular-nums text-muted-foreground">
+            {{ timeAgo(event.createdAt) }}
+          </span>
         </div>
-      </Card>
+      </div>
+      <p v-else class="py-8 text-center text-sm text-muted-foreground">
+        Sin accesos registrados hoy
+      </p>
+
+      <div class="mt-4">
+        <NuxtLink to="/vigilancia/accesos" class="text-sm text-primary hover:underline">
+          Ver todos los accesos →
+        </NuxtLink>
+      </div>
+    </Card>
+
+    <!-- 4. Stat cards -->
+    <div class="grid grid-cols-2 gap-4">
+      <StatCard
+        label="Incidencias Abiertas"
+        :value="stats?.openIncidents ?? 0"
+        :icon="AlertTriangle"
+        :icon-bg-class="ICON_BG.warning"
+        :is-loading="isLoading"
+      />
+      <StatCard
+        label="Alertas Pendientes"
+        :value="stats?.unresolvedPanicCount ?? 0"
+        :icon="ShieldAlert"
+        :icon-bg-class="ICON_BG.danger"
+        :is-loading="isLoading"
+      />
     </div>
 
-    <!-- Quick actions -->
+    <!-- 5. Quick actions -->
     <div>
       <h2 class="mb-3 text-sm font-semibold text-muted-foreground">Acciones rápidas</h2>
       <div class="grid grid-cols-3 gap-3">
@@ -142,19 +153,5 @@ onMounted(async () => {
         </NuxtLink>
       </div>
     </div>
-
-    <!-- Next meeting -->
-    <Card v-if="stats?.nextMeeting" class="p-4">
-      <div class="flex items-center gap-3">
-        <div :class="['flex size-10 shrink-0 items-center justify-center rounded-lg', ICON_BG.success]">
-          <Calendar class="size-5" />
-        </div>
-        <div class="min-w-0 flex-1">
-          <p class="text-xs font-medium text-muted-foreground">Próxima reunión</p>
-          <p class="truncate text-base font-semibold">{{ stats.nextMeeting.title }}</p>
-          <p class="text-sm text-muted-foreground">{{ formatDateTime(stats.nextMeeting.date) }}</p>
-        </div>
-      </div>
-    </Card>
   </div>
 </template>

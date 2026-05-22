@@ -1,12 +1,14 @@
 <script setup lang="ts">
 import {
   AlertTriangle,
-  Building2,
   Calendar,
+  CircleCheck,
   ClipboardList,
-  Megaphone,
   MessageCircle,
-  ScanLine,
+  QrCode,
+  Receipt,
+  UserPlus,
+  Users,
   Vote,
 } from 'lucide-vue-next'
 import { buttonVariants } from '~/components/ui/button'
@@ -14,133 +16,104 @@ import { ICON_BG } from '~/composables/useColorMap'
 
 useHead({ title: 'Mi Vivienda' })
 
-const { formatDateTime } = useFormatDate()
-
-interface DashboardStats {
-  myOpenIncidents: number
-  activePolls: number
-  publishedAnnouncements: number
-  upcomingMeetings: number
-  nextMeeting: { title: string; date: string } | null
-}
-
-const stats = ref<DashboardStats | null>(null)
-const isLoading = ref(true)
-
-onMounted(async () => {
-  try {
-    const res = await $fetch<{ data: DashboardStats }>('/api/dashboard/stats')
-    stats.value = res.data
-  } catch {
-    // silent
-  } finally {
-    isLoading.value = false
-  }
-})
+const { stats, isLoading } = useDashboard()
+const { formatCurrency, formatDateTime } = useFormatDate()
 
 const quickActions = [
-  { label: 'Mi Unidad', to: '/propietario/mi-unidad', icon: Building2 },
-  { label: 'Mi QR', to: '/propietario/mi-qr', icon: ScanLine },
+  { label: 'Nueva Visita', to: '/propietario/nueva-visita', icon: UserPlus },
   { label: 'Reportar Incidencia', to: '/propietario/incidencias', icon: ClipboardList },
-  { label: 'Ver Cartelera', to: '/mi-chana/cartelera', icon: Megaphone },
-  { label: 'Votaciones', to: '/mi-chana/votaciones', icon: Vote },
+  { label: 'Estado de Cuenta', to: '/propietario/estado-cuenta', icon: Receipt },
   { label: 'Chat', to: '/mi-chana/chat', icon: MessageCircle },
 ] as const
 </script>
 
 <template>
-  <div class="space-y-8">
-    <!-- Stats -->
-    <div class="grid grid-cols-2 gap-4">
-      <!-- Stat cards -->
-      <Card class="p-4">
-        <div class="flex items-start justify-between">
-          <div class="flex flex-col gap-1">
-            <template v-if="isLoading">
-              <Skeleton class="h-5 w-16" />
-              <Skeleton class="h-8 w-12" />
-            </template>
-            <template v-else>
-              <p class="text-sm text-muted-foreground">Mis Incidencias</p>
-              <p class="text-2xl font-bold tabular-nums tracking-tight">{{ stats?.myOpenIncidents ?? 0 }}</p>
-            </template>
-          </div>
-          <div :class="['flex size-10 items-center justify-center rounded-lg', ICON_BG.warning]">
-            <AlertTriangle class="size-5" />
+  <div class="space-y-6">
+    <!-- 1. Hero financiero -->
+    <Card class="p-6">
+      <template v-if="isLoading">
+        <div class="flex items-center gap-4">
+          <Skeleton class="size-10 rounded-lg" />
+          <div class="flex flex-col gap-2">
+            <Skeleton class="h-4 w-28" />
+            <Skeleton class="h-7 w-36" />
           </div>
         </div>
-      </Card>
+      </template>
 
-      <Card class="p-4">
-        <div class="flex items-start justify-between">
-          <div class="flex flex-col gap-1">
-            <template v-if="isLoading">
-              <Skeleton class="h-5 w-16" />
-              <Skeleton class="h-8 w-12" />
-            </template>
-            <template v-else>
-              <p class="text-sm text-muted-foreground">Votaciones Activas</p>
-              <p class="text-2xl font-bold tabular-nums tracking-tight">{{ stats?.activePolls ?? 0 }}</p>
-            </template>
+      <template v-else-if="stats?.myIsInDebt">
+        <div class="rounded-lg bg-amber-50 p-4 ring-1 ring-amber-200 dark:bg-amber-950/20 dark:ring-amber-800">
+          <div class="flex items-center gap-4">
+            <div class="flex size-10 shrink-0 items-center justify-center rounded-lg bg-amber-100 dark:bg-amber-900/30">
+              <AlertTriangle class="size-5 text-amber-600" />
+            </div>
+            <div class="min-w-0 flex-1">
+              <p class="text-sm text-muted-foreground">Saldo pendiente</p>
+              <p class="text-2xl font-bold tabular-nums tracking-tight text-amber-600">
+                {{ formatCurrency(stats.myBalance ?? 0) }}
+              </p>
+            </div>
           </div>
-          <div :class="['flex size-10 items-center justify-center rounded-lg', ICON_BG.purple]">
-            <Vote class="size-5" />
-          </div>
+          <NuxtLink
+            to="/propietario/estado-cuenta"
+            class="mt-3 inline-block text-sm text-amber-600 hover:underline"
+          >
+            Ver estado de cuenta &rarr;
+          </NuxtLink>
         </div>
-      </Card>
+      </template>
 
-      <Card class="p-4">
-        <div class="flex items-start justify-between">
-          <div class="flex flex-col gap-1">
-            <template v-if="isLoading">
-              <Skeleton class="h-5 w-16" />
-              <Skeleton class="h-8 w-12" />
-            </template>
-            <template v-else>
-              <p class="text-sm text-muted-foreground">Anuncios</p>
-              <p class="text-2xl font-bold tabular-nums tracking-tight">{{ stats?.publishedAnnouncements ?? 0 }}</p>
-            </template>
-          </div>
-          <div :class="['flex size-10 items-center justify-center rounded-lg', ICON_BG.info]">
-            <Megaphone class="size-5" />
+      <template v-else>
+        <div class="rounded-lg bg-emerald-50 p-4 ring-1 ring-emerald-200 dark:bg-emerald-950/20 dark:ring-emerald-800">
+          <div class="flex items-center gap-4">
+            <div class="flex size-10 shrink-0 items-center justify-center rounded-lg bg-emerald-100 dark:bg-emerald-900/30">
+              <CircleCheck class="size-5 text-emerald-600" />
+            </div>
+            <div class="min-w-0 flex-1">
+              <p class="text-lg font-semibold text-emerald-600">Estás al día</p>
+              <p class="text-sm text-muted-foreground">No tienes saldos pendientes</p>
+            </div>
           </div>
         </div>
-      </Card>
-
-      <Card class="p-4">
-        <div class="flex items-start justify-between">
-          <div class="flex flex-col gap-1">
-            <template v-if="isLoading">
-              <Skeleton class="h-5 w-16" />
-              <Skeleton class="h-8 w-12" />
-            </template>
-            <template v-else>
-              <p class="text-sm text-muted-foreground">Reuniones</p>
-              <p class="text-2xl font-bold tabular-nums tracking-tight">{{ stats?.upcomingMeetings ?? 0 }}</p>
-            </template>
-          </div>
-          <div :class="['flex size-10 items-center justify-center rounded-lg', ICON_BG.success]">
-            <Calendar class="size-5" />
-          </div>
-        </div>
-      </Card>
-    </div>
-
-    <!-- Next Meeting -->
-    <Card v-if="stats?.nextMeeting" class="p-4">
-      <div class="flex items-center gap-3">
-        <div :class="['flex size-10 shrink-0 items-center justify-center rounded-lg', ICON_BG.success]">
-          <Calendar class="size-5" />
-        </div>
-        <div class="min-w-0 flex-1">
-          <p class="text-xs font-medium text-muted-foreground">Próxima reunión</p>
-          <p class="truncate text-base font-semibold">{{ stats.nextMeeting.title }}</p>
-          <p class="text-sm text-muted-foreground">{{ formatDateTime(stats.nextMeeting.date) }}</p>
-        </div>
-      </div>
+      </template>
     </Card>
 
-    <!-- Quick Actions -->
+    <!-- 2. Mi QR — Botón prominente -->
+    <NuxtLink
+      to="/propietario/mi-qr"
+      :class="buttonVariants({ variant: 'default', size: 'lg' })"
+      class="w-full h-14 gap-3 text-base font-semibold"
+    >
+      <QrCode class="size-6" />
+      Mi QR de Acceso
+    </NuxtLink>
+
+    <!-- 3. Stat cards -->
+    <div class="grid grid-cols-3 gap-4">
+      <StatCard
+        label="Mis Incidencias"
+        :value="stats?.myOpenIncidents ?? 0"
+        :icon="AlertTriangle"
+        :icon-bg-class="ICON_BG.warning"
+        :is-loading="isLoading"
+      />
+      <StatCard
+        label="Votaciones"
+        :value="stats?.activePolls ?? 0"
+        :icon="Vote"
+        :icon-bg-class="ICON_BG.purple"
+        :is-loading="isLoading"
+      />
+      <StatCard
+        label="Visitas Activas"
+        :value="stats?.myActiveVisits ?? 0"
+        :icon="Users"
+        :icon-bg-class="ICON_BG.info"
+        :is-loading="isLoading"
+      />
+    </div>
+
+    <!-- 4. Quick actions -->
     <div>
       <h2 class="mb-3 text-sm font-semibold text-muted-foreground">Acciones rápidas</h2>
       <div class="grid grid-cols-2 gap-3">
@@ -156,5 +129,19 @@ const quickActions = [
         </NuxtLink>
       </div>
     </div>
+
+    <!-- 5. Próxima reunión -->
+    <Card v-if="stats?.nextMeeting" class="p-4">
+      <div class="flex items-center gap-3">
+        <div :class="['flex size-10 shrink-0 items-center justify-center rounded-lg', ICON_BG.success]">
+          <Calendar class="size-5" />
+        </div>
+        <div class="min-w-0 flex-1">
+          <p class="text-xs font-medium text-muted-foreground">Próxima reunión</p>
+          <p class="truncate text-base font-semibold">{{ stats.nextMeeting.title }}</p>
+          <p class="text-sm text-muted-foreground">{{ formatDateTime(stats.nextMeeting.date) }}</p>
+        </div>
+      </div>
+    </Card>
   </div>
 </template>
