@@ -17,7 +17,7 @@ export const pollType = pgEnum("poll_type", ['single', 'multiple'])
 export const providerCategory = pgEnum("provider_category", ['plomeria', 'electricidad', 'jardineria', 'cerrajeria', 'limpieza', 'pintura', 'albanileria', 'seguridad', 'fumigacion', 'otro'])
 export const providerStatus = pgEnum("provider_status", ['active', 'inactive', 'pending'])
 export const recordType = pgEnum("record_type", ['cargo', 'abono'])
-export const regulationCategory = pgEnum("regulation_category", ['normas', 'horarios', 'arquitectura'])
+
 export const staffRole = pgEnum("staff_role", ['conserje', 'vigilancia', 'mantenimiento', 'otro'])
 export const vehiclePassType = pgEnum("vehicle_pass_type", ['resident', 'guest'])
 export const visitorType = pgEnum("visitor_type", ['invitado', 'proveedor'])
@@ -958,7 +958,6 @@ export const panicEvents = pgTable("panic_events", {
 export const regulations = pgTable("regulations", {
 	id: uuid().defaultRandom().primaryKey().notNull(),
 	title: text().notNull(),
-	category: regulationCategory().notNull(),
 	attachmentPath: text("attachment_path").notNull(),
 	authorId: text("author_id").notNull(),
 	tenantId: uuid("tenant_id").notNull(),
@@ -966,7 +965,6 @@ export const regulations = pgTable("regulations", {
 	createdAt: timestamp("created_at", { mode: 'string' }).defaultNow().notNull(),
 	updatedAt: timestamp("updated_at", { mode: 'string' }).defaultNow().notNull(),
 }, (table) => [
-	index("regulation_category_idx").using("btree", table.category.asc().nullsLast().op("enum_ops")),
 	index("regulation_published_at_idx").using("btree", table.publishedAt.asc().nullsLast().op("timestamp_ops")),
 	index("regulation_tenant_idx").using("btree", table.tenantId.asc().nullsLast().op("uuid_ops")),
 	foreignKey({

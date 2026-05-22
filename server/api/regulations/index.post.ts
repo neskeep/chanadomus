@@ -4,10 +4,9 @@ import { readMultipartFormData } from 'h3'
 import { mkdir, writeFile } from 'fs/promises'
 import { join } from 'path'
 import { sendPushToAll } from '~~/server/utils/web-push'
-import type { Regulation, RegulationCategory } from '~~/shared/types/regulation'
+import type { Regulation } from '~~/shared/types/regulation'
 
 const MAX_PDF_SIZE = 10 * 1024 * 1024 // 10MB
-const VALID_CATEGORIES: RegulationCategory[] = ['normas', 'horarios', 'arquitectura']
 
 export default defineEventHandler(async (event) => {
   const session = await requireTenant(event)
@@ -19,14 +18,11 @@ export default defineEventHandler(async (event) => {
   }
 
   let title = ''
-  let category = ''
   let pdfFile: { filename: string; data: Buffer; type: string } | null = null
 
   for (const part of formData) {
     if (part.name === 'title') {
       title = part.data.toString('utf-8').trim()
-    } else if (part.name === 'category') {
-      category = part.data.toString('utf-8').trim()
     } else if (part.name === 'attachment' && part.data.length > 0) {
       pdfFile = {
         filename: part.filename ?? 'document.pdf',
@@ -41,10 +37,6 @@ export default defineEventHandler(async (event) => {
   }
   if (title.length > 200) {
     throw createError({ statusCode: 400, message: 'El titulo no puede exceder 200 caracteres' })
-  }
-
-  if (!category || !VALID_CATEGORIES.includes(category as RegulationCategory)) {
-    throw createError({ statusCode: 400, message: 'Categoria invalida' })
   }
 
   if (!pdfFile) {
@@ -69,7 +61,6 @@ export default defineEventHandler(async (event) => {
     .insert(regulations)
     .values({
       title,
-      category: category as RegulationCategory,
       attachmentPath: storedFileName,
       authorId: session.user.id,
       tenantId: session.tenantId,
@@ -92,7 +83,6 @@ export default defineEventHandler(async (event) => {
   const regulation: Regulation = {
     id: row.id,
     title: row.title,
-    category: row.category,
     attachmentPath: row.attachmentPath,
     authorId: row.authorId,
     authorName: session.user.name ?? undefined,
