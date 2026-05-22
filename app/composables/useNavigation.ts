@@ -113,8 +113,8 @@ export function useNavigation() {
             items: [
               { label: 'Chat', icon: MessageCircle, to: '/mi-chana/chat' },
               { label: 'Cartelera', icon: Megaphone, to: '/mi-chana/cartelera' },
+              { label: 'Incidencias', icon: AlertTriangle, to: '/vigilancia/incidencias' },
               { label: 'Proveedores', icon: Wrench, to: '/mi-chana/proveedores' },
-              { label: 'Reuniones', icon: Calendar, to: '/mi-chana/reuniones' },
             ],
           },
         ]
