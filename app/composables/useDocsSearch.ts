@@ -239,9 +239,12 @@ function scoreEntry(entry: DocsSearchEntry, normalizedQuery: string): number {
   return 0
 }
 
+const _docsSearchQuery = ref('')
+const _docsSearchOpen = ref(false)
+
 export function useDocsSearch() {
-  const query = ref('')
-  const isOpen = ref(false)
+  const query = _docsSearchQuery
+  const isOpen = _docsSearchOpen
 
   // Ctrl+K keyboard shortcut
   if (import.meta.client) {
