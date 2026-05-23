@@ -1,35 +1,50 @@
 <script setup lang="ts">
 import { Loader2 } from 'lucide-vue-next'
 import { toast } from 'vue-sonner'
-import type { StaffRole } from '~~/shared/types/staff'
-
 useHead({ title: 'Agregar Personal' })
 
 const router = useRouter()
-const { isSubmitting, error, createStaffMember } = useStaff()
+const { isSubmitting, error, createStaffMember, roleOptions, fetchRoles } = useStaff()
 
 // --- Form state ---
 const formName = ref('')
-const formRole = ref<StaffRole | ''>('')
+const formRole = ref('')
 const formDocument = ref('')
 const formPhone = ref('')
 const formEmail = ref('')
 const formShift = ref('none')
-const formUnitId = ref<string | ''>('')
+const formUnitId = ref('none')
 
 // Units for selector
 const unitOptions = ref<{ id: string; number: string; label: string | null }[]>([])
+
+const activeRoles = computed(() => roleOptions.value.filter(r => r.isActive))
+
+// Conserjes requieren unidad obligatoria
+const selectedRoleName = computed(() =>
+  roleOptions.value.find(r => r.id === formRole.value)?.name ?? '',
+)
+const isUnitRequired = computed(() =>
+  selectedRoleName.value.toLowerCase() === 'conserje',
+)
+
 onMounted(async () => {
-  try {
-    const res = await $fetch<{ data: { id: string; number: string; label: string | null }[] }>('/api/units')
-    unitOptions.value = res.data
-  }
-  catch { /* selector will be empty */ }
+  await Promise.all([
+    fetchRoles(),
+    (async () => {
+      try {
+        const res = await $fetch<{ data: { id: string; number: string; label: string | null }[] }>('/api/units')
+        unitOptions.value = res.data
+      }
+      catch { /* selector will be empty */ }
+    })(),
+  ])
 })
 
 const canSubmit = computed(() =>
   formName.value.trim().length > 0
   && formRole.value !== ''
+  && (!isUnitRequired.value || (formUnitId.value !== '' && formUnitId.value !== 'none'))
   && !isSubmitting.value,
 )
 
@@ -38,12 +53,12 @@ async function handleSubmit() {
   try {
     await createStaffMember({
       name: formName.value.trim(),
-      role: formRole.value as StaffRole,
+      roleId: formRole.value,
       idDocument: formDocument.value.trim() || undefined,
       phone: formPhone.value.trim() || undefined,
       email: formEmail.value.trim() || undefined,
       shift: formShift.value === 'none' ? undefined : formShift.value || undefined,
-      unitId: formUnitId.value || undefined,
+      unitId: formUnitId.value === 'none' ? undefined : formUnitId.value || undefined,
     })
     toast.success('Personal agregado correctamente')
     router.push('/admin/personal')
@@ -83,10 +98,9 @@ async function handleSubmit() {
                   <SelectValue placeholder="Seleccionar rol" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="conserje">Conserje</SelectItem>
-                  <SelectItem value="vigilancia">Vigilancia</SelectItem>
-                  <SelectItem value="mantenimiento">Mantenimiento</SelectItem>
-                  <SelectItem value="otro">Otro</SelectItem>
+                  <SelectItem v-for="role in activeRoles" :key="role.id" :value="role.id">
+                    {{ role.name }}
+                  </SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -142,22 +156,11 @@ async function handleSubmit() {
             </div>
 
             <div class="space-y-1.5">
-              <Label for="staff-unit">Unidad asignada</Label>
-              <Select v-model="formUnitId">
-                <SelectTrigger id="staff-unit" size="lg" class="text-base">
-                  <SelectValue placeholder="Sin unidad" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="">Sin unidad</SelectItem>
-                  <SelectItem
-                    v-for="unit in unitOptions"
-                    :key="unit.id"
-                    :value="unit.id"
-                  >
-                    {{ unit.number }}{{ unit.label ? ` — ${unit.label}` : '' }}
-                  </SelectItem>
-                </SelectContent>
-              </Select>
+              <Label>Rancho asignado <span v-if="isUnitRequired" class="text-destructive">*</span></Label>
+              <UnitCombobox v-model="formUnitId" :units="unitOptions" :required="isUnitRequired" />
+              <p v-if="isUnitRequired" class="text-xs text-muted-foreground">
+                Los conserjes deben tener un rancho asignado
+              </p>
             </div>
           </div>
 

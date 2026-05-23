@@ -130,6 +130,15 @@ onMounted(() => {
       </Button>
     </TopbarMobileAction>
 
+    <!-- Mobile search -->
+    <div class="mb-4 md:hidden">
+      <TopbarSearch v-model="searchQuery" placeholder="Buscar usuarios...">
+        <TopbarFilters :active="selectedRole !== ''" @clear="selectedRole = ''">
+          <TopbarFilterGroup v-model="selectedRole" label="Rol" :options="roleOptions" />
+        </TopbarFilters>
+      </TopbarSearch>
+    </div>
+
     <!-- Error -->
     <ErrorAlert v-if="error && !isSubmitting" :message="error" class="mb-4" />
 

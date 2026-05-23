@@ -11,6 +11,12 @@ export interface DashboardStats {
   pendingProviders: number
   myOpenIncidents: number
   todayAccessCount: number
+  todayEntryCount?: number
+  todayExitCount?: number
+  myBalance?: number
+  myIsInDebt?: boolean
+  myActiveVisits?: number
+  unresolvedPanicCount?: number
 }
 
 export interface DashboardTrends {

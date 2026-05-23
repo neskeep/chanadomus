@@ -22,6 +22,19 @@ export interface UnitSummary {
   unitLabel: string | null
   balance: string
   isInDebt: boolean
+  lastMovementDate: string | null
+}
+
+export interface MovementWithUnit {
+  id: string
+  type: RecordType
+  amount: string
+  description: string
+  date: string
+  unitNumber: string
+  unitLabel: string | null
+  unitId: string
+  createdAt: string
 }
 
 export interface FinancialReport {

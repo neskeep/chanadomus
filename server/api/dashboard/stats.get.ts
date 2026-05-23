@@ -6,8 +6,9 @@ import { announcements } from '~~/server/db/schema/announcement'
 import { providers } from '~~/server/db/schema/provider'
 import { units } from '~~/server/db/schema/unit'
 import { financialRecords } from '~~/server/db/schema/financial'
-import { accessLogs } from '~~/server/db/schema/access'
-import { eq, and, count, gte, asc, inArray, sql as dsql } from 'drizzle-orm'
+import { accessLogs, qrCodes } from '~~/server/db/schema/access'
+import { panicEvents } from '~~/server/db/schema/panic'
+import { eq, and, count, gte, asc, inArray, isNull, gt, sql as dsql } from 'drizzle-orm'
 
 interface DashboardStats {
   openIncidents: number
@@ -22,6 +23,12 @@ interface DashboardStats {
   pendingProviders: number
   myOpenIncidents: number
   todayAccessCount: number
+  todayEntryCount: number
+  todayExitCount: number
+  myBalance: number
+  myIsInDebt: boolean
+  myActiveVisits: number
+  unresolvedPanicCount: number
 }
 
 async function safeCount(fn: () => Promise<number>): Promise<number> {
@@ -39,6 +46,8 @@ export default defineEventHandler(async (event) => {
   const now = new Date()
   const todayMidnight = new Date(now.getFullYear(), now.getMonth(), now.getDate())
 
+  const unitId = (session.user as Record<string, unknown>).unitId as string | undefined
+
   const [
     openIncidents,
     inProgressIncidents,
@@ -52,6 +61,11 @@ export default defineEventHandler(async (event) => {
     myOpenIncidents,
     todayAccessCount,
     unitsInDebt,
+    todayEntryCount,
+    todayExitCount,
+    myBalanceResult,
+    myActiveVisits,
+    unresolvedPanicCount,
   ] = await Promise.all([
     // openIncidents
     safeCount(async () => {
@@ -188,7 +202,76 @@ export default defineEventHandler(async (event) => {
       const rows = result as unknown as Array<{ total: string | number }>
       return Number(rows[0]?.total ?? 0)
     }),
+
+    // todayEntryCount — access logs created today (entries)
+    safeCount(async () => {
+      const [row] = await db
+        .select({ total: count() })
+        .from(accessLogs)
+        .where(and(
+          eq(accessLogs.tenantId, tenantId),
+          gte(accessLogs.createdAt, todayMidnight),
+        ))
+      return row?.total ?? 0
+    }),
+
+    // todayExitCount — access logs with exitAt today (exits)
+    safeCount(async () => {
+      const [row] = await db
+        .select({ total: count() })
+        .from(accessLogs)
+        .where(and(
+          eq(accessLogs.tenantId, tenantId),
+          gte(accessLogs.exitAt, todayMidnight),
+        ))
+      return row?.total ?? 0
+    }),
+
+    // myBalance — sum of cargos minus abonos for current user's unit
+    (async (): Promise<number> => {
+      try {
+        if (!unitId) return 0
+        const result = await db.execute(
+          dsql`SELECT COALESCE(SUM(CASE WHEN type = 'cargo' THEN CAST(amount AS numeric) ELSE -CAST(amount AS numeric) END), 0) as balance
+            FROM financial_records
+            WHERE tenant_id = ${tenantId} AND unit_id = ${unitId}`,
+        )
+        const rows = result as unknown as Array<{ balance: string | number }>
+        return Number(rows[0]?.balance ?? 0)
+      } catch {
+        return 0
+      }
+    })(),
+
+    // myActiveVisits — QR codes owned by user, not used, not expired
+    safeCount(async () => {
+      const [row] = await db
+        .select({ total: count() })
+        .from(qrCodes)
+        .where(and(
+          eq(qrCodes.ownerId, userId),
+          eq(qrCodes.tenantId, tenantId),
+          isNull(qrCodes.usedAt),
+          gt(qrCodes.expiresAt, now),
+        ))
+      return row?.total ?? 0
+    }),
+
+    // unresolvedPanicCount — panic events without resolution
+    safeCount(async () => {
+      const [row] = await db
+        .select({ total: count() })
+        .from(panicEvents)
+        .where(and(
+          eq(panicEvents.tenantId, tenantId),
+          isNull(panicEvents.resolvedAt),
+        ))
+      return row?.total ?? 0
+    }),
   ])
+
+  const myBalance = myBalanceResult
+  const myIsInDebt = myBalance > 0
 
   const data: DashboardStats = {
     openIncidents,
@@ -203,6 +286,12 @@ export default defineEventHandler(async (event) => {
     pendingProviders,
     myOpenIncidents,
     todayAccessCount,
+    todayEntryCount,
+    todayExitCount,
+    myBalance,
+    myIsInDebt,
+    myActiveVisits,
+    unresolvedPanicCount,
   }
 
   return { data }

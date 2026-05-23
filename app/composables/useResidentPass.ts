@@ -6,6 +6,8 @@ interface ResidentPassResponse {
   expiresAt: string
   createdAt: string
   unitId: string
+  unitNumber: string
+  unitLabel: string | null
 }
 
 export function useResidentPass() {

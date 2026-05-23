@@ -13,15 +13,18 @@ const {
   error,
   videoRef,
   canvasRef,
+  selectedDirection,
   startScanning,
   stopScanning,
   toggleCamera,
   resetScan,
+  resetToSelection,
 } = useQrScanner()
 
-onMounted(() => {
+function selectDirection(direction: 'entry' | 'exit') {
+  selectedDirection.value = direction
   startScanning()
-})
+}
 
 onUnmounted(() => {
   stopScanning()
@@ -50,7 +53,7 @@ const resolvedConfig = computed(() => {
 
 <template>
   <div class="-mx-4 -my-6 lg:-mx-6 flex h-[calc(100dvh-3rem-4.5rem)] md:h-[calc(100dvh-3.5rem)] flex-col overflow-hidden bg-black">
-    <Teleport :to="target" defer v-if="isMounted">
+    <Teleport :to="target" defer v-if="isMounted && selectedDirection">
       <Button variant="ghost" size="sm" @click="toggleCamera">
         <SwitchCamera class="mr-1 size-4" />
         Cámara
@@ -58,14 +61,38 @@ const resolvedConfig = computed(() => {
     </Teleport>
 
     <!-- Mobile action button -->
-    <TopbarMobileAction>
+    <TopbarMobileAction v-if="selectedDirection">
       <Button variant="ghost" size="icon" class="size-9" @click="toggleCamera">
         <SwitchCamera class="size-4" />
       </Button>
     </TopbarMobileAction>
 
+    <!-- Direction selection screen -->
+    <div
+      v-if="!selectedDirection"
+      class="flex flex-1 flex-col items-center justify-center gap-8 bg-black px-6"
+    >
+      <p class="text-sm font-medium text-white/70">Selecciona el tipo de acceso</p>
+      <div class="flex w-full max-w-xs flex-col gap-4">
+        <Button
+          class="h-24 w-full gap-3 rounded-xl bg-emerald-600 text-xl font-semibold text-white hover:bg-emerald-700"
+          @click="selectDirection('entry')"
+        >
+          <LogIn class="size-8" />
+          Entrada
+        </Button>
+        <Button
+          class="h-24 w-full gap-3 rounded-xl bg-blue-600 text-xl font-semibold text-white hover:bg-blue-700"
+          @click="selectDirection('exit')"
+        >
+          <LogOut class="size-8" />
+          Salida
+        </Button>
+      </div>
+    </div>
+
     <!-- Full viewport camera -->
-    <div class="relative flex-1 overflow-hidden">
+    <div v-else class="relative flex-1 overflow-hidden">
       <video
         ref="videoRef"
         class="absolute inset-0 h-full w-full -scale-x-100 object-cover"
@@ -258,7 +285,7 @@ const resolvedConfig = computed(() => {
           <!-- Scan again button -->
           <Button
             class="mt-8 h-12 gap-2 px-8 text-base"
-            @click="resetScan"
+            @click="resetToSelection"
           >
             <RotateCcw class="size-4" />
             Escanear otro

@@ -1,15 +1,12 @@
 <script setup lang="ts">
 import { Loader2, Paperclip } from 'lucide-vue-next'
 import { toast } from 'vue-sonner'
-import type { RegulationCategory } from '~~/shared/types/regulation'
-
 useHead({ title: 'Subir Normativa' })
 
 const router = useRouter()
 const { isSubmitting, error, createRegulation } = useRegulations()
 
 const formTitle = ref('')
-const formCategory = ref<RegulationCategory>('normas')
 const formPdfFile = ref<File | null>(null)
 const pdfInputRef = ref<HTMLInputElement | null>(null)
 
@@ -35,7 +32,6 @@ async function handleSubmit() {
   try {
     const formData = new FormData()
     formData.append('title', formTitle.value.trim())
-    formData.append('category', formCategory.value)
     if (formPdfFile.value) formData.append('attachment', formPdfFile.value)
     await createRegulation(formData)
     toast.success('Normativa publicada correctamente')
@@ -65,21 +61,6 @@ async function handleSubmit() {
               class="h-12 text-base"
               required
             />
-          </div>
-
-          <!-- Categoría -->
-          <div class="space-y-1.5">
-            <Label for="reg-category">Categoría <span class="text-destructive">*</span></Label>
-            <Select v-model="formCategory">
-              <SelectTrigger id="reg-category" size="lg" class="text-base">
-                <SelectValue placeholder="Seleccionar categoría" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="normas">Normas de Convivencia</SelectItem>
-                <SelectItem value="horarios">Horarios</SelectItem>
-                <SelectItem value="arquitectura">Reglas Arquitectónicas</SelectItem>
-              </SelectContent>
-            </Select>
           </div>
 
           <!-- Archivo PDF -->

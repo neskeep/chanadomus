@@ -36,6 +36,7 @@ const PAGE_MAP: Record<string, PageInfo> = {
   '/admin/roles-servicio/crear': { title: 'Nuevo Rol', description: 'Agrega un rol al catálogo', breadcrumbs: [{ label: 'Roles de Servicio', to: '/admin/roles-servicio' }] },
   '/admin/pases-vehiculares': { title: 'Pases Vehiculares', description: 'Control de pases QR para vehículos' },
   '/admin/pases-vehiculares/nuevo': { title: 'Nuevo Pase Vehicular', description: 'Asigna un pase QR a un vehículo registrado', breadcrumbs: [{ label: 'Pases Vehiculares', to: '/admin/pases-vehiculares' }] },
+  '/admin/documentacion': { title: 'Documentación', description: 'Manual de uso de ChanaDomus' },
 
   // Propietario
   '/propietario': { title: 'Mi Vivienda', description: 'Tu resumen personal' },
@@ -67,6 +68,7 @@ const PAGE_MAP: Record<string, PageInfo> = {
 
   // Vigilancia
   '/vigilancia': { title: 'Panel de Vigilancia', description: 'Control de accesos del día' },
+  '/vigilancia/incidencias': { title: 'Incidencias', description: 'Reportes y problemas del condominio' },
   '/vigilancia/escanear': { title: 'Escanear QR', description: 'Verifica el código del visitante' },
   '/vigilancia/accesos': { title: 'Registro de Accesos', description: 'Historial de entradas y salidas' },
   '/vigilancia/alertas': { title: 'Alertas de Pánico', description: 'Historial de emergencias', breadcrumbs: [{ label: 'Vigilancia', to: '/vigilancia' }] },
@@ -74,7 +76,13 @@ const PAGE_MAP: Record<string, PageInfo> = {
 
   // Conserje
   '/conserje': { title: 'Panel de Conserjería', description: 'Tu resumen de actividad' },
+  '/conserje/mi-qr': { title: 'Mi QR Personal', description: 'Tu código de acceso al condominio' },
+  '/conserje/mis-visitas': { title: 'Mis Visitas', description: 'Invitaciones y códigos de acceso' },
+  '/conserje/nueva-visita': { title: 'Nueva Visita', description: 'Genera un código QR para tu visitante', breadcrumbs: [{ label: 'Mis Visitas', to: '/conserje/mis-visitas' }] },
+  '/conserje/visitantes-frecuentes': { title: 'Visitantes Frecuentes', description: 'Directorio de visitantes recurrentes' },
+  '/conserje/visitantes-frecuentes/nuevo': { title: 'Agregar Visitante', description: 'Registra un visitante frecuente', breadcrumbs: [{ label: 'Frecuentes', to: '/conserje/visitantes-frecuentes' }] },
   '/conserje/nueva-entrada': { title: 'Registrar Entrada', description: 'Ingresa un nuevo visitante', breadcrumbs: [{ label: 'Conserjería', to: '/conserje' }] },
+  '/conserje/incidencias': { title: 'Incidencias', description: 'Reportes y problemas del condominio' },
 }
 
 const DYNAMIC_ROUTES: Array<{ prefix: string; info: PageInfo }> = [
@@ -84,7 +92,19 @@ const DYNAMIC_ROUTES: Array<{ prefix: string; info: PageInfo }> = [
   { prefix: '/admin/unidades/', info: { title: 'Detalle de Unidad', description: 'Miembros, vehículos e información', breadcrumbs: [{ label: 'Unidades', to: '/admin/unidades' }] } },
   { prefix: '/mi-chana/chat/', info: { title: 'Chat', description: 'Conversación', breadcrumbs: [{ label: 'Chat', to: '/mi-chana/chat' }] } },
   { prefix: '/mi-chana/proveedores/', info: { title: 'Detalle de Proveedor', description: 'Información y reseñas', breadcrumbs: [{ label: 'Proveedores', to: '/mi-chana/proveedores' }] } },
+  { prefix: '/admin/finanzas/', info: { title: 'Detalle de Movimiento', description: 'Información del movimiento financiero', breadcrumbs: [{ label: 'Finanzas', to: '/admin/finanzas' }] } },
+  { prefix: '/admin/proveedores/', info: { title: 'Detalle de Proveedor', description: 'Información del proveedor', breadcrumbs: [{ label: 'Proveedores', to: '/admin/proveedores' }] } },
+  { prefix: '/admin/cartelera/', info: { title: 'Detalle de Anuncio', description: 'Información del anuncio', breadcrumbs: [{ label: 'Cartelera', to: '/admin/cartelera' }] } },
+  { prefix: '/admin/normativas/', info: { title: 'Editar Normativa', description: 'Modificar documento normativo', breadcrumbs: [{ label: 'Normativas', to: '/admin/normativas' }] } },
+  { prefix: '/admin/votaciones/', info: { title: 'Detalle de Votación', description: 'Información y resultados', breadcrumbs: [{ label: 'Votaciones', to: '/admin/votaciones' }] } },
+  { prefix: '/admin/reuniones/', info: { title: 'Detalle de Reunión', description: 'Información de la reunión', breadcrumbs: [{ label: 'Reuniones', to: '/admin/reuniones' }] } },
+  { prefix: '/admin/personal/', info: { title: 'Editar Personal', description: 'Actualiza información del personal', breadcrumbs: [{ label: 'Personal', to: '/admin/personal' }] } },
+  { prefix: '/vigilancia/incidencias/', info: { title: 'Detalle de Incidencia', description: 'Información y estado del reporte', breadcrumbs: [{ label: 'Incidencias', to: '/vigilancia/incidencias' }] } },
+  { prefix: '/conserje/incidencias/', info: { title: 'Detalle de Incidencia', description: 'Información y estado del reporte', breadcrumbs: [{ label: 'Incidencias', to: '/conserje/incidencias' }] } },
   { prefix: '/vigilancia/residentes/', info: { title: 'Ficha del Residente', description: 'Datos y vehículos', breadcrumbs: [{ label: 'Directorio', to: '/vigilancia/residentes' }] } },
+  { prefix: '/propietario/mi-unidad/editar-miembro/', info: { title: 'Editar Integrante', description: 'Actualiza información del miembro', breadcrumbs: [{ label: 'Mi Unidad', to: '/propietario/mi-unidad' }] } },
+  { prefix: '/propietario/mi-unidad/editar-vehiculo/', info: { title: 'Editar Vehículo', description: 'Actualiza información del vehículo', breadcrumbs: [{ label: 'Mi Unidad', to: '/propietario/mi-unidad' }] } },
+  { prefix: '/propietario/mi-unidad/editar-personal/', info: { title: 'Editar Personal', description: 'Actualiza información del personal de servicio', breadcrumbs: [{ label: 'Mi Unidad', to: '/propietario/mi-unidad' }] } },
   { prefix: '/acceso/', info: { title: 'Acceso de Visitante', description: 'Información de tu invitación' } },
 ]
 

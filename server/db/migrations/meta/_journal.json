@@ -239,6 +239,41 @@
       "when": 1779716800000,
       "tag": "0033_access_entry_exit",
       "breakpoints": true
+    },
+    {
+      "idx": 34,
+      "version": "7",
+      "when": 1779803200000,
+      "tag": "0034_chat_incidencias_channel",
+      "breakpoints": true
+    },
+    {
+      "idx": 35,
+      "version": "7",
+      "when": 1779889600000,
+      "tag": "0035_chat_propietarios_channel",
+      "breakpoints": true
+    },
+    {
+      "idx": 36,
+      "version": "7",
+      "when": 1779976000000,
+      "tag": "0036_chat_direct_members",
+      "breakpoints": true
+    },
+    {
+      "idx": 37,
+      "version": "7",
+      "when": 1780062400000,
+      "tag": "0037_regulations_drop_category",
+      "breakpoints": true
+    },
+    {
+      "idx": 38,
+      "version": "7",
+      "when": 1780148800000,
+      "tag": "0038_units_is_active",
+      "breakpoints": true
     }
   ]
 }

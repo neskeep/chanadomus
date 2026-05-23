@@ -56,6 +56,12 @@ export function useNavigation() {
               { label: 'Reuniones', icon: Calendar, to: '/admin/reuniones' },
             ],
           },
+          {
+            label: 'Referencia',
+            items: [
+              { label: 'Documentación', icon: FileText, to: '/admin/documentacion' },
+            ],
+          },
         ]
 
       case 'propietario':
@@ -100,11 +106,7 @@ export function useNavigation() {
               { label: 'Escanear', icon: ScanLine, to: '/vigilancia/escanear' },
               { label: 'Accesos', icon: ClipboardList, to: '/vigilancia/accesos' },
               { label: 'Alertas', icon: ShieldAlert, to: '/vigilancia/alertas' },
-            ],
-          },
-          {
-            label: 'Consultas',
-            items: [
+              { label: 'Incidencias', icon: AlertTriangle, to: '/vigilancia/incidencias' },
               { label: 'Residentes', icon: Shield, to: '/vigilancia/residentes' },
             ],
           },
@@ -113,6 +115,7 @@ export function useNavigation() {
             items: [
               { label: 'Chat', icon: MessageCircle, to: '/mi-chana/chat' },
               { label: 'Cartelera', icon: Megaphone, to: '/mi-chana/cartelera' },
+              { label: 'Normativas', icon: BookOpen, to: '/mi-chana/normativas' },
               { label: 'Proveedores', icon: Wrench, to: '/mi-chana/proveedores' },
               { label: 'Reuniones', icon: Calendar, to: '/mi-chana/reuniones' },
             ],
@@ -129,9 +132,8 @@ export function useNavigation() {
             ],
           },
           {
-            label: 'Mi Rancho',
+            label: 'Gestiones',
             items: [
-              { label: 'Chat', icon: MessageCircle, to: '/mi-chana/chat' },
               { label: 'Mi QR', icon: ScanLine, to: '/conserje/mi-qr' },
               { label: 'Visitas', icon: QrCode, to: '/conserje/mis-visitas' },
               { label: 'Frecuentes', icon: Users, to: '/conserje/visitantes-frecuentes' },
@@ -140,6 +142,7 @@ export function useNavigation() {
           {
             label: 'Comunidad',
             items: [
+              { label: 'Chat', icon: MessageCircle, to: '/mi-chana/chat' },
               { label: 'Cartelera', icon: Megaphone, to: '/mi-chana/cartelera' },
               { label: 'Normativas', icon: BookOpen, to: '/mi-chana/normativas' },
               { label: 'Proveedores', icon: Wrench, to: '/mi-chana/proveedores' },

@@ -41,6 +41,7 @@ export default defineEventHandler(async (event) => {
         ),
         0
       )::numeric(12,2)`.as('balance'),
+      lastMovementDate: sql<string | null>`MAX(${financialRecords.date})`.as('last_movement_date'),
     })
     .from(units)
     .leftJoin(financialRecords, joinCondition)
@@ -56,6 +57,7 @@ export default defineEventHandler(async (event) => {
       unitLabel: row.unitLabel,
       balance,
       isInDebt: parseFloat(balance) < 0,
+      lastMovementDate: row.lastMovementDate ? new Date(row.lastMovementDate).toISOString() : null,
     }
   })
 

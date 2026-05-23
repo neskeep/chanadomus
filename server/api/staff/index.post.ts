@@ -1,11 +1,11 @@
 import { db } from '~~/server/db'
 import { staff } from '~~/server/db/schema/staff'
-
-const VALID_ROLES = ['conserje', 'vigilancia', 'mantenimiento', 'otro'] as const
+import { serviceStaffRoles } from '~~/server/db/schema/service-staff-role'
+import { eq, and } from 'drizzle-orm'
 
 interface StaffCreateBody {
   name: string
-  role: string
+  roleId: string
   idDocument?: string
   phone?: string
   email?: string
@@ -23,15 +23,38 @@ export default defineEventHandler(async (event) => {
   if (!body.name?.trim()) {
     throw createError({ statusCode: 400, message: 'El nombre es requerido' })
   }
-  if (!body.role || !VALID_ROLES.includes(body.role as (typeof VALID_ROLES)[number])) {
-    throw createError({ statusCode: 400, message: 'Rol invalido. Debe ser: conserje, vigilancia, mantenimiento u otro' })
+  if (!body.roleId) {
+    throw createError({ statusCode: 400, message: 'El rol es requerido' })
+  }
+
+  // Validate roleId exists and belongs to tenant
+  const [role] = await db
+    .select({ id: serviceStaffRoles.id, name: serviceStaffRoles.name })
+    .from(serviceStaffRoles)
+    .where(and(eq(serviceStaffRoles.id, body.roleId), eq(serviceStaffRoles.tenantId, tenantId)))
+
+  if (!role) {
+    throw createError({ statusCode: 400, message: 'Rol no encontrado' })
+  }
+
+  // Map role name to legacy enum for backward compat
+  const legacyRoleMap: Record<string, string> = {
+    conserje: 'conserje', vigilancia: 'vigilancia',
+    mantenimiento: 'mantenimiento',
+  }
+  const legacyRole = legacyRoleMap[role.name.toLowerCase()] ?? 'otro'
+
+  // Conserjes requieren unidad obligatoria
+  if (legacyRole === 'conserje' && !body.unitId) {
+    throw createError({ statusCode: 400, message: 'Los conserjes deben tener una unidad asignada' })
   }
 
   const [inserted] = await db
     .insert(staff)
     .values({
       name: body.name.trim(),
-      role: body.role as (typeof VALID_ROLES)[number],
+      role: legacyRole as 'conserje' | 'vigilancia' | 'mantenimiento' | 'otro',
+      roleId: body.roleId,
       idDocument: body.idDocument?.trim() || null,
       phone: body.phone?.trim() || null,
       email: body.email?.trim() || null,

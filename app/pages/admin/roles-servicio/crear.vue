@@ -8,6 +8,8 @@ useHead({ title: 'Nuevo Rol de Servicio' })
 const router = useRouter()
 
 const formName = ref('')
+const formDescription = ref('')
+const formDisplayOrder = ref(0)
 const isSubmitting = ref(false)
 
 const canSubmit = computed(() =>
@@ -20,7 +22,11 @@ async function handleSubmit() {
   try {
     await $fetch('/api/admin/service-roles', {
       method: 'POST',
-      body: { name: formName.value.trim() },
+      body: {
+        name: formName.value.trim(),
+        description: formDescription.value.trim() || null,
+        displayOrder: formDisplayOrder.value,
+      },
     })
     toast.success('Rol creado correctamente')
     router.push('/admin/roles-servicio')
@@ -49,6 +55,30 @@ async function handleSubmit() {
               class="h-12 text-base"
               required
               autofocus
+            />
+          </div>
+
+          <!-- Descripción -->
+          <div class="space-y-1.5">
+            <Label for="role-description">Descripción</Label>
+            <Textarea
+              id="role-description"
+              v-model="formDescription"
+              placeholder="Descripción opcional del rol..."
+              class="min-h-20 text-base"
+            />
+          </div>
+
+          <!-- Orden de visualización -->
+          <div class="space-y-1.5">
+            <Label for="role-order">Orden de visualización</Label>
+            <Input
+              id="role-order"
+              v-model.number="formDisplayOrder"
+              type="number"
+              min="0"
+              placeholder="0"
+              class="h-12 text-base"
             />
           </div>
 

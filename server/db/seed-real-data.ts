@@ -203,9 +203,10 @@ async function seedRealData() {
   const hashedPassword = await hashPassword('Yolo2026!')
   const now = new Date()
   const includedEntries = CSV_DATA.filter(e => e.include)
+  const excludedEntries = CSV_DATA.filter(e => !e.include)
 
   // ============================================================
-  // STEP A: Update existing rancho labels + create new parcela units
+  // STEP A: Update existing rancho labels + create new units
   // ============================================================
   console.log('\n--- Unidades ---')
 
@@ -214,6 +215,7 @@ async function seedRealData() {
 
   let unitsUpdated = 0
   let unitsCreated = 0
+  let unitsInactive = 0
   const unitMap = new Map<string, string>() // "rancho-1" -> unitId
 
   for (const entry of includedEntries) {
@@ -252,8 +254,41 @@ async function seedRealData() {
     }
   }
 
+  // Insert excluded units as inactive
+  for (const entry of excludedEntries) {
+    const prefix = entry.type === 'rancho' ? 'R' : 'P'
+    const unitNumber = `${prefix}-${String(entry.number).padStart(3, '0')}`
+
+    let label: string
+    if (entry.type === 'rancho' && entry.name) {
+      label = entry.name
+    } else if (entry.lotCode) {
+      label = `Parcela ${entry.lotCode}`
+    } else {
+      label = `Parcela ${entry.number}`
+    }
+
+    const existing = existingUnitByNumber.get(unitNumber)
+
+    if (existing) {
+      // Ensure it's marked inactive with correct label
+      await db.update(units)
+        .set({ label, isActive: false, updatedAt: now })
+        .where(eq(units.id, existing.id))
+    } else {
+      await db.insert(units).values({
+        number: unitNumber,
+        label,
+        isActive: false,
+        tenantId: tenant.id,
+      })
+    }
+    unitsInactive++
+  }
+
   console.log(`  ✓ ${unitsUpdated} unidades actualizadas (nombre real)`)
   console.log(`  ✓ ${unitsCreated} unidades nuevas creadas`)
+  console.log(`  ✓ ${unitsInactive} unidades marcadas inactivas`)
 
   // ============================================================
   // STEP B: Create propietario users (skip existing)

@@ -13,13 +13,13 @@ const route = useRoute()
 const unitId = route.params.id as string
 
 // Unit data
-const unit = ref<{ id: string, number: string, label: string | null } | null>(null)
+const unit = ref<{ id: string, number: string, label: string | null, isActive: boolean } | null>(null)
 const unitLoading = ref(true)
 
 async function fetchUnit() {
   unitLoading.value = true
   try {
-    const res = await $fetch<{ data: { id: string, number: string, label: string | null }[] }>('/api/units')
+    const res = await $fetch<{ data: { id: string, number: string, label: string | null, isActive: boolean }[] }>('/api/units')
     unit.value = res.data.find(u => u.id === unitId) ?? null
   }
   catch {
@@ -44,8 +44,6 @@ const {
   isLoading: vehiclesLoading,
   isSubmitting: vehiclesSubmitting,
   fetchVehicles,
-  createVehicle,
-  updateVehicle,
   deleteVehicle,
 } = useUnitVehicles(unitId)
 
@@ -102,58 +100,13 @@ async function handleDeleteMember() {
   }
 }
 
-// ---- Vehicle Dialog ----
-const vehicleDialogOpen = ref(false)
-const editingVehicle = ref<Vehicle | null>(null)
-const vehicleForm = ref({
-  plate: '',
-  brand: '',
-  model: '',
-  color: '',
-  ownerMemberId: '',
-})
-
-function openVehicleDialog(vehicle?: Vehicle) {
-  if (vehicle) {
-    editingVehicle.value = vehicle
-    vehicleForm.value = {
-      plate: vehicle.plate,
-      brand: vehicle.brand,
-      model: vehicle.model,
-      color: vehicle.color,
-      ownerMemberId: vehicle.ownerMemberId ?? 'none',
-    }
-  }
-  else {
-    editingVehicle.value = null
-    vehicleForm.value = { plate: '', brand: '', model: '', color: '', ownerMemberId: 'none' }
-  }
-  vehicleDialogOpen.value = true
+// ---- Vehicle Navigation ----
+function navigateToAddVehicle() {
+  router.push(`/admin/unidades/${unitId}/vehiculos/nuevo`)
 }
 
-async function handleSaveVehicle() {
-  const data = {
-    plate: vehicleForm.value.plate.trim().toUpperCase(),
-    brand: vehicleForm.value.brand.trim(),
-    model: vehicleForm.value.model.trim(),
-    color: vehicleForm.value.color.trim(),
-    ownerMemberId: vehicleForm.value.ownerMemberId === 'none' ? undefined : vehicleForm.value.ownerMemberId || undefined,
-  }
-
-  try {
-    if (editingVehicle.value) {
-      await updateVehicle(editingVehicle.value.id, data)
-      toast.success('Vehiculo actualizado')
-    }
-    else {
-      await createVehicle(data)
-      toast.success('Vehiculo registrado')
-    }
-    vehicleDialogOpen.value = false
-  }
-  catch {
-    toast.error('Error al guardar vehiculo')
-  }
+function navigateToEditVehicle(vehicleId: string) {
+  router.push(`/admin/unidades/${unitId}/vehiculos/${vehicleId}`)
 }
 
 // ---- Delete Vehicle ----
@@ -198,7 +151,7 @@ onMounted(() => {
         <Plus class="mr-1 size-4" />
         Agregar
       </Button>
-      <Button v-else size="sm" @click="openVehicleDialog()">
+      <Button v-else size="sm" @click="navigateToAddVehicle()">
         <Plus class="mr-1 size-4" />
         Agregar
       </Button>
@@ -209,7 +162,7 @@ onMounted(() => {
       <Button v-if="activeTab === 'members'" size="icon" variant="ghost" class="size-9" @click="navigateToAddMember()">
         <Plus class="size-4" />
       </Button>
-      <Button v-else size="icon" variant="ghost" class="size-9" @click="openVehicleDialog()">
+      <Button v-else size="icon" variant="ghost" class="size-9" @click="navigateToAddVehicle()">
         <Plus class="size-4" />
       </Button>
     </TopbarMobileAction>
@@ -223,7 +176,7 @@ onMounted(() => {
       <div v-else-if="unit">
         <div class="flex items-center gap-3">
           <h1 class="text-xl font-semibold tracking-tight">{{ unit.number }}</h1>
-          <Badge variant="secondary">Activa</Badge>
+          <Badge :variant="unit.isActive ? 'secondary' : 'outline'">{{ unit.isActive ? 'Activa' : 'Inactiva' }}</Badge>
         </div>
         <p v-if="unit.label" class="mt-1 text-sm text-muted-foreground">{{ unit.label }}</p>
       </div>
@@ -366,7 +319,7 @@ onMounted(() => {
                 <TableCell class="text-muted-foreground">{{ getMemberName(vehicle.ownerMemberId) }}</TableCell>
                 <TableCell>
                   <div class="flex items-center gap-1">
-                    <Button variant="ghost" size="icon" class="size-10" @click="openVehicleDialog(vehicle)">
+                    <Button variant="ghost" size="icon" class="size-10" @click="navigateToEditVehicle(vehicle.id)">
                       <Pencil class="size-3.5" />
                       <span class="sr-only">Editar</span>
                     </Button>
@@ -394,7 +347,7 @@ onMounted(() => {
                 <span class="opacity-30">·</span>
                 <span class="truncate">{{ getMemberName(vehicle.ownerMemberId) }}</span>
                 <span class="ml-auto flex shrink-0 items-center gap-0.5">
-                  <Button variant="ghost" class="h-6 px-2 text-[11px]" @click="openVehicleDialog(vehicle)">
+                  <Button variant="ghost" class="h-6 px-2 text-[11px]" @click="navigateToEditVehicle(vehicle.id)">
                     <Pencil class="size-3" />
                   </Button>
                   <Button variant="ghost" class="h-6 px-2 text-[11px] text-destructive hover:text-destructive" @click="confirmDeleteVehicle(vehicle)">
@@ -430,94 +383,6 @@ onMounted(() => {
         </AlertDialogFooter>
       </AlertDialogContent>
     </AlertDialog>
-
-    <!-- Vehicle Sheet -->
-    <Sheet v-model:open="vehicleDialogOpen">
-      <SheetContent side="right">
-        <SheetHeader>
-          <SheetTitle>{{ editingVehicle ? 'Editar vehiculo' : 'Agregar vehiculo' }}</SheetTitle>
-          <SheetDescription>
-            {{ editingVehicle ? 'Modifica los datos del vehiculo' : 'Registra un nuevo vehiculo' }}
-          </SheetDescription>
-        </SheetHeader>
-
-        <form class="space-y-4" @submit.prevent="handleSaveVehicle">
-          <div class="space-y-2">
-            <Label for="vehicle-plate">Placa</Label>
-            <Input
-              id="vehicle-plate"
-              v-model="vehicleForm.plate"
-              placeholder="Ej: ABC123"
-              class="h-12 uppercase"
-              required
-            />
-          </div>
-
-          <div class="grid grid-cols-2 gap-3">
-            <div class="space-y-2">
-              <Label for="vehicle-brand">Marca</Label>
-              <Input
-                id="vehicle-brand"
-                v-model="vehicleForm.brand"
-                placeholder="Ej: Toyota"
-                required
-                class="h-12"
-              />
-            </div>
-            <div class="space-y-2">
-              <Label for="vehicle-model">Modelo</Label>
-              <Input
-                id="vehicle-model"
-                v-model="vehicleForm.model"
-                placeholder="Ej: Corolla"
-                required
-                class="h-12"
-              />
-            </div>
-          </div>
-
-          <div class="space-y-2">
-            <Label for="vehicle-color">Color</Label>
-            <Input
-              id="vehicle-color"
-              v-model="vehicleForm.color"
-              placeholder="Ej: Blanco"
-              required
-              class="h-12"
-            />
-          </div>
-
-          <div class="space-y-2">
-            <Label for="vehicle-owner">Propietario</Label>
-            <Select v-model="vehicleForm.ownerMemberId">
-              <SelectTrigger id="vehicle-owner" size="lg">
-                <SelectValue placeholder="Seleccionar miembro (opcional)" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="none">Sin asignar</SelectItem>
-                <SelectItem v-for="member in members" :key="member.id" :value="member.id">
-                  {{ member.name }}
-                </SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
-          <SheetFooter class="gap-2 sm:gap-0">
-            <Button type="button" variant="outline" class="h-12" @click="vehicleDialogOpen = false">
-              Cancelar
-            </Button>
-            <Button
-              type="submit"
-              class="h-12"
-              :disabled="!vehicleForm.plate.trim() || !vehicleForm.brand.trim() || !vehicleForm.model.trim() || !vehicleForm.color.trim() || vehiclesSubmitting"
-            >
-              <Loader2 v-if="vehiclesSubmitting" class="mr-2 size-4 animate-spin" />
-              {{ vehiclesSubmitting ? 'Guardando...' : 'Guardar' }}
-            </Button>
-          </SheetFooter>
-        </form>
-      </SheetContent>
-    </Sheet>
 
     <!-- Delete Vehicle AlertDialog -->
     <AlertDialog v-model:open="deleteVehicleDialogOpen">

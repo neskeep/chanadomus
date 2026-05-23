@@ -1,11 +1,14 @@
 <script setup lang="ts">
-import { Loader2, RefreshCw, ScanLine } from 'lucide-vue-next'
+import { Download, Loader2, RefreshCw, ScanLine } from 'lucide-vue-next'
 import QRCode from 'qrcode'
+import { toast } from 'vue-sonner'
 
 useHead({ title: 'Mi QR Personal' })
 
+const { user } = useAuth()
 const { pass, isLoading, error, fetchMyPass, regeneratePass } = useResidentPass()
 const { formatDateTime } = useFormatDate()
+const { downloadBadge, isGenerating: isDownloadingBadge } = useQrBadge()
 
 const qrDataUrl = ref<string | null>(null)
 const isRegenerating = ref(false)
@@ -50,6 +53,19 @@ async function handleRegenerate() {
 
 function cancelRegenerate() {
   confirmRegenerate.value = false
+}
+
+async function handleDownloadBadge() {
+  if (!pass.value?.token) return
+  await downloadBadge({
+    name: user.value?.name ?? 'Conserje',
+    roleName: 'Conserje',
+    unitNumber: pass.value.unitNumber || null,
+    unitLabel: pass.value.unitLabel || null,
+    phone: null,
+    qrToken: pass.value.token,
+  })
+  toast.success('Credencial descargada')
 }
 </script>
 
@@ -150,6 +166,16 @@ function cancelRegenerate() {
           Regenerar QR
         </Button>
       </div>
+
+      <Button
+        class="h-12 w-full text-base"
+        :disabled="isDownloadingBadge"
+        @click="handleDownloadBadge"
+      >
+        <Loader2 v-if="isDownloadingBadge" class="size-4 animate-spin" />
+        <Download v-else class="size-4" />
+        Descargar Credencial
+      </Button>
     </template>
   </div>
 </template>

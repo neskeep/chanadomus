@@ -3,7 +3,7 @@ import { tenants } from './tenant'
 import { units } from './unit'
 import { user } from './auth'
 
-export const chatRoomTypeEnum = pgEnum('chat_room_type', ['general', 'unit', 'vigilancia', 'admin', 'conserjeria', 'incidencias', 'propietarios'])
+export const chatRoomTypeEnum = pgEnum('chat_room_type', ['general', 'unit', 'vigilancia', 'admin', 'conserjeria', 'incidencias', 'propietarios', 'direct'])
 
 export const chatRooms = pgTable('chat_rooms', {
   id: uuid('id').primaryKey().defaultRandom(),
@@ -47,4 +47,15 @@ export const chatReadStatus = pgTable('chat_read_status', {
 }, (table) => [
   uniqueIndex('chat_read_status_room_user_idx').on(table.roomId, table.userId),
   index('chat_read_status_user_idx').on(table.userId),
+])
+
+export const chatRoomMembers = pgTable('chat_room_members', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  roomId: uuid('room_id').notNull().references(() => chatRooms.id, { onDelete: 'cascade' }),
+  userId: text('user_id').notNull().references(() => user.id, { onDelete: 'cascade' }),
+  joinedAt: timestamp('joined_at').notNull().defaultNow(),
+}, (table) => [
+  uniqueIndex('chat_room_members_room_user_idx').on(table.roomId, table.userId),
+  index('chat_room_members_user_idx').on(table.userId),
+  index('chat_room_members_room_idx').on(table.roomId),
 ])

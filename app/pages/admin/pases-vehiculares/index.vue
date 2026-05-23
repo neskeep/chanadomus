@@ -99,6 +99,16 @@ onMounted(() => {
       </Button>
     </TopbarMobileAction>
 
+    <!-- Mobile search -->
+    <div class="mb-4 md:hidden">
+      <TopbarSearch v-model="searchQuery" placeholder="Filtrar pases...">
+        <TopbarFilters :active="hasActiveFilters" @clear="filterType = ''; filterActive = 'active'">
+          <TopbarFilterGroup v-model="filterType" label="Tipo" :options="typeOptions" />
+          <TopbarFilterGroup v-model="filterActive" label="Estado" :options="statusOptions" />
+        </TopbarFilters>
+      </TopbarSearch>
+    </div>
+
     <!-- Error -->
     <ErrorAlert v-if="error" :message="error" class="mb-4" />
 

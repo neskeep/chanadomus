@@ -1,9 +1,9 @@
 import { db } from '~~/server/db'
-import { chatRooms, chatReadStatus, messages } from '~~/server/db/schema/chat'
+import { chatRooms, chatReadStatus, messages, chatRoomMembers } from '~~/server/db/schema/chat'
 import { user } from '~~/server/db/schema/auth'
 import { eq, and, or, ne, inArray, desc, gt, count, isNull, sql } from 'drizzle-orm'
 import { requireTenant } from '~~/server/utils/auth'
-import type { ChatRoomType, ChatRoom, ChatRoomLastMessage } from '~~/shared/types/chat'
+import type { ChatRoomType, ChatRoom, ChatRoomLastMessage, ChatRoomOtherUser } from '~~/shared/types/chat'
 
 async function attachLastMessages(rooms: { id: string; name: string; type: string; unitId: string | null; tenantId: string; createdAt: Date }[], authUserId: string): Promise<ChatRoom[]> {
   if (rooms.length === 0) return []
@@ -83,63 +83,109 @@ async function attachLastMessages(rooms: { id: string; name: string; type: strin
 export default defineEventHandler(async (event) => {
   const { user: authUser, tenantId } = await requireTenant(event)
   const role = authUser.role ?? 'propietario'
-  const unitId = (authUser as Record<string, unknown>).unitId as string | null
 
-  // Admin gets all rooms for the tenant
+  // --- Group rooms (role-based, excludes 'unit' and 'direct') ---
+  let groupRooms: typeof chatRooms.$inferSelect[]
+
   if (role === 'admin') {
-    const rooms = await db
+    // Admin sees all group rooms
+    groupRooms = await db
       .select()
       .from(chatRooms)
-      .where(eq(chatRooms.tenantId, tenantId))
+      .where(
+        and(
+          eq(chatRooms.tenantId, tenantId),
+          sql`${chatRooms.type} NOT IN ('unit', 'direct')`,
+        ),
+      )
+  }
+  else {
+    const accessibleTypes: ChatRoomType[] = ['general', 'incidencias']
 
-    return { data: await attachLastMessages(rooms, authUser.id) }
+    if (role === 'vigilancia' || role === 'conserje' || role === 'propietario') {
+      accessibleTypes.push('vigilancia', 'conserjeria')
+    }
+
+    if (role === 'propietario') {
+      accessibleTypes.push('admin', 'propietarios')
+    }
+
+    groupRooms = await db
+      .select()
+      .from(chatRooms)
+      .where(
+        and(
+          eq(chatRooms.tenantId, tenantId),
+          inArray(chatRooms.type, accessibleTypes),
+          sql`${chatRooms.unitId} IS NULL`,
+        ),
+      )
   }
 
-  // Build accessible room types based on role
-  const accessibleTypes: ChatRoomType[] = ['general', 'incidencias']
+  // --- Direct rooms (via membership) ---
+  const memberRows = await db
+    .select({ roomId: chatRoomMembers.roomId })
+    .from(chatRoomMembers)
+    .where(eq(chatRoomMembers.userId, authUser.id))
 
-  if (role === 'vigilancia' || role === 'conserje' || role === 'propietario') {
-    accessibleTypes.push('vigilancia', 'conserjeria')
-  }
+  const directRooms = memberRows.length > 0
+    ? await db
+        .select()
+        .from(chatRooms)
+        .where(
+          and(
+            inArray(chatRooms.id, memberRows.map(r => r.roomId)),
+            eq(chatRooms.type, 'direct'),
+          ),
+        )
+    : []
 
-  if (role === 'propietario') {
-    accessibleTypes.push('admin', 'propietarios')
-  }
+  // --- Merge and attach last messages + unread counts ---
+  const allRooms = [...groupRooms, ...directRooms]
+  const result = await attachLastMessages(allRooms, authUser.id)
 
-  // For non-unit room types (general, vigilancia, etc.)
-  const conditions = [
-    and(
-      eq(chatRooms.tenantId, tenantId),
-      inArray(chatRooms.type, accessibleTypes),
-      sql`${chatRooms.unitId} IS NULL`,
-    ),
-  ]
+  // --- Resolve otherUser for direct rooms ---
+  const directResultRooms = result.filter(r => r.type === 'direct')
+  if (directResultRooms.length > 0) {
+    const directRoomIds = directResultRooms.map(r => r.id)
 
-  // Propietarios: only their own unit room
-  if (role === 'propietario' && unitId) {
-    conditions.push(
-      and(
-        eq(chatRooms.tenantId, tenantId),
-        eq(chatRooms.type, 'unit'),
-        eq(chatRooms.unitId, unitId),
+    const allMemberships = await db
+      .select({ roomId: chatRoomMembers.roomId, userId: chatRoomMembers.userId })
+      .from(chatRoomMembers)
+      .where(inArray(chatRoomMembers.roomId, directRoomIds))
+
+    const otherUserIds = [
+      ...new Set(
+        allMemberships
+          .filter(m => m.userId !== authUser.id)
+          .map(m => m.userId),
       ),
-    )
+    ]
+
+    if (otherUserIds.length > 0) {
+      const otherUsers = await db
+        .select({ id: user.id, name: user.name, image: user.image, role: user.role })
+        .from(user)
+        .where(inArray(user.id, otherUserIds))
+
+      const otherUserMap = new Map<string, ChatRoomOtherUser>(
+        otherUsers.map(u => [u.id, { id: u.id, name: u.name, image: u.image, role: u.role ?? 'propietario' }]),
+      )
+
+      const roomToOther = new Map<string, ChatRoomOtherUser>(
+        allMemberships
+          .filter(m => m.userId !== authUser.id)
+          .map(m => [m.roomId, otherUserMap.get(m.userId)!])
+          .filter((entry): entry is [string, ChatRoomOtherUser] => !!entry[1]),
+      )
+
+      for (const room of result) {
+        if (room.type === 'direct') {
+          room.otherUser = roomToOther.get(room.id) ?? null
+        }
+      }
+    }
   }
 
-  // Vigilancia: access to ALL unit rooms (can chat with any rancho)
-  if (role === 'vigilancia') {
-    conditions.push(
-      and(
-        eq(chatRooms.tenantId, tenantId),
-        eq(chatRooms.type, 'unit'),
-      ),
-    )
-  }
-
-  const rooms = await db
-    .select()
-    .from(chatRooms)
-    .where(or(...conditions))
-
-  return { data: await attachLastMessages(rooms, authUser.id) }
+  return { data: result }
 })

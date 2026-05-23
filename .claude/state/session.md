@@ -1,62 +1,45 @@
 # Estado de Sesion — ChanaDomus
 
 ## Ultima Sesion
-- **Fecha**: 2026-05-12
-- **Sesion #**: 46
+- **Fecha**: 2026-05-22
+- **Sesion #**: 54
 - **Branch**: dev
-- **Estado**: Chat routing + imágenes PARCIAL — routing completo, upload pendiente test E2E
+- **Estado**: Completada — commit y push realizados
 
-## Completado Sesion 46
+## Completado Sesion 54
 
-### Chat Routing Completo (nested routes)
-- **Página padre `chat.vue`**: sidebar + `<NuxtPage :transition="false" />` — SSR-safe sin useMediaQuery
-- **`index.vue`** simplificado: solo empty state desktop
-- **`[roomId].vue`** simplificado: header con icono/tipo + ChatConversation
-- **Routing real**: URL se actualiza a `/mi-chana/chat/{roomId}` al seleccionar room (antes solo cambiaba ref)
-- **Fix hydration**: eliminado `useMediaQuery`, usado CSS `md:!flex` + `:class` basado en route (SSR-safe)
-- **Fix transición**: `<NuxtPage :transition="false" />` — la transición global `out-in` impedía render del hijo
+### Commit: `d499ac1` — feat(qr-badge): show unit on badge, enforce unit for conserjes
 
-### Sistema de Imágenes en Chat (backend completo, UI integrada, test E2E pendiente)
-- **Schema**: `chat_attachments` tabla (messageId, filePath, width, height, fileSize) — migración 0027 ejecutada
-- **Sharp processing**: `server/utils/image-processing.ts` — convierte cualquier formato a WebP optimizado (max 1920px, quality 80)
-- **Upload API**: `POST /api/chat/upload` — multipart, max 5 imágenes, 10MB cada una, broadcast WS
-- **Serve API**: `GET /api/chat/attachments/[filename]` — cache immutable
-- **Messages API**: actualizado con JOIN a chat_attachments (batch query eficiente)
-- **Tipos**: `ChatAttachment` interface + `attachments[]` en ChatMessage
-- **Composable**: `sendImages()`, `validateImages()`, `isUploading` en useChatRoom
-- **UI**: botón ImagePlus, preview strip pendientes, render imágenes en burbujas (clickables)
+### QR Badge muestra rancho asignado
+- **my-pass.get.ts / regenerate.post.ts**: Ahora devuelven `unitNumber` y `unitLabel` junto con `unitId`
+- **useResidentPass.ts**: Interface actualizada con campos de unidad
+- **conserje/mi-qr.vue** y **propietario/mi-qr.vue**: Pasan `unitNumber`/`unitLabel` a `downloadBadge`
+- **server/utils/staff-unit.ts**: Nueva funcion `getUnitDetails()` reutilizable
 
-### Archivos creados
-- `app/pages/mi-chana/chat.vue` — Página padre nested routing
-- `server/utils/image-processing.ts` — Sharp WebP processing
-- `server/api/chat/upload.post.ts` — Upload endpoint
-- `server/api/chat/attachments/[filename].get.ts` — Serve endpoint
-- `server/db/migrations/0027_chat_attachments.sql` — Migración
+### Validacion rancho obligatorio para conserjes
+- **Frontend**: Campo "Unidad asignada" con asterisco rojo y texto de ayuda cuando rol es conserje
+- **crear.vue**: `canSubmit` valida unidad si `isUnitRequired`, opcion "Sin unidad" se oculta para conserjes
+- **[id].vue**: Misma logica de validacion
+- **Backend**: `staff/index.post.ts` rechaza crear conserje sin `unitId` (400)
+- **Backend**: `staff/[id].patch.ts` rechaza quitar unidad a conserje existente o cambiar rol a conserje sin unidad
 
-### Archivos modificados
-- `app/pages/mi-chana/chat/index.vue` — Simplificado a empty state
-- `app/pages/mi-chana/chat/[roomId].vue` — Simplificado, back button CSS md:hidden
-- `app/components/chat/ChatConversation.vue` — Imágenes upload + render
-- `app/composables/useChatRoom.ts` — sendImages, validateImages, isUploading
-- `server/api/chat/[roomId]/messages.get.ts` — Incluye attachments
-- `server/db/schema/chat.ts` — chatAttachments tabla
-- `shared/types/chat.ts` — ChatAttachment interface
-- `server/db/migrations/meta/_journal.json` — Entry 0027
+### Eliminacion de fallback en getUnitIdForPass()
+- Ya no hay cadena de fallbacks (user → primera unidad)
+- Conserje: exige `unitId` en tabla staff, error claro si no tiene
+- Propietario/admin: exige `unitId` en tabla user
 
-## Pendiente
-1. **Test E2E upload imagen**: Playwright file upload → verificar processing sharp → render en chat
-2. **Test mobile viewport**: verificar sidebar oculto, back button visible
-3. **Sistema de comandos/mentions**: `/incidencia:`, `/anuncio:`, `/reunion:`, `/votacion:`, `/proveedor:`, `/normativa:` + `@usuario`
-4. **Mentions de usuarios**: `@nombre` con dropdown search
+### Regla de negocio establecida
+- **Conserjes y propietarios**: rancho OBLIGATORIO
+- **Vigilantes y administracion**: rancho NO requerido
 
-## Siguiente Paso
-- Verificar upload de imagen E2E (sharp processing + render)
-- Comenzar sistema de comandos/mentions interactivos con search contra DB
-- Los comandos respetan permisos por rol
+## Pendiente para proxima sesion
+
+### Menor prioridad
+- CRUD de unidades (crear/editar) — admin no puede crear unidades desde la UI
+- Type errors preexistentes en chat components y QR scanner (no criticos)
+- Duplicated imports warnings (VehiclePass, AccessDirection) — limpiar tipos compartidos
 
 ## Entorno
-- Docker PostgreSQL corriendo
-- `npx nuxi dev --port 3000` para dev
-- Build verificado: `npx nuxi build` OK
-- Migración 0027 aplicada en DB local
-- sharp@0.34.5 instalado
+- Docker `chanadomus-db-1` corriendo
+- Branch dev pushed to origin (17+ commits ahead of main)
+- Password de test: Yolo2026! (admin/propietario/conserje/vigilante @chanadomus.com)

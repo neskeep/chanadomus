@@ -43,6 +43,7 @@
 4. **Colores solo via tokens** — Nunca `text-[#hex]`, nunca colores Tailwind genericos (`text-red-500`). Usar tokens: `text-primary`, `bg-destructive`, etc.
 5. **Si falta un patron UI** en shadcn-vue, PREGUNTAR al usuario antes de crear una alternativa custom.
 6. **Registrar componentes** — Actualizar `.claude/state/installed-components.md` despues de cada `shadcn add`.
+7. **Sin drawers/sheets para formularios** — Formularios SIEMPRE como paginas completas, nunca en Sheet/Drawer/Modal. Sheet solo permitido para navegacion mobile (bottom nav).
 
 ## Reglas de Codigo (No Negociables)
 

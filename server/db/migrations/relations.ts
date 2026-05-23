@@ -1,5 +1,5 @@
 import { relations } from "drizzle-orm/relations";
-import { user, account, session, incidents, units, tenants, incidentUpdates, incidentPhotos, financialRecords, qrCodes, accessLogs, devices, vehiclePasses, serviceStaffPasses, householdMembers, vehicles, chatRooms, messages, announcements, pushSubscriptions, financialReports, polls, pollOptions, pollVotes, pushPreferences, providers, providerReviews, meetings, frequentVisitors, residentPasses, serviceStaffRoles, unitServiceStaff, panicEvents, regulations, chatAttachments, chatReadStatus, staff, householdMemberPasses } from "./schema";
+import { user, account, session, incidents, units, tenants, incidentUpdates, incidentPhotos, financialRecords, qrCodes, accessLogs, devices, vehiclePasses, serviceStaffPasses, householdMembers, vehicles, chatRooms, messages, announcements, pushSubscriptions, financialReports, polls, pollOptions, pollVotes, pushPreferences, providers, providerReviews, meetings, frequentVisitors, residentPasses, serviceStaffRoles, unitServiceStaff, panicEvents, regulations, chatAttachments, chatReadStatus, householdMemberPasses, staff, chatRoomMembers } from "./schema";
 
 export const accountRelations = relations(account, ({one}) => ({
 	user: one(user, {
@@ -46,6 +46,7 @@ export const userRelations = relations(user, ({one, many}) => ({
 	regulations: many(regulations),
 	chatReadStatuses: many(chatReadStatus),
 	staff: many(staff),
+	chatRoomMembers: many(chatRoomMembers),
 }));
 
 export const sessionRelations = relations(session, ({one}) => ({
@@ -92,6 +93,7 @@ export const unitsRelations = relations(units, ({one, many}) => ({
 	serviceStaffPasses: many(serviceStaffPasses),
 	panicEvents: many(panicEvents),
 	householdMemberPasses: many(householdMemberPasses),
+	staff: many(staff),
 }));
 
 export const tenantsRelations = relations(tenants, ({many}) => ({
@@ -123,8 +125,8 @@ export const tenantsRelations = relations(tenants, ({many}) => ({
 	serviceStaffPasses: many(serviceStaffPasses),
 	panicEvents: many(panicEvents),
 	regulations: many(regulations),
-	staff: many(staff),
 	householdMemberPasses: many(householdMemberPasses),
+	staff: many(staff),
 }));
 
 export const incidentUpdatesRelations = relations(incidentUpdates, ({one}) => ({
@@ -299,6 +301,7 @@ export const chatRoomsRelations = relations(chatRooms, ({one, many}) => ({
 		references: [tenants.id]
 	}),
 	chatReadStatuses: many(chatReadStatus),
+	chatRoomMembers: many(chatRoomMembers),
 }));
 
 export const announcementsRelations = relations(announcements, ({one}) => ({
@@ -467,9 +470,14 @@ export const serviceStaffRolesRelations = relations(serviceStaffRoles, ({one, ma
 		references: [tenants.id]
 	}),
 	unitServiceStaffs: many(unitServiceStaff),
+	staff: many(staff),
 }));
 
 export const unitServiceStaffRelations = relations(unitServiceStaff, ({one, many}) => ({
+	serviceStaffRole: one(serviceStaffRoles, {
+		fields: [unitServiceStaff.roleId],
+		references: [serviceStaffRoles.id]
+	}),
 	unit: one(units, {
 		fields: [unitServiceStaff.unitId],
 		references: [units.id]
@@ -477,10 +485,6 @@ export const unitServiceStaffRelations = relations(unitServiceStaff, ({one, many
 	tenant: one(tenants, {
 		fields: [unitServiceStaff.tenantId],
 		references: [tenants.id]
-	}),
-	serviceStaffRole: one(serviceStaffRoles, {
-		fields: [unitServiceStaff.roleId],
-		references: [serviceStaffRoles.id]
 	}),
 	serviceStaffPasses: many(serviceStaffPasses),
 }));
@@ -535,17 +539,6 @@ export const chatReadStatusRelations = relations(chatReadStatus, ({one}) => ({
 	}),
 }));
 
-export const staffRelations = relations(staff, ({one}) => ({
-	user: one(user, {
-		fields: [staff.userId],
-		references: [user.id]
-	}),
-	tenant: one(tenants, {
-		fields: [staff.tenantId],
-		references: [tenants.id]
-	}),
-}));
-
 export const householdMemberPassesRelations = relations(householdMemberPasses, ({one}) => ({
 	householdMember: one(householdMembers, {
 		fields: [householdMemberPasses.memberId],
@@ -558,5 +551,35 @@ export const householdMemberPassesRelations = relations(householdMemberPasses, (
 	tenant: one(tenants, {
 		fields: [householdMemberPasses.tenantId],
 		references: [tenants.id]
+	}),
+}));
+
+export const staffRelations = relations(staff, ({one}) => ({
+	user: one(user, {
+		fields: [staff.userId],
+		references: [user.id]
+	}),
+	tenant: one(tenants, {
+		fields: [staff.tenantId],
+		references: [tenants.id]
+	}),
+	unit: one(units, {
+		fields: [staff.unitId],
+		references: [units.id]
+	}),
+	serviceStaffRole: one(serviceStaffRoles, {
+		fields: [staff.roleId],
+		references: [serviceStaffRoles.id]
+	}),
+}));
+
+export const chatRoomMembersRelations = relations(chatRoomMembers, ({one}) => ({
+	chatRoom: one(chatRooms, {
+		fields: [chatRoomMembers.roomId],
+		references: [chatRooms.id]
+	}),
+	user: one(user, {
+		fields: [chatRoomMembers.userId],
+		references: [user.id]
 	}),
 }));

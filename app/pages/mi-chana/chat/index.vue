@@ -12,7 +12,7 @@ useHead({ title: 'Chat' })
     </div>
     <div>
       <p class="text-sm font-medium text-muted-foreground">Selecciona una conversación</p>
-      <p class="mt-0.5 text-xs text-muted-foreground/60">Elige un canal o rancho para comenzar</p>
+      <p class="mt-0.5 text-xs text-muted-foreground/60">Elige un grupo o conversación para comenzar</p>
     </div>
   </div>
 </template>

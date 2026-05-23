@@ -9,6 +9,7 @@ export function useQrScanner() {
   const videoRef = ref<HTMLVideoElement | null>(null)
   const canvasRef = ref<HTMLCanvasElement | null>(null)
   const facingMode = ref<'user' | 'environment'>('environment')
+  const selectedDirection = ref<'entry' | 'exit' | null>(null)
 
   let stream: MediaStream | null = null
   let scanInterval: ReturnType<typeof setInterval> | null = null
@@ -130,7 +131,7 @@ export function useQrScanner() {
     try {
       const result = await $fetch('/api/qr/validate', {
         method: 'POST',
-        body: { token },
+        body: { token, direction: selectedDirection.value },
       })
       scanResult.value = result.data
     }
@@ -150,6 +151,14 @@ export function useQrScanner() {
     isProcessing.value = false
   }
 
+  function resetToSelection() {
+    stopScanning()
+    selectedDirection.value = null
+    scanResult.value = null
+    error.value = null
+    isProcessing.value = false
+  }
+
   onUnmounted(() => {
     stopScanning()
   })
@@ -162,9 +171,11 @@ export function useQrScanner() {
     videoRef,
     canvasRef,
     facingMode,
+    selectedDirection,
     startScanning,
     stopScanning,
     toggleCamera,
     resetScan,
+    resetToSelection,
   }
 }

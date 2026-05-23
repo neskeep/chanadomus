@@ -1,46 +1,32 @@
 <script setup lang="ts">
-import { Plus, Pencil, Trash2, Users, Phone, Clock, Loader2, QrCode, Share2, Ban, Home } from 'lucide-vue-next'
+import { Plus, Pencil, Trash2, Users, Phone, Clock, Loader2, QrCode, Share2, Ban, Home, Download } from 'lucide-vue-next'
 import { toast } from 'vue-sonner'
 import QRCode from 'qrcode'
-import type { StaffRole, Staff } from '~~/shared/types/staff'
+import type { Staff } from '~~/shared/types/staff'
 
 useHead({ title: 'Personal' })
 
-const { staffList, isLoading, isSubmitting, error, fetchStaff, deleteStaffMember, generateQr } = useStaff()
+const { staffList, isLoading, isSubmitting, error, fetchStaff, deleteStaffMember, generateQr, roleOptions: roles, fetchRoles } = useStaff()
+const { downloadBadge, isGenerating: isDownloadingBadge } = useQrBadge()
 
 const { target, isMounted } = useTopbarPortal()
 
 // Filters
-const selectedRole = ref<StaffRole | ''>('')
+const selectedRole = ref('')
 const searchQuery = ref('')
 
-const roleOptions = [
-  { value: 'conserje', label: 'Conserje' },
-  { value: 'vigilancia', label: 'Vigilancia' },
-  { value: 'mantenimiento', label: 'Mantenimiento' },
-  { value: 'otro', label: 'Otro' },
-]
+const filterRoleOptions = computed(() =>
+  roles.value.map(r => ({ value: r.id, label: r.name })),
+)
 
 // Delete dialog
 const deleteDialogOpen = ref(false)
 const staffToDelete = ref<Staff | null>(null)
 
-const ROLE_CONFIG: Record<StaffRole, { label: string; variant: 'default' | 'secondary' | 'outline' }> = {
-  conserje: { label: 'Conserje', variant: 'default' },
-  vigilancia: { label: 'Vigilancia', variant: 'secondary' },
-  mantenimiento: { label: 'Mantenimiento', variant: 'outline' },
-  otro: { label: 'Otro', variant: 'outline' },
-}
-
-const SHIFT_LABELS: Record<string, string> = {
-  mañana: 'Mañana',
-  tarde: 'Tarde',
-  noche: 'Noche',
-}
-
 function getShiftLabel(shift: string | null): string {
   if (!shift) return '—'
-  return SHIFT_LABELS[shift] ?? shift
+  const labels: Record<string, string> = { mañana: 'Mañana', tarde: 'Tarde', noche: 'Noche' }
+  return labels[shift] ?? shift
 }
 
 const filteredStaff = computed(() => {
@@ -139,6 +125,19 @@ async function handleShowQr(member: Staff) {
   }
 }
 
+async function handleDownloadBadge() {
+  if (!qrStaff.value?.qrToken) return
+  await downloadBadge({
+    name: qrStaff.value.name,
+    roleName: qrStaff.value.roleName ?? null,
+    unitNumber: qrStaff.value.unitNumber ?? null,
+    unitLabel: qrStaff.value.unitLabel ?? null,
+    phone: qrStaff.value.phone ?? null,
+    qrToken: qrStaff.value.qrToken,
+  })
+  toast.success('Credencial descargada')
+}
+
 async function handleSharePass() {
   if (!qrAccessUrl.value) return
   try {
@@ -159,6 +158,7 @@ watch(selectedRole, (role) => {
 
 onMounted(() => {
   fetchStaff()
+  fetchRoles()
 })
 </script>
 
@@ -167,7 +167,7 @@ onMounted(() => {
     <Teleport :to="target" defer v-if="isMounted">
       <TopbarSearch v-model="searchQuery" placeholder="Buscar personal...">
         <TopbarFilters :active="selectedRole !== ''" @clear="selectedRole = ''">
-          <TopbarFilterGroup v-model="selectedRole" label="Rol" :options="roleOptions" />
+          <TopbarFilterGroup v-model="selectedRole" label="Rol" :options="filterRoleOptions" />
         </TopbarFilters>
       </TopbarSearch>
       <NuxtLink to="/admin/personal/crear">
@@ -186,6 +186,15 @@ onMounted(() => {
         </NuxtLink>
       </Button>
     </TopbarMobileAction>
+
+    <!-- Mobile search -->
+    <div class="mb-4 md:hidden">
+      <TopbarSearch v-model="searchQuery" placeholder="Buscar personal...">
+        <TopbarFilters :active="selectedRole !== ''" @clear="selectedRole = ''">
+          <TopbarFilterGroup v-model="selectedRole" label="Rol" :options="filterRoleOptions" />
+        </TopbarFilters>
+      </TopbarSearch>
+    </div>
 
     <!-- Error -->
     <ErrorAlert v-if="error && !isSubmitting" :message="error" class="mb-4" />
@@ -231,8 +240,8 @@ onMounted(() => {
                 </div>
               </TableCell>
               <TableCell>
-                <Badge :variant="ROLE_CONFIG[member.role].variant">
-                  {{ ROLE_CONFIG[member.role].label }}
+                <Badge variant="secondary">
+                  {{ member.roleName ?? 'Sin rol' }}
                 </Badge>
               </TableCell>
               <TableCell class="text-muted-foreground">{{ member.phone ?? '—' }}</TableCell>
@@ -297,8 +306,8 @@ onMounted(() => {
                 </AvatarFallback>
               </Avatar>
               <p class="min-w-0 flex-1 truncate text-sm font-semibold">{{ member.name }}</p>
-              <Badge :variant="ROLE_CONFIG[member.role].variant" class="shrink-0 text-[11px]">
-                {{ ROLE_CONFIG[member.role].label }}
+              <Badge variant="secondary" class="shrink-0 text-[11px]">
+                {{ member.roleName ?? 'Sin rol' }}
               </Badge>
             </div>
             <!-- Row 2: Phone · Shift | QR + Actions inline -->
@@ -376,7 +385,7 @@ onMounted(() => {
         <DialogHeader>
           <DialogTitle>Pase QR — {{ qrStaff?.name }}</DialogTitle>
           <DialogDescription>
-            {{ ROLE_CONFIG[qrStaff?.role ?? 'otro'].label }} — pase de acceso multi-uso
+            {{ qrStaff?.roleName ?? 'Sin rol' }} — pase de acceso multi-uso
           </DialogDescription>
         </DialogHeader>
 
@@ -410,6 +419,15 @@ onMounted(() => {
             Regenerar
           </Button>
         </div>
+        <Button
+          class="w-full gap-1.5"
+          :disabled="isDownloadingBadge"
+          @click="handleDownloadBadge"
+        >
+          <Loader2 v-if="isDownloadingBadge" class="size-4 animate-spin" />
+          <Download v-else class="size-4" />
+          Descargar Credencial
+        </Button>
       </DialogContent>
     </Dialog>
   </div>

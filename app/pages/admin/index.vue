@@ -2,6 +2,7 @@
 import {
   AlertTriangle,
   Calendar,
+  ChevronRight,
   ClipboardCheck,
   Download,
   FileText,
@@ -9,6 +10,7 @@ import {
   Megaphone,
   Percent,
   ShieldAlert,
+  Store,
   Users,
   Vote,
   Wallet,
@@ -37,6 +39,10 @@ const { stats, trends, isLoading, exportCsv, exportPdf } = useDashboard()
 const { formatCurrency, formatDateTime } = useFormatDate()
 
 const collectionRate = computed(() => trends.value?.financialKpis?.collectionRate ?? 0)
+
+const hasAttentionItems = computed(() =>
+  (stats.value?.openIncidents ?? 0) > 0 || (stats.value?.pendingProviders ?? 0) > 0
+)
 
 // --- Chart helpers ---
 
@@ -180,6 +186,31 @@ const groupedChartOpts = {
         <Skeleton v-else class="mt-3 h-1.5 w-full rounded-lg" />
       </Card>
     </div>
+
+    <!-- Attention required — hide when nothing pending -->
+    <Card v-if="hasAttentionItems" class="p-5">
+      <h3 class="text-sm font-semibold mb-3">Requiere atención</h3>
+      <div class="space-y-2">
+        <NuxtLink v-if="(stats?.openIncidents ?? 0) > 0" to="/admin/incidencias" class="flex items-center gap-3 rounded-lg p-2.5 transition-colors hover:bg-accent">
+          <div class="flex size-8 shrink-0 items-center justify-center rounded-lg bg-amber-100">
+            <AlertTriangle class="size-4 text-amber-600" />
+          </div>
+          <div class="flex-1">
+            <p class="text-sm font-medium">{{ stats.openIncidents }} incidencias abiertas</p>
+          </div>
+          <ChevronRight class="size-4 text-muted-foreground" />
+        </NuxtLink>
+        <NuxtLink v-if="(stats?.pendingProviders ?? 0) > 0" to="/admin/proveedores" class="flex items-center gap-3 rounded-lg p-2.5 transition-colors hover:bg-accent">
+          <div class="flex size-8 shrink-0 items-center justify-center rounded-lg bg-blue-100">
+            <Store class="size-4 text-blue-600" />
+          </div>
+          <div class="flex-1">
+            <p class="text-sm font-medium">{{ stats.pendingProviders }} proveedores por aprobar</p>
+          </div>
+          <ChevronRight class="size-4 text-muted-foreground" />
+        </NuxtLink>
+      </div>
+    </Card>
 
     <!-- Charts row 1: Finance + Access -->
     <div class="grid gap-4 lg:grid-cols-2">

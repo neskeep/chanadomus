@@ -1,10 +1,14 @@
-import { pgTable, uuid, text, timestamp, index, uniqueIndex } from 'drizzle-orm/pg-core'
+import { pgTable, uuid, text, timestamp, boolean, integer, index, uniqueIndex } from 'drizzle-orm/pg-core'
 import { tenants } from './tenant'
 
 // Catálogo de roles de personal de servicio (gestionado por admin)
+// Usado por: unit_service_staff (personal por unidad) y staff (personal condominial)
 export const serviceStaffRoles = pgTable('service_staff_roles', {
   id: uuid('id').primaryKey().defaultRandom(),
   name: text('name').notNull(),
+  description: text('description'),
+  isActive: boolean('is_active').notNull().default(true),
+  displayOrder: integer('display_order').notNull().default(0),
   tenantId: uuid('tenant_id').notNull().references(() => tenants.id),
   createdAt: timestamp('created_at').notNull().defaultNow(),
 }, (table) => [

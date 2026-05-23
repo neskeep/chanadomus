@@ -1,8 +1,9 @@
-import type { Staff, StaffRole } from '~~/shared/types/staff'
+import type { Staff } from '~~/shared/types/staff'
+import type { ServiceStaffRole } from '~~/shared/types/unit-service-staff'
 
 interface CreateStaffData {
   name: string
-  role: StaffRole
+  roleId: string
   idDocument?: string
   phone?: string
   email?: string
@@ -14,16 +15,27 @@ type UpdateStaffData = Partial<CreateStaffData> & { unitId?: string | null }
 
 export function useStaff() {
   const staffList = ref<Staff[]>([])
+  const roleOptions = ref<ServiceStaffRole[]>([])
   const isLoading = ref(false)
   const isSubmitting = ref(false)
   const error = ref<string | null>(null)
 
-  async function fetchStaff(role?: StaffRole) {
+  async function fetchRoles() {
+    try {
+      const res = await $fetch<{ data: ServiceStaffRole[] }>('/api/admin/service-roles', {
+        params: { includeInactive: 'true' },
+      })
+      roleOptions.value = res.data
+    }
+    catch { /* silent — dropdown will be empty */ }
+  }
+
+  async function fetchStaff(roleId?: string) {
     isLoading.value = true
     error.value = null
     try {
       const query: Record<string, string> = {}
-      if (role) query.role = role
+      if (roleId) query.roleId = roleId
 
       const res = await $fetch<{ data: Staff[] }>(
         '/api/staff',
@@ -188,9 +200,11 @@ export function useStaff() {
 
   return {
     staffList,
+    roleOptions,
     isLoading,
     isSubmitting,
     error,
+    fetchRoles,
     fetchStaff,
     createStaffMember,
     updateStaffMember,

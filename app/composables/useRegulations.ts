@@ -1,8 +1,4 @@
-import type { Regulation, RegulationCategory } from '~~/shared/types/regulation'
-
-interface FetchRegulationsParams {
-  category?: RegulationCategory
-}
+import type { Regulation } from '~~/shared/types/regulation'
 
 export function useRegulations() {
   const regulations = ref<Regulation[]>([])
@@ -10,17 +6,11 @@ export function useRegulations() {
   const isSubmitting = ref(false)
   const error = ref<string | null>(null)
 
-  async function fetchRegulations(params: FetchRegulationsParams = {}) {
+  async function fetchRegulations() {
     isLoading.value = true
     error.value = null
     try {
-      const query: Record<string, string> = {}
-      if (params.category) query.category = params.category
-
-      const res = await $fetch<{ data: Regulation[] }>(
-        '/api/regulations',
-        { params: query },
-      )
+      const res = await $fetch<{ data: Regulation[] }>('/api/regulations')
       regulations.value = res.data
     }
     catch (err: unknown) {
@@ -52,6 +42,35 @@ export function useRegulations() {
     }
   }
 
+  async function fetchRegulation(id: string): Promise<Regulation | null> {
+    try {
+      const res = await $fetch<{ data: Regulation[] }>('/api/regulations')
+      return res.data.find(r => r.id === id) ?? null
+    } catch {
+      return null
+    }
+  }
+
+  async function updateRegulation(id: string, formData: FormData): Promise<Regulation> {
+    isSubmitting.value = true
+    error.value = null
+    try {
+      const res = await $fetch<{ data: Regulation }>(`/api/regulations/${id}`, {
+        method: 'PATCH',
+        body: formData,
+      })
+      return res.data
+    }
+    catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Error al actualizar normativa'
+      error.value = message
+      throw err
+    }
+    finally {
+      isSubmitting.value = false
+    }
+  }
+
   async function deleteRegulation(id: string): Promise<void> {
     isSubmitting.value = true
     error.value = null
@@ -70,27 +89,15 @@ export function useRegulations() {
     }
   }
 
-  /** Group regulations by category */
-  const grouped = computed(() => {
-    const groups: Record<RegulationCategory, Regulation[]> = {
-      normas: [],
-      horarios: [],
-      arquitectura: [],
-    }
-    for (const reg of regulations.value) {
-      groups[reg.category].push(reg)
-    }
-    return groups
-  })
-
   return {
     regulations,
-    grouped,
     isLoading,
     isSubmitting,
     error,
     fetchRegulations,
+    fetchRegulation,
     createRegulation,
+    updateRegulation,
     deleteRegulation,
   }
 }

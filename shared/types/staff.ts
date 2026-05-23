@@ -4,6 +4,8 @@ export interface Staff {
   id: string
   name: string
   role: StaffRole
+  roleId: string | null
+  roleName: string | null
   idDocument: string | null
   phone: string | null
   email: string | null

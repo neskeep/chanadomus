@@ -1,16 +1,14 @@
 <script setup lang="ts">
-import { Camera, Loader2, RefreshCw, ScanLine, Shield } from 'lucide-vue-next'
+import { Camera, Download, Loader2, RefreshCw, ScanLine, Shield } from 'lucide-vue-next'
 import { toast } from 'vue-sonner'
 import QRCode from 'qrcode'
-import type { StaffRole } from '~~/shared/types/staff'
-
 definePageMeta({ layout: 'default' })
 
 const route = useRoute()
 const router = useRouter()
 const staffId = route.params.id as string
 
-const { staffList, isLoading, isSubmitting, error, fetchStaff, updateStaffMember, uploadAvatar, generateQr, getQrToken } = useStaff()
+const { staffList, isLoading, isSubmitting, error, fetchStaff, updateStaffMember, uploadAvatar, generateQr, getQrToken, roleOptions, fetchRoles } = useStaff()
 
 // Breadcrumb
 const pageOverride = computed(() => ({
@@ -21,12 +19,12 @@ usePageInfoOverride(pageOverride)
 
 // Form state
 const formName = ref('')
-const formRole = ref<StaffRole | ''>('')
+const formRole = ref('')
 const formDocument = ref('')
 const formPhone = ref('')
 const formEmail = ref('')
 const formShift = ref('none')
-const formUnitId = ref<string | ''>('')
+const formUnitId = ref('none')
 
 // Units for selector
 const unitOptions = ref<{ id: string; number: string; label: string | null }[]>([])
@@ -37,6 +35,8 @@ async function fetchUnits() {
   }
   catch { /* silently fail — selector will be empty */ }
 }
+
+const activeRoles = computed(() => roleOptions.value.filter(r => r.isActive))
 
 const memberLoaded = ref(false)
 
@@ -71,20 +71,29 @@ watch(staffList, (list) => {
   const staff = list.find(s => s.id === staffId)
   if (staff) {
     formName.value = staff.name
-    formRole.value = staff.role
+    formRole.value = staff.roleId ?? ''
     formDocument.value = staff.idDocument ?? ''
     formPhone.value = staff.phone ?? ''
     formEmail.value = staff.email ?? ''
     formShift.value = staff.shift ?? 'none'
-    formUnitId.value = staff.unitId ?? ''
+    formUnitId.value = staff.unitId ?? 'none'
     qrToken.value = staff.qrToken ?? null
     memberLoaded.value = true
   }
 }, { immediate: true })
 
+// Conserjes requieren unidad obligatoria
+const selectedRoleName = computed(() =>
+  roleOptions.value.find(r => r.id === formRole.value)?.name ?? '',
+)
+const isUnitRequired = computed(() =>
+  selectedRoleName.value.toLowerCase() === 'conserje',
+)
+
 const canSubmit = computed(() =>
   formName.value.trim().length > 0
   && formRole.value
+  && (!isUnitRequired.value || (formUnitId.value !== 'none' && formUnitId.value !== ''))
   && !isSubmitting.value,
 )
 
@@ -161,18 +170,48 @@ function cancelRegenerate() {
   confirmRegenerate.value = false
 }
 
+// Badge download
+const { downloadBadge, isGenerating: isDownloadingBadge } = useQrBadge()
+
+const currentRoleName = computed(() =>
+  roleOptions.value.find(r => r.id === formRole.value)?.name ?? null,
+)
+
+const currentUnitLabel = computed(() => {
+  const unit = unitOptions.value.find(u => u.id === formUnitId.value)
+  return unit ? unit.number : null
+})
+
+const currentUnitFullLabel = computed(() => {
+  const unit = unitOptions.value.find(u => u.id === formUnitId.value)
+  return unit?.label ?? null
+})
+
+async function handleDownloadBadge(format: 'png' | 'svg' = 'png') {
+  if (!qrToken.value) return
+  await downloadBadge({
+    name: formName.value,
+    roleName: currentRoleName.value,
+    unitNumber: currentUnitLabel.value,
+    unitLabel: currentUnitFullLabel.value,
+    phone: formPhone.value || null,
+    qrToken: qrToken.value,
+  }, format)
+  toast.success(`Credencial descargada como ${format.toUpperCase()}`)
+}
+
 // Form submit
 async function handleSubmit() {
   if (!canSubmit.value) return
   try {
     await updateStaffMember(staffId, {
       name: formName.value.trim(),
-      role: formRole.value as StaffRole,
+      roleId: formRole.value,
       idDocument: formDocument.value.trim() || undefined,
       phone: formPhone.value.trim() || undefined,
       email: formEmail.value.trim() || undefined,
       shift: formShift.value === 'none' ? undefined : formShift.value || undefined,
-      unitId: formUnitId.value || null,
+      unitId: formUnitId.value === 'none' ? undefined : formUnitId.value || undefined,
     })
     toast.success('Personal actualizado correctamente')
     router.push('/admin/personal')
@@ -183,7 +222,7 @@ async function handleSubmit() {
 }
 
 onMounted(async () => {
-  await Promise.all([fetchStaff(), fetchUnits()])
+  await Promise.all([fetchStaff(), fetchUnits(), fetchRoles()])
   // Load QR token if staff has one
   if (currentStaff.value?.qrToken) {
     qrToken.value = currentStaff.value.qrToken
@@ -246,7 +285,7 @@ onMounted(async () => {
               <!-- Name + role -->
               <div class="min-w-0 flex-1">
                 <h2 class="truncate text-lg font-semibold">{{ formName || 'Sin nombre' }}</h2>
-                <Badge v-if="formRole" variant="secondary" class="mt-1 capitalize">{{ formRole }}</Badge>
+                <Badge v-if="formRole" variant="secondary" class="mt-1">{{ roleOptions.find(r => r.id === formRole)?.name ?? 'Sin rol' }}</Badge>
                 <p class="mt-2 text-sm text-muted-foreground">
                   Haz click en el icono de camara para cambiar la foto de perfil
                 </p>
@@ -280,10 +319,9 @@ onMounted(async () => {
                     <SelectValue placeholder="Seleccionar rol" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="conserje">Conserje</SelectItem>
-                    <SelectItem value="vigilancia">Vigilancia</SelectItem>
-                    <SelectItem value="mantenimiento">Mantenimiento</SelectItem>
-                    <SelectItem value="otro">Otro</SelectItem>
+                    <SelectItem v-for="role in activeRoles" :key="role.id" :value="role.id">
+                      {{ role.name }}
+                    </SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -338,22 +376,11 @@ onMounted(async () => {
                 </div>
 
                 <div class="space-y-1.5">
-                  <Label for="staff-unit">Unidad asignada</Label>
-                  <Select v-model="formUnitId">
-                    <SelectTrigger id="staff-unit" size="lg" class="text-base">
-                      <SelectValue placeholder="Sin unidad" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="">Sin unidad</SelectItem>
-                      <SelectItem
-                        v-for="unit in unitOptions"
-                        :key="unit.id"
-                        :value="unit.id"
-                      >
-                        {{ unit.number }}{{ unit.label ? ` — ${unit.label}` : '' }}
-                      </SelectItem>
-                    </SelectContent>
-                  </Select>
+                  <Label>Rancho asignado <span v-if="isUnitRequired" class="text-destructive">*</span></Label>
+                  <UnitCombobox v-model="formUnitId" :units="unitOptions" :required="isUnitRequired" />
+                  <p v-if="isUnitRequired" class="text-xs text-muted-foreground">
+                    Los conserjes deben tener un rancho asignado
+                  </p>
                 </div>
               </div>
 
@@ -441,6 +468,17 @@ onMounted(async () => {
                 >
                   <RefreshCw class="size-4" />
                   Regenerar QR
+                </Button>
+
+                <!-- Download badge -->
+                <Button
+                  class="h-10 w-full text-sm"
+                  :disabled="isDownloadingBadge"
+                  @click="handleDownloadBadge('png')"
+                >
+                  <Loader2 v-if="isDownloadingBadge" class="size-4 animate-spin" />
+                  <Download v-else class="size-4" />
+                  Descargar Credencial
                 </Button>
               </div>
             </template>

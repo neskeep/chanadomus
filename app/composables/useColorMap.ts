@@ -161,6 +161,7 @@ export const CHAT_CHANNEL_COLORS: Record<ChatRoomType, { iconBg: string; iconCol
   conserjeria: { iconBg: 'bg-orange-100', iconColor: 'text-orange-700' },
   incidencias: { iconBg: 'bg-red-100', iconColor: 'text-red-700' },
   propietarios: { iconBg: 'bg-teal-100', iconColor: 'text-teal-700' },
+  direct: { iconBg: 'bg-violet-100', iconColor: 'text-violet-700' },
 }
 
 // ─── Dashboard Icon Backgrounds ──────────────────────────
