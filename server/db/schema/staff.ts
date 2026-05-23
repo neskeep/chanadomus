@@ -2,8 +2,9 @@ import { pgTable, pgEnum, uuid, text, timestamp, boolean, index } from 'drizzle-
 import { tenants } from './tenant'
 import { user } from './auth'
 import { units } from './unit'
+import { serviceStaffRoles } from './service-staff-role'
 
-// Enums
+// Enums (legacy — kept for backward compat, new records use roleId)
 export const staffRoleEnum = pgEnum('staff_role', ['conserje', 'vigilancia', 'mantenimiento', 'otro'])
 
 // Staff
@@ -11,6 +12,7 @@ export const staff = pgTable('staff', {
   id: uuid('id').primaryKey().defaultRandom(),
   name: text('name').notNull(),
   role: staffRoleEnum('role').notNull(),
+  roleId: uuid('role_id').references(() => serviceStaffRoles.id),
   idDocument: text('id_document'),
   phone: text('phone'),
   email: text('email'),
@@ -25,6 +27,7 @@ export const staff = pgTable('staff', {
 }, (table) => [
   index('staff_tenant_idx').on(table.tenantId),
   index('staff_role_idx').on(table.role),
+  index('staff_role_id_idx').on(table.roleId),
   index('staff_qr_token_idx').on(table.qrToken),
   index('staff_unit_idx').on(table.unitId),
 ])

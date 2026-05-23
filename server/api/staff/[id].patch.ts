@@ -1,12 +1,11 @@
 import { db } from '~~/server/db'
 import { staff } from '~~/server/db/schema/staff'
+import { serviceStaffRoles } from '~~/server/db/schema/service-staff-role'
 import { eq, and } from 'drizzle-orm'
-
-const VALID_ROLES = ['conserje', 'vigilancia', 'mantenimiento', 'otro'] as const
 
 interface StaffUpdateBody {
   name?: string
-  role?: string
+  roleId?: string
   idDocument?: string
   phone?: string
   email?: string
@@ -26,14 +25,28 @@ export default defineEventHandler(async (event) => {
 
   const body = await readBody<StaffUpdateBody>(event)
 
-  if (body.role && !VALID_ROLES.includes(body.role as (typeof VALID_ROLES)[number])) {
-    throw createError({ statusCode: 400, message: 'Rol invalido. Debe ser: conserje, vigilancia, mantenimiento u otro' })
-  }
-
   const updates: Record<string, unknown> = {}
 
   if (body.name !== undefined) updates.name = body.name.trim()
-  if (body.role !== undefined) updates.role = body.role as (typeof VALID_ROLES)[number]
+  if (body.roleId !== undefined) {
+    // Validate roleId belongs to tenant
+    const [role] = await db
+      .select({ id: serviceStaffRoles.id, name: serviceStaffRoles.name })
+      .from(serviceStaffRoles)
+      .where(and(eq(serviceStaffRoles.id, body.roleId), eq(serviceStaffRoles.tenantId, tenantId)))
+
+    if (!role) {
+      throw createError({ statusCode: 400, message: 'Rol no encontrado' })
+    }
+
+    updates.roleId = body.roleId
+    // Keep legacy enum in sync
+    const legacyRoleMap: Record<string, string> = {
+      conserje: 'conserje', vigilancia: 'vigilancia',
+      mantenimiento: 'mantenimiento',
+    }
+    updates.role = legacyRoleMap[role.name.toLowerCase()] ?? 'otro'
+  }
   if (body.idDocument !== undefined) updates.idDocument = body.idDocument?.trim() || null
   if (body.phone !== undefined) updates.phone = body.phone?.trim() || null
   if (body.email !== undefined) updates.email = body.email?.trim() || null

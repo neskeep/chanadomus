@@ -2,15 +2,13 @@
 import { Camera, Loader2, RefreshCw, ScanLine, Shield } from 'lucide-vue-next'
 import { toast } from 'vue-sonner'
 import QRCode from 'qrcode'
-import type { StaffRole } from '~~/shared/types/staff'
-
 definePageMeta({ layout: 'default' })
 
 const route = useRoute()
 const router = useRouter()
 const staffId = route.params.id as string
 
-const { staffList, isLoading, isSubmitting, error, fetchStaff, updateStaffMember, uploadAvatar, generateQr, getQrToken } = useStaff()
+const { staffList, isLoading, isSubmitting, error, fetchStaff, updateStaffMember, uploadAvatar, generateQr, getQrToken, roleOptions, fetchRoles } = useStaff()
 
 // Breadcrumb
 const pageOverride = computed(() => ({
@@ -21,7 +19,7 @@ usePageInfoOverride(pageOverride)
 
 // Form state
 const formName = ref('')
-const formRole = ref<StaffRole | ''>('')
+const formRole = ref('')
 const formDocument = ref('')
 const formPhone = ref('')
 const formEmail = ref('')
@@ -37,6 +35,8 @@ async function fetchUnits() {
   }
   catch { /* silently fail — selector will be empty */ }
 }
+
+const activeRoles = computed(() => roleOptions.value.filter(r => r.isActive))
 
 const memberLoaded = ref(false)
 
@@ -71,7 +71,7 @@ watch(staffList, (list) => {
   const staff = list.find(s => s.id === staffId)
   if (staff) {
     formName.value = staff.name
-    formRole.value = staff.role
+    formRole.value = staff.roleId ?? ''
     formDocument.value = staff.idDocument ?? ''
     formPhone.value = staff.phone ?? ''
     formEmail.value = staff.email ?? ''
@@ -167,12 +167,12 @@ async function handleSubmit() {
   try {
     await updateStaffMember(staffId, {
       name: formName.value.trim(),
-      role: formRole.value as StaffRole,
+      roleId: formRole.value,
       idDocument: formDocument.value.trim() || undefined,
       phone: formPhone.value.trim() || undefined,
       email: formEmail.value.trim() || undefined,
       shift: formShift.value === 'none' ? undefined : formShift.value || undefined,
-      unitId: formUnitId.value || null,
+      unitId: formUnitId.value || undefined,
     })
     toast.success('Personal actualizado correctamente')
     router.push('/admin/personal')
@@ -183,7 +183,7 @@ async function handleSubmit() {
 }
 
 onMounted(async () => {
-  await Promise.all([fetchStaff(), fetchUnits()])
+  await Promise.all([fetchStaff(), fetchUnits(), fetchRoles()])
   // Load QR token if staff has one
   if (currentStaff.value?.qrToken) {
     qrToken.value = currentStaff.value.qrToken
@@ -246,7 +246,7 @@ onMounted(async () => {
               <!-- Name + role -->
               <div class="min-w-0 flex-1">
                 <h2 class="truncate text-lg font-semibold">{{ formName || 'Sin nombre' }}</h2>
-                <Badge v-if="formRole" variant="secondary" class="mt-1 capitalize">{{ formRole }}</Badge>
+                <Badge v-if="formRole" variant="secondary" class="mt-1">{{ roleOptions.find(r => r.id === formRole)?.name ?? 'Sin rol' }}</Badge>
                 <p class="mt-2 text-sm text-muted-foreground">
                   Haz click en el icono de camara para cambiar la foto de perfil
                 </p>
@@ -280,10 +280,9 @@ onMounted(async () => {
                     <SelectValue placeholder="Seleccionar rol" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="conserje">Conserje</SelectItem>
-                    <SelectItem value="vigilancia">Vigilancia</SelectItem>
-                    <SelectItem value="mantenimiento">Mantenimiento</SelectItem>
-                    <SelectItem value="otro">Otro</SelectItem>
+                    <SelectItem v-for="role in activeRoles" :key="role.id" :value="role.id">
+                      {{ role.name }}
+                    </SelectItem>
                   </SelectContent>
                 </Select>
               </div>

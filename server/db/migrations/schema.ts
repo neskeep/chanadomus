@@ -4,7 +4,7 @@ import { sql } from "drizzle-orm"
 export const accessResult = pgEnum("access_result", ['allowed', 'denied', 'expired', 'already_used'])
 export const announcementCategory = pgEnum("announcement_category", ['general', 'mantenimiento', 'seguridad', 'financiero', 'evento', 'urgente'])
 export const announcementStatus = pgEnum("announcement_status", ['draft', 'published', 'archived'])
-export const chatRoomType = pgEnum("chat_room_type", ['general', 'unit', 'vigilancia', 'admin', 'conserjeria'])
+export const chatRoomType = pgEnum("chat_room_type", ['general', 'unit', 'vigilancia', 'admin', 'conserjeria', 'incidencias', 'propietarios', 'direct'])
 export const deviceStatus = pgEnum("device_status", ['active', 'inactive'])
 export const entryType = pgEnum("entry_type", ['qr', 'manual', 'webhook'])
 export const householdRelationship = pgEnum("household_relationship", ['owner', 'spouse', 'child', 'tenant', 'other'])
@@ -17,7 +17,6 @@ export const pollType = pgEnum("poll_type", ['single', 'multiple'])
 export const providerCategory = pgEnum("provider_category", ['plomeria', 'electricidad', 'jardineria', 'cerrajeria', 'limpieza', 'pintura', 'albanileria', 'seguridad', 'fumigacion', 'otro'])
 export const providerStatus = pgEnum("provider_status", ['active', 'inactive', 'pending'])
 export const recordType = pgEnum("record_type", ['cargo', 'abono'])
-
 export const staffRole = pgEnum("staff_role", ['conserje', 'vigilancia', 'mantenimiento', 'otro'])
 export const vehiclePassType = pgEnum("vehicle_pass_type", ['resident', 'guest'])
 export const visitorType = pgEnum("visitor_type", ['invitado', 'proveedor'])
@@ -230,6 +229,7 @@ export const units = pgTable("units", {
 	tenantId: uuid("tenant_id").notNull(),
 	createdAt: timestamp("created_at", { mode: 'string' }).defaultNow().notNull(),
 	updatedAt: timestamp("updated_at", { mode: 'string' }).defaultNow().notNull(),
+	isActive: boolean("is_active").default(true).notNull(),
 }, (table) => [
 	index("unit_tenant_idx").using("btree", table.tenantId.asc().nullsLast().op("uuid_ops")),
 	uniqueIndex("unit_tenant_number_idx").using("btree", table.tenantId.asc().nullsLast().op("text_ops"), table.number.asc().nullsLast().op("text_ops")),
@@ -257,9 +257,12 @@ export const accessLogs = pgTable("access_logs", {
 	vehiclePassId: uuid("vehicle_pass_id"),
 	occupantCount: integer("occupant_count"),
 	staffPassId: uuid("staff_pass_id"),
+	passToken: text("pass_token"),
+	expiredOpen: boolean("expired_open").default(false).notNull(),
 }, (table) => [
 	index("access_log_created_idx").using("btree", table.createdAt.asc().nullsLast().op("timestamp_ops")),
 	index("access_log_device_idx").using("btree", table.deviceId.asc().nullsLast().op("uuid_ops")),
+	index("access_log_pass_token_idx").using("btree", table.passToken.asc().nullsLast().op("text_ops")).where(sql`((exit_at IS NULL) AND (result = 'allowed'::access_result))`),
 	index("access_log_qr_idx").using("btree", table.qrCodeId.asc().nullsLast().op("uuid_ops")),
 	index("access_log_staff_pass_idx").using("btree", table.staffPassId.asc().nullsLast().op("uuid_ops")),
 	index("access_log_tenant_idx").using("btree", table.tenantId.asc().nullsLast().op("uuid_ops")),
@@ -296,7 +299,7 @@ export const accessLogs = pgTable("access_logs", {
 	foreignKey({
 			columns: [table.staffPassId],
 			foreignColumns: [serviceStaffPasses.id],
-			name: "access_logs_staff_pass_id_fkey"
+			name: "access_logs_staff_pass_id_service_staff_passes_id_fk"
 		}),
 ]);
 
@@ -849,13 +852,16 @@ export const serviceStaffRoles = pgTable("service_staff_roles", {
 	name: text().notNull(),
 	tenantId: uuid("tenant_id").notNull(),
 	createdAt: timestamp("created_at", { mode: 'string' }).defaultNow().notNull(),
+	description: text(),
+	isActive: boolean("is_active").default(true).notNull(),
+	displayOrder: integer("display_order").default(0).notNull(),
 }, (table) => [
 	uniqueIndex("service_staff_roles_name_tenant_idx").using("btree", table.tenantId.asc().nullsLast().op("text_ops"), table.name.asc().nullsLast().op("text_ops")),
 	index("service_staff_roles_tenant_idx").using("btree", table.tenantId.asc().nullsLast().op("uuid_ops")),
 	foreignKey({
 			columns: [table.tenantId],
 			foreignColumns: [tenants.id],
-			name: "service_staff_roles_tenant_id_fkey"
+			name: "service_staff_roles_tenant_id_tenants_id_fk"
 		}),
 ]);
 
@@ -873,19 +879,19 @@ export const unitServiceStaff = pgTable("unit_service_staff", {
 	index("unit_service_staff_tenant_idx").using("btree", table.tenantId.asc().nullsLast().op("uuid_ops")),
 	index("unit_service_staff_unit_idx").using("btree", table.unitId.asc().nullsLast().op("uuid_ops")),
 	foreignKey({
+			columns: [table.roleId],
+			foreignColumns: [serviceStaffRoles.id],
+			name: "unit_service_staff_role_id_service_staff_roles_id_fk"
+		}),
+	foreignKey({
 			columns: [table.unitId],
 			foreignColumns: [units.id],
-			name: "unit_service_staff_unit_id_fkey"
+			name: "unit_service_staff_unit_id_units_id_fk"
 		}),
 	foreignKey({
 			columns: [table.tenantId],
 			foreignColumns: [tenants.id],
-			name: "unit_service_staff_tenant_id_fkey"
-		}),
-	foreignKey({
-			columns: [table.roleId],
-			foreignColumns: [serviceStaffRoles.id],
-			name: "unit_service_staff_role_id_service_staff_roles_id_fk"
+			name: "unit_service_staff_tenant_id_tenants_id_fk"
 		}),
 ]);
 
@@ -905,19 +911,19 @@ export const serviceStaffPasses = pgTable("service_staff_passes", {
 	foreignKey({
 			columns: [table.staffId],
 			foreignColumns: [unitServiceStaff.id],
-			name: "service_staff_passes_staff_id_fkey"
+			name: "service_staff_passes_staff_id_unit_service_staff_id_fk"
 		}),
 	foreignKey({
 			columns: [table.unitId],
 			foreignColumns: [units.id],
-			name: "service_staff_passes_unit_id_fkey"
+			name: "service_staff_passes_unit_id_units_id_fk"
 		}),
 	foreignKey({
 			columns: [table.tenantId],
 			foreignColumns: [tenants.id],
-			name: "service_staff_passes_tenant_id_fkey"
+			name: "service_staff_passes_tenant_id_tenants_id_fk"
 		}),
-	unique("service_staff_passes_token_key").on(table.token),
+	unique("service_staff_passes_token_unique").on(table.token),
 ]);
 
 export const panicEvents = pgTable("panic_events", {
@@ -951,7 +957,7 @@ export const panicEvents = pgTable("panic_events", {
 	foreignKey({
 			columns: [table.resolvedBy],
 			foreignColumns: [user.id],
-			name: "panic_events_resolved_by_fkey"
+			name: "panic_events_resolved_by_user_id_fk"
 		}),
 ]);
 
@@ -1007,44 +1013,13 @@ export const chatReadStatus = pgTable("chat_read_status", {
 	foreignKey({
 			columns: [table.roomId],
 			foreignColumns: [chatRooms.id],
-			name: "chat_read_status_room_id_fkey"
+			name: "chat_read_status_room_id_chat_rooms_id_fk"
 		}).onDelete("cascade"),
 	foreignKey({
 			columns: [table.userId],
 			foreignColumns: [user.id],
-			name: "chat_read_status_user_id_fkey"
+			name: "chat_read_status_user_id_user_id_fk"
 		}).onDelete("cascade"),
-]);
-
-export const staff = pgTable("staff", {
-	id: uuid().defaultRandom().primaryKey().notNull(),
-	name: text().notNull(),
-	role: staffRole().notNull(),
-	idDocument: text("id_document"),
-	phone: text(),
-	email: text(),
-	shift: text(),
-	isActive: boolean("is_active").default(true).notNull(),
-	userId: text("user_id"),
-	tenantId: uuid("tenant_id").notNull(),
-	createdAt: timestamp("created_at", { mode: 'string' }).defaultNow().notNull(),
-	avatar: text(),
-	qrToken: text("qr_token"),
-}, (table) => [
-	index("staff_qr_token_idx").using("btree", table.qrToken.asc().nullsLast().op("text_ops")),
-	index("staff_role_idx").using("btree", table.role.asc().nullsLast().op("enum_ops")),
-	index("staff_tenant_idx").using("btree", table.tenantId.asc().nullsLast().op("uuid_ops")),
-	foreignKey({
-			columns: [table.userId],
-			foreignColumns: [user.id],
-			name: "staff_user_id_user_id_fk"
-		}),
-	foreignKey({
-			columns: [table.tenantId],
-			foreignColumns: [tenants.id],
-			name: "staff_tenant_id_tenants_id_fk"
-		}),
-	unique("staff_qr_token_unique").on(table.qrToken),
 ]);
 
 export const householdMemberPasses = pgTable("household_member_passes", {
@@ -1063,17 +1038,83 @@ export const householdMemberPasses = pgTable("household_member_passes", {
 	foreignKey({
 			columns: [table.memberId],
 			foreignColumns: [householdMembers.id],
-			name: "household_member_passes_member_id_fkey"
+			name: "household_member_passes_member_id_household_members_id_fk"
 		}),
 	foreignKey({
 			columns: [table.unitId],
 			foreignColumns: [units.id],
-			name: "household_member_passes_unit_id_fkey"
+			name: "household_member_passes_unit_id_units_id_fk"
 		}),
 	foreignKey({
 			columns: [table.tenantId],
 			foreignColumns: [tenants.id],
-			name: "household_member_passes_tenant_id_fkey"
+			name: "household_member_passes_tenant_id_tenants_id_fk"
 		}),
-	unique("household_member_passes_token_key").on(table.token),
+	unique("household_member_passes_token_unique").on(table.token),
+]);
+
+export const staff = pgTable("staff", {
+	id: uuid().defaultRandom().primaryKey().notNull(),
+	name: text().notNull(),
+	role: staffRole().notNull(),
+	idDocument: text("id_document"),
+	phone: text(),
+	email: text(),
+	shift: text(),
+	isActive: boolean("is_active").default(true).notNull(),
+	userId: text("user_id"),
+	tenantId: uuid("tenant_id").notNull(),
+	createdAt: timestamp("created_at", { mode: 'string' }).defaultNow().notNull(),
+	avatar: text(),
+	qrToken: text("qr_token"),
+	unitId: uuid("unit_id"),
+	roleId: uuid("role_id"),
+}, (table) => [
+	index("staff_qr_token_idx").using("btree", table.qrToken.asc().nullsLast().op("text_ops")),
+	index("staff_role_id_idx").using("btree", table.roleId.asc().nullsLast().op("uuid_ops")),
+	index("staff_role_idx").using("btree", table.role.asc().nullsLast().op("enum_ops")),
+	index("staff_tenant_idx").using("btree", table.tenantId.asc().nullsLast().op("uuid_ops")),
+	index("staff_unit_idx").using("btree", table.unitId.asc().nullsLast().op("uuid_ops")),
+	foreignKey({
+			columns: [table.userId],
+			foreignColumns: [user.id],
+			name: "staff_user_id_user_id_fk"
+		}),
+	foreignKey({
+			columns: [table.tenantId],
+			foreignColumns: [tenants.id],
+			name: "staff_tenant_id_tenants_id_fk"
+		}),
+	foreignKey({
+			columns: [table.unitId],
+			foreignColumns: [units.id],
+			name: "staff_unit_id_units_id_fk"
+		}),
+	foreignKey({
+			columns: [table.roleId],
+			foreignColumns: [serviceStaffRoles.id],
+			name: "staff_role_id_service_staff_roles_id_fk"
+		}),
+	unique("staff_qr_token_unique").on(table.qrToken),
+]);
+
+export const chatRoomMembers = pgTable("chat_room_members", {
+	id: uuid().defaultRandom().primaryKey().notNull(),
+	roomId: uuid("room_id").notNull(),
+	userId: text("user_id").notNull(),
+	joinedAt: timestamp("joined_at", { mode: 'string' }).defaultNow().notNull(),
+}, (table) => [
+	index("chat_room_members_room_idx").using("btree", table.roomId.asc().nullsLast().op("uuid_ops")),
+	uniqueIndex("chat_room_members_room_user_idx").using("btree", table.roomId.asc().nullsLast().op("uuid_ops"), table.userId.asc().nullsLast().op("uuid_ops")),
+	index("chat_room_members_user_idx").using("btree", table.userId.asc().nullsLast().op("text_ops")),
+	foreignKey({
+			columns: [table.roomId],
+			foreignColumns: [chatRooms.id],
+			name: "chat_room_members_room_id_chat_rooms_id_fk"
+		}).onDelete("cascade"),
+	foreignKey({
+			columns: [table.userId],
+			foreignColumns: [user.id],
+			name: "chat_room_members_user_id_user_id_fk"
+		}).onDelete("cascade"),
 ]);

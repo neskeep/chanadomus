@@ -1,16 +1,14 @@
 <script setup lang="ts">
 import { Loader2 } from 'lucide-vue-next'
 import { toast } from 'vue-sonner'
-import type { StaffRole } from '~~/shared/types/staff'
-
 useHead({ title: 'Agregar Personal' })
 
 const router = useRouter()
-const { isSubmitting, error, createStaffMember } = useStaff()
+const { isSubmitting, error, createStaffMember, roleOptions, fetchRoles } = useStaff()
 
 // --- Form state ---
 const formName = ref('')
-const formRole = ref<StaffRole | ''>('')
+const formRole = ref('')
 const formDocument = ref('')
 const formPhone = ref('')
 const formEmail = ref('')
@@ -19,12 +17,20 @@ const formUnitId = ref<string | ''>('')
 
 // Units for selector
 const unitOptions = ref<{ id: string; number: string; label: string | null }[]>([])
+
+const activeRoles = computed(() => roleOptions.value.filter(r => r.isActive))
+
 onMounted(async () => {
-  try {
-    const res = await $fetch<{ data: { id: string; number: string; label: string | null }[] }>('/api/units')
-    unitOptions.value = res.data
-  }
-  catch { /* selector will be empty */ }
+  await Promise.all([
+    fetchRoles(),
+    (async () => {
+      try {
+        const res = await $fetch<{ data: { id: string; number: string; label: string | null }[] }>('/api/units')
+        unitOptions.value = res.data
+      }
+      catch { /* selector will be empty */ }
+    })(),
+  ])
 })
 
 const canSubmit = computed(() =>
@@ -38,7 +44,7 @@ async function handleSubmit() {
   try {
     await createStaffMember({
       name: formName.value.trim(),
-      role: formRole.value as StaffRole,
+      roleId: formRole.value,
       idDocument: formDocument.value.trim() || undefined,
       phone: formPhone.value.trim() || undefined,
       email: formEmail.value.trim() || undefined,
@@ -83,10 +89,9 @@ async function handleSubmit() {
                   <SelectValue placeholder="Seleccionar rol" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="conserje">Conserje</SelectItem>
-                  <SelectItem value="vigilancia">Vigilancia</SelectItem>
-                  <SelectItem value="mantenimiento">Mantenimiento</SelectItem>
-                  <SelectItem value="otro">Otro</SelectItem>
+                  <SelectItem v-for="role in activeRoles" :key="role.id" :value="role.id">
+                    {{ role.name }}
+                  </SelectItem>
                 </SelectContent>
               </Select>
             </div>

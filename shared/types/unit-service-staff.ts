@@ -1,6 +1,9 @@
 export interface ServiceStaffRole {
   id: string
   name: string
+  description: string | null
+  isActive: boolean
+  displayOrder: number
   tenantId: string
   createdAt: string
 }

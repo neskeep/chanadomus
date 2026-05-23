@@ -6,12 +6,14 @@ definePageMeta({ layout: 'default' })
 useHead({ title: 'Roles de Servicio' })
 
 const { target, isMounted } = useTopbarPortal()
-const { formatDate } = useFormatDate()
 
 // --- Types ---
 interface ServiceRole {
   id: string
   name: string
+  description: string | null
+  isActive: boolean
+  displayOrder: number
   tenantId: string
   createdAt: string
 }
@@ -26,6 +28,9 @@ const fetchError = ref<string | null>(null)
 const editDialogOpen = ref(false)
 const editingRole = ref<ServiceRole | null>(null)
 const editName = ref('')
+const editDescription = ref('')
+const editIsActive = ref(true)
+const editDisplayOrder = ref(0)
 
 // --- Delete AlertDialog ---
 const deleteDialogOpen = ref(false)
@@ -36,7 +41,9 @@ async function fetchRoles() {
   isLoading.value = true
   fetchError.value = null
   try {
-    const res = await $fetch<{ data: ServiceRole[] }>('/api/admin/service-roles')
+    const res = await $fetch<{ data: ServiceRole[] }>('/api/admin/service-roles', {
+      query: { includeInactive: 'true' },
+    })
     roles.value = res.data
   }
   catch {
@@ -51,6 +58,9 @@ async function fetchRoles() {
 function openEdit(role: ServiceRole) {
   editingRole.value = role
   editName.value = role.name
+  editDescription.value = role.description ?? ''
+  editIsActive.value = role.isActive
+  editDisplayOrder.value = role.displayOrder
   editDialogOpen.value = true
 }
 
@@ -60,7 +70,12 @@ async function handleEdit() {
   try {
     const res = await $fetch<{ data: ServiceRole }>(`/api/admin/service-roles/${editingRole.value.id}`, {
       method: 'PATCH',
-      body: { name: editName.value.trim() },
+      body: {
+        name: editName.value.trim(),
+        description: editDescription.value.trim() || null,
+        isActive: editIsActive.value,
+        displayOrder: editDisplayOrder.value,
+      },
     })
     const idx = roles.value.findIndex(r => r.id === editingRole.value!.id)
     if (idx !== -1) roles.value[idx] = res.data
@@ -150,15 +165,24 @@ onMounted(fetchRoles)
           <TableHeader>
             <TableRow>
               <TableHead>Nombre</TableHead>
-              <TableHead>Fecha de creación</TableHead>
+              <TableHead>Descripción</TableHead>
               <TableHead class="w-[100px]">Acciones</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            <TableRow v-for="role in roles" :key="role.id">
-              <TableCell class="font-medium">{{ role.name }}</TableCell>
-              <TableCell class="text-muted-foreground tabular-nums">
-                {{ formatDate(role.createdAt) }}
+            <TableRow
+              v-for="role in roles"
+              :key="role.id"
+              :class="{ 'opacity-50': !role.isActive }"
+            >
+              <TableCell class="font-medium">
+                <div class="flex items-center gap-2">
+                  <span>{{ role.name }}</span>
+                  <Badge v-if="!role.isActive" variant="outline" class="text-[11px]">Inactivo</Badge>
+                </div>
+              </TableCell>
+              <TableCell class="text-muted-foreground">
+                {{ role.description ?? '—' }}
               </TableCell>
               <TableCell>
                 <div class="flex items-center gap-1">
@@ -189,33 +213,39 @@ onMounted(fetchRoles)
 
       <!-- Mobile cards -->
       <div class="space-y-2 md:hidden">
-        <Card v-for="role in roles" :key="role.id">
+        <Card
+          v-for="role in roles"
+          :key="role.id"
+          :class="{ 'opacity-50': !role.isActive }"
+        >
           <CardContent class="px-3 py-2.5">
-            <!-- Row 1: Name -->
+            <!-- Row 1: Name + inactive badge -->
             <div class="flex items-center gap-1.5">
               <p class="min-w-0 flex-1 truncate text-sm font-semibold">{{ role.name }}</p>
+              <Badge v-if="!role.isActive" variant="outline" class="shrink-0 text-[11px]">Inactivo</Badge>
             </div>
-            <!-- Row 2: Date | Actions inline -->
-            <div class="mt-0.5 flex items-center gap-x-1 text-[11px] text-muted-foreground">
-              <span class="tabular-nums">{{ formatDate(role.createdAt) }}</span>
-              <span class="ml-auto flex shrink-0 items-center gap-0.5">
-                <Button
-                  variant="ghost"
-                  class="h-6 px-2 text-[11px] text-muted-foreground hover:text-foreground"
-                  aria-label="Editar rol"
-                  @click="openEdit(role)"
-                >
-                  <Pencil class="size-3" />
-                </Button>
-                <Button
-                  variant="ghost"
-                  class="h-6 px-2 text-[11px] text-destructive hover:text-destructive"
-                  aria-label="Eliminar rol"
-                  @click="openDelete(role)"
-                >
-                  <Trash2 class="size-3" />
-                </Button>
-              </span>
+            <!-- Row 2: Description -->
+            <p v-if="role.description" class="mt-0.5 truncate text-[11px] text-muted-foreground">
+              {{ role.description }}
+            </p>
+            <!-- Row 3: Actions inline -->
+            <div class="mt-0.5 flex items-center justify-end gap-0.5 text-[11px]">
+              <Button
+                variant="ghost"
+                class="h-6 px-2 text-[11px] text-muted-foreground hover:text-foreground"
+                aria-label="Editar rol"
+                @click="openEdit(role)"
+              >
+                <Pencil class="size-3" />
+              </Button>
+              <Button
+                variant="ghost"
+                class="h-6 px-2 text-[11px] text-destructive hover:text-destructive"
+                aria-label="Eliminar rol"
+                @click="openDelete(role)"
+              >
+                <Trash2 class="size-3" />
+              </Button>
             </div>
           </CardContent>
         </Card>
@@ -228,7 +258,7 @@ onMounted(fetchRoles)
         <DialogHeader>
           <DialogTitle>Editar rol</DialogTitle>
           <DialogDescription>
-            Cambia el nombre del rol de servicio
+            Modifica los datos del rol de servicio
           </DialogDescription>
         </DialogHeader>
 
@@ -242,6 +272,36 @@ onMounted(fetchRoles)
               class="h-12 text-base"
               required
               autofocus
+            />
+          </div>
+
+          <div class="space-y-1.5">
+            <Label for="edit-role-description">Descripción</Label>
+            <Textarea
+              id="edit-role-description"
+              v-model="editDescription"
+              placeholder="Descripción opcional del rol..."
+              class="min-h-20 text-base"
+            />
+          </div>
+
+          <div class="space-y-1.5">
+            <Label for="edit-role-order">Orden de visualización</Label>
+            <Input
+              id="edit-role-order"
+              v-model.number="editDisplayOrder"
+              type="number"
+              min="0"
+              placeholder="0"
+              class="h-12 text-base"
+            />
+          </div>
+
+          <div class="flex items-center justify-between">
+            <Label for="edit-role-active" class="cursor-pointer">Rol activo</Label>
+            <Switch
+              id="edit-role-active"
+              v-model="editIsActive"
             />
           </div>
 
