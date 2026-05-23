@@ -81,6 +81,7 @@ const PAGE_MAP: Record<string, PageInfo> = {
   '/conserje/visitantes-frecuentes': { title: 'Visitantes Frecuentes', description: 'Directorio de visitantes recurrentes' },
   '/conserje/visitantes-frecuentes/nuevo': { title: 'Agregar Visitante', description: 'Registra un visitante frecuente', breadcrumbs: [{ label: 'Frecuentes', to: '/conserje/visitantes-frecuentes' }] },
   '/conserje/nueva-entrada': { title: 'Registrar Entrada', description: 'Ingresa un nuevo visitante', breadcrumbs: [{ label: 'Conserjería', to: '/conserje' }] },
+  '/conserje/incidencias': { title: 'Incidencias', description: 'Reportes y problemas del condominio' },
 }
 
 const DYNAMIC_ROUTES: Array<{ prefix: string; info: PageInfo }> = [
@@ -98,6 +99,7 @@ const DYNAMIC_ROUTES: Array<{ prefix: string; info: PageInfo }> = [
   { prefix: '/admin/reuniones/', info: { title: 'Detalle de Reunión', description: 'Información de la reunión', breadcrumbs: [{ label: 'Reuniones', to: '/admin/reuniones' }] } },
   { prefix: '/admin/personal/', info: { title: 'Editar Personal', description: 'Actualiza información del personal', breadcrumbs: [{ label: 'Personal', to: '/admin/personal' }] } },
   { prefix: '/vigilancia/incidencias/', info: { title: 'Detalle de Incidencia', description: 'Información y estado del reporte', breadcrumbs: [{ label: 'Incidencias', to: '/vigilancia/incidencias' }] } },
+  { prefix: '/conserje/incidencias/', info: { title: 'Detalle de Incidencia', description: 'Información y estado del reporte', breadcrumbs: [{ label: 'Incidencias', to: '/conserje/incidencias' }] } },
   { prefix: '/vigilancia/residentes/', info: { title: 'Ficha del Residente', description: 'Datos y vehículos', breadcrumbs: [{ label: 'Directorio', to: '/vigilancia/residentes' }] } },
   { prefix: '/propietario/mi-unidad/editar-miembro/', info: { title: 'Editar Integrante', description: 'Actualiza información del miembro', breadcrumbs: [{ label: 'Mi Unidad', to: '/propietario/mi-unidad' }] } },
   { prefix: '/propietario/mi-unidad/editar-vehiculo/', info: { title: 'Editar Vehículo', description: 'Actualiza información del vehículo', breadcrumbs: [{ label: 'Mi Unidad', to: '/propietario/mi-unidad' }] } },

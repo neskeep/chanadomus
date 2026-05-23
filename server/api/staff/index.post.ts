@@ -44,6 +44,11 @@ export default defineEventHandler(async (event) => {
   }
   const legacyRole = legacyRoleMap[role.name.toLowerCase()] ?? 'otro'
 
+  // Conserjes requieren unidad obligatoria
+  if (legacyRole === 'conserje' && !body.unitId) {
+    throw createError({ statusCode: 400, message: 'Los conserjes deben tener una unidad asignada' })
+  }
+
   const [inserted] = await db
     .insert(staff)
     .values({

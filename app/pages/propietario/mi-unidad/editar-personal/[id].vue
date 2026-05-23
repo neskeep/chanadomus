@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import QRCode from 'qrcode'
-import { Loader2, QrCode, Share2, Ban, ClipboardList, CheckCircle, XCircle, Clock, Trash2, Shield } from 'lucide-vue-next'
+import { Download, Loader2, QrCode, Share2, Ban, ClipboardList, CheckCircle, XCircle, Clock, Trash2, Shield } from 'lucide-vue-next'
 import { toast } from 'vue-sonner'
 import type { StaffAttendanceLog } from '~~/shared/types/unit-service-staff'
 
@@ -23,6 +23,8 @@ const {
   revokeStaffPass,
   fetchStaffAttendance,
 } = useMyUnit()
+
+const { downloadBadge, isGenerating: isDownloadingBadge } = useQrBadge()
 
 const formName = ref('')
 const formRoleId = ref('')
@@ -180,6 +182,21 @@ async function handleDelete() {
   catch {
     toast.error(error.value ?? 'Error al eliminar')
   }
+}
+
+const currentRoleName = computed(() =>
+  serviceRoles.value.find(r => r.id === formRoleId.value)?.name ?? null,
+)
+
+async function handleDownloadBadge() {
+  if (!currentStaff.value?.passToken) return
+  await downloadBadge({
+    name: formName.value,
+    roleName: currentRoleName.value,
+    phone: formPhone.value || null,
+    qrToken: currentStaff.value.passToken,
+  })
+  toast.success('Credencial descargada')
 }
 
 onMounted(() => loadData())
@@ -421,6 +438,17 @@ onMounted(() => loadData())
                   </AlertDialogContent>
                 </AlertDialog>
               </div>
+
+              <!-- Download badge -->
+              <Button
+                class="h-10 w-full text-sm"
+                :disabled="isDownloadingBadge"
+                @click="handleDownloadBadge"
+              >
+                <Loader2 v-if="isDownloadingBadge" class="size-4 animate-spin" />
+                <Download v-else class="size-4" />
+                Descargar Credencial
+              </Button>
             </template>
 
             <!-- No pass: generate -->

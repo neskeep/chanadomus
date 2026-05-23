@@ -1,6 +1,5 @@
 import { db } from '~~/server/db'
 import { residentPasses } from '~~/server/db/schema/resident-pass'
-import { user } from '~~/server/db/schema/auth'
 import { eq, and } from 'drizzle-orm'
 import { randomUUID } from 'node:crypto'
 
@@ -14,23 +13,7 @@ export default defineEventHandler(async (event) => {
   }
 
   const userId = session.user.id
-
-  // Get unitId: from user for propietario/admin, from staff for conserje
-  let unitId: string
-  if (role === 'conserje') {
-    unitId = await getStaffUnitId(userId, tenantId)
-  } else {
-    const [userData] = await db
-      .select({ unitId: user.unitId })
-      .from(user)
-      .where(eq(user.id, userId))
-      .limit(1)
-
-    if (!userData?.unitId) {
-      throw createError({ statusCode: 400, message: 'Usuario sin unidad asignada' })
-    }
-    unitId = userData.unitId
-  }
+  const unitId = await getUnitIdForPass(userId, tenantId, role)
   const now = new Date()
 
   // Look for active pass
@@ -48,6 +31,7 @@ export default defineEventHandler(async (event) => {
 
   // If active pass exists and not expired, return it
   if (existingPass && existingPass.expiresAt > now) {
+    const unitDetails = await getUnitDetails(existingPass.unitId)
     return {
       data: {
         id: existingPass.id,
@@ -55,6 +39,8 @@ export default defineEventHandler(async (event) => {
         expiresAt: existingPass.expiresAt.toISOString(),
         createdAt: existingPass.createdAt.toISOString(),
         unitId: existingPass.unitId,
+        unitNumber: unitDetails.number,
+        unitLabel: unitDetails.label,
       },
     }
   }
@@ -87,6 +73,7 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 500, message: 'Error al crear pase de residente' })
   }
 
+  const newUnitDetails = await getUnitDetails(newPass.unitId)
   return {
     data: {
       id: newPass.id,
@@ -94,6 +81,8 @@ export default defineEventHandler(async (event) => {
       expiresAt: newPass.expiresAt.toISOString(),
       createdAt: newPass.createdAt.toISOString(),
       unitId: newPass.unitId,
+      unitNumber: newUnitDetails.number,
+      unitLabel: newUnitDetails.label,
     },
   }
 })

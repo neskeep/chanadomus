@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Plus, Pencil, Trash2, Users, Phone, Clock, Loader2, QrCode, Share2, Ban, Home } from 'lucide-vue-next'
+import { Plus, Pencil, Trash2, Users, Phone, Clock, Loader2, QrCode, Share2, Ban, Home, Download } from 'lucide-vue-next'
 import { toast } from 'vue-sonner'
 import QRCode from 'qrcode'
 import type { Staff } from '~~/shared/types/staff'
@@ -7,6 +7,7 @@ import type { Staff } from '~~/shared/types/staff'
 useHead({ title: 'Personal' })
 
 const { staffList, isLoading, isSubmitting, error, fetchStaff, deleteStaffMember, generateQr, roleOptions: roles, fetchRoles } = useStaff()
+const { downloadBadge, isGenerating: isDownloadingBadge } = useQrBadge()
 
 const { target, isMounted } = useTopbarPortal()
 
@@ -122,6 +123,19 @@ async function handleShowQr(member: Staff) {
   finally {
     isGeneratingQr.value = false
   }
+}
+
+async function handleDownloadBadge() {
+  if (!qrStaff.value?.qrToken) return
+  await downloadBadge({
+    name: qrStaff.value.name,
+    roleName: qrStaff.value.roleName ?? null,
+    unitNumber: qrStaff.value.unitNumber ?? null,
+    unitLabel: qrStaff.value.unitLabel ?? null,
+    phone: qrStaff.value.phone ?? null,
+    qrToken: qrStaff.value.qrToken,
+  })
+  toast.success('Credencial descargada')
 }
 
 async function handleSharePass() {
@@ -405,6 +419,15 @@ onMounted(() => {
             Regenerar
           </Button>
         </div>
+        <Button
+          class="w-full gap-1.5"
+          :disabled="isDownloadingBadge"
+          @click="handleDownloadBadge"
+        >
+          <Loader2 v-if="isDownloadingBadge" class="size-4 animate-spin" />
+          <Download v-else class="size-4" />
+          Descargar Credencial
+        </Button>
       </DialogContent>
     </Dialog>
   </div>

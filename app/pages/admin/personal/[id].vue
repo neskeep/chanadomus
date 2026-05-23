@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Camera, Loader2, RefreshCw, ScanLine, Shield } from 'lucide-vue-next'
+import { Camera, Download, Loader2, RefreshCw, ScanLine, Shield } from 'lucide-vue-next'
 import { toast } from 'vue-sonner'
 import QRCode from 'qrcode'
 definePageMeta({ layout: 'default' })
@@ -24,7 +24,7 @@ const formDocument = ref('')
 const formPhone = ref('')
 const formEmail = ref('')
 const formShift = ref('none')
-const formUnitId = ref<string | ''>('')
+const formUnitId = ref('none')
 
 // Units for selector
 const unitOptions = ref<{ id: string; number: string; label: string | null }[]>([])
@@ -76,15 +76,24 @@ watch(staffList, (list) => {
     formPhone.value = staff.phone ?? ''
     formEmail.value = staff.email ?? ''
     formShift.value = staff.shift ?? 'none'
-    formUnitId.value = staff.unitId ?? ''
+    formUnitId.value = staff.unitId ?? 'none'
     qrToken.value = staff.qrToken ?? null
     memberLoaded.value = true
   }
 }, { immediate: true })
 
+// Conserjes requieren unidad obligatoria
+const selectedRoleName = computed(() =>
+  roleOptions.value.find(r => r.id === formRole.value)?.name ?? '',
+)
+const isUnitRequired = computed(() =>
+  selectedRoleName.value.toLowerCase() === 'conserje',
+)
+
 const canSubmit = computed(() =>
   formName.value.trim().length > 0
   && formRole.value
+  && (!isUnitRequired.value || (formUnitId.value !== 'none' && formUnitId.value !== ''))
   && !isSubmitting.value,
 )
 
@@ -161,6 +170,36 @@ function cancelRegenerate() {
   confirmRegenerate.value = false
 }
 
+// Badge download
+const { downloadBadge, isGenerating: isDownloadingBadge } = useQrBadge()
+
+const currentRoleName = computed(() =>
+  roleOptions.value.find(r => r.id === formRole.value)?.name ?? null,
+)
+
+const currentUnitLabel = computed(() => {
+  const unit = unitOptions.value.find(u => u.id === formUnitId.value)
+  return unit ? unit.number : null
+})
+
+const currentUnitFullLabel = computed(() => {
+  const unit = unitOptions.value.find(u => u.id === formUnitId.value)
+  return unit?.label ?? null
+})
+
+async function handleDownloadBadge(format: 'png' | 'svg' = 'png') {
+  if (!qrToken.value) return
+  await downloadBadge({
+    name: formName.value,
+    roleName: currentRoleName.value,
+    unitNumber: currentUnitLabel.value,
+    unitLabel: currentUnitFullLabel.value,
+    phone: formPhone.value || null,
+    qrToken: qrToken.value,
+  }, format)
+  toast.success(`Credencial descargada como ${format.toUpperCase()}`)
+}
+
 // Form submit
 async function handleSubmit() {
   if (!canSubmit.value) return
@@ -172,7 +211,7 @@ async function handleSubmit() {
       phone: formPhone.value.trim() || undefined,
       email: formEmail.value.trim() || undefined,
       shift: formShift.value === 'none' ? undefined : formShift.value || undefined,
-      unitId: formUnitId.value || undefined,
+      unitId: formUnitId.value === 'none' ? undefined : formUnitId.value || undefined,
     })
     toast.success('Personal actualizado correctamente')
     router.push('/admin/personal')
@@ -337,13 +376,13 @@ onMounted(async () => {
                 </div>
 
                 <div class="space-y-1.5">
-                  <Label for="staff-unit">Unidad asignada</Label>
+                  <Label for="staff-unit">Unidad asignada <span v-if="isUnitRequired" class="text-destructive">*</span></Label>
                   <Select v-model="formUnitId">
                     <SelectTrigger id="staff-unit" size="lg" class="text-base">
                       <SelectValue placeholder="Sin unidad" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">Sin unidad</SelectItem>
+                      <SelectItem v-if="!isUnitRequired" value="none">Sin unidad</SelectItem>
                       <SelectItem
                         v-for="unit in unitOptions"
                         :key="unit.id"
@@ -353,6 +392,9 @@ onMounted(async () => {
                       </SelectItem>
                     </SelectContent>
                   </Select>
+                  <p v-if="isUnitRequired" class="text-xs text-muted-foreground">
+                    Los conserjes deben tener una unidad asignada
+                  </p>
                 </div>
               </div>
 
@@ -440,6 +482,17 @@ onMounted(async () => {
                 >
                   <RefreshCw class="size-4" />
                   Regenerar QR
+                </Button>
+
+                <!-- Download badge -->
+                <Button
+                  class="h-10 w-full text-sm"
+                  :disabled="isDownloadingBadge"
+                  @click="handleDownloadBadge('png')"
+                >
+                  <Loader2 v-if="isDownloadingBadge" class="size-4 animate-spin" />
+                  <Download v-else class="size-4" />
+                  Descargar Credencial
                 </Button>
               </div>
             </template>

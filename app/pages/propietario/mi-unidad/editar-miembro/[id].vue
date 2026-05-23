@@ -1,8 +1,18 @@
 <script setup lang="ts">
-import { Loader2, QrCode, Share2, Ban, Trash2, Shield } from 'lucide-vue-next'
+import { Download, Loader2, QrCode, Share2, Ban, Trash2, Shield } from 'lucide-vue-next'
 import QRCode from 'qrcode'
 import { toast } from 'vue-sonner'
 import type { HouseholdRelationship } from '~~/shared/types/household'
+
+const { downloadBadge, isGenerating: isDownloadingBadge } = useQrBadge()
+
+const RELATIONSHIP_LABELS: Record<string, string> = {
+  owner: 'Propietario',
+  spouse: 'Cónyuge',
+  child: 'Hijo/a',
+  tenant: 'Inquilino',
+  other: 'Otro',
+}
 
 useHead({ title: 'Editar Integrante' })
 
@@ -153,6 +163,17 @@ async function handleDelete() {
   catch {
     toast.error(error.value ?? 'Error al eliminar integrante')
   }
+}
+
+async function handleDownloadBadge() {
+  if (!currentMember.value?.passToken) return
+  await downloadBadge({
+    name: formName.value,
+    roleName: RELATIONSHIP_LABELS[formRelationship.value] ?? null,
+    phone: formPhone.value || null,
+    qrToken: currentMember.value.passToken,
+  })
+  toast.success('Credencial descargada')
 }
 
 onMounted(() => loadMember())
@@ -344,6 +365,17 @@ onMounted(() => loadMember())
                   </AlertDialogContent>
                 </AlertDialog>
               </div>
+
+              <!-- Download badge -->
+              <Button
+                class="h-10 w-full text-sm"
+                :disabled="isDownloadingBadge"
+                @click="handleDownloadBadge"
+              >
+                <Loader2 v-if="isDownloadingBadge" class="size-4 animate-spin" />
+                <Download v-else class="size-4" />
+                Descargar Credencial
+              </Button>
             </template>
 
             <!-- No pass: generate -->

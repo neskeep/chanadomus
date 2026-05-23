@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Camera, Loader2, ScanLine, Mail, Building2, Phone, Shield, Lock, Eye, EyeOff } from 'lucide-vue-next'
+import { Camera, Download, Loader2, ScanLine, Mail, Building2, Phone, Shield, Lock, Eye, EyeOff } from 'lucide-vue-next'
 import { toast } from 'vue-sonner'
 import { ROLE_LABELS } from '~~/shared/types/auth'
 import type { UserRole } from '~~/shared/types/auth'
@@ -14,6 +14,7 @@ const { role } = useAuth()
 const { pass, isLoading: isLoadingPass, fetchMyPass } = useResidentPass()
 const qrDataUrl = ref<string | null>(null)
 const { formatDateTime } = useFormatDate()
+const { downloadBadge, isGenerating: isDownloadingBadge } = useQrBadge()
 
 const formName = ref('')
 const formPhone = ref('')
@@ -123,6 +124,19 @@ async function handleChangePassword() {
   finally {
     isChangingPassword.value = false
   }
+}
+
+async function handleDownloadBadge() {
+  if (!pass.value?.token) return
+  await downloadBadge({
+    name: profile.value?.name ?? 'Usuario',
+    roleName: roleLabel.value || null,
+    unitNumber: profile.value?.unitNumber ?? null,
+    unitLabel: profile.value?.unitLabel ?? null,
+    phone: profile.value?.phone ?? null,
+    qrToken: pass.value.token,
+  })
+  toast.success('Credencial descargada')
 }
 
 onMounted(async () => {
@@ -365,6 +379,18 @@ onMounted(async () => {
                   <span class="text-xs tabular-nums text-muted-foreground">{{ formatDateTime(pass.expiresAt) }}</span>
                 </div>
               </div>
+
+              <Separator class="my-3 w-full" />
+
+              <Button
+                class="h-10 w-full text-sm"
+                :disabled="isDownloadingBadge"
+                @click="handleDownloadBadge"
+              >
+                <Loader2 v-if="isDownloadingBadge" class="size-4 animate-spin" />
+                <Download v-else class="size-4" />
+                Descargar Credencial
+              </Button>
             </template>
 
             <!-- No pass -->

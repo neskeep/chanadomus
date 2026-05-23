@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Loader2, QrCode, Share2, Ban, Trash2, Shield } from 'lucide-vue-next'
+import { Download, Loader2, QrCode, Share2, Ban, Trash2, Shield } from 'lucide-vue-next'
 import { toast } from 'vue-sonner'
 import QRCode from 'qrcode'
 import type { Vehicle } from '~~/shared/types/vehicle'
@@ -33,6 +33,8 @@ const formBrand = ref('')
 const formModel = ref('')
 const formColor = ref('')
 const formOwnerMemberId = ref('none')
+
+const { downloadBadge, isGenerating: isDownloadingBadge } = useQrBadge()
 
 const isLoadingData = ref(true)
 
@@ -151,6 +153,17 @@ async function handleSharePass() {
       toast.success('Enlace copiado al portapapeles')
     }
   }
+}
+
+async function handleDownloadBadge() {
+  if (!currentVehicle.value?.passToken) return
+  await downloadBadge({
+    name: formPlate.value,
+    roleName: `${formBrand.value} ${formModel.value}`,
+    unitNumber: formColor.value || null,
+    qrToken: currentVehicle.value.passToken,
+  })
+  toast.success('Credencial descargada')
 }
 
 async function handleDelete() {
@@ -364,6 +377,17 @@ onMounted(() => loadVehicle())
                   </AlertDialogContent>
                 </AlertDialog>
               </div>
+
+              <!-- Download badge -->
+              <Button
+                class="h-10 w-full text-sm"
+                :disabled="isDownloadingBadge"
+                @click="handleDownloadBadge"
+              >
+                <Loader2 v-if="isDownloadingBadge" class="size-4 animate-spin" />
+                <Download v-else class="size-4" />
+                Descargar Credencial
+              </Button>
             </template>
 
             <!-- No pass: generate -->
