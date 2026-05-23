@@ -35,12 +35,22 @@ const passwordMismatch = computed(() =>
   && formPassword.value !== formConfirmPassword.value,
 )
 
+// Roles que requieren unidad obligatoria
+const ROLES_REQUIRING_UNIT = ['propietario', 'conserje']
+const isUnitRequired = computed(() =>
+  !!formRole.value && ROLES_REQUIRING_UNIT.includes(formRole.value),
+)
+const showUnitField = computed(() =>
+  !!formRole.value && ROLES_REQUIRING_UNIT.includes(formRole.value),
+)
+
 const canSubmit = computed(() =>
   formName.value.trim().length > 0
   && formEmail.value.trim().length > 0
   && formPassword.value.length >= 8
   && formPassword.value === formConfirmPassword.value
   && !!formRole.value
+  && (!isUnitRequired.value || (formUnitId.value !== undefined && formUnitId.value !== 'none'))
   && !isSubmitting.value,
 )
 
@@ -52,7 +62,7 @@ async function handleSubmit() {
       email: formEmail.value.trim(),
       password: formPassword.value,
       role: formRole.value as UserRole,
-      unitId: formUnitId.value === 'none' ? undefined : formUnitId.value,
+      unitId: showUnitField.value ? (formUnitId.value === 'none' ? undefined : formUnitId.value) : undefined,
       phone: formPhone.value.trim() || undefined,
     })
     toast.success('Usuario creado correctamente')
@@ -146,19 +156,21 @@ onMounted(() => {
                 </SelectContent>
               </Select>
             </div>
-            <div class="space-y-1.5">
-              <Label for="user-unit">Unidad</Label>
+            <div v-if="showUnitField" class="space-y-1.5">
+              <Label for="user-unit">Unidad asignada <span v-if="isUnitRequired" class="text-destructive">*</span></Label>
               <Select v-model="formUnitId">
                 <SelectTrigger id="user-unit" size="lg" class="text-base">
-                  <SelectValue placeholder="Sin unidad" />
+                  <SelectValue placeholder="Seleccionar unidad" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="none">Sin unidad</SelectItem>
                   <SelectItem v-for="unit in units" :key="unit.id" :value="unit.id">
                     {{ unit.number }}{{ unit.label ? ` (${unit.label})` : '' }}
                   </SelectItem>
                 </SelectContent>
               </Select>
+              <p class="text-xs text-muted-foreground">
+                Este rol requiere una unidad asignada
+              </p>
             </div>
           </div>
 

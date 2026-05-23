@@ -24,6 +24,12 @@ export default defineEventHandler(async (event) => {
   if (!body.password || body.password.length < 8) throw createError({ statusCode: 400, message: 'La contrasena debe tener al menos 8 caracteres' })
   if (!body.role || !USER_ROLES.includes(body.role)) throw createError({ statusCode: 400, message: 'Rol invalido' })
 
+  // Propietarios y conserjes requieren unidad obligatoria
+  const ROLES_REQUIRING_UNIT: UserRole[] = ['propietario', 'conserje']
+  if (ROLES_REQUIRING_UNIT.includes(body.role) && !body.unitId) {
+    throw createError({ statusCode: 400, message: 'Este rol requiere una unidad asignada' })
+  }
+
   // Check email uniqueness
   const [existing] = await db
     .select({ id: user.id })

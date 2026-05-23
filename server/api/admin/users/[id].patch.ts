@@ -24,6 +24,9 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 400, message: 'Rol invalido' })
   }
 
+  // Propietarios y conserjes requieren unidad obligatoria
+  const ROLES_REQUIRING_UNIT: UserRole[] = ['propietario', 'conserje']
+
   const updates: Record<string, unknown> = { updatedAt: new Date() }
 
   if (body.name !== undefined) updates.name = body.name.trim()
@@ -31,6 +34,36 @@ export default defineEventHandler(async (event) => {
   if (body.role !== undefined) updates.role = body.role
   if (body.unitId !== undefined) updates.unitId = body.unitId || null
   if (body.phone !== undefined) updates.phone = body.phone?.trim() || null
+
+  // Validate unit requirement based on effective role
+  const effectiveRole = (body.role ?? undefined) as UserRole | undefined
+  if (effectiveRole && ROLES_REQUIRING_UNIT.includes(effectiveRole)) {
+    const effectiveUnitId = body.unitId !== undefined ? body.unitId : undefined
+    if (effectiveUnitId === null || effectiveUnitId === '') {
+      throw createError({ statusCode: 400, message: 'Este rol requiere una unidad asignada' })
+    }
+    if (effectiveUnitId === undefined) {
+      const [existing] = await db
+        .select({ unitId: user.unitId })
+        .from(user)
+        .where(and(eq(user.id, id), eq(user.tenantId, tenantId)))
+        .limit(1)
+      if (!existing?.unitId) {
+        throw createError({ statusCode: 400, message: 'Este rol requiere una unidad asignada' })
+      }
+    }
+  }
+  // If removing unit, check current role doesn't require it
+  if (body.unitId !== undefined && !body.unitId && body.role === undefined) {
+    const [existing] = await db
+      .select({ role: user.role })
+      .from(user)
+      .where(and(eq(user.id, id), eq(user.tenantId, tenantId)))
+      .limit(1)
+    if (existing?.role && ROLES_REQUIRING_UNIT.includes(existing.role as UserRole)) {
+      throw createError({ statusCode: 400, message: 'Este rol requiere una unidad asignada' })
+    }
+  }
 
   if (Object.keys(updates).length === 1) {
     throw createError({ statusCode: 400, message: 'No se proporcionaron campos para actualizar' })
