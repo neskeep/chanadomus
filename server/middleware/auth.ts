@@ -4,6 +4,7 @@ export default defineEventHandler(async (event) => {
   // Public API routes (no auth required)
   if (path.startsWith('/api/auth')) return
   if (path === '/api/qr/lookup') return
+  if (path.startsWith('/api/invitacion/')) return
   if (path.startsWith('/api/webhook/')) return
 
   // Only protect API routes (client routes handled by client middleware)

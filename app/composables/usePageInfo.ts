@@ -106,6 +106,7 @@ const DYNAMIC_ROUTES: Array<{ prefix: string; info: PageInfo }> = [
   { prefix: '/propietario/mi-unidad/editar-vehiculo/', info: { title: 'Editar Vehículo', description: 'Actualiza información del vehículo', breadcrumbs: [{ label: 'Mi Unidad', to: '/propietario/mi-unidad' }] } },
   { prefix: '/propietario/mi-unidad/editar-personal/', info: { title: 'Editar Personal', description: 'Actualiza información del personal de servicio', breadcrumbs: [{ label: 'Mi Unidad', to: '/propietario/mi-unidad' }] } },
   { prefix: '/acceso/', info: { title: 'Acceso de Visitante', description: 'Información de tu invitación' } },
+  { prefix: '/invitacion/', info: { title: 'Registro por Invitación', description: 'Crea tu cuenta en ChanaDomus' } },
 ]
 
 const DEFAULT_PAGE_INFO: PageInfo = { title: 'ChanaDomus', description: '' }
