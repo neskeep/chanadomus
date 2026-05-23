@@ -27,7 +27,7 @@ export const ROUTE_ROLE_MAP: Record<string, UserRole[]> = {
 export const PUBLIC_ROUTES = ['/login']
 
 /** Routes accessible regardless of auth state */
-export const HYBRID_ROUTES = ['/acceso', '/offline']
+export const HYBRID_ROUTES = ['/acceso', '/invitacion', '/offline']
 
 export interface UserWithUnit {
   id: string

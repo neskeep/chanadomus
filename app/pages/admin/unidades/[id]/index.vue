@@ -1,8 +1,9 @@
 <script setup lang="ts">
-import { Plus, Pencil, Trash2, Users, Car, Loader2 } from 'lucide-vue-next'
+import { Plus, Pencil, Trash2, Users, Car, Loader2, Mail, Link, Copy, Ban } from 'lucide-vue-next'
 import { toast } from 'vue-sonner'
 import type { HouseholdMember, HouseholdRelationship } from '~~/shared/types/household'
 import type { Vehicle } from '~~/shared/types/vehicle'
+import type { Invitation, InvitationStatus } from '~~/shared/types/invitation'
 
 const router = useRouter()
 
@@ -11,6 +12,7 @@ definePageMeta({ layout: 'default' })
 const { target, isMounted } = useTopbarPortal()
 const route = useRoute()
 const unitId = route.params.id as string
+const { formatDateTime } = useFormatDate()
 
 // Unit data
 const unit = ref<{ id: string, number: string, label: string | null, isActive: boolean } | null>(null)
@@ -46,6 +48,21 @@ const {
   fetchVehicles,
   deleteVehicle,
 } = useUnitVehicles(unitId)
+
+// Invitations composable
+const {
+  invitations: unitInvitations,
+  pendingInvitations,
+  isLoading: invitationsLoading,
+  isSubmitting: invitationsSubmitting,
+  fetchInvitations,
+  createInvitation,
+  revokeInvitation,
+} = useInvitations(unitId)
+
+const usedOrExpiredInvitations = computed(() =>
+  unitInvitations.value.filter(i => i.status !== 'pending'),
+)
 
 // Breadcrumb navigation
 const pageOverride = computed(() => {
@@ -137,10 +154,78 @@ function getMemberName(memberId: string | null): string {
   return member?.name ?? '—'
 }
 
+// ---- Invitation Create Dialog ----
+const createInvitationDialogOpen = ref(false)
+const newInvitationRole = ref<'propietario' | 'conserje'>('propietario')
+const generatedInvitationUrl = ref<string | null>(null)
+
+function openCreateInvitationDialog() {
+  newInvitationRole.value = 'propietario'
+  generatedInvitationUrl.value = null
+  createInvitationDialogOpen.value = true
+}
+
+async function handleCreateInvitation() {
+  try {
+    const result = await createInvitation(newInvitationRole.value)
+    if (result) {
+      generatedInvitationUrl.value = `${window.location.origin}/invitacion/${result.token}`
+      toast.success('Invitacion creada')
+    }
+  }
+  catch {
+    toast.error('Error al crear invitacion')
+  }
+}
+
+function copyInvitationUrl(url: string) {
+  navigator.clipboard.writeText(url)
+  toast.success('Enlace copiado')
+}
+
+function getInvitationUrl(token: string): string {
+  return `${window.location.origin}/invitacion/${token}`
+}
+
+// ---- Revoke Invitation ----
+const revokeDialogOpen = ref(false)
+const invitationToRevoke = ref<Invitation | null>(null)
+
+function confirmRevokeInvitation(invitation: Invitation) {
+  invitationToRevoke.value = invitation
+  revokeDialogOpen.value = true
+}
+
+async function handleRevokeInvitation() {
+  if (!invitationToRevoke.value) return
+  try {
+    await revokeInvitation(invitationToRevoke.value.id)
+    toast.success('Invitacion revocada')
+    revokeDialogOpen.value = false
+  }
+  catch {
+    toast.error('Error al revocar invitacion')
+  }
+}
+
+// ---- Invitation Status Config ----
+const INVITATION_STATUS_CONFIG: Record<InvitationStatus, { label: string, variant: 'default' | 'secondary' | 'outline' | 'destructive' }> = {
+  pending: { label: 'Pendiente', variant: 'default' },
+  used: { label: 'Usada', variant: 'secondary' },
+  expired: { label: 'Expirada', variant: 'outline' },
+  revoked: { label: 'Revocada', variant: 'destructive' },
+}
+
+const ROLE_LABELS: Record<string, string> = {
+  propietario: 'Propietario',
+  conserje: 'Conserje',
+}
+
 onMounted(() => {
   fetchUnit()
   fetchMembers()
   fetchVehicles()
+  fetchInvitations()
 })
 </script>
 
@@ -151,9 +236,13 @@ onMounted(() => {
         <Plus class="mr-1 size-4" />
         Agregar
       </Button>
-      <Button v-else size="sm" @click="navigateToAddVehicle()">
+      <Button v-else-if="activeTab === 'vehicles'" size="sm" @click="navigateToAddVehicle()">
         <Plus class="mr-1 size-4" />
         Agregar
+      </Button>
+      <Button v-else-if="activeTab === 'invitations'" size="sm" @click="openCreateInvitationDialog()">
+        <Link class="mr-1 size-4" />
+        Generar enlace
       </Button>
     </Teleport>
 
@@ -162,8 +251,11 @@ onMounted(() => {
       <Button v-if="activeTab === 'members'" size="icon" variant="ghost" class="size-9" @click="navigateToAddMember()">
         <Plus class="size-4" />
       </Button>
-      <Button v-else size="icon" variant="ghost" class="size-9" @click="navigateToAddVehicle()">
+      <Button v-else-if="activeTab === 'vehicles'" size="icon" variant="ghost" class="size-9" @click="navigateToAddVehicle()">
         <Plus class="size-4" />
+      </Button>
+      <Button v-else-if="activeTab === 'invitations'" size="icon" variant="ghost" class="size-9" @click="openCreateInvitationDialog()">
+        <Link class="size-4" />
       </Button>
     </TopbarMobileAction>
 
@@ -195,6 +287,10 @@ onMounted(() => {
         <TabsTrigger value="vehicles" class="flex-1">
           <Car class="mr-1.5 size-4" />
           Vehiculos
+        </TabsTrigger>
+        <TabsTrigger value="invitations" class="flex-1">
+          <Mail class="mr-1.5 size-4" />
+          Invitaciones
         </TabsTrigger>
       </TabsList>
 
@@ -359,7 +455,213 @@ onMounted(() => {
           </Card>
         </div>
       </TabsContent>
+
+      <!-- Invitations Tab -->
+      <TabsContent value="invitations" class="mt-4">
+        <!-- Loading -->
+        <ListSkeleton v-if="invitationsLoading" :count="3" variant="row" />
+
+        <template v-else>
+          <!-- Pending Invitations -->
+          <div v-if="pendingInvitations.length > 0" class="mb-6">
+            <p class="mb-3 text-sm font-medium">Invitaciones pendientes ({{ pendingInvitations.length }})</p>
+
+            <!-- Desktop Table -->
+            <div class="hidden overflow-x-auto rounded-lg border md:block">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Rol</TableHead>
+                    <TableHead>Expira</TableHead>
+                    <TableHead>Creada</TableHead>
+                    <TableHead class="w-32">Acciones</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  <TableRow v-for="invitation in pendingInvitations" :key="invitation.id">
+                    <TableCell>
+                      <Badge variant="default">{{ ROLE_LABELS[invitation.role] }}</Badge>
+                    </TableCell>
+                    <TableCell class="text-muted-foreground">{{ formatDateTime(invitation.expiresAt) }}</TableCell>
+                    <TableCell class="text-muted-foreground">{{ formatDateTime(invitation.createdAt) }}</TableCell>
+                    <TableCell>
+                      <div class="flex items-center gap-1">
+                        <Button variant="ghost" size="icon" class="size-10" @click="copyInvitationUrl(getInvitationUrl(invitation.token))">
+                          <Copy class="size-3.5" />
+                          <span class="sr-only">Copiar enlace</span>
+                        </Button>
+                        <Button variant="ghost" size="icon" class="size-10 text-destructive hover:text-destructive" @click="confirmRevokeInvitation(invitation)">
+                          <Ban class="size-3.5" />
+                          <span class="sr-only">Revocar</span>
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                </TableBody>
+              </Table>
+            </div>
+
+            <!-- Mobile Cards -->
+            <div class="space-y-2 md:hidden">
+              <Card v-for="invitation in pendingInvitations" :key="invitation.id">
+                <CardContent class="px-3 py-2.5">
+                  <div class="flex items-center gap-1.5">
+                    <Badge variant="default" class="shrink-0 text-[11px]">{{ ROLE_LABELS[invitation.role] }}</Badge>
+                    <Badge variant="outline" class="shrink-0 text-[11px]">{{ INVITATION_STATUS_CONFIG[invitation.status].label }}</Badge>
+                  </div>
+                  <div class="mt-0.5 flex items-center gap-x-1 text-[11px] text-muted-foreground">
+                    <span class="truncate">Expira: {{ formatDateTime(invitation.expiresAt) }}</span>
+                    <span class="ml-auto flex shrink-0 items-center gap-0.5">
+                      <Button variant="ghost" class="h-6 px-2 text-[11px]" @click="copyInvitationUrl(getInvitationUrl(invitation.token))">
+                        <Copy class="size-3" />
+                      </Button>
+                      <Button variant="ghost" class="h-6 px-2 text-[11px] text-destructive hover:text-destructive" @click="confirmRevokeInvitation(invitation)">
+                        <Ban class="size-3" />
+                      </Button>
+                    </span>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          </div>
+
+          <!-- Empty state (no invitations at all) -->
+          <EmptyState
+            v-if="unitInvitations.length === 0"
+            :icon="Mail"
+            title="Sin invitaciones"
+            description="Genera un enlace de invitacion para que un usuario se registre en esta unidad"
+          />
+
+          <!-- History (used/expired/revoked) -->
+          <div v-if="usedOrExpiredInvitations.length > 0">
+            <Separator v-if="pendingInvitations.length > 0" class="mb-4" />
+            <p class="mb-3 text-sm font-medium text-muted-foreground">Historial ({{ usedOrExpiredInvitations.length }})</p>
+
+            <!-- Desktop Table -->
+            <div class="hidden overflow-x-auto rounded-lg border md:block">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Rol</TableHead>
+                    <TableHead>Estado</TableHead>
+                    <TableHead>Creada</TableHead>
+                    <TableHead>Finalizada</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  <TableRow v-for="invitation in usedOrExpiredInvitations" :key="invitation.id">
+                    <TableCell>
+                      <Badge variant="secondary">{{ ROLE_LABELS[invitation.role] }}</Badge>
+                    </TableCell>
+                    <TableCell>
+                      <Badge :variant="INVITATION_STATUS_CONFIG[invitation.status].variant">
+                        {{ INVITATION_STATUS_CONFIG[invitation.status].label }}
+                      </Badge>
+                    </TableCell>
+                    <TableCell class="text-muted-foreground">{{ formatDateTime(invitation.createdAt) }}</TableCell>
+                    <TableCell class="text-muted-foreground">
+                      {{ invitation.usedAt ? formatDateTime(invitation.usedAt) : invitation.revokedAt ? formatDateTime(invitation.revokedAt) : formatDateTime(invitation.expiresAt) }}
+                    </TableCell>
+                  </TableRow>
+                </TableBody>
+              </Table>
+            </div>
+
+            <!-- Mobile Cards -->
+            <div class="space-y-2 md:hidden">
+              <Card v-for="invitation in usedOrExpiredInvitations" :key="invitation.id">
+                <CardContent class="px-3 py-2.5">
+                  <div class="flex items-center gap-1.5">
+                    <Badge variant="secondary" class="shrink-0 text-[11px]">{{ ROLE_LABELS[invitation.role] }}</Badge>
+                    <Badge :variant="INVITATION_STATUS_CONFIG[invitation.status].variant" class="shrink-0 text-[11px]">
+                      {{ INVITATION_STATUS_CONFIG[invitation.status].label }}
+                    </Badge>
+                  </div>
+                  <div class="mt-0.5 text-[11px] text-muted-foreground">
+                    {{ formatDateTime(invitation.createdAt) }}
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          </div>
+        </template>
+      </TabsContent>
     </Tabs>
+
+    <!-- Create Invitation Dialog -->
+    <Dialog v-model:open="createInvitationDialogOpen">
+      <DialogContent class="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle>Generar enlace de invitacion</DialogTitle>
+          <DialogDescription>
+            Crea un enlace para que un usuario se registre y se asocie a esta unidad.
+          </DialogDescription>
+        </DialogHeader>
+
+        <!-- Before generation: role selection -->
+        <div v-if="!generatedInvitationUrl" class="space-y-4 py-2">
+          <div class="space-y-2">
+            <Label for="invitation-role">Rol del invitado</Label>
+            <Select v-model="newInvitationRole">
+              <SelectTrigger id="invitation-role">
+                <SelectValue placeholder="Seleccionar rol" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="propietario">Propietario</SelectItem>
+                <SelectItem value="conserje">Conserje</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+
+        <!-- After generation: show link -->
+        <div v-else class="space-y-3 py-2">
+          <Label>Enlace de invitacion</Label>
+          <div class="flex items-center gap-2">
+            <Input :model-value="generatedInvitationUrl" readonly class="font-mono text-xs" />
+            <Button variant="outline" size="icon" class="shrink-0" @click="copyInvitationUrl(generatedInvitationUrl!)">
+              <Copy class="size-4" />
+              <span class="sr-only">Copiar enlace</span>
+            </Button>
+          </div>
+          <p class="text-xs text-muted-foreground">Este enlace expira en 7 dias. Compartelo con el usuario que deseas invitar.</p>
+        </div>
+
+        <DialogFooter>
+          <Button v-if="!generatedInvitationUrl" @click="handleCreateInvitation" :disabled="invitationsSubmitting">
+            <Loader2 v-if="invitationsSubmitting" class="mr-2 size-4 animate-spin" />
+            Generar enlace
+          </Button>
+          <Button v-else variant="outline" @click="createInvitationDialogOpen = false">
+            Cerrar
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+
+    <!-- Revoke Invitation AlertDialog -->
+    <AlertDialog v-model:open="revokeDialogOpen">
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>Revocar invitacion</AlertDialogTitle>
+          <AlertDialogDescription>
+            Se revocara la invitacion de <span class="font-medium text-foreground">{{ ROLE_LABELS[invitationToRevoke?.role ?? 'propietario'] }}</span>. El enlace dejara de funcionar. Esta accion no se puede deshacer.
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel>Cancelar</AlertDialogCancel>
+          <AlertDialogAction
+            class="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            :disabled="invitationsSubmitting"
+            @click="handleRevokeInvitation"
+          >
+            <Loader2 v-if="invitationsSubmitting" class="mr-2 size-4 animate-spin" />
+            Revocar
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
 
     <!-- Delete Member AlertDialog -->
     <AlertDialog v-model:open="deleteMemberDialogOpen">

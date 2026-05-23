@@ -288,6 +288,13 @@
       "when": 1780321600000,
       "tag": "0040_staff_role_id",
       "breakpoints": true
+    },
+    {
+      "idx": 41,
+      "version": "7",
+      "when": 1780408000000,
+      "tag": "0041_invitations",
+      "breakpoints": true
     }
   ]
 }
