@@ -83,6 +83,13 @@ function isNew(publishedAt: string | null): boolean {
       </TopbarFilters>
     </Teleport>
 
+    <!-- Mobile filters -->
+    <div class="mb-4 md:hidden">
+      <TopbarFilters :active="activeCategory !== ''" @clear="activeCategory = ''">
+        <TopbarFilterGroup v-model="activeCategory" label="Categoria" :options="categoryOptions" />
+      </TopbarFilters>
+    </div>
+
     <!-- Error -->
     <ErrorAlert v-if="error" :message="error" class="mb-4" />
 

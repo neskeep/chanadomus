@@ -160,6 +160,15 @@ async function handleDelete() {
       </Button>
     </TopbarMobileAction>
 
+    <!-- Mobile search -->
+    <div class="mb-4 md:hidden">
+      <TopbarSearch v-model="searchQuery" placeholder="Buscar anuncio...">
+        <TopbarFilters :active="filterCategory !== ''" @clear="filterCategory = ''">
+          <TopbarFilterGroup v-model="filterCategory" label="Categoria" :options="categoryOptions" />
+        </TopbarFilters>
+      </TopbarSearch>
+    </div>
+
     <!-- Stats cards -->
     <div class="mb-6 grid grid-cols-2 gap-3">
       <StatCard

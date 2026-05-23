@@ -111,6 +111,13 @@ function getParticipation(poll: Poll): string {
       </TopbarFilters>
     </Teleport>
 
+    <!-- Mobile filters -->
+    <div class="mb-4 md:hidden">
+      <TopbarFilters :active="activeTab !== 'active'" @clear="activeTab = 'active'">
+        <TopbarFilterGroup v-model="activeTab" label="Estado" :options="statusOptions" />
+      </TopbarFilters>
+    </div>
+
     <!-- Error -->
     <ErrorAlert v-if="error" :message="error" class="mb-4" />
 

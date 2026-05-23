@@ -63,6 +63,11 @@ onMounted(() => {
       <TopbarSearch v-model="searchQuery" placeholder="Buscar unidad..." />
     </Teleport>
 
+    <!-- Mobile search -->
+    <div class="mb-4 md:hidden">
+      <TopbarSearch v-model="searchQuery" placeholder="Buscar unidad..." />
+    </div>
+
     <!-- Error -->
     <ErrorAlert v-if="error" :message="error" class="mb-4" />
 

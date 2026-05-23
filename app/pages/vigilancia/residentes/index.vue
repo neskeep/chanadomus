@@ -100,6 +100,11 @@ onMounted(() => {
       <TopbarSearch v-model="searchQuery" placeholder="Buscar unidad o placa..." />
     </Teleport>
 
+    <!-- Mobile search -->
+    <div class="mb-4 md:hidden">
+      <TopbarSearch v-model="searchQuery" placeholder="Buscar unidad o placa..." />
+    </div>
+
     <!-- Vehicle search results -->
     <section v-if="vehicleSearchLoading" aria-label="Cargando vehículos">
       <ListSkeleton :count="2" variant="card" />

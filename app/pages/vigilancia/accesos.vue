@@ -121,6 +121,27 @@ function formatDuration(entryDate: string, exitDate: string): string {
       </Badge>
     </Teleport>
 
+    <!-- Mobile connection status -->
+    <TopbarMobileAction>
+      <Badge
+        variant="outline"
+        :class="isConnected ? 'border-primary text-primary' : 'border-destructive text-destructive'"
+        class="gap-1.5 text-[10px]"
+      >
+        <span class="relative flex size-1.5">
+          <span
+            v-if="isConnected"
+            class="absolute inline-flex size-full animate-ping rounded-lg bg-primary opacity-75"
+          />
+          <span
+            class="relative inline-flex size-1.5 rounded-lg"
+            :class="isConnected ? 'bg-primary' : 'bg-destructive'"
+          />
+        </span>
+        {{ isConnected ? 'Vivo' : 'Off' }}
+      </Badge>
+    </TopbarMobileAction>
+
     <!-- Empty state -->
     <EmptyState
       v-if="events.length === 0"

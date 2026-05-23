@@ -206,6 +206,18 @@ async function handleReview() {
       </template>
     </Teleport>
 
+    <!-- Mobile actions -->
+    <TopbarMobileAction>
+      <template v-if="canManage && provider">
+        <Button size="icon" variant="ghost" class="size-9" @click="openEditDialog">
+          <Pencil class="size-4" />
+        </Button>
+        <Button size="icon" variant="ghost" class="size-9 text-destructive" @click="deleteDialogOpen = true">
+          <Trash2 class="size-4" />
+        </Button>
+      </template>
+    </TopbarMobileAction>
+
     <!-- Loading -->
     <div v-if="isLoading" class="space-y-4">
       <Skeleton class="h-6 w-3/4" />

@@ -160,6 +160,15 @@ function participationText(poll: Poll): string {
       </Button>
     </TopbarMobileAction>
 
+    <!-- Mobile search -->
+    <div class="mb-4 md:hidden">
+      <TopbarSearch v-model="searchQuery" placeholder="Buscar votacion...">
+        <TopbarFilters :active="filterStatus !== ''" @clear="filterStatus = ''">
+          <TopbarFilterGroup v-model="filterStatus" label="Estado" :options="statusOptions" />
+        </TopbarFilters>
+      </TopbarSearch>
+    </div>
+
     <!-- Stats cards -->
     <div class="mb-6 grid grid-cols-2 gap-3">
       <StatCard label="Activas" :value="totalActive" :icon="Vote" icon-bg-class="bg-primary/10 text-primary" :is-loading="isLoading" />

@@ -111,6 +111,16 @@ const { formatDate } = useFormatDate()
       </TopbarSearch>
     </Teleport>
 
+    <!-- Mobile search -->
+    <div class="mb-4 md:hidden">
+      <TopbarSearch v-model="searchQuery" placeholder="Buscar incidencia...">
+        <TopbarFilters :active="filterStatus !== '' || filterPriority !== ''" @clear="filterStatus = ''; filterPriority = ''">
+          <TopbarFilterGroup v-model="filterStatus" label="Estado" :options="statusOptions" />
+          <TopbarFilterGroup v-model="filterPriority" label="Prioridad" :options="priorityOptions" />
+        </TopbarFilters>
+      </TopbarSearch>
+    </div>
+
     <!-- Loading -->
     <ListSkeleton v-if="isLoading" :count="5" variant="row" />
 

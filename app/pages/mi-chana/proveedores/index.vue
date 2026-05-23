@@ -109,6 +109,15 @@ function renderStars(rating: number | undefined): number[] {
       </Button>
     </TopbarMobileAction>
 
+    <!-- Mobile search -->
+    <div class="mb-4 md:hidden">
+      <TopbarSearch v-model="searchQuery" placeholder="Buscar proveedor...">
+        <TopbarFilters :active="filterCategory !== ''" @clear="filterCategory = ''">
+          <TopbarFilterGroup v-model="filterCategory" label="Categoria" :options="categoryOptions" />
+        </TopbarFilters>
+      </TopbarSearch>
+    </div>
+
     <!-- Error -->
     <ErrorAlert :message="error" class="mb-4" />
 
