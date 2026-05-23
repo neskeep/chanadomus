@@ -156,24 +156,10 @@ async function handleSubmit() {
             </div>
 
             <div class="space-y-1.5">
-              <Label for="staff-unit">Unidad asignada <span v-if="isUnitRequired" class="text-destructive">*</span></Label>
-              <Select v-model="formUnitId">
-                <SelectTrigger id="staff-unit" size="lg" class="text-base">
-                  <SelectValue placeholder="Sin unidad" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem v-if="!isUnitRequired" value="none">Sin unidad</SelectItem>
-                  <SelectItem
-                    v-for="unit in unitOptions"
-                    :key="unit.id"
-                    :value="unit.id"
-                  >
-                    {{ unit.number }}{{ unit.label ? ` — ${unit.label}` : '' }}
-                  </SelectItem>
-                </SelectContent>
-              </Select>
+              <Label>Rancho asignado <span v-if="isUnitRequired" class="text-destructive">*</span></Label>
+              <UnitCombobox v-model="formUnitId" :units="unitOptions" :required="isUnitRequired" />
               <p v-if="isUnitRequired" class="text-xs text-muted-foreground">
-                Los conserjes deben tener una unidad asignada
+                Los conserjes deben tener un rancho asignado
               </p>
             </div>
           </div>

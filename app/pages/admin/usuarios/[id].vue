@@ -115,7 +115,7 @@ onMounted(() => {
         <form class="space-y-6" @submit.prevent="handleSubmit">
           <ErrorAlert v-if="error" :message="error" />
 
-          <!-- Nombre -->
+          <!-- Nombre completo -->
           <div class="space-y-1.5">
             <Label for="edit-name">Nombre completo <span class="text-destructive">*</span></Label>
             <Input
@@ -127,17 +127,28 @@ onMounted(() => {
             />
           </div>
 
-          <!-- Email -->
-          <div class="space-y-1.5">
-            <Label for="edit-email">Email <span class="text-destructive">*</span></Label>
-            <Input
-              id="edit-email"
-              v-model="formEmail"
-              type="email"
-              placeholder="correo@ejemplo.com"
-              class="h-12 text-base"
-              required
-            />
+          <!-- Teléfono + Correo -->
+          <div class="grid gap-4 sm:grid-cols-2">
+            <div class="space-y-1.5">
+              <Label for="edit-phone">Teléfono</Label>
+              <Input
+                id="edit-phone"
+                v-model="formPhone"
+                placeholder="0412-1234567"
+                class="h-12 text-base"
+              />
+            </div>
+            <div class="space-y-1.5">
+              <Label for="edit-email">Correo <span class="text-destructive">*</span></Label>
+              <Input
+                id="edit-email"
+                v-model="formEmail"
+                type="email"
+                placeholder="correo@ejemplo.com"
+                class="h-12 text-base"
+                required
+              />
+            </div>
           </div>
 
           <!-- Rol + Unidad -->
@@ -156,32 +167,12 @@ onMounted(() => {
               </Select>
             </div>
             <div v-if="showUnitField" class="space-y-1.5">
-              <Label for="edit-unit">Unidad asignada <span v-if="isUnitRequired" class="text-destructive">*</span></Label>
-              <Select v-model="formUnitId">
-                <SelectTrigger id="edit-unit" size="lg" class="text-base">
-                  <SelectValue placeholder="Seleccionar unidad" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem v-for="unit in units" :key="unit.id" :value="unit.id">
-                    {{ unit.number }}{{ unit.label ? ` (${unit.label})` : '' }}
-                  </SelectItem>
-                </SelectContent>
-              </Select>
+              <Label>Rancho asignado <span v-if="isUnitRequired" class="text-destructive">*</span></Label>
+              <UnitCombobox v-model="formUnitId" :units="units" :required="isUnitRequired" />
               <p class="text-xs text-muted-foreground">
-                Este rol requiere una unidad asignada
+                Este rol requiere un rancho asignado
               </p>
             </div>
-          </div>
-
-          <!-- Teléfono -->
-          <div class="space-y-1.5">
-            <Label for="edit-phone">Teléfono</Label>
-            <Input
-              id="edit-phone"
-              v-model="formPhone"
-              placeholder="0412-1234567"
-              class="h-12 text-base"
-            />
           </div>
 
           <!-- Submit -->

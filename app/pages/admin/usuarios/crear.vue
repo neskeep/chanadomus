@@ -86,7 +86,7 @@ onMounted(() => {
           <!-- Error -->
           <ErrorAlert v-if="error" :message="error" />
 
-          <!-- Nombre -->
+          <!-- Nombre completo -->
           <div class="space-y-1.5">
             <Label for="user-name">Nombre completo <span class="text-destructive">*</span></Label>
             <Input
@@ -98,17 +98,52 @@ onMounted(() => {
             />
           </div>
 
-          <!-- Email -->
-          <div class="space-y-1.5">
-            <Label for="user-email">Email <span class="text-destructive">*</span></Label>
-            <Input
-              id="user-email"
-              v-model="formEmail"
-              type="email"
-              placeholder="correo@ejemplo.com"
-              class="h-12 text-base"
-              required
-            />
+          <!-- Teléfono + Correo -->
+          <div class="grid gap-4 sm:grid-cols-2">
+            <div class="space-y-1.5">
+              <Label for="user-phone">Teléfono</Label>
+              <Input
+                id="user-phone"
+                v-model="formPhone"
+                placeholder="0412-1234567"
+                class="h-12 text-base"
+              />
+            </div>
+            <div class="space-y-1.5">
+              <Label for="user-email">Correo <span class="text-destructive">*</span></Label>
+              <Input
+                id="user-email"
+                v-model="formEmail"
+                type="email"
+                placeholder="correo@ejemplo.com"
+                class="h-12 text-base"
+                required
+              />
+            </div>
+          </div>
+
+          <!-- Rol + Unidad -->
+          <div class="grid gap-4 sm:grid-cols-2">
+            <div class="space-y-1.5">
+              <Label for="user-role">Rol <span class="text-destructive">*</span></Label>
+              <Select v-model="formRole">
+                <SelectTrigger id="user-role" size="lg" class="text-base">
+                  <SelectValue placeholder="Seleccionar rol" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem v-for="role in USER_ROLES" :key="role" :value="role">
+                    {{ ROLE_LABELS[role] }}
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div v-if="showUnitField" class="space-y-1.5">
+              <Label>Rancho asignado <span v-if="isUnitRequired" class="text-destructive">*</span></Label>
+              <UnitCombobox v-model="formUnitId" :units="units" :required="isUnitRequired" />
+              <p class="text-xs text-muted-foreground">
+                Este rol requiere un rancho asignado
+              </p>
+            </div>
           </div>
 
           <!-- Contraseña + Confirmar -->
@@ -139,50 +174,6 @@ onMounted(() => {
                 Las contraseñas no coinciden
               </p>
             </div>
-          </div>
-
-          <!-- Rol + Unidad -->
-          <div class="grid gap-4 sm:grid-cols-2">
-            <div class="space-y-1.5">
-              <Label for="user-role">Rol <span class="text-destructive">*</span></Label>
-              <Select v-model="formRole">
-                <SelectTrigger id="user-role" size="lg" class="text-base">
-                  <SelectValue placeholder="Seleccionar rol" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem v-for="role in USER_ROLES" :key="role" :value="role">
-                    {{ ROLE_LABELS[role] }}
-                  </SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div v-if="showUnitField" class="space-y-1.5">
-              <Label for="user-unit">Unidad asignada <span v-if="isUnitRequired" class="text-destructive">*</span></Label>
-              <Select v-model="formUnitId">
-                <SelectTrigger id="user-unit" size="lg" class="text-base">
-                  <SelectValue placeholder="Seleccionar unidad" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem v-for="unit in units" :key="unit.id" :value="unit.id">
-                    {{ unit.number }}{{ unit.label ? ` (${unit.label})` : '' }}
-                  </SelectItem>
-                </SelectContent>
-              </Select>
-              <p class="text-xs text-muted-foreground">
-                Este rol requiere una unidad asignada
-              </p>
-            </div>
-          </div>
-
-          <!-- Teléfono -->
-          <div class="space-y-1.5">
-            <Label for="user-phone">Teléfono</Label>
-            <Input
-              id="user-phone"
-              v-model="formPhone"
-              placeholder="0412-1234567"
-              class="h-12 text-base"
-            />
           </div>
 
           <!-- Submit -->
