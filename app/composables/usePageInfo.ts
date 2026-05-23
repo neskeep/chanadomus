@@ -36,6 +36,7 @@ const PAGE_MAP: Record<string, PageInfo> = {
   '/admin/roles-servicio/crear': { title: 'Nuevo Rol', description: 'Agrega un rol al catálogo', breadcrumbs: [{ label: 'Roles de Servicio', to: '/admin/roles-servicio' }] },
   '/admin/pases-vehiculares': { title: 'Pases Vehiculares', description: 'Control de pases QR para vehículos' },
   '/admin/pases-vehiculares/nuevo': { title: 'Nuevo Pase Vehicular', description: 'Asigna un pase QR a un vehículo registrado', breadcrumbs: [{ label: 'Pases Vehiculares', to: '/admin/pases-vehiculares' }] },
+  '/admin/documentacion': { title: 'Documentación', description: 'Manual de uso de ChanaDomus' },
 
   // Propietario
   '/propietario': { title: 'Mi Vivienda', description: 'Tu resumen personal' },

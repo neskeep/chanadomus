@@ -56,6 +56,12 @@ export function useNavigation() {
               { label: 'Reuniones', icon: Calendar, to: '/admin/reuniones' },
             ],
           },
+          {
+            label: 'Referencia',
+            items: [
+              { label: 'Documentación', icon: FileText, to: '/admin/documentacion' },
+            ],
+          },
         ]
 
       case 'propietario':

@@ -33,6 +33,9 @@ Actualizar este archivo cada vez que se ejecute `shadcn add`.
 | Calendar | 2026-05-11 | nueva-visita.vue — date picker para fecha límite |
 | Popover | 2026-05-11 | nueva-visita.vue — contenedor del date picker |
 | NativeSelect | 2026-05-11 | Calendar internals (month/year selectors) |
+| Accordion | 2026-05-22 | Documentacion admin (secciones expandibles) |
+| Command | 2026-05-22 | Documentacion admin (busqueda CommandDialog) |
+| ScrollArea | 2026-05-22 | Documentacion admin (TOC sidebar scroll) |
 
 ## Notas
 - El preset a6PDm8yA (reka-luma) esta configurado
