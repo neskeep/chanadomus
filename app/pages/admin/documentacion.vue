@@ -27,6 +27,7 @@ const { openSearch } = useDocsSearch()
       <DocsIntroduccionContent />
       <DocsRolesContent />
       <DocsUsuariosContent />
+      <DocsInvitacionesContent />
       <DocsUnidadesContent />
       <DocsMiembrosContent />
       <DocsVehiculosContent />
