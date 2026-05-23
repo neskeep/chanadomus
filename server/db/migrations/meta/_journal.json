@@ -267,6 +267,13 @@
       "when": 1780062400000,
       "tag": "0037_regulations_drop_category",
       "breakpoints": true
+    },
+    {
+      "idx": 38,
+      "version": "7",
+      "when": 1780148800000,
+      "tag": "0038_units_is_active",
+      "breakpoints": true
     }
   ]
 }

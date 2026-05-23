@@ -13,13 +13,13 @@ const route = useRoute()
 const unitId = route.params.id as string
 
 // Unit data
-const unit = ref<{ id: string, number: string, label: string | null } | null>(null)
+const unit = ref<{ id: string, number: string, label: string | null, isActive: boolean } | null>(null)
 const unitLoading = ref(true)
 
 async function fetchUnit() {
   unitLoading.value = true
   try {
-    const res = await $fetch<{ data: { id: string, number: string, label: string | null }[] }>('/api/units')
+    const res = await $fetch<{ data: { id: string, number: string, label: string | null, isActive: boolean }[] }>('/api/units')
     unit.value = res.data.find(u => u.id === unitId) ?? null
   }
   catch {
@@ -176,7 +176,7 @@ onMounted(() => {
       <div v-else-if="unit">
         <div class="flex items-center gap-3">
           <h1 class="text-xl font-semibold tracking-tight">{{ unit.number }}</h1>
-          <Badge variant="secondary">Activa</Badge>
+          <Badge :variant="unit.isActive ? 'secondary' : 'outline'">{{ unit.isActive ? 'Activa' : 'Inactiva' }}</Badge>
         </div>
         <p v-if="unit.label" class="mt-1 text-sm text-muted-foreground">{{ unit.label }}</p>
       </div>
