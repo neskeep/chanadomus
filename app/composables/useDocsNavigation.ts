@@ -23,6 +23,7 @@ const DOCS_GROUPS: DocsTocGroup[] = [
     icon: 'Users',
     items: [
       { id: 'usuarios', label: 'Usuarios' },
+      { id: 'invitaciones', label: 'Invitaciones de registro' },
       { id: 'unidades', label: 'Unidades y propiedades' },
       { id: 'miembros', label: 'Miembros del hogar' },
       { id: 'vehiculos', label: 'Vehículos' },

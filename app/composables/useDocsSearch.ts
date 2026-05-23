@@ -32,6 +32,13 @@ const SEARCH_INDEX: DocsSearchEntry[] = [
     description: 'Gestión de cuentas de usuario y registro de residentes',
   },
   {
+    id: 'invitaciones',
+    title: 'Invitaciones de registro',
+    group: 'Gestión de Residentes',
+    keywords: ['invitación', 'invitar', 'enlace', 'link', 'registro', 'auto-registro', 'token', 'generar enlace', 'compartir', 'revocar', 'expirar', 'propietario', 'conserje'],
+    description: 'Generación de enlaces de invitación para que usuarios se registren por su cuenta',
+  },
+  {
     id: 'unidades',
     title: 'Unidades y propiedades',
     group: 'Gestión de Residentes',
