@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Plus, Pencil, Trash2, Users, Car, HardHat, Loader2 } from 'lucide-vue-next'
+import { Plus, Pencil, Trash2, Users, Car, HardHat, Loader2, QrCode } from 'lucide-vue-next'
 import { toast } from 'vue-sonner'
 import type { HouseholdMember, HouseholdRelationship } from '~~/shared/types/household'
 import type { Vehicle } from '~~/shared/types/vehicle'
@@ -203,6 +203,7 @@ onMounted(() => fetchAll())
                 <TableHead>Parentesco</TableHead>
                 <TableHead>Telefono</TableHead>
                 <TableHead>Documento</TableHead>
+                <TableHead class="w-16 text-center">QR</TableHead>
                 <TableHead class="w-24">Acciones</TableHead>
               </TableRow>
             </TableHeader>
@@ -216,6 +217,10 @@ onMounted(() => fetchAll())
                 </TableCell>
                 <TableCell class="text-muted-foreground">{{ member.phone ?? '—' }}</TableCell>
                 <TableCell class="text-muted-foreground">{{ member.idDocument ?? '—' }}</TableCell>
+                <TableCell class="text-center">
+                  <QrCode v-if="member.hasPass" class="mx-auto size-4 text-primary" />
+                  <span v-else class="text-xs text-muted-foreground">—</span>
+                </TableCell>
                 <TableCell>
                   <div class="flex items-center gap-1">
                     <Button variant="ghost" size="icon" class="size-10" @click="navigateToEditMember(member)">
@@ -252,6 +257,7 @@ onMounted(() => fetchAll())
                   <span class="truncate">{{ member.idDocument }}</span>
                 </template>
                 <span class="ml-auto flex shrink-0 items-center gap-0.5">
+                  <QrCode v-if="member.hasPass" class="size-3 text-primary" />
                   <Button variant="ghost" class="h-6 px-2 text-[11px]" @click="navigateToEditMember(member)">
                     <Pencil class="size-3" />
                   </Button>
@@ -289,6 +295,7 @@ onMounted(() => fetchAll())
                 <TableHead>Marca / Modelo</TableHead>
                 <TableHead>Color</TableHead>
                 <TableHead>Propietario</TableHead>
+                <TableHead class="w-16 text-center">QR</TableHead>
                 <TableHead class="w-24">Acciones</TableHead>
               </TableRow>
             </TableHeader>
@@ -298,6 +305,10 @@ onMounted(() => fetchAll())
                 <TableCell>{{ vehicle.brand }} {{ vehicle.model }}</TableCell>
                 <TableCell>{{ vehicle.color }}</TableCell>
                 <TableCell class="text-muted-foreground">{{ getMemberName(vehicle.ownerMemberId) }}</TableCell>
+                <TableCell class="text-center">
+                  <QrCode v-if="vehicle.hasPass" class="mx-auto size-4 text-primary" />
+                  <span v-else class="text-xs text-muted-foreground">—</span>
+                </TableCell>
                 <TableCell>
                   <div class="flex items-center gap-1">
                     <Button variant="ghost" size="icon" class="size-10" @click="navigateToEditVehicle(vehicle)">
@@ -328,6 +339,7 @@ onMounted(() => fetchAll())
                 <span class="opacity-30">·</span>
                 <span class="truncate">{{ getMemberName(vehicle.ownerMemberId) }}</span>
                 <span class="ml-auto flex shrink-0 items-center gap-0.5">
+                  <QrCode v-if="vehicle.hasPass" class="size-3 text-primary" />
                   <Button variant="ghost" class="h-6 px-2 text-[11px]" @click="navigateToEditVehicle(vehicle)">
                     <Pencil class="size-3" />
                   </Button>
@@ -365,6 +377,7 @@ onMounted(() => fetchAll())
                 <TableHead>Rol</TableHead>
                 <TableHead>Telefono</TableHead>
                 <TableHead>Documento</TableHead>
+                <TableHead class="w-16 text-center">QR</TableHead>
                 <TableHead class="w-24">Acciones</TableHead>
               </TableRow>
             </TableHeader>
@@ -378,6 +391,10 @@ onMounted(() => fetchAll())
                 </TableCell>
                 <TableCell class="text-muted-foreground">{{ staff.phone ?? '—' }}</TableCell>
                 <TableCell class="text-muted-foreground">{{ staff.idDocument ?? '—' }}</TableCell>
+                <TableCell class="text-center">
+                  <QrCode v-if="staff.hasPass" class="mx-auto size-4 text-primary" />
+                  <span v-else class="text-xs text-muted-foreground">—</span>
+                </TableCell>
                 <TableCell>
                   <div class="flex items-center gap-1">
                     <Button variant="ghost" size="icon" class="size-10" @click="navigateToEditStaff(staff)">
@@ -414,6 +431,7 @@ onMounted(() => fetchAll())
                   <span class="truncate">{{ staff.idDocument }}</span>
                 </template>
                 <span class="ml-auto flex shrink-0 items-center gap-0.5">
+                  <QrCode v-if="staff.hasPass" class="size-3 text-primary" />
                   <Button variant="ghost" class="h-6 px-2 text-[11px]" @click="navigateToEditStaff(staff)">
                     <Pencil class="size-3" />
                   </Button>

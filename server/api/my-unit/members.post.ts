@@ -27,6 +27,10 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 400, message: `La relación debe ser una de: ${VALID_RELATIONSHIPS.join(', ')}` })
   }
 
+  if (!body.idDocument || !body.idDocument.trim()) {
+    throw createError({ statusCode: 400, message: 'El documento de identidad es requerido' })
+  }
+
   const [inserted] = await db
     .insert(householdMembers)
     .values({

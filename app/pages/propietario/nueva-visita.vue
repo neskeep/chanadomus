@@ -1,7 +1,5 @@
 <script setup lang="ts">
-import { Loader2, Share2, Plus, QrCode, CalendarIcon, Clock } from 'lucide-vue-next'
-import { CalendarDate, getLocalTimeZone, today } from '@internationalized/date'
-import type { DateValue } from 'reka-ui'
+import { Loader2, Share2, Plus, QrCode, Users } from 'lucide-vue-next'
 import type { VisitorType } from '~~/shared/types/qr'
 import QRCode from 'qrcode'
 
@@ -10,52 +8,22 @@ useHead({ title: 'Nueva Visita' })
 const route = useRoute()
 const { user } = useAuth()
 const { generateQr, isGenerating, error } = useQr()
+const { visitors: frequentVisitors, fetchVisitors: fetchFrequentVisitors, addVisitor: addFrequentVisitor } = useFrequentVisitors()
 
 // Form state
 const visitorName = ref('')
 const visitorDocument = ref('')
 const visitorType = ref<VisitorType>('invitado')
 const frequentVisitorId = ref<string | null>(null)
+const showFrequentPicker = ref(false)
+const saveAsFrequent = ref(false)
 
-// Date/time picker state
-const expiresDate = shallowRef<DateValue>(today(getLocalTimeZone()).add({ days: 1 }))
-const datePickerOpen = ref(false)
-
-// Time picker state (3 independent selects)
-const now = new Date()
-const currentH = now.getHours()
-const roundedMin = Math.ceil(now.getMinutes() / 5) * 5
-const overflowHour = roundedMin >= 60
-
-const expiresHour = ref(String((() => {
-  let h = overflowHour ? currentH + 1 : currentH
-  if (h >= 24) h = 0
-  if (h === 0) return 12
-  if (h > 12) return h - 12
-  return h
-})()))
-const expiresMinute = ref(String(overflowHour ? 0 : roundedMin).padStart(2, '0'))
-const expiresPeriod = ref<'AM' | 'PM'>((overflowHour ? currentH + 1 : currentH) >= 12 ? 'PM' : 'AM')
-
-// Options
-const hourOptions = Array.from({ length: 12 }, (_, i) => String(i + 1))
-const minuteOptions = Array.from({ length: 12 }, (_, i) => String(i * 5).padStart(2, '0'))
-
-// Computed ISO string for submission
+// Computed ISO string for submission — fixed 24h from now
 const expiresAtISO = computed(() => {
-  const d = expiresDate.value
-  let h = Number(expiresHour.value)
-  if (expiresPeriod.value === 'AM' && h === 12) h = 0
-  else if (expiresPeriod.value === 'PM' && h !== 12) h = h + 12
-  return new Date(d.year, d.month - 1, d.day, h, Number(expiresMinute.value)).toISOString()
+  const expires = new Date()
+  expires.setHours(expires.getHours() + 24)
+  return expires.toISOString()
 })
-
-// Format display
-function formatSelectedDate(d: DateValue): string {
-  const date = new Date(d.year, d.month - 1, d.day)
-  const formatted = date.toLocaleDateString('es-VE', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })
-  return formatted.charAt(0).toUpperCase() + formatted.slice(1)
-}
 
 // Result state
 const generatedToken = ref<string | null>(null)
@@ -78,14 +46,23 @@ onMounted(() => {
     }
     frequentVisitorId.value = (route.query.fid as string) || null
   }
+  fetchFrequentVisitors()
 })
+
+function selectFrequent(visitor: { id: string; visitorName: string; visitorDocument: string | null; visitorType: string }) {
+  visitorName.value = visitor.visitorName
+  visitorDocument.value = visitor.visitorDocument ?? ''
+  visitorType.value = (visitor.visitorType === 'proveedor' ? 'proveedor' : 'invitado') as VisitorType
+  frequentVisitorId.value = visitor.id
+  showFrequentPicker.value = false
+}
 
 const userUnitId = computed(() => (user.value as Record<string, unknown> | null)?.unitId as string | undefined)
 
 const isFormValid = computed(() => {
   return visitorName.value.trim() !== ''
+    && visitorDocument.value.trim() !== ''
     && !!userUnitId.value
-    && !!expiresDate.value
 })
 
 async function handleGenerate() {
@@ -112,6 +89,21 @@ async function handleGenerate() {
 
     const accessUrl = `${window.location.origin}/acceso/${result.token}`
     qrDataUrl.value = await QRCode.toDataURL(accessUrl, { width: 256, margin: 2 })
+
+    // Save as frequent visitor if requested
+    if (saveAsFrequent.value && !frequentVisitorId.value) {
+      try {
+        await addFrequentVisitor({
+          visitorName: visitorName.value.trim(),
+          visitorDocument: visitorDocument.value.trim() || undefined,
+          visitorType: visitorType.value,
+          unitId: userUnitId.value!,
+        })
+      }
+      catch {
+        // Non-blocking
+      }
+    }
   }
   catch {
     // Error is already set in composable
@@ -172,17 +164,9 @@ function handleReset() {
   visitorName.value = ''
   visitorDocument.value = ''
   visitorType.value = 'invitado'
-  expiresDate.value = today(getLocalTimeZone()).add({ days: 1 })
-  const resetNow = new Date()
-  const resetH = resetNow.getHours()
-  const resetRounded = Math.ceil(resetNow.getMinutes() / 5) * 5
-  const resetOverflow = resetRounded >= 60
-  let resetHour = resetOverflow ? resetH + 1 : resetH
-  if (resetHour >= 24) resetHour = 0
-  expiresHour.value = String(resetHour === 0 ? 12 : resetHour > 12 ? resetHour - 12 : resetHour)
-  expiresMinute.value = String(resetOverflow ? 0 : resetRounded).padStart(2, '0')
-  expiresPeriod.value = resetHour >= 12 ? 'PM' : 'AM'
   frequentVisitorId.value = null
+  saveAsFrequent.value = false
+  showFrequentPicker.value = false
   generatedToken.value = null
   generatedData.value = null
   qrDataUrl.value = null
@@ -200,6 +184,47 @@ const { formatDateTime } = useFormatDate()
 
     <!-- Form (hidden after generation) -->
     <form v-if="!generatedToken" @submit.prevent="handleGenerate">
+      <!-- Frequent visitors selector -->
+      <div v-if="frequentVisitors.length > 0" class="mb-4">
+        <Button
+          v-if="!showFrequentPicker"
+          type="button"
+          variant="outline"
+          class="h-10 w-full text-sm"
+          @click="showFrequentPicker = true"
+        >
+          <Users class="size-4" />
+          Seleccionar visitante frecuente
+        </Button>
+        <Card v-else>
+          <CardContent class="p-3">
+            <div class="mb-2 flex items-center justify-between">
+              <span class="text-sm font-medium">Visitantes frecuentes</span>
+              <Button type="button" variant="ghost" size="sm" @click="showFrequentPicker = false">
+                Cerrar
+              </Button>
+            </div>
+            <div class="space-y-1">
+              <button
+                v-for="fv in frequentVisitors"
+                :key="fv.id"
+                type="button"
+                class="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-left transition-colors hover:bg-accent"
+                @click="selectFrequent(fv)"
+              >
+                <div class="min-w-0 flex-1">
+                  <p class="truncate text-sm font-medium">{{ fv.visitorName }}</p>
+                  <p class="text-xs text-muted-foreground">
+                    {{ fv.visitorDocument ?? 'Sin cédula' }}
+                    <span v-if="fv.visitCount"> · {{ fv.visitCount }} visitas</span>
+                  </p>
+                </div>
+              </button>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
       <Card>
       <CardContent class="space-y-6 p-4">
         <!-- Nombre del visitante (full width) -->
@@ -217,11 +242,12 @@ const { formatDateTime } = useFormatDate()
         <!-- Cédula | Tipo (row) -->
         <div class="grid grid-cols-2 gap-4">
           <div class="space-y-1.5">
-            <Label for="visitor-document">Cédula <span class="text-xs text-muted-foreground">(opcional)</span></Label>
+            <Label for="visitor-document">Cédula <span class="text-destructive">*</span></Label>
             <Input
               id="visitor-document"
               v-model="visitorDocument"
               placeholder="V-12345678"
+              required
               class="h-12 text-base"
             />
           </div>
@@ -239,57 +265,15 @@ const { formatDateTime } = useFormatDate()
           </div>
         </div>
 
-        <!-- Fecha | Hora (row) -->
-        <div class="grid grid-cols-2 gap-4">
-          <div class="space-y-1.5">
-            <Label>Fecha límite <span class="text-destructive">*</span></Label>
-            <Popover v-model:open="datePickerOpen">
-              <PopoverTrigger as-child>
-                <Button variant="outline" class="h-12 w-full justify-start rounded-lg text-base font-normal">
-                  <CalendarIcon class="mr-2 size-4 shrink-0 text-muted-foreground" />
-                  <span class="truncate">{{ formatSelectedDate(expiresDate) }}</span>
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent class="w-auto p-0" align="start">
-                <Calendar
-                  :model-value="expiresDate"
-                  locale="es"
-                  :min-value="today(getLocalTimeZone())"
-                  @update:model-value="(v: DateValue | undefined) => { if (v) { expiresDate = v; datePickerOpen = false } }"
-                />
-              </PopoverContent>
-            </Popover>
-          </div>
-          <div class="space-y-1.5">
-            <Label>Hora límite <span class="text-destructive">*</span></Label>
-            <div class="flex items-center gap-2">
-              <Select v-model="expiresHour">
-                <SelectTrigger size="lg" class="w-full text-center text-base">
-                  <SelectValue placeholder="H" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem v-for="h in hourOptions" :key="h" :value="h">{{ h }}</SelectItem>
-                </SelectContent>
-              </Select>
-              <span class="text-base font-medium text-muted-foreground">:</span>
-              <Select v-model="expiresMinute">
-                <SelectTrigger size="lg" class="w-full text-center text-base">
-                  <SelectValue placeholder="M" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem v-for="m in minuteOptions" :key="m" :value="m">{{ m }}</SelectItem>
-                </SelectContent>
-              </Select>
-              <Select v-model="expiresPeriod">
-                <SelectTrigger size="lg" class="w-full text-center text-sm font-medium">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="AM">AM</SelectItem>
-                  <SelectItem value="PM">PM</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
+        <!-- Validity info + save as frequent -->
+        <div class="space-y-3">
+          <p class="text-sm text-muted-foreground">
+            El pase será válido por 24 horas a partir de su creación.
+          </p>
+
+          <div v-if="!frequentVisitorId" class="flex items-center gap-2">
+            <Checkbox id="save-frequent" v-model:checked="saveAsFrequent" />
+            <Label for="save-frequent" class="text-sm font-normal text-muted-foreground">Guardar como visitante frecuente</Label>
           </div>
         </div>
 

@@ -6,7 +6,7 @@ import type { HouseholdRelationship } from '~~/shared/types/household'
 useHead({ title: 'Agregar Integrante' })
 
 const router = useRouter()
-const { isSubmitting, error, createMember } = useMyUnit()
+const { isSubmitting, error, createMember, generateMemberPass } = useMyUnit()
 
 const formName = ref('')
 const formRelationship = ref<HouseholdRelationship | ''>('')
@@ -16,20 +16,28 @@ const formPhone = ref('')
 const canSubmit = computed(() =>
   formName.value.trim().length > 0
   && formRelationship.value !== ''
+  && formDocument.value.trim().length > 0
   && !isSubmitting.value,
 )
 
 async function handleSubmit() {
   if (!canSubmit.value) return
   try {
-    await createMember({
+    const member = await createMember({
       name: formName.value.trim(),
       relationship: formRelationship.value as HouseholdRelationship,
       idDocument: formDocument.value.trim() || undefined,
       phone: formPhone.value.trim() || undefined,
     })
-    toast.success('Integrante agregado correctamente')
-    router.push('/propietario/mi-unidad')
+    // Auto-generate QR pass
+    try {
+      await generateMemberPass(member.id)
+    }
+    catch {
+      // Non-blocking: pass generation failure shouldn't prevent creation
+    }
+    toast.success('Integrante agregado con pase QR')
+    router.push(`/propietario/mi-unidad/editar-miembro/${member.id}`)
   }
   catch {
     toast.error(error.value ?? 'Error al guardar')
@@ -72,12 +80,13 @@ async function handleSubmit() {
               </Select>
             </div>
             <div class="space-y-1.5">
-              <Label for="member-document">Documento de identidad</Label>
+              <Label for="member-document">Cédula <span class="text-destructive">*</span></Label>
               <Input
                 id="member-document"
                 v-model="formDocument"
-                placeholder="Cédula o pasaporte"
+                placeholder="V-12345678"
                 class="h-12 text-base"
+                required
               />
             </div>
           </div>

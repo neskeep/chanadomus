@@ -1,6 +1,7 @@
 import { eq, and, isNull } from 'drizzle-orm'
 import { db } from '~~/server/db'
 import { panicEvents } from '~~/server/db/schema/panic'
+import { broadcastPanicDismiss } from '~~/server/utils/ws-panic'
 
 export default defineEventHandler(async (event) => {
   const session = await requireTenant(event)
@@ -23,6 +24,8 @@ export default defineEventHandler(async (event) => {
   if (!resolved) {
     throw createError({ statusCode: 404, message: 'No hay alerta activa' })
   }
+
+  broadcastPanicDismiss(resolved.id)
 
   return { data: { id: resolved.id } }
 })

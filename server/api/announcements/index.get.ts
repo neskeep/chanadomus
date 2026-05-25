@@ -1,7 +1,7 @@
 import { db } from '~~/server/db'
 import { announcements } from '~~/server/db/schema/announcement'
 import { user } from '~~/server/db/schema/auth'
-import { eq, and, sql, desc, count, isNull, gte } from 'drizzle-orm'
+import { eq, and, desc, count } from 'drizzle-orm'
 import type { Announcement, AnnouncementCategory, AnnouncementStatus } from '~~/shared/types/announcement'
 
 const VALID_CATEGORIES: AnnouncementCategory[] = ['general', 'mantenimiento', 'seguridad', 'financiero', 'evento', 'urgente']
@@ -31,12 +31,9 @@ export default defineEventHandler(async (event) => {
   const userRole = session.user.role ?? ''
   const isPrivileged = userRole === 'admin' || userRole === 'conserje'
 
-  // Non-privileged users only see published + not expired
+  // Non-privileged users only see published announcements
   if (!isPrivileged) {
     conditions.push(eq(announcements.status, 'published'))
-    conditions.push(
-      sql`(${announcements.expiresAt} IS NULL OR ${announcements.expiresAt} >= NOW())`,
-    )
   }
 
   if (category) {

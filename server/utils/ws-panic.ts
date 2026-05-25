@@ -2,6 +2,7 @@ import type { Peer } from 'crossws'
 
 export interface PanicAlert {
   id: string
+  userId: string
   createdAt: string
   userName: string
   userEmail: string
@@ -24,6 +25,13 @@ export function removePanicPeer(peer: Peer) {
 
 export function broadcastPanicAlert(alert: PanicAlert) {
   const message = JSON.stringify({ type: 'panic-alert', data: alert })
+  for (const peer of peers) {
+    peer.send(message)
+  }
+}
+
+export function broadcastPanicDismiss(alertId: string) {
+  const message = JSON.stringify({ type: 'panic-dismiss', data: { id: alertId } })
   for (const peer of peers) {
     peer.send(message)
   }

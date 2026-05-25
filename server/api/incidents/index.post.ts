@@ -15,7 +15,7 @@ const VALID_PRIORITIES: IncidentPriority[] = ['low', 'medium', 'high']
 
 export default defineEventHandler(async (event) => {
   const session = await requireTenant(event)
-  await requireRole(event, ['propietario'])
+  const userRole = await requireRole(event, ['propietario', 'vigilancia', 'conserje'])
 
   const formData = await readMultipartFormData(event)
   if (!formData || formData.length === 0) {
@@ -27,6 +27,7 @@ export default defineEventHandler(async (event) => {
   let description = ''
   let priority = ''
   let isAnonymous = false
+  let formUnitId = ''
   const photos: { filename: string; data: Buffer; type: string }[] = []
 
   for (const part of formData) {
@@ -38,6 +39,8 @@ export default defineEventHandler(async (event) => {
       priority = part.data.toString('utf-8').trim()
     } else if (part.name === 'is_anonymous') {
       isAnonymous = part.data.toString('utf-8').trim() === 'true'
+    } else if (part.name === 'unit_id') {
+      formUnitId = part.data.toString('utf-8').trim()
     } else if (part.name?.startsWith('photo_') && part.data.length > 0) {
       if (photos.length < MAX_PHOTOS) {
         photos.push({
@@ -77,14 +80,15 @@ export default defineEventHandler(async (event) => {
     }
   }
 
-  // Get user's unitId
+  // Get user's unitId — vigilancia passes unit_id in form, propietario uses their assigned unit
   const [userData] = await db
     .select({ unitId: user.unitId, name: user.name })
     .from(user)
     .where(eq(user.id, session.user.id))
 
-  if (!userData?.unitId) {
-    throw createError({ statusCode: 400, message: 'El usuario no tiene una unidad asignada' })
+  const resolvedUnitId = formUnitId || userData?.unitId
+  if (!resolvedUnitId) {
+    throw createError({ statusCode: 400, message: 'Se requiere una unidad para la incidencia' })
   }
 
   // Save photos to disk
@@ -109,7 +113,7 @@ export default defineEventHandler(async (event) => {
       status: 'open',
       isAnonymous,
       reportedById: session.user.id,
-      unitId: userData.unitId,
+      unitId: resolvedUnitId,
       tenantId: session.tenantId,
     })
     .returning()
@@ -130,7 +134,7 @@ export default defineEventHandler(async (event) => {
   }
 
   // Send push to admins (admin always sees reporter, even for anonymous)
-  const userName = userData.name ?? 'Un propietario'
+  const userName = userData?.name ?? (userRole.user.role === 'vigilancia' ? 'Vigilancia' : userRole.user.role === 'conserje' ? 'Conserjería' : 'Un propietario')
   const pushBody = isAnonymous
     ? `Reporte anónimo: ${title}`
     : `${userName} reportó: ${title}`

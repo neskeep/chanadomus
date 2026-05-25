@@ -23,20 +23,20 @@ withDefaults(defineProps<Props>(), {
 </script>
 
 <template>
-  <Card class="p-4">
-    <div class="flex items-start justify-between gap-2">
-      <div class="flex min-w-0 flex-col gap-1">
+  <Card class="p-3 sm:p-4">
+    <div class="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+      <div class="flex size-7 shrink-0 items-center justify-center rounded-lg sm:order-2 sm:size-10" :class="iconBgClass">
+        <component :is="icon" class="size-3.5 sm:size-5" />
+      </div>
+      <div class="flex min-w-0 flex-col gap-0.5 sm:order-1 sm:gap-1">
         <template v-if="isLoading">
-          <Skeleton class="h-5 w-16" />
-          <Skeleton class="h-8 w-24" />
+          <Skeleton class="h-4 w-12 sm:h-5 sm:w-16" />
+          <Skeleton class="h-6 w-10 sm:h-8 sm:w-24" />
         </template>
         <template v-else>
-          <p class="text-xs text-muted-foreground md:text-sm">{{ label }}</p>
-          <p class="truncate text-sm font-bold tabular-nums tracking-tight md:text-2xl">{{ value }}</p>
+          <p class="text-[11px] leading-tight text-muted-foreground sm:text-sm">{{ label }}</p>
+          <p class="text-lg font-bold tabular-nums tracking-tight sm:text-2xl">{{ value }}</p>
         </template>
-      </div>
-      <div class="flex size-8 shrink-0 items-center justify-center rounded-lg md:size-10" :class="iconBgClass">
-        <component :is="icon" class="size-4 md:size-5" />
       </div>
     </div>
     <div v-if="trend && !isLoading" class="mt-2 flex items-center gap-1 text-xs">

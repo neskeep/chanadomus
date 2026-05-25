@@ -28,7 +28,7 @@ const quickActions = [
 </script>
 
 <template>
-  <div class="space-y-6">
+  <div class="space-y-4 sm:space-y-6">
     <!-- 1. Hero financiero -->
     <Card class="p-6">
       <template v-if="isLoading">
@@ -88,8 +88,8 @@ const quickActions = [
       Mi QR de Acceso
     </NuxtLink>
 
-    <!-- 3. Stat cards -->
-    <div class="grid grid-cols-3 gap-4">
+    <!-- 3. Stat cards — unified on mobile, separate on sm+ -->
+    <div class="hidden sm:grid sm:grid-cols-3 sm:gap-4">
       <StatCard
         label="Mis Incidencias"
         :value="stats?.myOpenIncidents ?? 0"
@@ -112,6 +112,27 @@ const quickActions = [
         :is-loading="isLoading"
       />
     </div>
+    <Card class="sm:hidden">
+      <CardContent class="flex items-center divide-x p-0">
+        <div v-for="(stat, idx) in [
+          { label: 'Incidencias', value: stats?.myOpenIncidents ?? 0, icon: AlertTriangle, bg: ICON_BG.warning },
+          { label: 'Votaciones', value: stats?.activePolls ?? 0, icon: Vote, bg: ICON_BG.purple },
+          { label: 'Visitas', value: stats?.myActiveVisits ?? 0, icon: Users, bg: ICON_BG.info },
+        ]" :key="idx" class="flex flex-1 flex-col items-center gap-1 py-3">
+          <template v-if="isLoading">
+            <Skeleton class="size-6 rounded-lg" />
+            <Skeleton class="h-4 w-10" />
+          </template>
+          <template v-else>
+            <div class="flex size-7 items-center justify-center rounded-lg" :class="stat.bg">
+              <component :is="stat.icon" class="size-3.5" />
+            </div>
+            <p class="text-lg font-bold tabular-nums">{{ stat.value }}</p>
+            <p class="text-[11px] text-muted-foreground">{{ stat.label }}</p>
+          </template>
+        </div>
+      </CardContent>
+    </Card>
 
     <!-- 4. Quick actions -->
     <div>
@@ -122,7 +143,7 @@ const quickActions = [
           :key="action.to"
           :to="action.to"
           :class="buttonVariants({ variant: 'outline', size: 'lg' })"
-          class="h-auto flex-col gap-2.5 py-5"
+          class="h-auto flex-col gap-2 py-3.5 sm:gap-2.5 sm:py-5"
         >
           <component :is="action.icon" class="size-6 text-primary" />
           <span class="text-sm font-medium">{{ action.label }}</span>
