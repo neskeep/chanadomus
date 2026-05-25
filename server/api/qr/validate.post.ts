@@ -529,10 +529,13 @@ async function validateVehiclePass(
   direction: 'entry' | 'exit',
   occupantCount?: number,
 ): Promise<ValidationResult | null> {
+  const { sql } = await import('drizzle-orm')
+
   const [pass] = await db
     .select({
       id: vehiclePasses.id,
       vehicleId: vehiclePasses.vehicleId,
+      description: vehiclePasses.description,
       passType: vehiclePasses.passType,
       isActive: vehiclePasses.isActive,
       occupantLimit: vehiclePasses.occupantLimit,
@@ -541,13 +544,12 @@ async function validateVehiclePass(
       brand: vehicles.brand,
       model: vehicles.model,
       color: vehicles.color,
-      unitId: vehicles.unitId,
       unitNumber: units.number,
       unitLabel: units.label,
     })
     .from(vehiclePasses)
-    .innerJoin(vehicles, eq(vehicles.id, vehiclePasses.vehicleId))
-    .innerJoin(units, eq(units.id, vehicles.unitId))
+    .leftJoin(vehicles, eq(vehicles.id, vehiclePasses.vehicleId))
+    .leftJoin(units, sql`${units.id} = COALESCE(${vehicles.unitId}, ${vehiclePasses.unitId})`)
     .where(
       and(
         eq(vehiclePasses.token, token),
@@ -563,6 +565,8 @@ async function validateVehiclePass(
 
   const now = new Date()
 
+  const visitorName = pass.plate ? `Vehiculo ${pass.plate}` : (pass.description ?? 'Pase temporal')
+
   // Expired vehicle pass
   if (pass.expiresAt && pass.expiresAt <= now) {
     await logAccess({
@@ -571,8 +575,7 @@ async function validateVehiclePass(
       result: 'expired',
       authorizedBy,
       vehiclePassId: pass.id,
-      visitorName: `Vehiculo ${pass.plate}`,
-      unitId: pass.unitId,
+      visitorName,
       unitNumber: pass.unitNumber,
       unitLabel: pass.unitLabel,
       vehiclePlate: pass.plate,
@@ -621,8 +624,7 @@ async function validateVehiclePass(
       authorizedBy,
       vehiclePassId: pass.id,
       occupantCount,
-      visitorName: `Vehiculo ${pass.plate}`,
-      unitId: pass.unitId,
+      visitorName,
       unitNumber: pass.unitNumber,
       unitLabel: pass.unitLabel,
       vehiclePlate: pass.plate,
@@ -653,8 +655,7 @@ async function validateVehiclePass(
     authorizedBy,
     vehiclePassId: pass.id,
     occupantCount,
-    visitorName: `Vehiculo ${pass.plate}`,
-    unitId: pass.unitId,
+    visitorName,
     unitNumber: pass.unitNumber,
     unitLabel: pass.unitLabel,
     vehiclePlate: pass.plate,
