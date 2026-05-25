@@ -63,7 +63,7 @@ watch(() => route.path, () => {
     </button>
 
     <Sheet v-model:open="moreOpen">
-      <SheetContent side="bottom" class="rounded-t-lg px-0 pb-[env(safe-area-inset-bottom)]">
+      <SheetContent side="bottom" class="max-h-[85vh] rounded-t-lg px-0 pb-[env(safe-area-inset-bottom)]">
         <SheetHeader class="sr-only">
           <SheetTitle>Más opciones</SheetTitle>
           <SheetDescription>Opciones de navegación adicionales</SheetDescription>
@@ -86,7 +86,7 @@ watch(() => route.path, () => {
         <Separator />
 
         <!-- Grouped navigation -->
-        <div class="max-h-[50vh] overflow-y-auto px-3 py-2">
+        <div class="flex-1 overflow-y-auto px-3 py-2">
           <div v-for="group in secondaryGroups" :key="group.label" class="py-1.5">
             <span class="px-3 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground/70">
               {{ group.label }}

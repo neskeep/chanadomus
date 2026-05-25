@@ -24,19 +24,19 @@ withDefaults(defineProps<Props>(), {
 
 <template>
   <Card class="p-4">
-    <div class="flex items-start justify-between">
-      <div class="flex flex-col gap-1">
+    <div class="flex items-start justify-between gap-2">
+      <div class="flex min-w-0 flex-col gap-1">
         <template v-if="isLoading">
           <Skeleton class="h-5 w-16" />
           <Skeleton class="h-8 w-24" />
         </template>
         <template v-else>
-          <p class="text-sm text-muted-foreground">{{ label }}</p>
-          <p class="text-lg font-bold tabular-nums tracking-tight md:text-2xl">{{ value }}</p>
+          <p class="text-xs text-muted-foreground md:text-sm">{{ label }}</p>
+          <p class="truncate text-sm font-bold tabular-nums tracking-tight md:text-2xl">{{ value }}</p>
         </template>
       </div>
-      <div class="flex size-10 items-center justify-center rounded-lg" :class="iconBgClass">
-        <component :is="icon" class="size-5" />
+      <div class="flex size-8 shrink-0 items-center justify-center rounded-lg md:size-10" :class="iconBgClass">
+        <component :is="icon" class="size-4 md:size-5" />
       </div>
     </div>
     <div v-if="trend && !isLoading" class="mt-2 flex items-center gap-1 text-xs">
