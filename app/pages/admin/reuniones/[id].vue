@@ -1,5 +1,7 @@
 <script setup lang="ts">
-import { Loader2 } from 'lucide-vue-next'
+import { Loader2, CalendarIcon, Clock } from 'lucide-vue-next'
+import { CalendarDate } from '@internationalized/date'
+import type { DateValue } from 'reka-ui'
 import { toast } from 'vue-sonner'
 import type { MeetingType, MeetingStatus, UpdateMeeting } from '~~/shared/types/meeting'
 import { MEETING_TYPES, MEETING_STATUSES } from '~~/shared/types/meeting'
@@ -21,8 +23,12 @@ useHead({ title: 'Editar Reunión' })
 // --- Form state ---
 const formTitle = ref('')
 const formDescription = ref('')
-const formDate = ref('')
-const formEndDate = ref('')
+const formDateValue = shallowRef<DateValue | undefined>(undefined)
+const formTime = ref('09:00')
+const datePickerOpen = ref(false)
+const formEndDateValue = shallowRef<DateValue | undefined>(undefined)
+const formEndTime = ref('10:00')
+const endDatePickerOpen = ref(false)
 const formLocation = ref('')
 const formMeetingLink = ref('')
 const formType = ref<MeetingType>('ordinaria')
@@ -31,26 +37,44 @@ const formMinutes = ref('')
 const formStatus = ref<MeetingStatus>('programada')
 const loaded = ref(false)
 
+function formatPickerDate(d: DateValue): string {
+  const date = new Date(d.year, d.month - 1, d.day)
+  return date.toLocaleDateString('es-VE', { weekday: 'short', day: 'numeric', month: 'short' })
+}
+
+function parseISODate(iso: string): CalendarDate {
+  const d = new Date(iso)
+  return new CalendarDate(d.getFullYear(), d.getMonth() + 1, d.getDate())
+}
+
+function parseISOTime(iso: string): string {
+  const d = new Date(iso)
+  return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`
+}
+
+function combineDateTimeISO(d: DateValue, time: string): string {
+  const iso = `${d.year}-${String(d.month).padStart(2, '0')}-${String(d.day).padStart(2, '0')}T${time}:00`
+  return new Date(iso).toISOString()
+}
+
 const canSubmit = computed(() =>
   formTitle.value.trim().length > 0
-  && formDate.value.length > 0
+  && formDateValue.value
+  && formTime.value
   && !isSubmitting.value,
 )
-
-function toLocalInput(iso: string): string {
-  const d = new Date(iso)
-  const offset = d.getTimezoneOffset()
-  const local = new Date(d.getTime() - offset * 60000)
-  return local.toISOString().slice(0, 16)
-}
 
 async function loadMeeting() {
   try {
     const meeting = await fetchMeeting(id)
     formTitle.value = meeting.title
     formDescription.value = meeting.description ?? ''
-    formDate.value = toLocalInput(meeting.date)
-    formEndDate.value = meeting.endDate ? toLocalInput(meeting.endDate) : ''
+    formDateValue.value = parseISODate(meeting.date)
+    formTime.value = parseISOTime(meeting.date)
+    if (meeting.endDate) {
+      formEndDateValue.value = parseISODate(meeting.endDate)
+      formEndTime.value = parseISOTime(meeting.endDate)
+    }
     formLocation.value = meeting.location ?? ''
     formMeetingLink.value = meeting.meetingLink ?? ''
     formType.value = meeting.type
@@ -65,10 +89,12 @@ async function loadMeeting() {
 }
 
 async function handleSubmit() {
-  if (!canSubmit.value) return
+  if (!canSubmit.value || !formDateValue.value) return
   try {
-    const dateISO = new Date(formDate.value).toISOString()
-    const endDateISO = formEndDate.value ? new Date(formEndDate.value).toISOString() : undefined
+    const dateISO = combineDateTimeISO(formDateValue.value, formTime.value)
+    const endDateISO = formEndDateValue.value
+      ? combineDateTimeISO(formEndDateValue.value, formEndTime.value)
+      : undefined
 
     const data: UpdateMeeting = {
       title: formTitle.value.trim(),
@@ -139,26 +165,72 @@ onMounted(() => {
             />
           </div>
 
-          <!-- Fecha y Hora + Hora de Fin -->
+          <!-- Fecha y Hora -->
           <div class="grid gap-4 sm:grid-cols-2">
             <div class="space-y-1.5">
-              <Label for="meet-date">Fecha y hora <span class="text-destructive">*</span></Label>
-              <Input
-                id="meet-date"
-                v-model="formDate"
-                type="datetime-local"
-                class="h-12 text-base"
-                required
-              />
+              <Label>Fecha <span class="text-destructive">*</span></Label>
+              <Popover v-model:open="datePickerOpen">
+                <PopoverTrigger as-child>
+                  <Button variant="outline" class="h-12 w-full justify-start rounded-lg text-base font-normal">
+                    <CalendarIcon class="mr-2 size-4 shrink-0 text-muted-foreground" />
+                    <span class="truncate">{{ formDateValue ? formatPickerDate(formDateValue) : 'Seleccionar fecha' }}</span>
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent class="w-auto p-0" align="start">
+                  <Calendar
+                    :model-value="formDateValue"
+                    locale="es"
+                    @update:model-value="(v: DateValue | undefined) => { if (v) { formDateValue = v; datePickerOpen = false } }"
+                  />
+                </PopoverContent>
+              </Popover>
             </div>
             <div class="space-y-1.5">
-              <Label for="meet-end-date">Hora de fin</Label>
-              <Input
-                id="meet-end-date"
-                v-model="formEndDate"
-                type="datetime-local"
-                class="h-12 text-base"
-              />
+              <Label for="meet-time">Hora de inicio <span class="text-destructive">*</span></Label>
+              <div class="relative">
+                <Clock class="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+                <Input
+                  id="meet-time"
+                  v-model="formTime"
+                  type="time"
+                  class="h-12 pl-9 text-base"
+                  required
+                />
+              </div>
+            </div>
+          </div>
+
+          <!-- Fecha y Hora de Fin -->
+          <div class="grid gap-4 sm:grid-cols-2">
+            <div class="space-y-1.5">
+              <Label>Fecha de fin</Label>
+              <Popover v-model:open="endDatePickerOpen">
+                <PopoverTrigger as-child>
+                  <Button variant="outline" class="h-12 w-full justify-start rounded-lg text-base font-normal">
+                    <CalendarIcon class="mr-2 size-4 shrink-0 text-muted-foreground" />
+                    <span class="truncate">{{ formEndDateValue ? formatPickerDate(formEndDateValue) : 'Misma fecha' }}</span>
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent class="w-auto p-0" align="start">
+                  <Calendar
+                    :model-value="formEndDateValue"
+                    locale="es"
+                    @update:model-value="(v: DateValue | undefined) => { if (v) { formEndDateValue = v; endDatePickerOpen = false } }"
+                  />
+                </PopoverContent>
+              </Popover>
+            </div>
+            <div class="space-y-1.5">
+              <Label for="meet-end-time">Hora de fin</Label>
+              <div class="relative">
+                <Clock class="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+                <Input
+                  id="meet-end-time"
+                  v-model="formEndTime"
+                  type="time"
+                  class="h-12 pl-9 text-base"
+                />
+              </div>
             </div>
           </div>
 

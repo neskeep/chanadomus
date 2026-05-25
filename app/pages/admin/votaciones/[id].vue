@@ -1,5 +1,7 @@
 <script setup lang="ts">
-import { Loader2, Calendar } from 'lucide-vue-next'
+import { Loader2, CalendarIcon } from 'lucide-vue-next'
+import { CalendarDate } from '@internationalized/date'
+import type { DateValue } from 'reka-ui'
 import { toast } from 'vue-sonner'
 import type { PollStatus } from '~~/shared/types/poll'
 
@@ -21,8 +23,23 @@ useHead({ title: 'Editar Votación' })
 const formTitle = ref('')
 const formDescription = ref('')
 const formStatus = ref<'draft' | 'active'>('draft')
-const formDeadline = ref('')
+const formDeadline = shallowRef<DateValue | undefined>(undefined)
+const deadlinePickerOpen = ref(false)
 const loaded = ref(false)
+
+function dateToISO(d: DateValue): string {
+  return `${d.year}-${String(d.month).padStart(2, '0')}-${String(d.day).padStart(2, '0')}`
+}
+
+function formatPickerDate(d: DateValue): string {
+  const date = new Date(d.year, d.month - 1, d.day)
+  return date.toLocaleDateString('es-VE', { weekday: 'short', day: 'numeric', month: 'short' })
+}
+
+function parseISODate(iso: string): CalendarDate {
+  const [y, m, d] = iso.split('T')[0]!.split('-').map(Number)
+  return new CalendarDate(y!, m!, d!)
+}
 
 const canSubmit = computed(() =>
   formTitle.value.trim().length > 0 && !isSubmitting.value,
@@ -34,7 +51,7 @@ async function loadPoll() {
     formTitle.value = poll.title
     formDescription.value = poll.description ?? ''
     formStatus.value = poll.status === 'closed' ? 'draft' : poll.status as 'draft' | 'active'
-    formDeadline.value = poll.deadline?.split('T')[0] ?? ''
+    formDeadline.value = poll.deadline ? parseISODate(poll.deadline) : undefined
     loaded.value = true
   }
   catch {
@@ -49,7 +66,7 @@ async function handleSubmit() {
       title: formTitle.value.trim(),
       description: formDescription.value.trim() || null,
       status: formStatus.value,
-      deadline: formDeadline.value || null,
+      deadline: formDeadline.value ? dateToISO(formDeadline.value) : null,
     })
     toast.success('Votación actualizada correctamente')
     router.push('/admin/votaciones')
@@ -110,16 +127,22 @@ onMounted(() => {
           <!-- Fecha límite + Estado row -->
           <div class="grid gap-4 sm:grid-cols-2">
             <div class="space-y-1.5">
-              <Label for="poll-deadline">Fecha límite</Label>
-              <div class="relative">
-                <Calendar class="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-                <Input
-                  id="poll-deadline"
-                  v-model="formDeadline"
-                  type="date"
-                  class="h-12 pl-9 text-base"
-                />
-              </div>
+              <Label>Fecha límite</Label>
+              <Popover v-model:open="deadlinePickerOpen">
+                <PopoverTrigger as-child>
+                  <Button variant="outline" class="h-12 w-full justify-start rounded-lg text-base font-normal">
+                    <CalendarIcon class="mr-2 size-4 shrink-0 text-muted-foreground" />
+                    <span class="truncate">{{ formDeadline ? formatPickerDate(formDeadline) : 'Seleccionar fecha' }}</span>
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent class="w-auto p-0" align="start">
+                  <Calendar
+                    :model-value="formDeadline"
+                    locale="es"
+                    @update:model-value="(v: DateValue | undefined) => { if (v) { formDeadline = v; deadlinePickerOpen = false } }"
+                  />
+                </PopoverContent>
+              </Popover>
             </div>
             <div class="space-y-1.5">
               <Label for="poll-status">Estado</Label>

@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { Loader2, Paperclip, Calendar } from 'lucide-vue-next'
+import { Loader2, Paperclip, CalendarIcon } from 'lucide-vue-next'
+import type { DateValue } from 'reka-ui'
 import { toast } from 'vue-sonner'
 import type { AnnouncementCategory, AnnouncementStatus } from '~~/shared/types/announcement'
 
@@ -13,9 +14,19 @@ const formTitle = ref('')
 const formBody = ref('')
 const formCategory = ref<AnnouncementCategory>('general')
 const formStatus = ref<AnnouncementStatus>('draft')
-const formExpiresAt = ref('')
+const formExpiresAt = shallowRef<DateValue | undefined>(undefined)
+const expiresPickerOpen = ref(false)
 const formPdfFile = ref<File | null>(null)
 const pdfInputRef = ref<HTMLInputElement | null>(null)
+
+function dateToISO(d: DateValue): string {
+  return `${d.year}-${String(d.month).padStart(2, '0')}-${String(d.day).padStart(2, '0')}`
+}
+
+function formatPickerDate(d: DateValue): string {
+  const date = new Date(d.year, d.month - 1, d.day)
+  return date.toLocaleDateString('es-VE', { weekday: 'short', day: 'numeric', month: 'short' })
+}
 
 const canSubmit = computed(() =>
   formTitle.value.trim().length > 0
@@ -37,7 +48,7 @@ async function handleSubmit() {
     formData.append('body', formBody.value.trim())
     formData.append('category', formCategory.value)
     formData.append('status', formStatus.value)
-    if (formExpiresAt.value) formData.append('expires_at', formExpiresAt.value)
+    if (formExpiresAt.value) formData.append('expires_at', dateToISO(formExpiresAt.value))
     if (formPdfFile.value) formData.append('attachment', formPdfFile.value)
     await createAnnouncement(formData)
     toast.success('Anuncio creado correctamente')
@@ -136,16 +147,22 @@ async function handleSubmit() {
               </div>
             </div>
             <div class="space-y-1.5">
-              <Label for="ann-expires">Fecha de expiración</Label>
-              <div class="relative">
-                <Calendar class="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-                <Input
-                  id="ann-expires"
-                  v-model="formExpiresAt"
-                  type="date"
-                  class="h-12 pl-9 text-base"
-                />
-              </div>
+              <Label>Fecha de expiración</Label>
+              <Popover v-model:open="expiresPickerOpen">
+                <PopoverTrigger as-child>
+                  <Button variant="outline" class="h-12 w-full justify-start rounded-lg text-base font-normal">
+                    <CalendarIcon class="mr-2 size-4 shrink-0 text-muted-foreground" />
+                    <span class="truncate">{{ formExpiresAt ? formatPickerDate(formExpiresAt) : 'Seleccionar fecha' }}</span>
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent class="w-auto p-0" align="start">
+                  <Calendar
+                    :model-value="formExpiresAt"
+                    locale="es"
+                    @update:model-value="(v: DateValue | undefined) => { if (v) { formExpiresAt = v; expiresPickerOpen = false } }"
+                  />
+                </PopoverContent>
+              </Popover>
               <p class="text-xs text-muted-foreground">Se archiva automáticamente en esta fecha</p>
             </div>
           </div>
