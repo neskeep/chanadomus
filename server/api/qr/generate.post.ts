@@ -18,6 +18,9 @@ export default defineEventHandler(async (event) => {
   if (!body.visitorType || !['invitado', 'proveedor'].includes(body.visitorType)) {
     throw createError({ statusCode: 400, message: 'visitorType debe ser "invitado" o "proveedor"' })
   }
+  if (!body.visitorDocument?.trim()) {
+    throw createError({ statusCode: 400, message: 'La cédula del visitante es requerida' })
+  }
   if (!body.unitId?.trim()) {
     throw createError({ statusCode: 400, message: 'unitId es requerido' })
   }

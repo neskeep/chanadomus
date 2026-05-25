@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { AlertTriangle, ClipboardList, DoorOpen, LogIn, LogOut, QrCode, Shield, ShieldAlert, Users } from 'lucide-vue-next'
+import { AlertTriangle, ClipboardList, DoorOpen, LogIn, LogOut, QrCode, Shield, ShieldAlert, UserPlus, Users } from 'lucide-vue-next'
 import { buttonVariants } from '~/components/ui/button'
 import { ICON_BG } from '~/composables/useColorMap'
 
@@ -7,10 +7,11 @@ useHead({ title: 'Panel Vigilancia' })
 
 const { stats, isLoading } = useDashboard()
 const { events, isConnected, loadInitialEvents } = useAccessStream()
+const { hasActiveAlert, activeAlert } = usePanicStream()
 
 const quickActions = [
-  { label: 'Registrar Acceso', icon: DoorOpen, to: '/vigilancia/accesos' },
-  { label: 'Reportar Incidencia', icon: ClipboardList, to: '/vigilancia/incidencias' },
+  { label: 'Registrar', icon: DoorOpen, to: '/vigilancia/registrar-acceso' },
+  { label: 'Incidencias', icon: ClipboardList, to: '/vigilancia/incidencias' },
   { label: 'Residentes', icon: Users, to: '/vigilancia/residentes' },
 ] as const
 
@@ -31,6 +32,24 @@ onMounted(() => {
 
 <template>
   <div class="space-y-6">
+    <!-- 0. Panic alert banner -->
+    <NuxtLink v-if="hasActiveAlert" to="/vigilancia/alertas">
+      <Card class="animate-pulse border-destructive bg-destructive/10">
+        <CardContent class="flex items-center gap-3 px-4 py-3">
+          <ShieldAlert class="size-6 text-destructive" />
+          <div class="min-w-0 flex-1">
+            <p class="text-sm font-bold text-destructive">ALERTA DE PANICO</p>
+            <p class="truncate text-xs text-destructive/80">
+              {{ activeAlert?.userName }} — {{ activeAlert?.unitLabel || activeAlert?.unitNumber }}
+            </p>
+          </div>
+          <Badge variant="destructive" class="shrink-0 animate-bounce">
+            Ver
+          </Badge>
+        </CardContent>
+      </Card>
+    </NuxtLink>
+
     <!-- 1. Hero: Accesos Hoy -->
     <Card class="p-6">
       <div class="flex items-center justify-between">
@@ -64,15 +83,25 @@ onMounted(() => {
       </div>
     </Card>
 
-    <!-- 2. Escanear QR — Botón prominente -->
-    <NuxtLink
-      to="/vigilancia/escanear"
-      :class="buttonVariants({ variant: 'default', size: 'lg' })"
-      class="w-full h-14 gap-3 text-base font-semibold"
-    >
-      <QrCode class="size-6" />
-      Escanear QR
-    </NuxtLink>
+    <!-- 2. Acciones principales: Escanear QR + Registrar Acceso -->
+    <div class="grid grid-cols-2 gap-3">
+      <NuxtLink
+        to="/vigilancia/escanear"
+        :class="buttonVariants({ variant: 'default', size: 'lg' })"
+        class="h-14 gap-2.5 text-base font-semibold"
+      >
+        <QrCode class="size-5" />
+        Escanear QR
+      </NuxtLink>
+      <NuxtLink
+        to="/vigilancia/registrar-acceso"
+        :class="buttonVariants({ variant: 'outline', size: 'lg' })"
+        class="h-14 gap-2.5 text-base font-semibold"
+      >
+        <UserPlus class="size-5" />
+        Registrar
+      </NuxtLink>
+    </div>
 
     <!-- 3. Feed en vivo: Últimos accesos -->
     <Card class="p-5">
@@ -145,10 +174,10 @@ onMounted(() => {
           <Button
             variant="outline"
             size="lg"
-            class="flex h-auto min-h-16 w-full flex-col gap-2 py-4"
+            class="flex h-auto min-h-16 w-full flex-col gap-2 px-2 py-4"
           >
             <component :is="action.icon" class="size-5 text-primary" />
-            <span class="text-xs font-medium leading-tight">{{ action.label }}</span>
+            <span class="text-center text-[11px] font-medium leading-tight sm:text-xs">{{ action.label }}</span>
           </Button>
         </NuxtLink>
       </div>

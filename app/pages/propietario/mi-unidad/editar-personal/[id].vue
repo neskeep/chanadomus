@@ -39,6 +39,7 @@ const attendanceLogs = ref<StaffAttendanceLog[]>([])
 const canSubmit = computed(() =>
   formName.value.trim().length > 0
   && formRoleId.value !== ''
+  && formDocument.value.trim().length > 0
   && !isSubmitting.value,
 )
 
@@ -248,12 +249,13 @@ onMounted(() => loadData())
 
               <div class="grid gap-4 sm:grid-cols-2">
                 <div class="space-y-1.5">
-                  <Label for="staff-document">Documento de identidad</Label>
+                  <Label for="staff-document">Cédula <span class="text-destructive">*</span></Label>
                   <Input
                     id="staff-document"
                     v-model="formDocument"
-                    placeholder="Cedula o pasaporte"
+                    placeholder="V-12345678"
                     class="h-12 text-base"
+                    required
                   />
                 </div>
                 <div class="space-y-1.5">
@@ -441,7 +443,7 @@ onMounted(() => loadData())
 
               <!-- Download badge -->
               <Button
-                class="h-10 w-full text-sm"
+                class="mt-2 h-10 w-full text-sm"
                 :disabled="isDownloadingBadge"
                 @click="handleDownloadBadge"
               >

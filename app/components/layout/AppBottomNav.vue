@@ -58,12 +58,21 @@ watch(() => route.path, () => {
       :class="moreOpen ? 'text-primary' : 'text-muted-foreground'"
       @click="moreOpen = true"
     >
-      <MoreHorizontal class="size-5" />
+      <span class="relative">
+        <MoreHorizontal class="size-5" />
+        <span
+          v-if="hasActiveAlert"
+          class="absolute -right-1.5 -top-1.5 flex size-3"
+        >
+          <span class="absolute inline-flex size-full animate-ping rounded-full bg-destructive opacity-75" />
+          <span class="relative inline-flex size-3 rounded-full bg-destructive" />
+        </span>
+      </span>
       <span class="text-[11px] font-medium">Más</span>
     </button>
 
     <Sheet v-model:open="moreOpen">
-      <SheetContent side="bottom" class="rounded-t-lg px-0 pb-[env(safe-area-inset-bottom)]">
+      <SheetContent side="bottom" class="flex max-h-[85vh] flex-col rounded-t-lg px-0 pb-[env(safe-area-inset-bottom)]" :show-close-button="false">
         <SheetHeader class="sr-only">
           <SheetTitle>Más opciones</SheetTitle>
           <SheetDescription>Opciones de navegación adicionales</SheetDescription>
@@ -86,7 +95,7 @@ watch(() => route.path, () => {
         <Separator />
 
         <!-- Grouped navigation -->
-        <div class="max-h-[50vh] overflow-y-auto px-3 py-2">
+        <div class="min-h-0 flex-1 overflow-y-auto px-3 py-2">
           <div v-for="group in secondaryGroups" :key="group.label" class="py-1.5">
             <span class="px-3 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground/70">
               {{ group.label }}
@@ -96,7 +105,7 @@ watch(() => route.path, () => {
                 v-for="item in group.items"
                 :key="item.to"
                 :to="item.to"
-                class="relative flex items-center gap-3 rounded-lg px-3 py-2.5 text-foreground transition-colors hover:bg-accent"
+                class="relative flex items-center gap-3 rounded-lg px-3 py-2 text-foreground transition-colors hover:bg-accent"
                 active-class="!text-primary !bg-accent"
                 @click="moreOpen = false"
               >

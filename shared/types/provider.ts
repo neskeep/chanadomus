@@ -23,6 +23,8 @@ export interface Provider {
   costs: string | null
   notes: string | null
   category: ProviderCategory
+  serviceRoleId: string | null
+  serviceRoleName?: string
   status: ProviderStatus
   createdById: string
   createdByName?: string
@@ -55,6 +57,7 @@ export interface CreateProvider {
   costs?: string
   notes?: string
   category: ProviderCategory
+  serviceRoleId?: string
 }
 
 export interface UpdateProvider {
@@ -67,6 +70,7 @@ export interface UpdateProvider {
   costs?: string | null
   notes?: string | null
   category?: ProviderCategory
+  serviceRoleId?: string | null
   status?: ProviderStatus
 }
 

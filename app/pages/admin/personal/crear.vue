@@ -13,38 +13,16 @@ const formDocument = ref('')
 const formPhone = ref('')
 const formEmail = ref('')
 const formShift = ref('none')
-const formUnitId = ref('none')
-
-// Units for selector
-const unitOptions = ref<{ id: string; number: string; label: string | null }[]>([])
 
 const activeRoles = computed(() => roleOptions.value.filter(r => r.isActive))
 
-// Conserjes requieren unidad obligatoria
-const selectedRoleName = computed(() =>
-  roleOptions.value.find(r => r.id === formRole.value)?.name ?? '',
-)
-const isUnitRequired = computed(() =>
-  selectedRoleName.value.toLowerCase() === 'conserje',
-)
-
-onMounted(async () => {
-  await Promise.all([
-    fetchRoles(),
-    (async () => {
-      try {
-        const res = await $fetch<{ data: { id: string; number: string; label: string | null }[] }>('/api/units')
-        unitOptions.value = res.data
-      }
-      catch { /* selector will be empty */ }
-    })(),
-  ])
+onMounted(() => {
+  fetchRoles()
 })
 
 const canSubmit = computed(() =>
   formName.value.trim().length > 0
   && formRole.value !== ''
-  && (!isUnitRequired.value || (formUnitId.value !== '' && formUnitId.value !== 'none'))
   && !isSubmitting.value,
 )
 
@@ -58,7 +36,6 @@ async function handleSubmit() {
       phone: formPhone.value.trim() || undefined,
       email: formEmail.value.trim() || undefined,
       shift: formShift.value === 'none' ? undefined : formShift.value || undefined,
-      unitId: formUnitId.value === 'none' ? undefined : formUnitId.value || undefined,
     })
     toast.success('Personal agregado correctamente')
     router.push('/admin/personal')
@@ -77,45 +54,30 @@ async function handleSubmit() {
           <!-- Error -->
           <ErrorAlert v-if="error" :message="error" />
 
-          <!-- Nombre -->
-          <div class="space-y-1.5">
-            <Label for="staff-name">Nombre completo <span class="text-destructive">*</span></Label>
-            <Input
-              id="staff-name"
-              v-model="formName"
-              placeholder="Nombre completo"
-              class="h-12 text-base"
-              required
-            />
-          </div>
-
-          <!-- Rol + Documento row -->
+          <!-- Nombre + Cédula -->
           <div class="grid gap-4 sm:grid-cols-2">
             <div class="space-y-1.5">
-              <Label for="staff-role">Rol <span class="text-destructive">*</span></Label>
-              <Select v-model="formRole">
-                <SelectTrigger id="staff-role" size="lg" class="text-base">
-                  <SelectValue placeholder="Seleccionar rol" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem v-for="role in activeRoles" :key="role.id" :value="role.id">
-                    {{ role.name }}
-                  </SelectItem>
-                </SelectContent>
-              </Select>
+              <Label for="staff-name">Nombre <span class="text-destructive">*</span></Label>
+              <Input
+                id="staff-name"
+                v-model="formName"
+                placeholder="Nombre completo"
+                class="h-12 text-base"
+                required
+              />
             </div>
             <div class="space-y-1.5">
-              <Label for="staff-document">Documento de identidad</Label>
+              <Label for="staff-document">Cédula</Label>
               <Input
                 id="staff-document"
                 v-model="formDocument"
-                placeholder="Cédula o pasaporte"
+                placeholder="V-12345678"
                 class="h-12 text-base"
               />
             </div>
           </div>
 
-          <!-- Teléfono + Email row -->
+          <!-- Teléfono + Email -->
           <div class="grid gap-4 sm:grid-cols-2">
             <div class="space-y-1.5">
               <Label for="staff-phone">Teléfono</Label>
@@ -138,7 +100,7 @@ async function handleSubmit() {
             </div>
           </div>
 
-          <!-- Turno + Unidad -->
+          <!-- Turno + Rol -->
           <div class="grid gap-4 sm:grid-cols-2">
             <div class="space-y-1.5">
               <Label for="staff-shift">Turno</Label>
@@ -154,13 +116,18 @@ async function handleSubmit() {
                 </SelectContent>
               </Select>
             </div>
-
             <div class="space-y-1.5">
-              <Label>Rancho asignado <span v-if="isUnitRequired" class="text-destructive">*</span></Label>
-              <UnitCombobox v-model="formUnitId" :units="unitOptions" :required="isUnitRequired" />
-              <p v-if="isUnitRequired" class="text-xs text-muted-foreground">
-                Los conserjes deben tener un rancho asignado
-              </p>
+              <Label for="staff-role">Rol <span class="text-destructive">*</span></Label>
+              <Select v-model="formRole">
+                <SelectTrigger id="staff-role" size="lg" class="text-base">
+                  <SelectValue placeholder="Seleccionar rol" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem v-for="role in activeRoles" :key="role.id" :value="role.id">
+                    {{ role.name }}
+                  </SelectItem>
+                </SelectContent>
+              </Select>
             </div>
           </div>
 

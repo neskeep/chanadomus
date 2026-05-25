@@ -6,6 +6,7 @@ import {
   Loader2,
   XCircle,
   EyeOff,
+  Plus,
 } from 'lucide-vue-next'
 import type { IncidentStatus, IncidentPriority } from '~~/shared/types/incident'
 import { INCIDENT_STATUS_COLORS, INCIDENT_STATUS_LABELS, INCIDENT_PRIORITY_COLORS, INCIDENT_PRIORITY_LABELS } from '~/composables/useColorMap'
@@ -100,14 +101,30 @@ const { formatDate } = useFormatDate()
     <!-- Error -->
     <ErrorAlert v-if="error" :message="error" class="mb-4" />
 
-    <Teleport :to="target" defer v-if="isMounted">
+    <!-- Topbar (desktop) -->
+    <Teleport v-if="isMounted" :to="target" defer>
       <TopbarSearch v-model="searchQuery" placeholder="Buscar incidencia...">
         <TopbarFilters :active="filterStatus !== '' || filterPriority !== ''" @clear="filterStatus = ''; filterPriority = ''">
           <TopbarFilterGroup v-model="filterStatus" label="Estado" :options="statusOptions" />
           <TopbarFilterGroup v-model="filterPriority" label="Prioridad" :options="priorityOptions" />
         </TopbarFilters>
       </TopbarSearch>
+      <Button size="sm" as-child>
+        <NuxtLink to="/vigilancia/incidencias/nueva">
+          <Plus class="mr-1.5 size-3.5" />
+          Reportar
+        </NuxtLink>
+      </Button>
     </Teleport>
+
+    <!-- Topbar (mobile) -->
+    <TopbarMobileAction>
+      <Button size="icon" variant="ghost" class="size-9" as-child>
+        <NuxtLink to="/vigilancia/incidencias/nueva">
+          <Plus class="size-4" />
+        </NuxtLink>
+      </Button>
+    </TopbarMobileAction>
 
     <!-- Mobile search -->
     <div class="mb-4 md:hidden">
@@ -128,7 +145,14 @@ const { formatDate } = useFormatDate()
       :icon="AlertTriangle"
       title="No hay incidencias"
       :description="filterStatus || filterPriority ? 'Prueba cambiando los filtros' : 'Los reportes aparecerán aquí'"
-    />
+    >
+      <template v-if="!filterStatus && !filterPriority" #action>
+        <Button size="sm" @click="navigateTo('/vigilancia/incidencias/nueva')">
+          <Plus class="mr-1.5 size-3.5" />
+          Reportar incidencia
+        </Button>
+      </template>
+    </EmptyState>
 
     <!-- Table (desktop) / Cards (mobile) -->
     <div v-else>

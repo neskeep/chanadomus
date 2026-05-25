@@ -24,17 +24,6 @@ const formDocument = ref('')
 const formPhone = ref('')
 const formEmail = ref('')
 const formShift = ref('none')
-const formUnitId = ref('none')
-
-// Units for selector
-const unitOptions = ref<{ id: string; number: string; label: string | null }[]>([])
-async function fetchUnits() {
-  try {
-    const res = await $fetch<{ data: { id: string; number: string; label: string | null }[] }>('/api/units')
-    unitOptions.value = res.data
-  }
-  catch { /* silently fail — selector will be empty */ }
-}
 
 const activeRoles = computed(() => roleOptions.value.filter(r => r.isActive))
 
@@ -76,24 +65,14 @@ watch(staffList, (list) => {
     formPhone.value = staff.phone ?? ''
     formEmail.value = staff.email ?? ''
     formShift.value = staff.shift ?? 'none'
-    formUnitId.value = staff.unitId ?? 'none'
     qrToken.value = staff.qrToken ?? null
     memberLoaded.value = true
   }
 }, { immediate: true })
 
-// Conserjes requieren unidad obligatoria
-const selectedRoleName = computed(() =>
-  roleOptions.value.find(r => r.id === formRole.value)?.name ?? '',
-)
-const isUnitRequired = computed(() =>
-  selectedRoleName.value.toLowerCase() === 'conserje',
-)
-
 const canSubmit = computed(() =>
   formName.value.trim().length > 0
   && formRole.value
-  && (!isUnitRequired.value || (formUnitId.value !== 'none' && formUnitId.value !== ''))
   && !isSubmitting.value,
 )
 
@@ -177,23 +156,14 @@ const currentRoleName = computed(() =>
   roleOptions.value.find(r => r.id === formRole.value)?.name ?? null,
 )
 
-const currentUnitLabel = computed(() => {
-  const unit = unitOptions.value.find(u => u.id === formUnitId.value)
-  return unit ? unit.number : null
-})
-
-const currentUnitFullLabel = computed(() => {
-  const unit = unitOptions.value.find(u => u.id === formUnitId.value)
-  return unit?.label ?? null
-})
 
 async function handleDownloadBadge(format: 'png' | 'svg' = 'png') {
   if (!qrToken.value) return
   await downloadBadge({
     name: formName.value,
     roleName: currentRoleName.value,
-    unitNumber: currentUnitLabel.value,
-    unitLabel: currentUnitFullLabel.value,
+    unitNumber: null,
+    unitLabel: null,
     phone: formPhone.value || null,
     qrToken: qrToken.value,
   }, format)
@@ -211,7 +181,6 @@ async function handleSubmit() {
       phone: formPhone.value.trim() || undefined,
       email: formEmail.value.trim() || undefined,
       shift: formShift.value === 'none' ? undefined : formShift.value || undefined,
-      unitId: formUnitId.value === 'none' ? undefined : formUnitId.value || undefined,
     })
     toast.success('Personal actualizado correctamente')
     router.push('/admin/personal')
@@ -222,7 +191,7 @@ async function handleSubmit() {
 }
 
 onMounted(async () => {
-  await Promise.all([fetchStaff(), fetchUnits(), fetchRoles()])
+  await Promise.all([fetchStaff(), fetchRoles()])
   // Load QR token if staff has one
   if (currentStaff.value?.qrToken) {
     qrToken.value = currentStaff.value.qrToken
@@ -301,44 +270,33 @@ onMounted(async () => {
             <form class="space-y-6" @submit.prevent="handleSubmit">
               <ErrorAlert v-if="error" :message="error" />
 
-              <div class="space-y-1.5">
-                <Label for="staff-name">Nombre <span class="text-destructive">*</span></Label>
-                <Input
-                  id="staff-name"
-                  v-model="formName"
-                  placeholder="Nombre completo"
-                  class="h-12 text-base"
-                  required
-                />
-              </div>
-
-              <div class="space-y-1.5">
-                <Label for="staff-role">Rol <span class="text-destructive">*</span></Label>
-                <Select v-model="formRole">
-                  <SelectTrigger id="staff-role" size="lg" class="text-base">
-                    <SelectValue placeholder="Seleccionar rol" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem v-for="role in activeRoles" :key="role.id" :value="role.id">
-                      {{ role.name }}
-                    </SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div class="space-y-1.5">
-                <Label for="staff-document">Documento de identidad</Label>
-                <Input
-                  id="staff-document"
-                  v-model="formDocument"
-                  placeholder="Cedula o pasaporte"
-                  class="h-12 text-base"
-                />
-              </div>
-
+              <!-- Nombre + Cédula -->
               <div class="grid gap-4 sm:grid-cols-2">
                 <div class="space-y-1.5">
-                  <Label for="staff-phone">Telefono</Label>
+                  <Label for="staff-name">Nombre <span class="text-destructive">*</span></Label>
+                  <Input
+                    id="staff-name"
+                    v-model="formName"
+                    placeholder="Nombre completo"
+                    class="h-12 text-base"
+                    required
+                  />
+                </div>
+                <div class="space-y-1.5">
+                  <Label for="staff-document">Cédula</Label>
+                  <Input
+                    id="staff-document"
+                    v-model="formDocument"
+                    placeholder="V-12345678"
+                    class="h-12 text-base"
+                  />
+                </div>
+              </div>
+
+              <!-- Teléfono + Email -->
+              <div class="grid gap-4 sm:grid-cols-2">
+                <div class="space-y-1.5">
+                  <Label for="staff-phone">Teléfono</Label>
                   <Input
                     id="staff-phone"
                     v-model="formPhone"
@@ -346,7 +304,6 @@ onMounted(async () => {
                     class="h-12 text-base"
                   />
                 </div>
-
                 <div class="space-y-1.5">
                   <Label for="staff-email">Email</Label>
                   <Input
@@ -359,6 +316,7 @@ onMounted(async () => {
                 </div>
               </div>
 
+              <!-- Turno + Rol -->
               <div class="grid gap-4 sm:grid-cols-2">
                 <div class="space-y-1.5">
                   <Label for="staff-shift">Turno</Label>
@@ -374,13 +332,18 @@ onMounted(async () => {
                     </SelectContent>
                   </Select>
                 </div>
-
                 <div class="space-y-1.5">
-                  <Label>Rancho asignado <span v-if="isUnitRequired" class="text-destructive">*</span></Label>
-                  <UnitCombobox v-model="formUnitId" :units="unitOptions" :required="isUnitRequired" />
-                  <p v-if="isUnitRequired" class="text-xs text-muted-foreground">
-                    Los conserjes deben tener un rancho asignado
-                  </p>
+                  <Label for="staff-role">Rol <span class="text-destructive">*</span></Label>
+                  <Select v-model="formRole">
+                    <SelectTrigger id="staff-role" size="lg" class="text-base">
+                      <SelectValue placeholder="Seleccionar rol" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem v-for="role in activeRoles" :key="role.id" :value="role.id">
+                        {{ role.name }}
+                      </SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
               </div>
 

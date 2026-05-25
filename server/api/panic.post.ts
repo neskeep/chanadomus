@@ -60,6 +60,7 @@ export default defineEventHandler(async (event) => {
   // 5. Broadcast via WebSocket to connected vigilancia clients
   broadcastPanicAlert({
     id: panicEvent!.id,
+    userId: session.user.id,
     createdAt: panicEvent!.createdAt.toISOString(),
     userName: userName as string,
     userEmail: session.user.email,

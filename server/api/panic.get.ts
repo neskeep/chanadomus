@@ -19,6 +19,7 @@ export default defineEventHandler(async (event) => {
   const logs = await db
     .select({
       id: panicEvents.id,
+      userId: panicEvents.userId,
       createdAt: panicEvents.createdAt,
       userName: user.name,
       userEmail: user.email,
@@ -70,6 +71,7 @@ export default defineEventHandler(async (event) => {
     const unitId = panicUnitMap.get(log.id)
     return {
       id: log.id,
+      userId: log.userId,
       createdAt: log.createdAt.toISOString(),
       userName: log.userName,
       userEmail: log.userEmail,

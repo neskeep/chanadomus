@@ -2,7 +2,7 @@
 import { CheckCircle2, XCircle, Loader2 } from 'lucide-vue-next'
 import type { AccessResult } from '~~/shared/types/access'
 
-useHead({ title: 'Registrar Entrada' })
+useHead({ title: 'Registrar Acceso' })
 
 interface Unit {
   id: string

@@ -73,6 +73,29 @@ onUnmounted(() => {
   if (elapsedInterval) clearInterval(elapsedInterval)
 })
 
+const isOpeningChat = ref(false)
+
+async function openDirectChat() {
+  if (!activeAlert.value) return
+  isOpeningChat.value = true
+  try {
+    const { data } = await $fetch('/api/chat/direct', {
+      method: 'POST',
+      body: { targetUserId: activeAlert.value.userId },
+    })
+    await navigateTo({
+      path: `/mi-chana/chat/${data.roomId}`,
+      query: { msg: '🚨 Vigilancia atendiendo alerta de pánico. ¿Se encuentra bien?' },
+    })
+  }
+  catch {
+    toast.error('Error al abrir chat directo')
+  }
+  finally {
+    isOpeningChat.value = false
+  }
+}
+
 function openResolveDialog() {
   resolveNote.value = ''
   resolveDialogOpen.value = true
@@ -270,28 +293,14 @@ onMounted(async () => {
               </Button>
 
               <Button
-                v-if="activeAlert.chatRoomId"
-                as-child
                 variant="outline"
                 size="sm"
                 class="flex-1 gap-2"
+                :disabled="isOpeningChat"
+                @click="openDirectChat"
               >
-                <NuxtLink :to="{ path: `/mi-chana/chat/${activeAlert.chatRoomId}`, query: { msg: `🚨 Vigilancia atendiendo alerta de pánico. ¿Se encuentra bien?` } }">
-                  <MessageCircle class="size-4" />
-                  Chat unidad
-                </NuxtLink>
-              </Button>
-              <Button
-                v-else
-                as-child
-                variant="outline"
-                size="sm"
-                class="flex-1 gap-2"
-              >
-                <NuxtLink to="/mi-chana/chat">
-                  <MessageCircle class="size-4" />
-                  Ir al chat
-                </NuxtLink>
+                <MessageCircle class="size-4" />
+                {{ isOpeningChat ? 'Abriendo...' : 'Chat directo' }}
               </Button>
             </div>
           </div>

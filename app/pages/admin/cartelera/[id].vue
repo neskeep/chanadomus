@@ -1,5 +1,7 @@
 <script setup lang="ts">
-import { Loader2, Paperclip, Calendar } from 'lucide-vue-next'
+import { Loader2, Paperclip, CalendarIcon } from 'lucide-vue-next'
+import { CalendarDate } from '@internationalized/date'
+import type { DateValue } from 'reka-ui'
 import { toast } from 'vue-sonner'
 import type { Announcement, AnnouncementCategory, AnnouncementStatus } from '~~/shared/types/announcement'
 
@@ -22,8 +24,23 @@ const formTitle = ref('')
 const formBody = ref('')
 const formCategory = ref<AnnouncementCategory>('general')
 const formStatus = ref<AnnouncementStatus>('draft')
-const formExpiresAt = ref('')
+const formExpiresAt = shallowRef<DateValue | undefined>(undefined)
+const expiresPickerOpen = ref(false)
 const loaded = ref(false)
+
+function dateToISO(d: DateValue): string {
+  return `${d.year}-${String(d.month).padStart(2, '0')}-${String(d.day).padStart(2, '0')}`
+}
+
+function formatPickerDate(d: DateValue): string {
+  const date = new Date(d.year, d.month - 1, d.day)
+  return date.toLocaleDateString('es-VE', { weekday: 'short', day: 'numeric', month: 'short' })
+}
+
+function parseISODate(iso: string): CalendarDate {
+  const [y, m, d] = iso.split('T')[0]!.split('-').map(Number)
+  return new CalendarDate(y!, m!, d!)
+}
 
 const canSubmit = computed(() =>
   formTitle.value.trim().length > 0
@@ -38,7 +55,7 @@ async function loadAnnouncement() {
     formBody.value = announcement.body
     formCategory.value = announcement.category
     formStatus.value = announcement.status
-    formExpiresAt.value = announcement.expiresAt?.split('T')[0] ?? ''
+    formExpiresAt.value = announcement.expiresAt ? parseISODate(announcement.expiresAt) : undefined
     loaded.value = true
   }
   catch {
@@ -55,7 +72,7 @@ async function handleSubmit() {
       category: formCategory.value,
       status: formStatus.value,
     }
-    if (formExpiresAt.value) data.expiresAt = formExpiresAt.value
+    if (formExpiresAt.value) data.expiresAt = dateToISO(formExpiresAt.value)
     await updateAnnouncement(id, data)
     toast.success('Anuncio actualizado correctamente')
     router.push('/admin/cartelera')
@@ -148,16 +165,22 @@ onMounted(() => {
 
           <!-- Fecha de expiración -->
           <div class="space-y-1.5">
-            <Label for="ann-expires">Fecha de expiración</Label>
-            <div class="relative">
-              <Calendar class="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-              <Input
-                id="ann-expires"
-                v-model="formExpiresAt"
-                type="date"
-                class="h-12 pl-9 text-base"
-              />
-            </div>
+            <Label>Fecha de expiración</Label>
+            <Popover v-model:open="expiresPickerOpen">
+              <PopoverTrigger as-child>
+                <Button variant="outline" class="h-12 w-full justify-start rounded-lg text-base font-normal">
+                  <CalendarIcon class="mr-2 size-4 shrink-0 text-muted-foreground" />
+                  <span class="truncate">{{ formExpiresAt ? formatPickerDate(formExpiresAt) : 'Seleccionar fecha' }}</span>
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent class="w-auto p-0" align="start">
+                <Calendar
+                  :model-value="formExpiresAt"
+                  locale="es"
+                  @update:model-value="(v: DateValue | undefined) => { if (v) { formExpiresAt = v; expiresPickerOpen = false } }"
+                />
+              </PopoverContent>
+            </Popover>
             <p class="text-xs text-muted-foreground">Se archiva automáticamente en esta fecha</p>
           </div>
 

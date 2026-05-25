@@ -61,54 +61,87 @@ function stopAlarm() {
   }
 }
 
+function initWs() {
+  if (_initialized.value) return
+
+  _initialized.value = true
+
+  const wsProtocol = window.location.protocol === 'https:' ? 'wss' : 'ws'
+  const wsUrl = `${wsProtocol}://${window.location.host}/_ws/panic`
+
+  const { status, data } = useWebSocket(wsUrl, {
+    autoReconnect: {
+      retries: -1,
+      delay: 3000,
+    },
+    heartbeat: {
+      message: 'ping',
+      interval: 30000,
+      pongTimeout: 10000,
+    },
+    immediate: true,
+  })
+
+  watch(status, (newStatus) => {
+    isConnected.value = newStatus === 'OPEN'
+  })
+
+  watch(data, (raw) => {
+    if (!raw) return
+
+    try {
+      const message = JSON.parse(raw as string) as { type: string; data: WsPanicAlert & { id: string } }
+      if (message.type === 'panic-alert' && message.data) {
+        const logEntry: PanicAlertLog = {
+          ...message.data,
+          resolvedAt: null,
+          resolvedNote: null,
+          resolverName: null,
+        }
+        alerts.value = [logEntry, ...alerts.value].slice(0, MAX_ALERTS)
+        activeAlert.value = message.data
+        startAlarm()
+      }
+      else if (message.type === 'panic-dismiss' && message.data?.id) {
+        const dismissedId = message.data.id
+        const idx = alerts.value.findIndex(a => a.id === dismissedId)
+        if (idx !== -1) {
+          const existing = alerts.value[idx]
+          if (existing) {
+            alerts.value[idx] = {
+              ...existing,
+              resolvedAt: new Date().toISOString(),
+              resolvedNote: 'Desactivada por el usuario',
+              resolverName: null,
+            }
+          }
+        }
+        if (activeAlert.value?.id === dismissedId) {
+          activeAlert.value = null
+          stopAlarm()
+        }
+      }
+    }
+    catch {
+      // Ignore non-JSON messages (e.g. 'pong')
+    }
+  })
+}
+
 export function usePanicStream() {
   if (!_initialized.value && !import.meta.server) {
     const { role } = useAuth()
 
-    // Only connect WS for vigilancia/admin roles
+    // If role is already available, init immediately
     if (role.value === 'vigilancia' || role.value === 'admin') {
-      _initialized.value = true
-
-      const wsProtocol = window.location.protocol === 'https:' ? 'wss' : 'ws'
-      const wsUrl = `${wsProtocol}://${window.location.host}/_ws/panic`
-
-      const { status, data } = useWebSocket(wsUrl, {
-        autoReconnect: {
-          retries: -1,
-          delay: 3000,
-        },
-        heartbeat: {
-          message: 'ping',
-          interval: 30000,
-          pongTimeout: 10000,
-        },
-        immediate: true,
-      })
-
-      watch(status, (newStatus) => {
-        isConnected.value = newStatus === 'OPEN'
-      })
-
-      watch(data, (raw) => {
-        if (!raw) return
-
-        try {
-          const message = JSON.parse(raw as string) as { type: string; data: WsPanicAlert }
-          if (message.type === 'panic-alert' && message.data) {
-            // WS alert has base fields; extend to PanicAlertLog with null resolved fields
-            const logEntry: PanicAlertLog = {
-              ...message.data,
-              resolvedAt: null,
-              resolvedNote: null,
-              resolverName: null,
-            }
-            alerts.value = [logEntry, ...alerts.value].slice(0, MAX_ALERTS)
-            activeAlert.value = message.data
-            startAlarm()
-          }
-        }
-        catch {
-          // Ignore non-JSON messages (e.g. 'pong')
+      initWs()
+    }
+    else {
+      // Role not yet loaded (hard refresh) — watch until it resolves
+      const stopWatch = watch(role, (newRole) => {
+        if (newRole === 'vigilancia' || newRole === 'admin') {
+          initWs()
+          stopWatch()
         }
       })
     }

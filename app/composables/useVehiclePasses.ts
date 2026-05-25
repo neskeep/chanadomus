@@ -82,8 +82,9 @@ export function useVehiclePasses() {
       await $fetch(`/api/vehicle-passes/${id}/deactivate`, { method: 'POST' })
       const idx = passes.value.findIndex(p => p.id === id)
       if (idx !== -1) {
+        const existing = passes.value[idx]!
         passes.value[idx] = {
-          ...passes.value[idx],
+          ...existing,
           isActive: false,
           deactivatedAt: new Date().toISOString(),
         }

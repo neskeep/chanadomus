@@ -5,7 +5,7 @@ import { toast } from 'vue-sonner'
 useHead({ title: 'Agregar Vehículo' })
 
 const router = useRouter()
-const { members, isSubmitting, error, createVehicle, fetchMembers } = useMyUnit()
+const { members, isSubmitting, error, createVehicle, fetchMembers, generateVehiclePass } = useMyUnit()
 
 const formPlate = ref('')
 const formBrand = ref('')
@@ -24,15 +24,22 @@ const canSubmit = computed(() =>
 async function handleSubmit() {
   if (!canSubmit.value) return
   try {
-    await createVehicle({
+    const vehicle = await createVehicle({
       plate: formPlate.value.trim().toUpperCase(),
       brand: formBrand.value.trim(),
       model: formModel.value.trim(),
       color: formColor.value.trim(),
       ownerMemberId: formOwnerMemberId.value === 'none' ? undefined : formOwnerMemberId.value || undefined,
     })
-    toast.success('Vehículo registrado correctamente')
-    router.push('/propietario/mi-unidad')
+    // Auto-generate QR pass
+    try {
+      await generateVehiclePass(vehicle.id)
+    }
+    catch {
+      // Non-blocking: pass generation failure shouldn't prevent creation
+    }
+    toast.success('Vehículo registrado con pase QR')
+    router.push(`/propietario/mi-unidad/editar-vehiculo/${vehicle.id}`)
   }
   catch {
     toast.error(error.value ?? 'Error al guardar')

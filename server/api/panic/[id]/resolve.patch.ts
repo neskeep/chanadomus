@@ -1,6 +1,7 @@
 import { eq, and } from 'drizzle-orm'
 import { db } from '~~/server/db'
 import { panicEvents } from '~~/server/db/schema/panic'
+import { broadcastPanicDismiss } from '~~/server/utils/ws-panic'
 
 export default defineEventHandler(async (event) => {
   const session = await requireRole(event, ['admin', 'vigilancia'])
@@ -33,6 +34,8 @@ export default defineEventHandler(async (event) => {
   if (!updated) {
     throw createError({ statusCode: 404, message: 'Alerta no encontrada' })
   }
+
+  broadcastPanicDismiss(updated.id)
 
   return { data: { id: updated.id, resolvedAt: updated.resolvedAt?.toISOString() } }
 })

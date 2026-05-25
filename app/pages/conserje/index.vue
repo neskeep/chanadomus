@@ -9,16 +9,16 @@ const { stats, isLoading } = useDashboard()
 const { formatDateTime } = useFormatDate()
 
 const quickActions = [
-  { label: 'Reportar Incidencia', to: '/conserje/incidencias', icon: ClipboardList },
+  { label: 'Reportar Incidencia', to: '/conserje/incidencias/nueva', icon: ClipboardList },
   { label: 'Proveedores', to: '/mi-chana/proveedores', icon: Store },
-  { label: 'Registrar Acceso', to: '/vigilancia/accesos', icon: DoorOpen },
+  { label: 'Registrar Acceso', to: '/conserje/registrar-acceso', icon: DoorOpen },
 ]
 </script>
 
 <template>
   <div class="space-y-8">
     <!-- Stat cards -->
-    <div class="grid grid-cols-3 gap-4">
+    <div class="grid grid-cols-2 gap-3 md:grid-cols-3 md:gap-4">
       <StatCard
         label="Accesos Hoy"
         :value="stats?.todayAccessCount ?? 0"
@@ -55,7 +55,7 @@ const quickActions = [
     <!-- Quick actions -->
     <div>
       <h2 class="mb-3 text-sm font-semibold text-muted-foreground">Acciones rápidas</h2>
-      <div class="grid grid-cols-3 gap-3">
+      <div class="grid grid-cols-2 gap-3 md:grid-cols-3">
         <NuxtLink
           v-for="action in quickActions"
           :key="action.to"

@@ -36,7 +36,7 @@ export interface ValidationResult {
   visitorName?: string
   visitorDocument?: string | null
   visitorType?: VisitorType
-  unitNumber?: string
+  unitNumber?: string | null
   unitLabel?: string | null
   expiresAt?: string
   usedAt?: string | null
@@ -47,10 +47,10 @@ export interface ValidationResult {
   /** Indicates this was a vehicle pass */
   isVehiclePass?: boolean
   /** Vehicle data when validated via vehicle pass */
-  vehiclePlate?: string
-  vehicleBrand?: string
-  vehicleModel?: string
-  vehicleColor?: string
+  vehiclePlate?: string | null
+  vehicleBrand?: string | null
+  vehicleModel?: string | null
+  vehicleColor?: string | null
   /** Vehicle pass type: resident or guest */
   passType?: string
   /** Max occupants allowed, null = unlimited */

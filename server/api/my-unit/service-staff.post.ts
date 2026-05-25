@@ -37,6 +37,10 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 400, message: 'Rol no válido' })
   }
 
+  if (!body.idDocument || !body.idDocument.trim()) {
+    throw createError({ statusCode: 400, message: 'El documento de identidad es requerido' })
+  }
+
   const [inserted] = await db
     .insert(unitServiceStaff)
     .values({

@@ -1,7 +1,8 @@
 import { db } from '~~/server/db'
 import { providers, providerReviews } from '~~/server/db/schema/provider'
 import { user } from '~~/server/db/schema/auth'
-import { eq, and, desc, count, ilike, avg, inArray } from 'drizzle-orm'
+import { serviceStaffRoles } from '~~/server/db/schema/service-staff-role'
+import { eq, and, asc, count, ilike, avg, inArray } from 'drizzle-orm'
 import type { Provider, ProviderCategory, ProviderStatus } from '~~/shared/types/provider'
 
 const VALID_CATEGORIES: ProviderCategory[] = [
@@ -73,6 +74,8 @@ export default defineEventHandler(async (event) => {
       costs: providers.costs,
       notes: providers.notes,
       category: providers.category,
+      serviceRoleId: providers.serviceRoleId,
+      serviceRoleName: serviceStaffRoles.name,
       status: providers.status,
       createdById: providers.createdById,
       tenantId: providers.tenantId,
@@ -82,8 +85,9 @@ export default defineEventHandler(async (event) => {
     })
     .from(providers)
     .leftJoin(user, eq(providers.createdById, user.id))
+    .leftJoin(serviceStaffRoles, eq(providers.serviceRoleId, serviceStaffRoles.id))
     .where(whereClause)
-    .orderBy(desc(providers.createdAt))
+    .orderBy(asc(serviceStaffRoles.name), asc(providers.name))
     .limit(limit)
     .offset(offset)
 
@@ -123,6 +127,8 @@ export default defineEventHandler(async (event) => {
       costs: row.costs,
       notes: row.notes,
       category: row.category,
+      serviceRoleId: row.serviceRoleId,
+      serviceRoleName: row.serviceRoleName ?? undefined,
       status: row.status,
       createdById: row.createdById,
       createdByName: row.createdByName ?? undefined,

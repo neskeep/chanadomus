@@ -295,6 +295,20 @@
       "when": 1780408000000,
       "tag": "0041_invitations",
       "breakpoints": true
+    },
+    {
+      "idx": 42,
+      "version": "7",
+      "when": 1784793600000,
+      "tag": "0042_provider_service_role_id",
+      "breakpoints": true
+    },
+    {
+      "idx": 43,
+      "version": "7",
+      "when": 1785398400000,
+      "tag": "0043_vehicle_pass_temporary",
+      "breakpoints": true
     }
   ]
 }

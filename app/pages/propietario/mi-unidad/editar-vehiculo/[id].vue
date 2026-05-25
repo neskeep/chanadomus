@@ -380,7 +380,7 @@ onMounted(() => loadVehicle())
 
               <!-- Download badge -->
               <Button
-                class="h-10 w-full text-sm"
+                class="mt-2 h-10 w-full text-sm"
                 :disabled="isDownloadingBadge"
                 @click="handleDownloadBadge"
               >

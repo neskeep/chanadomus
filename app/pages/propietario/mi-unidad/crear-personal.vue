@@ -5,7 +5,7 @@ import { toast } from 'vue-sonner'
 useHead({ title: 'Agregar Personal' })
 
 const router = useRouter()
-const { serviceRoles, isSubmitting, error, createServiceStaff, fetchServiceRoles } = useMyUnit()
+const { serviceRoles, isSubmitting, error, createServiceStaff, fetchServiceRoles, generateStaffPass } = useMyUnit()
 
 const formName = ref('')
 const formRoleId = ref('')
@@ -15,20 +15,28 @@ const formPhone = ref('')
 const canSubmit = computed(() =>
   formName.value.trim().length > 0
   && formRoleId.value !== ''
+  && formDocument.value.trim().length > 0
   && !isSubmitting.value,
 )
 
 async function handleSubmit() {
   if (!canSubmit.value) return
   try {
-    await createServiceStaff({
+    const staff = await createServiceStaff({
       name: formName.value.trim(),
       roleId: formRoleId.value,
       idDocument: formDocument.value.trim() || undefined,
       phone: formPhone.value.trim() || undefined,
     })
-    toast.success('Personal registrado correctamente')
-    router.push('/propietario/mi-unidad')
+    // Auto-generate QR pass
+    try {
+      await generateStaffPass(staff.id)
+    }
+    catch {
+      // Non-blocking: pass generation failure shouldn't prevent creation
+    }
+    toast.success('Personal registrado con pase QR')
+    router.push(`/propietario/mi-unidad/editar-personal/${staff.id}`)
   }
   catch {
     toast.error(error.value ?? 'Error al guardar')
@@ -71,12 +79,13 @@ onMounted(() => fetchServiceRoles())
               </Select>
             </div>
             <div class="space-y-1.5">
-              <Label for="staff-document">Documento de identidad</Label>
+              <Label for="staff-document">Cédula <span class="text-destructive">*</span></Label>
               <Input
                 id="staff-document"
                 v-model="formDocument"
-                placeholder="Cédula o pasaporte"
+                placeholder="V-12345678"
                 class="h-12 text-base"
+                required
               />
             </div>
           </div>

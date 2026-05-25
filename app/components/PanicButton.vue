@@ -13,6 +13,53 @@ const holdProgress = ref(0)
 let holdTimer: ReturnType<typeof setTimeout> | null = null
 let progressInterval: ReturnType<typeof setInterval> | null = null
 
+// Listen for dismiss from vigilancia via WebSocket — only connect when alert is active
+let wsClose: (() => void) | null = null
+
+function connectDismissListener() {
+  if (import.meta.server || wsClose) return
+
+  const wsProtocol = window.location.protocol === 'https:' ? 'wss' : 'ws'
+  const wsUrl = `${wsProtocol}://${window.location.host}/_ws/panic`
+
+  const { data: wsData, close } = useWebSocket(wsUrl, {
+    autoReconnect: { retries: 5, delay: 5000 },
+    heartbeat: { message: 'ping', interval: 30000, pongTimeout: 10000 },
+    immediate: true,
+  })
+  wsClose = close
+
+  watch(wsData, (raw) => {
+    if (!raw) return
+    try {
+      const msg = JSON.parse(raw as string) as { type: string; data: { id: string } }
+      if (msg.type === 'panic-dismiss' && msg.data?.id === activeAlertId.value) {
+        activeAlertId.value = null
+        disconnectDismissListener()
+        toast.info('Tu alerta fue atendida por vigilancia')
+      }
+    } catch {
+      // Ignore non-JSON (pong)
+    }
+  })
+}
+
+function disconnectDismissListener() {
+  if (wsClose) {
+    wsClose()
+    wsClose = null
+  }
+}
+
+// Connect/disconnect WS based on active alert state
+watch(hasActiveAlert, (active) => {
+  if (active) {
+    connectDismissListener()
+  } else {
+    disconnectDismissListener()
+  }
+})
+
 // Check if user has an active (unresolved) panic alert on mount
 onMounted(async () => {
   try {
@@ -100,6 +147,7 @@ async function deactivatePanic() {
 
 onUnmounted(() => {
   cancelHold()
+  disconnectDismissListener()
 })
 </script>
 

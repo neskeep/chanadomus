@@ -1,5 +1,7 @@
 <script setup lang="ts">
-import { Loader2, ArrowUpRight, ArrowDownLeft } from 'lucide-vue-next'
+import { Loader2, ArrowUpRight, ArrowDownLeft, CalendarIcon } from 'lucide-vue-next'
+import { CalendarDate, getLocalTimeZone, today } from '@internationalized/date'
+import type { DateValue } from 'reka-ui'
 import { toast } from 'vue-sonner'
 import type { RecordType } from '~~/shared/types/financial'
 
@@ -14,7 +16,17 @@ const formUnit = ref('')
 const formType = ref<RecordType | ''>('')
 const formAmount = ref('')
 const formDescription = ref('')
-const formDate = ref(new Date().toISOString().split('T')[0])
+const formDate = shallowRef<DateValue>(today(getLocalTimeZone()))
+const datePickerOpen = ref(false)
+
+function dateToISO(d: DateValue): string {
+  return `${d.year}-${String(d.month).padStart(2, '0')}-${String(d.day).padStart(2, '0')}`
+}
+
+function formatPickerDate(d: DateValue): string {
+  const date = new Date(d.year, d.month - 1, d.day)
+  return date.toLocaleDateString('es-VE', { weekday: 'short', day: 'numeric', month: 'short' })
+}
 
 const canSubmit = computed(() =>
   formUnit.value
@@ -23,7 +35,8 @@ const canSubmit = computed(() =>
   && parseFloat(formAmount.value) > 0
   && formDescription.value.trim().length > 0
   && formDate.value
-  && !isSubmitting.value,
+  && !isSubmitting.value
+  && !error.value,
 )
 
 async function handleSubmit() {
@@ -34,7 +47,7 @@ async function handleSubmit() {
       type: formType.value as RecordType,
       amount: formAmount.value,
       description: formDescription.value,
-      date: formDate.value,
+      date: dateToISO(formDate.value),
     })
     toast.success('Movimiento registrado correctamente')
     router.push('/admin/finanzas')
@@ -63,46 +76,46 @@ onMounted(() => {
             <div class="grid grid-cols-2 gap-3">
               <button
                 type="button"
-                class="flex items-center gap-3 rounded-lg border p-3 text-left transition-colors"
+                class="flex items-center gap-2 rounded-lg border p-2.5 text-left transition-colors md:gap-3 md:p-3"
                 :class="formType === 'cargo'
                   ? 'border-destructive/40 bg-destructive/5'
                   : 'hover:bg-muted/50'"
                 @click="formType = 'cargo'"
               >
                 <div
-                  class="flex size-10 shrink-0 items-center justify-center rounded-lg"
+                  class="flex size-8 shrink-0 items-center justify-center rounded-lg md:size-10"
                   :class="formType === 'cargo' ? 'bg-destructive/10' : 'bg-muted'"
                 >
                   <ArrowUpRight
-                    class="size-5"
+                    class="size-4 md:size-5"
                     :class="formType === 'cargo' ? 'text-destructive' : 'text-muted-foreground'"
                   />
                 </div>
-                <div>
+                <div class="min-w-0">
                   <p class="text-sm font-semibold" :class="formType === 'cargo' ? 'text-destructive' : ''">Cargo</p>
-                  <p class="text-xs text-muted-foreground">Cobro al propietario</p>
+                  <p class="truncate text-[11px] text-muted-foreground md:text-xs">Cobro al propietario</p>
                 </div>
               </button>
               <button
                 type="button"
-                class="flex items-center gap-3 rounded-lg border p-3 text-left transition-colors"
+                class="flex items-center gap-2 rounded-lg border p-2.5 text-left transition-colors md:gap-3 md:p-3"
                 :class="formType === 'abono'
                   ? 'border-primary/40 bg-primary/5'
                   : 'hover:bg-muted/50'"
                 @click="formType = 'abono'"
               >
                 <div
-                  class="flex size-10 shrink-0 items-center justify-center rounded-lg"
+                  class="flex size-8 shrink-0 items-center justify-center rounded-lg md:size-10"
                   :class="formType === 'abono' ? 'bg-primary/10' : 'bg-muted'"
                 >
                   <ArrowDownLeft
-                    class="size-5"
+                    class="size-4 md:size-5"
                     :class="formType === 'abono' ? 'text-primary' : 'text-muted-foreground'"
                   />
                 </div>
-                <div>
+                <div class="min-w-0">
                   <p class="text-sm font-semibold" :class="formType === 'abono' ? 'text-primary' : ''">Abono</p>
-                  <p class="text-xs text-muted-foreground">Pago recibido</p>
+                  <p class="truncate text-[11px] text-muted-foreground md:text-xs">Pago recibido</p>
                 </div>
               </button>
             </div>
@@ -111,31 +124,32 @@ onMounted(() => {
           <!-- Unit + Date row -->
           <div class="grid gap-4 sm:grid-cols-2">
             <div class="space-y-1.5">
-              <Label for="unit-select">Unidad <span class="text-destructive">*</span></Label>
-              <Select v-model="formUnit">
-                <SelectTrigger id="unit-select" size="lg" class="text-base">
-                  <SelectValue placeholder="Selecciona unidad" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem
-                    v-for="unit in units"
-                    :key="unit.id"
-                    :value="unit.id"
-                  >
-                    {{ unit.number }}{{ unit.label ? ` — ${unit.label}` : '' }}
-                  </SelectItem>
-                </SelectContent>
-              </Select>
+              <Label>Unidad <span class="text-destructive">*</span></Label>
+              <UnitCombobox
+                v-model="formUnit"
+                :units="units"
+                placeholder="Buscar rancho..."
+                required
+              />
             </div>
 
             <div class="space-y-1.5">
-              <Label for="date-input">Fecha <span class="text-destructive">*</span></Label>
-              <Input
-                id="date-input"
-                v-model="formDate"
-                type="date"
-                class="h-12 text-base"
-              />
+              <Label>Fecha <span class="text-destructive">*</span></Label>
+              <Popover v-model:open="datePickerOpen">
+                <PopoverTrigger as-child>
+                  <Button variant="outline" class="h-12 w-full justify-start rounded-lg text-base font-normal">
+                    <CalendarIcon class="mr-2 size-4 shrink-0 text-muted-foreground" />
+                    <span class="truncate">{{ formatPickerDate(formDate) }}</span>
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent class="w-auto p-0" align="start">
+                  <Calendar
+                    :model-value="formDate"
+                    locale="es"
+                    @update:model-value="(v: DateValue | undefined) => { if (v) { formDate = v; datePickerOpen = false } }"
+                  />
+                </PopoverContent>
+              </Popover>
             </div>
           </div>
 
