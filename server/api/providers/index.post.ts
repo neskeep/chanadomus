@@ -20,8 +20,9 @@ export default defineEventHandler(async (event) => {
   if (body.name.trim().length > 200) {
     throw createError({ statusCode: 400, message: 'El nombre no puede exceder 200 caracteres' })
   }
-  if (!body.category || !VALID_CATEGORIES.includes(body.category)) {
-    throw createError({ statusCode: 400, message: 'La categoria es requerida y debe ser valida' })
+  // Category validation: accept serviceRoleId OR legacy category enum
+  if (!body.serviceRoleId && (!body.category || !VALID_CATEGORIES.includes(body.category))) {
+    throw createError({ statusCode: 400, message: 'La categoria es requerida' })
   }
 
   // Validate optional fields
@@ -43,7 +44,8 @@ export default defineEventHandler(async (event) => {
       services: body.services ?? null,
       costs: body.costs?.trim() || null,
       notes: body.notes?.trim() || null,
-      category: body.category,
+      category: body.category ?? 'otro',
+      serviceRoleId: body.serviceRoleId ?? null,
       status: 'active',
       createdById: session.user.id,
       tenantId: session.tenantId,
@@ -66,6 +68,7 @@ export default defineEventHandler(async (event) => {
     costs: row.costs,
     notes: row.notes,
     category: row.category,
+    serviceRoleId: row.serviceRoleId,
     status: row.status,
     createdById: row.createdById,
     tenantId: row.tenantId,

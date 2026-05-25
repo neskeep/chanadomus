@@ -62,6 +62,7 @@ export default defineEventHandler(async (event) => {
   if (body.costs !== undefined) updateValues.costs = body.costs?.trim() || null
   if (body.notes !== undefined) updateValues.notes = body.notes?.trim() || null
   if (body.category !== undefined) updateValues.category = body.category
+  if (body.serviceRoleId !== undefined) updateValues.serviceRoleId = body.serviceRoleId || null
   if (body.status !== undefined) updateValues.status = body.status
 
   const rows = await db
@@ -86,6 +87,7 @@ export default defineEventHandler(async (event) => {
     costs: row.costs,
     notes: row.notes,
     category: row.category,
+    serviceRoleId: row.serviceRoleId,
     status: row.status,
     createdById: row.createdById,
     tenantId: row.tenantId,

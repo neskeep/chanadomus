@@ -1,8 +1,7 @@
 <script setup lang="ts">
 import { Loader2 } from 'lucide-vue-next'
 import { toast } from 'vue-sonner'
-import type { ProviderCategory, UpdateProvider } from '~~/shared/types/provider'
-import { PROVIDER_CATEGORIES } from '~~/shared/types/provider'
+import type { UpdateProvider } from '~~/shared/types/provider'
 
 const route = useRoute()
 const router = useRouter()
@@ -15,13 +14,14 @@ const {
   fetchProvider,
   updateProvider,
 } = useProviders()
+const { roles: serviceRoles, fetchRoles } = useServiceRoles()
 
 useHead({ title: 'Editar Proveedor' })
 
 // --- Form state ---
 const formName = ref('')
 const formPhone = ref('')
-const formCategory = ref<ProviderCategory>('otro')
+const formServiceRoleId = ref('')
 const formAddress = ref('')
 const formSchedule = ref('')
 const formServices = ref('')
@@ -38,7 +38,7 @@ async function loadProvider() {
     const provider = await fetchProvider(id)
     formName.value = provider.name
     formPhone.value = provider.phone ?? ''
-    formCategory.value = provider.category
+    formServiceRoleId.value = provider.serviceRoleId ?? ''
     formAddress.value = provider.address ?? ''
     formSchedule.value = provider.schedule ?? ''
     formServices.value = provider.services?.join('\n') ?? ''
@@ -61,7 +61,7 @@ async function handleSubmit() {
     const data: UpdateProvider = {
       name: formName.value.trim(),
       phone: formPhone.value.trim() || null,
-      category: formCategory.value,
+      serviceRoleId: formServiceRoleId.value || null,
       address: formAddress.value.trim() || null,
       schedule: formSchedule.value.trim() || null,
       services: services ?? null,
@@ -78,7 +78,7 @@ async function handleSubmit() {
 }
 
 onMounted(() => {
-  loadProvider()
+  Promise.all([loadProvider(), fetchRoles()])
 })
 </script>
 
@@ -125,17 +125,13 @@ onMounted(() => {
               />
             </div>
             <div class="space-y-1.5">
-              <Label for="prov-category">Categoría</Label>
-              <Select v-model="formCategory">
-                <SelectTrigger id="prov-category" size="lg" class="text-base">
-                  <SelectValue placeholder="Seleccionar categoría" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem v-for="cat in PROVIDER_CATEGORIES" :key="cat.key" :value="cat.key">
-                    {{ cat.label }}
-                  </SelectItem>
-                </SelectContent>
-              </Select>
+              <Label>Categoría <span class="text-destructive">*</span></Label>
+              <ServiceRoleCombobox
+                v-model="formServiceRoleId"
+                :roles="serviceRoles"
+                required
+                @create="(r) => serviceRoles.push(r)"
+              />
             </div>
           </div>
 

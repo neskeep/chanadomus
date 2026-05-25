@@ -36,9 +36,11 @@ const filterStatus = ref<ProviderStatus | ''>('')
 
 const { target, isMounted } = useTopbarPortal()
 
-const providerCategoryOptions = [
-  ...PROVIDER_CATEGORIES.map(cat => ({ value: cat.key, label: cat.label })),
-]
+// Service roles for category filter
+const { roles: serviceRoles, fetchRoles: fetchServiceRoles } = useServiceRoles()
+const providerCategoryOptions = computed(() =>
+  serviceRoles.value.map(r => ({ value: r.id, label: r.name })),
+)
 
 const providerStatusOptions = [
   { value: 'active' as const, label: 'Activo' },
@@ -106,6 +108,7 @@ watch([currentPage, filterCategory, filterStatus], () => {
 
 onMounted(() => {
   loadProviders()
+  fetchServiceRoles()
 })
 
 function confirmDelete(id: string) {
@@ -224,10 +227,9 @@ function renderStars(rating: number | undefined): number[] {
                 <div class="flex items-center gap-2">
                   <p class="truncate text-sm font-semibold">{{ sug.name }}</p>
                   <span
-                    class="inline-flex shrink-0 rounded-lg px-1.5 py-0.5 text-[11px] font-medium"
-                    :class="CATEGORY_COLORS[sug.category]"
+                    class="inline-flex shrink-0 rounded-lg bg-muted px-1.5 py-0.5 text-[11px] font-medium text-muted-foreground"
                   >
-                    {{ CATEGORY_LABELS[sug.category] }}
+                    {{ sug.serviceRoleName ?? CATEGORY_LABELS[sug.category] }}
                   </span>
                 </div>
                 <div class="mt-0.5 flex items-center gap-x-1 text-[11px] text-muted-foreground">
@@ -310,11 +312,8 @@ function renderStars(rating: number | undefined): number[] {
                 </NuxtLink>
               </TableCell>
               <TableCell>
-                <span
-                  class="inline-flex rounded-lg px-2 py-0.5 text-xs font-medium"
-                  :class="CATEGORY_COLORS[item.category]"
-                >
-                  {{ CATEGORY_LABELS[item.category] }}
+                <span class="inline-flex rounded-lg bg-muted px-2 py-0.5 text-xs font-medium text-muted-foreground">
+                  {{ item.serviceRoleName ?? CATEGORY_LABELS[item.category] }}
                 </span>
               </TableCell>
               <TableCell>

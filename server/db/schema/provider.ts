@@ -1,6 +1,7 @@
 import { pgTable, pgEnum, uuid, text, timestamp, integer, index } from 'drizzle-orm/pg-core'
 import { tenants } from './tenant'
 import { user } from './auth'
+import { serviceStaffRoles } from './service-staff-role'
 
 // Enums
 export const providerCategoryEnum = pgEnum('provider_category', [
@@ -30,6 +31,7 @@ export const providers = pgTable('providers', {
   costs: text('costs'),
   notes: text('notes'),
   category: providerCategoryEnum('category').notNull(),
+  serviceRoleId: uuid('service_role_id').references(() => serviceStaffRoles.id),
   status: providerStatusEnum('status').notNull().default('active'),
   createdById: text('created_by_id').notNull().references(() => user.id),
   tenantId: uuid('tenant_id').notNull().references(() => tenants.id),
@@ -38,6 +40,7 @@ export const providers = pgTable('providers', {
 }, (table) => [
   index('provider_tenant_idx').on(table.tenantId),
   index('provider_category_idx').on(table.category),
+  index('provider_service_role_idx').on(table.serviceRoleId),
   index('provider_status_idx').on(table.status),
   index('provider_created_by_idx').on(table.createdById),
 ])
