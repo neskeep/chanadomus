@@ -76,46 +76,46 @@ onMounted(() => {
             <div class="grid grid-cols-2 gap-3">
               <button
                 type="button"
-                class="flex items-center gap-3 rounded-lg border p-3 text-left transition-colors"
+                class="flex items-center gap-2 rounded-lg border p-2.5 text-left transition-colors md:gap-3 md:p-3"
                 :class="formType === 'cargo'
                   ? 'border-destructive/40 bg-destructive/5'
                   : 'hover:bg-muted/50'"
                 @click="formType = 'cargo'"
               >
                 <div
-                  class="flex size-10 shrink-0 items-center justify-center rounded-lg"
+                  class="flex size-8 shrink-0 items-center justify-center rounded-lg md:size-10"
                   :class="formType === 'cargo' ? 'bg-destructive/10' : 'bg-muted'"
                 >
                   <ArrowUpRight
-                    class="size-5"
+                    class="size-4 md:size-5"
                     :class="formType === 'cargo' ? 'text-destructive' : 'text-muted-foreground'"
                   />
                 </div>
-                <div>
+                <div class="min-w-0">
                   <p class="text-sm font-semibold" :class="formType === 'cargo' ? 'text-destructive' : ''">Cargo</p>
-                  <p class="text-xs text-muted-foreground">Cobro al propietario</p>
+                  <p class="truncate text-[11px] text-muted-foreground md:text-xs">Cobro al propietario</p>
                 </div>
               </button>
               <button
                 type="button"
-                class="flex items-center gap-3 rounded-lg border p-3 text-left transition-colors"
+                class="flex items-center gap-2 rounded-lg border p-2.5 text-left transition-colors md:gap-3 md:p-3"
                 :class="formType === 'abono'
                   ? 'border-primary/40 bg-primary/5'
                   : 'hover:bg-muted/50'"
                 @click="formType = 'abono'"
               >
                 <div
-                  class="flex size-10 shrink-0 items-center justify-center rounded-lg"
+                  class="flex size-8 shrink-0 items-center justify-center rounded-lg md:size-10"
                   :class="formType === 'abono' ? 'bg-primary/10' : 'bg-muted'"
                 >
                   <ArrowDownLeft
-                    class="size-5"
+                    class="size-4 md:size-5"
                     :class="formType === 'abono' ? 'text-primary' : 'text-muted-foreground'"
                   />
                 </div>
-                <div>
+                <div class="min-w-0">
                   <p class="text-sm font-semibold" :class="formType === 'abono' ? 'text-primary' : ''">Abono</p>
-                  <p class="text-xs text-muted-foreground">Pago recibido</p>
+                  <p class="truncate text-[11px] text-muted-foreground md:text-xs">Pago recibido</p>
                 </div>
               </button>
             </div>
