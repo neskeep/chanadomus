@@ -123,17 +123,13 @@ async function submit(result: 'allowed' | 'denied') {
 
         <!-- Unidad destino -->
         <div class="space-y-1.5">
-          <Label for="unit-select">Unidad destino <span class="text-destructive">*</span></Label>
-          <Select v-model="form.unitId">
-            <SelectTrigger id="unit-select" size="lg" class="w-full text-base">
-              <SelectValue placeholder="Seleccionar unidad" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem v-for="unit in units" :key="unit.id" :value="unit.id">
-                {{ unit.number }}{{ unit.label ? ` — ${unit.label}` : '' }}
-              </SelectItem>
-            </SelectContent>
-          </Select>
+          <Label>Unidad destino <span class="text-destructive">*</span></Label>
+          <UnitCombobox
+            v-model="form.unitId"
+            :units="units"
+            placeholder="Buscar rancho..."
+            required
+          />
         </div>
 
         <!-- Tipo visitante (botones toggle) -->

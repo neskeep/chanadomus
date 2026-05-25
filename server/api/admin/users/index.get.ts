@@ -1,7 +1,7 @@
 import { db } from '~~/server/db'
 import { user } from '~~/server/db/schema/auth'
 import { units } from '~~/server/db/schema/unit'
-import { eq, and, or, ilike, asc } from 'drizzle-orm'
+import { eq, and, or, ilike, asc, sql } from 'drizzle-orm'
 import { USER_ROLES, type UserRole } from '~~/shared/types/auth'
 
 export default defineEventHandler(async (event) => {
@@ -45,7 +45,16 @@ export default defineEventHandler(async (event) => {
     .from(user)
     .leftJoin(units, eq(user.unitId, units.id))
     .where(and(...conditions))
-    .orderBy(asc(user.name))
+    .orderBy(
+      sql`CASE ${user.role}
+        WHEN 'admin' THEN 0
+        WHEN 'conserje' THEN 1
+        WHEN 'vigilancia' THEN 2
+        WHEN 'propietario' THEN 3
+        ELSE 4
+      END`,
+      asc(user.name),
+    )
 
   return { data: rows }
 })

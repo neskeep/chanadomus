@@ -23,8 +23,16 @@ const { target, isMounted } = useTopbarPortal()
 // Filters
 const selectedRole = ref<UserRole | ''>('')
 const searchQuery = ref('')
+const sortBy = ref('role')
+// Prevent deselecting sort (TopbarFilterGroup toggles to '' on re-click)
+watch(sortBy, (v) => { if (!v) sortBy.value = 'role' })
 
 const roleOptions = USER_ROLES.map(r => ({ value: r, label: ROLE_LABELS[r] }))
+const sortOptions = [
+  { value: 'role', label: 'Rol + nombre' },
+  { value: 'name', label: 'Nombre A-Z' },
+  { value: 'unit', label: 'Unidad' },
+]
 
 const ROLE_BADGE: Record<UserRole, { label: string; variant: 'default' | 'secondary' | 'outline' }> = {
   admin: { label: 'Admin', variant: 'default' },
@@ -33,7 +41,14 @@ const ROLE_BADGE: Record<UserRole, { label: string; variant: 'default' | 'second
   vigilancia: { label: 'Vigilancia', variant: 'outline' },
 }
 
-// Filtered list
+const ROLE_ORDER: Record<UserRole, number> = {
+  admin: 0,
+  conserje: 1,
+  vigilancia: 2,
+  propietario: 3,
+}
+
+// Filtered + sorted list
 const filteredUsers = computed(() => {
   let list = userList.value
   if (selectedRole.value) {
@@ -46,7 +61,20 @@ const filteredUsers = computed(() => {
       || u.email.toLowerCase().includes(q),
     )
   }
-  return list
+  return [...list].sort((a, b) => {
+    if (sortBy.value === 'name') {
+      return a.name.localeCompare(b.name, 'es')
+    }
+    if (sortBy.value === 'unit') {
+      const aUnit = a.unitNumber ?? ''
+      const bUnit = b.unitNumber ?? ''
+      return aUnit.localeCompare(bUnit, 'es') || a.name.localeCompare(b.name, 'es')
+    }
+    // Default: role priority + alphabetical
+    const roleDiff = ROLE_ORDER[a.role] - ROLE_ORDER[b.role]
+    if (roleDiff !== 0) return roleDiff
+    return a.name.localeCompare(b.name, 'es')
+  })
 })
 
 // Password Dialog
@@ -109,8 +137,9 @@ onMounted(() => {
   <div>
     <Teleport :to="target" defer v-if="isMounted">
       <TopbarSearch v-model="searchQuery" placeholder="Buscar usuarios...">
-        <TopbarFilters :active="selectedRole !== ''" @clear="selectedRole = ''">
+        <TopbarFilters :active="selectedRole !== '' || sortBy !== 'role'" @clear="selectedRole = ''; sortBy = 'role'">
           <TopbarFilterGroup v-model="selectedRole" label="Rol" :options="roleOptions" />
+          <TopbarFilterGroup v-model="sortBy" label="Ordenar por" :options="sortOptions" />
         </TopbarFilters>
       </TopbarSearch>
       <NuxtLink to="/admin/usuarios/crear">
@@ -133,8 +162,9 @@ onMounted(() => {
     <!-- Mobile search -->
     <div class="mb-4 md:hidden">
       <TopbarSearch v-model="searchQuery" placeholder="Buscar usuarios...">
-        <TopbarFilters :active="selectedRole !== ''" @clear="selectedRole = ''">
+        <TopbarFilters :active="selectedRole !== '' || sortBy !== 'role'" @clear="selectedRole = ''; sortBy = 'role'">
           <TopbarFilterGroup v-model="selectedRole" label="Rol" :options="roleOptions" />
+          <TopbarFilterGroup v-model="sortBy" label="Ordenar por" :options="sortOptions" />
         </TopbarFilters>
       </TopbarSearch>
     </div>
