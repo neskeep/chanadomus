@@ -7,15 +7,17 @@ import {
   XCircle,
   Camera,
   EyeOff,
+  Trash2,
 } from 'lucide-vue-next'
 import { toast } from 'vue-sonner'
 import type { IncidentStatus, IncidentPriority } from '~~/shared/types/incident'
 import { INCIDENT_STATUS_COLORS, INCIDENT_STATUS_LABELS, INCIDENT_PRIORITY_COLORS, INCIDENT_PRIORITY_LABELS } from '~/composables/useColorMap'
 
 const route = useRoute()
+const router = useRouter()
 const id = route.params.id as string
 
-const { incident, isLoading, isUpdating, error, fetchIncident, updateStatus } = useIncidentDetail()
+const { incident, isLoading, isUpdating, isDeleting, error, fetchIncident, updateStatus, deleteIncident } = useIncidentDetail()
 const { formatDate, formatDateTime } = useFormatDate()
 
 // Override page info with dynamic title
@@ -54,6 +56,17 @@ async function handleUpdateStatus() {
   }
   catch {
     toast.error(error.value ?? 'Error al actualizar estado')
+  }
+}
+
+async function handleDelete() {
+  try {
+    await deleteIncident(id)
+    toast.success('Incidencia eliminada correctamente')
+    router.push('/admin/incidencias')
+  }
+  catch {
+    toast.error(error.value ?? 'Error al eliminar incidencia')
   }
 }
 
@@ -186,6 +199,41 @@ onMounted(() => {
               {{ isUpdating ? 'Actualizando...' : 'Actualizar estado' }}
             </Button>
           </form>
+        </CardContent>
+      </Card>
+
+      <!-- Delete -->
+      <Card class="mb-4 border-destructive/30">
+        <CardContent class="flex items-center justify-between gap-4 p-5 md:px-8">
+          <div>
+            <p class="text-sm font-semibold text-destructive">Eliminar incidencia</p>
+            <p class="text-xs text-muted-foreground">Esta acción no se puede deshacer.</p>
+          </div>
+          <AlertDialog>
+            <AlertDialogTrigger as-child>
+              <Button variant="destructive" size="sm">
+                <Trash2 class="mr-1.5 size-3.5" />
+                Eliminar
+              </Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogTitle>¿Eliminar esta incidencia?</AlertDialogTitle>
+              <AlertDialogDescription>
+                Se eliminará permanentemente la incidencia "{{ incident.title }}" junto con sus fotos y historial de cambios.
+              </AlertDialogDescription>
+              <div class="flex justify-end gap-2">
+                <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                <AlertDialogAction
+                  class="bg-destructive text-white hover:bg-destructive/90"
+                  :disabled="isDeleting"
+                  @click="handleDelete"
+                >
+                  <Loader2 v-if="isDeleting" class="mr-1.5 size-3.5 animate-spin" />
+                  Eliminar
+                </AlertDialogAction>
+              </div>
+            </AlertDialogContent>
+          </AlertDialog>
         </CardContent>
       </Card>
 

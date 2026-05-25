@@ -4,6 +4,7 @@ export function useIncidentDetail() {
   const incident = ref<Incident | null>(null)
   const isLoading = ref(false)
   const isUpdating = ref(false)
+  const isDeleting = ref(false)
   const error = ref<string | null>(null)
 
   async function fetchIncident(id: string) {
@@ -43,12 +44,30 @@ export function useIncidentDetail() {
     }
   }
 
+  async function deleteIncident(id: string) {
+    isDeleting.value = true
+    error.value = null
+    try {
+      await $fetch(`/api/incidents/${id}`, { method: 'DELETE' })
+    }
+    catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Error al eliminar incidencia'
+      error.value = message
+      throw err
+    }
+    finally {
+      isDeleting.value = false
+    }
+  }
+
   return {
     incident,
     isLoading,
     isUpdating,
+    isDeleting,
     error,
     fetchIncident,
     updateStatus,
+    deleteIncident,
   }
 }
