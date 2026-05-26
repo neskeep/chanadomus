@@ -88,8 +88,7 @@ onMounted(async () => {
               <Badge variant="secondary">{{ visitorTypeLabel }}</Badge>
               <span>→</span>
               <span class="font-medium text-foreground">
-                {{ result.unitNumber }}
-                <span v-if="result.unitLabel" class="text-muted-foreground">({{ result.unitLabel }})</span>
+                {{ result.unitLabel || result.unitNumber }}
               </span>
             </div>
           </div>

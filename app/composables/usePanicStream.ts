@@ -182,6 +182,11 @@ export function usePanicStream() {
     try {
       const result = await $fetch<{ data: PanicAlertLog[] }>('/api/panic')
       alerts.value = result.data
+      // Set activeAlert to the most recent unresolved alert (if any)
+      const unresolved = result.data.find(a => !a.resolvedAt)
+      if (unresolved && !activeAlert.value) {
+        activeAlert.value = unresolved
+      }
     }
     catch (err: unknown) {
       console.error('Failed to load initial panic alerts:', err)

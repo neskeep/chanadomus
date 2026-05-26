@@ -73,6 +73,7 @@ interface VehicleOption {
   model: string | null
   color: string | null
   unitNumber: string | null
+  unitLabel: string | null
 }
 
 const vehicles = ref<VehicleOption[]>([])
@@ -187,7 +188,7 @@ onMounted(() => {
                   :value="v.id"
                 >
                   {{ v.plate }} — {{ [v.brand, v.model, v.color].filter(Boolean).join(' ') }}
-                  <template v-if="v.unitNumber"> ({{ v.unitNumber }})</template>
+                  <template v-if="v.unitNumber"> ({{ v.unitLabel || v.unitNumber }})</template>
                 </SelectItem>
               </SelectContent>
             </Select>

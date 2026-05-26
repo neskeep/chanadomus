@@ -158,8 +158,7 @@ onMounted(async () => {
         <p class="mt-1 flex items-center justify-center gap-2">
           <Badge variant="default">{{ roleLabel }}</Badge>
           <span class="text-sm font-medium text-foreground">
-            {{ lookup.unitNumber }}
-            <span v-if="lookup.unitLabel" class="font-normal text-muted-foreground">· {{ lookup.unitLabel }}</span>
+            {{ lookup.unitLabel || lookup.unitNumber }}
           </span>
         </p>
       </div>

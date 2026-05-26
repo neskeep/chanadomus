@@ -246,7 +246,7 @@ onMounted(() => {
               </TableCell>
               <TableCell class="text-muted-foreground">{{ member.phone ?? '—' }}</TableCell>
               <TableCell class="text-muted-foreground">
-                {{ member.unitNumber ? `${member.unitNumber}${member.unitLabel ? ` — ${member.unitLabel}` : ''}` : '—' }}
+                {{ member.unitLabel || member.unitNumber || '—' }}
               </TableCell>
               <TableCell class="text-muted-foreground">{{ getShiftLabel(member.shift) }}</TableCell>
               <TableCell>
@@ -319,7 +319,7 @@ onMounted(() => {
               <template v-if="member.unitNumber">
                 <span class="opacity-30">·</span>
                 <Home class="size-3 shrink-0" />
-                <span>{{ member.unitNumber }}</span>
+                <span>{{ member.unitLabel || member.unitNumber }}</span>
               </template>
               <template v-if="member.shift">
                 <span class="opacity-30">·</span>

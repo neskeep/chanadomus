@@ -32,6 +32,7 @@ const error = ref<string | null>(null)
 const lastResult = ref<{
   visitorName: string
   unitNumber: string
+  unitLabel: string | null
   result: AccessResult
 } | null>(null)
 
@@ -72,6 +73,7 @@ async function submit(result: 'allowed' | 'denied') {
     lastResult.value = {
       visitorName: response.data.visitorName || form.visitorName.trim(),
       unitNumber: response.data.unitNumber || '',
+      unitLabel: response.data.unitLabel || null,
       result: response.data.result,
     }
 
@@ -197,7 +199,7 @@ async function submit(result: 'allowed' | 'denied') {
         <div class="flex items-center justify-between">
           <p class="text-sm font-semibold">{{ lastResult.visitorName }}</p>
           <Badge variant="outline" class="text-[11px]">
-            {{ lastResult.unitNumber }}
+            {{ lastResult.unitLabel || lastResult.unitNumber }}
           </Badge>
         </div>
         <p

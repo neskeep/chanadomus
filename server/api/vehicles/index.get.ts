@@ -26,6 +26,7 @@ export default defineEventHandler(async (event) => {
       tenantId: vehicles.tenantId,
       createdAt: vehicles.createdAt,
       unitNumber: units.number,
+      unitLabel: units.label,
     })
     .from(vehicles)
     .leftJoin(units, eq(vehicles.unitId, units.id))

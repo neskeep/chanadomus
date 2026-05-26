@@ -31,9 +31,7 @@ export function useQrBadge() {
     const qrEmbedded = `<svg xmlns="http://www.w3.org/2000/svg" x="80" y="101" width="180" height="180" viewBox="${viewBox}">${innerContent}</svg>`
 
     const role = data.roleName ?? 'Sin rol'
-    const unit = data.unitNumber
-      ? `${data.unitNumber}${data.unitLabel ? ` — ${data.unitLabel}` : ''}`
-      : null
+    const unit = data.unitLabel || data.unitNumber || null
     const phone = data.phone ?? null
 
     // Escape XML entities

@@ -125,7 +125,7 @@ async function handleToggleBan() {
 
 function getUnitDisplay(user: UserWithUnit): string {
   if (!user.unitNumber) return '—'
-  return user.unitLabel ? `${user.unitNumber} (${user.unitLabel})` : user.unitNumber
+  return user.unitLabel || user.unitNumber
 }
 
 onMounted(() => {
@@ -283,7 +283,7 @@ onMounted(() => {
               <template v-if="user.unitNumber">
                 <span class="opacity-30">·</span>
                 <Building2 class="size-3 shrink-0" />
-                <span class="shrink-0">{{ user.unitNumber }}</span>
+                <span class="shrink-0">{{ user.unitLabel || user.unitNumber }}</span>
               </template>
               <span class="ml-auto flex shrink-0 items-center gap-0.5">
                 <NuxtLink

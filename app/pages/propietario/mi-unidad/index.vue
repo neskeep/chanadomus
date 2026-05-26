@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { Plus, Pencil, Trash2, Users, Car, HardHat, Loader2, QrCode } from 'lucide-vue-next'
+import QRCode from 'qrcode'
+import { Download, Loader2, Pencil, Plus, QrCode, Share2, Trash2, Users, Car, HardHat } from 'lucide-vue-next'
 import { toast } from 'vue-sonner'
 import type { HouseholdMember, HouseholdRelationship } from '~~/shared/types/household'
 import type { Vehicle } from '~~/shared/types/vehicle'
@@ -20,7 +21,93 @@ const {
   deleteMember,
   deleteVehicle,
   deleteServiceStaff,
+  generateMemberPass,
+  generateVehiclePass,
+  generateStaffPass,
 } = useMyUnit()
+
+const { downloadBadge, isGenerating: isDownloadingBadge } = useQrBadge()
+
+// ---- QR Dialog ----
+const qrDialogOpen = ref(false)
+const isGeneratingQr = ref(false)
+const qrImageUrl = ref('')
+const qrAccessUrl = ref('')
+const qrTarget = ref<{ name: string, subtitle: string, id: string, token: string | null, type: 'member' | 'vehicle' | 'staff' } | null>(null)
+
+async function handleShowQr(entity: { name?: string, plate?: string, id: string, passToken?: string }, type: 'member' | 'vehicle' | 'staff', subtitle: string) {
+  const token = entity.passToken
+  if (!token) return
+  const name = type === 'vehicle' ? (entity as Vehicle).plate : (entity as HouseholdMember).name
+  qrTarget.value = { name, subtitle, id: entity.id, token, type }
+  qrDialogOpen.value = true
+  isGeneratingQr.value = true
+  try {
+    const origin = window.location.origin
+    qrAccessUrl.value = `${origin}/acceso/${token}`
+    qrImageUrl.value = await QRCode.toDataURL(qrAccessUrl.value, { width: 280, margin: 2, color: { dark: '#1F2933' } })
+  }
+  catch {
+    toast.error('Error al cargar QR')
+    qrDialogOpen.value = false
+  }
+  finally {
+    isGeneratingQr.value = false
+  }
+}
+
+async function handleGenerateQr(entity: { id: string, name?: string, plate?: string }, type: 'member' | 'vehicle' | 'staff', subtitle: string) {
+  const name = type === 'vehicle' ? (entity as Vehicle).plate : (entity as HouseholdMember).name
+  qrTarget.value = { name, subtitle, id: entity.id, token: null, type }
+  qrDialogOpen.value = true
+  isGeneratingQr.value = true
+  try {
+    let token: string
+    if (type === 'member') {
+      const res = await generateMemberPass(entity.id)
+      token = res.token
+    }
+    else if (type === 'vehicle') {
+      const res = await generateVehiclePass(entity.id)
+      token = res.token
+    }
+    else {
+      const res = await generateStaffPass(entity.id)
+      token = res.token
+    }
+    qrTarget.value!.token = token
+    const origin = window.location.origin
+    qrAccessUrl.value = `${origin}/acceso/${token}`
+    qrImageUrl.value = await QRCode.toDataURL(qrAccessUrl.value, { width: 280, margin: 2, color: { dark: '#1F2933' } })
+  }
+  catch {
+    toast.error('Error al generar pase QR')
+    qrDialogOpen.value = false
+  }
+  finally {
+    isGeneratingQr.value = false
+  }
+}
+
+async function handleSharePass() {
+  if (!qrAccessUrl.value) return
+  try {
+    await navigator.share({ title: `Pase QR — ${qrTarget.value?.name}`, url: qrAccessUrl.value })
+  }
+  catch {
+    await navigator.clipboard.writeText(qrAccessUrl.value)
+    toast.success('Enlace copiado al portapapeles')
+  }
+}
+
+async function handleDownloadBadge() {
+  if (!qrTarget.value?.token) return
+  await downloadBadge({
+    name: qrTarget.value.name,
+    roleName: qrTarget.value.subtitle,
+    qrToken: qrTarget.value.token,
+  })
+}
 
 // Tabs synced with URL query param
 const route = useRoute()
@@ -203,7 +290,7 @@ onMounted(() => fetchAll())
                 <TableHead>Parentesco</TableHead>
                 <TableHead>Telefono</TableHead>
                 <TableHead>Documento</TableHead>
-                <TableHead class="w-16 text-center">QR</TableHead>
+                <TableHead class="w-28 text-center">Pase QR</TableHead>
                 <TableHead class="w-24">Acciones</TableHead>
               </TableRow>
             </TableHeader>
@@ -218,8 +305,26 @@ onMounted(() => fetchAll())
                 <TableCell class="text-muted-foreground">{{ member.phone ?? '—' }}</TableCell>
                 <TableCell class="text-muted-foreground">{{ member.idDocument ?? '—' }}</TableCell>
                 <TableCell class="text-center">
-                  <QrCode v-if="member.hasPass" class="mx-auto size-4 text-primary" />
-                  <span v-else class="text-xs text-muted-foreground">—</span>
+                  <Button
+                    v-if="member.passToken"
+                    variant="outline"
+                    size="sm"
+                    class="gap-1.5"
+                    @click="handleShowQr(member, 'member', RELATIONSHIP_CONFIG[member.relationship].label)"
+                  >
+                    <QrCode class="size-3.5" />
+                    Ver QR
+                  </Button>
+                  <Button
+                    v-else
+                    variant="default"
+                    size="sm"
+                    class="gap-1.5"
+                    @click="handleGenerateQr(member, 'member', RELATIONSHIP_CONFIG[member.relationship].label)"
+                  >
+                    <QrCode class="size-3.5" />
+                    Generar
+                  </Button>
                 </TableCell>
                 <TableCell>
                   <div class="flex items-center gap-1">
@@ -248,7 +353,7 @@ onMounted(() => fetchAll())
                   {{ RELATIONSHIP_CONFIG[member.relationship].label }}
                 </Badge>
               </div>
-              <div class="mt-0.5 flex items-center gap-x-1 text-[11px] text-muted-foreground">
+              <div class="mt-1 flex items-center gap-x-1 text-[11px] text-muted-foreground">
                 <template v-if="member.phone">
                   <span class="shrink-0 tabular-nums">{{ member.phone }}</span>
                 </template>
@@ -257,7 +362,26 @@ onMounted(() => fetchAll())
                   <span class="truncate">{{ member.idDocument }}</span>
                 </template>
                 <span class="ml-auto flex shrink-0 items-center gap-0.5">
-                  <QrCode v-if="member.hasPass" class="size-3 text-primary" />
+                  <Button
+                    v-if="member.passToken"
+                    variant="outline"
+                    size="sm"
+                    class="h-6 gap-1 px-2 text-[11px]"
+                    @click="handleShowQr(member, 'member', RELATIONSHIP_CONFIG[member.relationship].label)"
+                  >
+                    <QrCode class="size-3" />
+                    Ver QR
+                  </Button>
+                  <Button
+                    v-else
+                    variant="default"
+                    size="sm"
+                    class="h-6 gap-1 px-2 text-[11px]"
+                    @click="handleGenerateQr(member, 'member', RELATIONSHIP_CONFIG[member.relationship].label)"
+                  >
+                    <QrCode class="size-3" />
+                    Generar
+                  </Button>
                   <Button variant="ghost" class="h-6 px-2 text-[11px]" @click="navigateToEditMember(member)">
                     <Pencil class="size-3" />
                   </Button>
@@ -295,7 +419,7 @@ onMounted(() => fetchAll())
                 <TableHead>Marca / Modelo</TableHead>
                 <TableHead>Color</TableHead>
                 <TableHead>Propietario</TableHead>
-                <TableHead class="w-16 text-center">QR</TableHead>
+                <TableHead class="w-28 text-center">Pase QR</TableHead>
                 <TableHead class="w-24">Acciones</TableHead>
               </TableRow>
             </TableHeader>
@@ -306,8 +430,26 @@ onMounted(() => fetchAll())
                 <TableCell>{{ vehicle.color }}</TableCell>
                 <TableCell class="text-muted-foreground">{{ getMemberName(vehicle.ownerMemberId) }}</TableCell>
                 <TableCell class="text-center">
-                  <QrCode v-if="vehicle.hasPass" class="mx-auto size-4 text-primary" />
-                  <span v-else class="text-xs text-muted-foreground">—</span>
+                  <Button
+                    v-if="vehicle.passToken"
+                    variant="outline"
+                    size="sm"
+                    class="gap-1.5"
+                    @click="handleShowQr(vehicle, 'vehicle', `${vehicle.brand} ${vehicle.model}`)"
+                  >
+                    <QrCode class="size-3.5" />
+                    Ver QR
+                  </Button>
+                  <Button
+                    v-else
+                    variant="default"
+                    size="sm"
+                    class="gap-1.5"
+                    @click="handleGenerateQr(vehicle, 'vehicle', `${vehicle.brand} ${vehicle.model}`)"
+                  >
+                    <QrCode class="size-3.5" />
+                    Generar
+                  </Button>
                 </TableCell>
                 <TableCell>
                   <div class="flex items-center gap-1">
@@ -334,12 +476,31 @@ onMounted(() => fetchAll())
                 <p class="text-sm font-bold tabular-nums tracking-wider">{{ vehicle.plate }}</p>
                 <span class="text-sm text-muted-foreground">{{ vehicle.brand }} {{ vehicle.model }}</span>
               </div>
-              <div class="mt-0.5 flex items-center gap-x-1 text-[11px] text-muted-foreground">
+              <div class="mt-1 flex items-center gap-x-1 text-[11px] text-muted-foreground">
                 <span>{{ vehicle.color }}</span>
                 <span class="opacity-30">·</span>
                 <span class="truncate">{{ getMemberName(vehicle.ownerMemberId) }}</span>
                 <span class="ml-auto flex shrink-0 items-center gap-0.5">
-                  <QrCode v-if="vehicle.hasPass" class="size-3 text-primary" />
+                  <Button
+                    v-if="vehicle.passToken"
+                    variant="outline"
+                    size="sm"
+                    class="h-6 gap-1 px-2 text-[11px]"
+                    @click="handleShowQr(vehicle, 'vehicle', `${vehicle.brand} ${vehicle.model}`)"
+                  >
+                    <QrCode class="size-3" />
+                    Ver QR
+                  </Button>
+                  <Button
+                    v-else
+                    variant="default"
+                    size="sm"
+                    class="h-6 gap-1 px-2 text-[11px]"
+                    @click="handleGenerateQr(vehicle, 'vehicle', `${vehicle.brand} ${vehicle.model}`)"
+                  >
+                    <QrCode class="size-3" />
+                    Generar
+                  </Button>
                   <Button variant="ghost" class="h-6 px-2 text-[11px]" @click="navigateToEditVehicle(vehicle)">
                     <Pencil class="size-3" />
                   </Button>
@@ -377,7 +538,7 @@ onMounted(() => fetchAll())
                 <TableHead>Rol</TableHead>
                 <TableHead>Telefono</TableHead>
                 <TableHead>Documento</TableHead>
-                <TableHead class="w-16 text-center">QR</TableHead>
+                <TableHead class="w-28 text-center">Pase QR</TableHead>
                 <TableHead class="w-24">Acciones</TableHead>
               </TableRow>
             </TableHeader>
@@ -392,8 +553,26 @@ onMounted(() => fetchAll())
                 <TableCell class="text-muted-foreground">{{ staff.phone ?? '—' }}</TableCell>
                 <TableCell class="text-muted-foreground">{{ staff.idDocument ?? '—' }}</TableCell>
                 <TableCell class="text-center">
-                  <QrCode v-if="staff.hasPass" class="mx-auto size-4 text-primary" />
-                  <span v-else class="text-xs text-muted-foreground">—</span>
+                  <Button
+                    v-if="staff.passToken"
+                    variant="outline"
+                    size="sm"
+                    class="gap-1.5"
+                    @click="handleShowQr(staff, 'staff', staff.roleName ?? 'Sin rol')"
+                  >
+                    <QrCode class="size-3.5" />
+                    Ver QR
+                  </Button>
+                  <Button
+                    v-else
+                    variant="default"
+                    size="sm"
+                    class="gap-1.5"
+                    @click="handleGenerateQr(staff, 'staff', staff.roleName ?? 'Sin rol')"
+                  >
+                    <QrCode class="size-3.5" />
+                    Generar
+                  </Button>
                 </TableCell>
                 <TableCell>
                   <div class="flex items-center gap-1">
@@ -422,7 +601,7 @@ onMounted(() => fetchAll())
                   {{ staff.roleName ?? 'Sin rol' }}
                 </Badge>
               </div>
-              <div class="mt-0.5 flex items-center gap-x-1 text-[11px] text-muted-foreground">
+              <div class="mt-1 flex items-center gap-x-1 text-[11px] text-muted-foreground">
                 <template v-if="staff.phone">
                   <span class="shrink-0 tabular-nums">{{ staff.phone }}</span>
                 </template>
@@ -431,7 +610,26 @@ onMounted(() => fetchAll())
                   <span class="truncate">{{ staff.idDocument }}</span>
                 </template>
                 <span class="ml-auto flex shrink-0 items-center gap-0.5">
-                  <QrCode v-if="staff.hasPass" class="size-3 text-primary" />
+                  <Button
+                    v-if="staff.passToken"
+                    variant="outline"
+                    size="sm"
+                    class="h-6 gap-1 px-2 text-[11px]"
+                    @click="handleShowQr(staff, 'staff', staff.roleName ?? 'Sin rol')"
+                  >
+                    <QrCode class="size-3" />
+                    Ver QR
+                  </Button>
+                  <Button
+                    v-else
+                    variant="default"
+                    size="sm"
+                    class="h-6 gap-1 px-2 text-[11px]"
+                    @click="handleGenerateQr(staff, 'staff', staff.roleName ?? 'Sin rol')"
+                  >
+                    <QrCode class="size-3" />
+                    Generar
+                  </Button>
                   <Button variant="ghost" class="h-6 px-2 text-[11px]" @click="navigateToEditStaff(staff)">
                     <Pencil class="size-3" />
                   </Button>
@@ -514,5 +712,52 @@ onMounted(() => fetchAll())
         </AlertDialogFooter>
       </AlertDialogContent>
     </AlertDialog>
+
+    <!-- QR Dialog -->
+    <Dialog v-model:open="qrDialogOpen">
+      <DialogContent class="sm:max-w-sm">
+        <DialogHeader>
+          <DialogTitle>Pase QR — {{ qrTarget?.name }}</DialogTitle>
+          <DialogDescription>
+            {{ qrTarget?.subtitle }} — pase de acceso multi-uso
+          </DialogDescription>
+        </DialogHeader>
+
+        <div class="flex flex-col items-center gap-4 py-4">
+          <div v-if="isGeneratingQr" class="flex size-[280px] items-center justify-center">
+            <Loader2 class="size-8 animate-spin text-muted-foreground" />
+          </div>
+          <img
+            v-else-if="qrImageUrl"
+            :src="qrImageUrl"
+            :alt="`QR de acceso para ${qrTarget?.name}`"
+            class="size-[280px] rounded-lg"
+          />
+          <p class="text-center text-[11px] text-muted-foreground">
+            Este pase permite acceso recurrente. El vigilante lo escanea cada vez que ingresa.
+          </p>
+        </div>
+
+        <div class="flex gap-2">
+          <Button class="flex-1 gap-1.5" @click="handleSharePass">
+            <Share2 class="size-4" />
+            Compartir
+          </Button>
+          <Button
+            variant="outline"
+            class="gap-1.5"
+            @click="qrTarget && handleGenerateQr({ id: qrTarget.id, name: qrTarget.name }, qrTarget.type, qrTarget.subtitle)"
+          >
+            <QrCode class="size-4" />
+            Regenerar
+          </Button>
+        </div>
+        <Button class="w-full gap-1.5" :disabled="isDownloadingBadge" @click="handleDownloadBadge">
+          <Loader2 v-if="isDownloadingBadge" class="size-4 animate-spin" />
+          <Download v-else class="size-4" />
+          Descargar Credencial
+        </Button>
+      </DialogContent>
+    </Dialog>
   </div>
 </template>

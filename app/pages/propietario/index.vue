@@ -20,10 +20,10 @@ const { stats, isLoading } = useDashboard()
 const { formatCurrency, formatDateTime } = useFormatDate()
 
 const quickActions = [
-  { label: 'Nueva Visita', to: '/propietario/nueva-visita', icon: UserPlus },
-  { label: 'Reportar Incidencia', to: '/propietario/incidencias', icon: ClipboardList },
-  { label: 'Estado de Cuenta', to: '/propietario/estado-cuenta', icon: Receipt },
-  { label: 'Chat', to: '/mi-chana/chat', icon: MessageCircle },
+  { label: 'Nueva Visita', to: '/propietario/nueva-visita', icon: UserPlus, bg: ICON_BG.teal },
+  { label: 'Reportar Incidencia', to: '/propietario/incidencias', icon: ClipboardList, bg: ICON_BG.warning },
+  { label: 'Estado de Cuenta', to: '/propietario/estado-cuenta', icon: Receipt, bg: ICON_BG.success },
+  { label: 'Chat', to: '/mi-chana/chat', icon: MessageCircle, bg: ICON_BG.purple },
 ] as const
 </script>
 
@@ -145,7 +145,9 @@ const quickActions = [
           :class="buttonVariants({ variant: 'outline', size: 'lg' })"
           class="h-auto flex-col gap-2 py-3.5 sm:gap-2.5 sm:py-5"
         >
-          <component :is="action.icon" class="size-6 text-primary" />
+          <div class="flex size-10 items-center justify-center rounded-lg" :class="action.bg">
+            <component :is="action.icon" class="size-5" />
+          </div>
           <span class="text-sm font-medium">{{ action.label }}</span>
         </NuxtLink>
       </div>

@@ -106,9 +106,9 @@ async function handleDelete() {
     deleteDialogOpen.value = false
   }
   catch (err: unknown) {
-    const status = (err as { statusCode?: number })?.statusCode
-    if (status === 409) {
-      toast.error('No se puede eliminar: el rol está en uso por personal activo')
+    const fetchErr = err as { statusCode?: number; data?: { message?: string } }
+    if (fetchErr.statusCode === 409) {
+      toast.error(fetchErr.data?.message ?? 'No se puede eliminar: el rol está en uso')
     }
     else {
       toast.error('Error al eliminar el rol')

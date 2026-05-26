@@ -4,17 +4,10 @@ import { eq, and, desc } from 'drizzle-orm'
 
 export default defineEventHandler(async (event) => {
   const { tenantId, user } = await requireTenant(event)
-  const session = await requireRole(event, ['propietario', 'admin', 'conserje'])
-  const role = session.user.role
+  await requireRole(event, ['propietario', 'admin', 'conserje'])
 
-  // Conserje ve todos los visitantes frecuentes de su unidad; propietario solo los suyos
-  let ownerFilter
-  if (role === 'conserje') {
-    const staffUnitId = await getStaffUnitId(user.id, tenantId)
-    ownerFilter = eq(frequentVisitors.unitId, staffUnitId)
-  } else {
-    ownerFilter = eq(frequentVisitors.ownerId, user.id)
-  }
+  // Todos los roles filtran por ownerId (cada usuario ve sus propios visitantes frecuentes)
+  const ownerFilter = eq(frequentVisitors.ownerId, user.id)
 
   const rows = await db
     .select()

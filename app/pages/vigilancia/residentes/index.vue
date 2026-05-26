@@ -135,7 +135,7 @@ onMounted(() => {
               </p>
             </div>
             <Badge variant="secondary" class="shrink-0 text-[11px]">
-              Unidad {{ vehicle.unitNumber }}
+              {{ vehicle.unitLabel || vehicle.unitNumber }}
             </Badge>
           </CardContent>
         </Card>

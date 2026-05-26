@@ -152,9 +152,9 @@ const { formatDate } = useFormatDate()
               v-for="item in filteredIncidents"
               :key="item.id"
             >
-              <TableCell class="font-medium">{{ item.unitNumber ?? '—' }}</TableCell>
+              <TableCell class="font-medium">{{ item.unitLabel || item.unitNumber || '—' }}</TableCell>
               <TableCell class="max-w-[200px]">
-                <NuxtLink :to="`/admin/incidencias/${item.id}`" class="truncate font-medium text-primary underline-offset-2 hover:underline">
+                <NuxtLink :to="`/admin/incidencias/${item.id}`" class="block truncate font-medium text-primary underline-offset-2 hover:underline">
                   {{ item.title }}
                 </NuxtLink>
               </TableCell>
@@ -210,7 +210,7 @@ const { formatDate } = useFormatDate()
                   {{ STATUS_CONFIG[item.status].label }}
                 </span>
                 <span class="opacity-30">·</span>
-                <span class="shrink-0">{{ item.unitNumber ?? '—' }}</span>
+                <span class="shrink-0">{{ item.unitLabel || item.unitNumber || '—' }}</span>
                 <span class="opacity-30">·</span>
                 <span class="truncate">{{ item.reportedByName ?? '—' }}</span>
                 <template v-if="item.isAnonymous">
