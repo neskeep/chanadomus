@@ -28,9 +28,6 @@ export default defineEventHandler(async (event) => {
     conditions.push(or(ilike(user.name, term), ilike(user.email, term))!)
   }
 
-  // COALESCE: conserjes tienen unitId en staff, no en user
-  const effectiveUnitId = sql<string>`COALESCE(${user.unitId}, ${staff.unitId})`
-
   const rows = await db
     .select({
       id: user.id,
@@ -41,7 +38,7 @@ export default defineEventHandler(async (event) => {
       role: user.role,
       banned: user.banned,
       banReason: user.banReason,
-      unitId: effectiveUnitId,
+      unitId: sql<string | null>`COALESCE(${user.unitId}, ${staff.unitId})`.as('unit_id'),
       unitNumber: units.number,
       unitLabel: units.label,
       createdAt: user.createdAt,
