@@ -2,6 +2,7 @@ import type { Vehicle } from '~~/shared/types/vehicle'
 
 interface VehicleSearchResult extends Vehicle {
   unitNumber: string
+  unitLabel: string | null
 }
 
 export function useVehicleSearch() {

@@ -180,7 +180,7 @@ onMounted(() => {
             </span>
             <template v-if="pass.unitNumber">
               <span v-if="pass.vehicleBrand || pass.vehicleModel || (pass.vehiclePlate && pass.description)" class="opacity-30">·</span>
-              <span class="shrink-0">{{ pass.unitNumber }}</span>
+              <span class="shrink-0">{{ pass.unitLabel || pass.unitNumber }}</span>
             </template>
             <span class="opacity-30">·</span>
             <span v-if="pass.expiresAt" class="shrink-0">Vence: {{ formatDate(pass.expiresAt) }}</span>

@@ -1,6 +1,7 @@
 import { db } from '~~/server/db'
 import { providers, providerReviews } from '~~/server/db/schema/provider'
 import { user } from '~~/server/db/schema/auth'
+import { serviceStaffRoles } from '~~/server/db/schema/service-staff-role'
 import { eq, and, desc, count, avg } from 'drizzle-orm'
 import type { Provider, ProviderReview } from '~~/shared/types/provider'
 
@@ -25,6 +26,8 @@ export default defineEventHandler(async (event) => {
       costs: providers.costs,
       notes: providers.notes,
       category: providers.category,
+      serviceRoleId: providers.serviceRoleId,
+      serviceRoleName: serviceStaffRoles.name,
       status: providers.status,
       createdById: providers.createdById,
       tenantId: providers.tenantId,
@@ -34,6 +37,7 @@ export default defineEventHandler(async (event) => {
     })
     .from(providers)
     .leftJoin(user, eq(providers.createdById, user.id))
+    .leftJoin(serviceStaffRoles, eq(providers.serviceRoleId, serviceStaffRoles.id))
     .where(and(eq(providers.id, id), eq(providers.tenantId, session.tenantId)))
 
   const row = rows[0]
@@ -91,6 +95,8 @@ export default defineEventHandler(async (event) => {
     costs: row.costs,
     notes: row.notes,
     category: row.category,
+    serviceRoleId: row.serviceRoleId,
+    serviceRoleName: row.serviceRoleName ?? undefined,
     status: row.status,
     createdById: row.createdById,
     createdByName: row.createdByName ?? undefined,

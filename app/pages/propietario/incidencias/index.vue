@@ -121,9 +121,9 @@ const { formatDate } = useFormatDate()
                       <span class="opacity-30">·</span>
                       <span class="truncate">{{ item.reportedByName }}</span>
                     </template>
-                    <template v-if="item.unitNumber">
+                    <template v-if="item.unitLabel || item.unitNumber">
                       <span class="opacity-30">·</span>
-                      <span class="shrink-0">{{ item.unitNumber }}</span>
+                      <span class="shrink-0">{{ item.unitLabel || item.unitNumber }}</span>
                     </template>
                   </template>
                 </div>

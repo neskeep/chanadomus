@@ -176,7 +176,7 @@ function formatDuration(entryDate: string, exitDate: string): string {
                   {{ event.visitorName || 'Visitante' }}
                 </p>
                 <Badge v-if="event.unitNumber" variant="secondary" class="shrink-0 text-[11px] font-semibold">
-                  {{ event.unitNumber }}
+                  {{ event.unitLabel || event.unitNumber }}
                 </Badge>
                 <span class="shrink-0 text-[11px] tabular-nums text-muted-foreground">
                   {{ formatAbsoluteTime(event.createdAt) }}

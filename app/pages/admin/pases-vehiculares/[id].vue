@@ -201,8 +201,8 @@ onMounted(() => {
                 <div>
                   <p class="text-xs text-muted-foreground">Rancho asignado</p>
                   <p class="text-sm">
-                    <template v-if="pass.unitNumber">
-                      {{ pass.unitNumber }}<template v-if="pass.unitLabel"> — {{ pass.unitLabel }}</template>
+                    <template v-if="pass.unitLabel || pass.unitNumber">
+                      {{ pass.unitLabel || pass.unitNumber }}
                     </template>
                     <span v-else class="text-muted-foreground">Condominio general</span>
                   </p>

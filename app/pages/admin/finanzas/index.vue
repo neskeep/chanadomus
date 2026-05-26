@@ -336,7 +336,7 @@ onMounted(() => {
                       {{ formatDate(mov.date) }}
                     </TableCell>
                     <TableCell class="font-medium">
-                      {{ mov.unitNumber }}
+                      {{ mov.unitLabel || mov.unitNumber }}
                     </TableCell>
                     <TableCell class="max-w-[200px] truncate">
                       {{ mov.description }}
@@ -384,7 +384,7 @@ onMounted(() => {
                   </div>
                   <div class="mt-0.5 flex items-center justify-between">
                     <div class="flex items-center gap-x-1 text-[11px] text-muted-foreground">
-                      <span class="font-medium">{{ mov.unitNumber }}</span>
+                      <span class="font-medium">{{ mov.unitLabel || mov.unitNumber }}</span>
                       <span class="opacity-30">&middot;</span>
                       <span class="tabular-nums">{{ formatDate(mov.date) }}</span>
                     </div>
@@ -434,7 +434,7 @@ onMounted(() => {
                     @click="router.push(`/admin/finanzas/${summary.unitId}`)"
                   >
                     <TableCell class="font-medium">
-                      {{ summary.unitNumber }}
+                      {{ summary.unitLabel || summary.unitNumber }}
                     </TableCell>
                     <TableCell class="hidden text-muted-foreground sm:table-cell">
                       {{ summary.unitLabel ?? '—' }}

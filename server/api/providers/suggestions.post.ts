@@ -75,6 +75,7 @@ export default defineEventHandler(async (event) => {
     costs: row.costs,
     notes: row.notes,
     category: row.category,
+    serviceRoleId: row.serviceRoleId,
     status: row.status,
     createdById: row.createdById,
     tenantId: row.tenantId,

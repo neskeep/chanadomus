@@ -7,7 +7,7 @@ useHead({ title: 'Panel Vigilancia' })
 
 const { stats, isLoading } = useDashboard()
 const { events, isConnected, loadInitialEvents } = useAccessStream()
-const { hasActiveAlert, activeAlert } = usePanicStream()
+const { hasActiveAlert, activeAlert, loadInitialAlerts } = usePanicStream()
 
 const quickActions = [
   { label: 'Registrar', icon: DoorOpen, to: '/vigilancia/registrar-acceso' },
@@ -27,18 +27,21 @@ function timeAgo(dateStr: string): string {
 
 onMounted(() => {
   loadInitialEvents()
+  loadInitialAlerts()
 })
 </script>
 
 <template>
   <div class="space-y-6">
     <!-- 0. Panic alert banner -->
-    <NuxtLink v-if="hasActiveAlert" to="/vigilancia/alertas">
-      <Card class="animate-pulse border-destructive bg-destructive/10">
-        <CardContent class="flex items-center gap-3 px-4 py-3">
-          <ShieldAlert class="size-6 text-destructive" />
+    <NuxtLink v-if="hasActiveAlert" to="/vigilancia/alertas" class="mb-2 block">
+      <Card class="border-2 border-destructive bg-destructive/10 shadow-lg shadow-destructive/20">
+        <CardContent class="flex items-center gap-3 px-4 py-4">
+          <div class="flex size-10 shrink-0 animate-pulse items-center justify-center rounded-full bg-destructive/20">
+            <ShieldAlert class="size-5 text-destructive" />
+          </div>
           <div class="min-w-0 flex-1">
-            <p class="text-sm font-bold text-destructive">ALERTA DE PANICO</p>
+            <p class="text-sm font-bold text-destructive">ALERTA DE PÁNICO</p>
             <p class="truncate text-xs text-destructive/80">
               {{ activeAlert?.userName }} — {{ activeAlert?.unitLabel || activeAlert?.unitNumber }}
             </p>
@@ -95,7 +98,7 @@ onMounted(() => {
       </NuxtLink>
       <NuxtLink
         to="/vigilancia/registrar-acceso"
-        :class="buttonVariants({ variant: 'outline', size: 'lg' })"
+        :class="buttonVariants({ variant: 'secondary', size: 'lg' })"
         class="h-14 gap-2.5 text-base font-semibold"
       >
         <UserPlus class="size-5" />

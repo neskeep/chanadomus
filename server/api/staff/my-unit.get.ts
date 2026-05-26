@@ -25,7 +25,7 @@ export default defineEventHandler(async (event) => {
     .limit(1)
 
   if (!record?.unitId) {
-    throw createError({ statusCode: 403, message: 'Staff sin unidad asignada' })
+    return { data: null }
   }
 
   return {

@@ -74,6 +74,7 @@ export default defineEventHandler(async (event) => {
       isAnonymous: incidents.isAnonymous,
       resolvedAt: incidents.resolvedAt,
       unitNumber: units.number,
+      unitLabel: units.label,
       reportedByName: user.name,
     })
     .from(incidents)
@@ -97,6 +98,7 @@ export default defineEventHandler(async (event) => {
       reportedById: hideReporter ? '' : row.reportedById,
       unitId: hideReporter ? '' : row.unitId,
       unitNumber: hideReporter ? undefined : (row.unitNumber ?? undefined),
+      unitLabel: hideReporter ? undefined : (row.unitLabel ?? undefined),
       reportedByName: hideReporter ? undefined : (row.reportedByName ?? undefined),
       isAnonymous: row.isAnonymous,
       tenantId: row.tenantId,

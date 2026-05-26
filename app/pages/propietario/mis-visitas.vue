@@ -173,7 +173,7 @@ const statusConfig: Record<QrStatus, { label: string; variant: 'default' | 'seco
           </div>
 
           <div class="mt-1 flex items-center gap-x-1 text-[11px] text-muted-foreground">
-            <span class="truncate">{{ code.unitNumber }}{{ code.unitLabel ? ` — ${code.unitLabel}` : '' }}</span>
+            <span class="truncate">{{ code.unitLabel || code.unitNumber }}</span>
             <span class="opacity-30">&middot;</span>
             <span class="shrink-0 tabular-nums">{{ code.usedAt ? formatDateTime(code.usedAt) : formatDateTime(code.expiresAt) }}</span>
           </div>

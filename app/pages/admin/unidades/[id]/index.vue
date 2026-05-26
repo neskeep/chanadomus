@@ -269,6 +269,10 @@ onMounted(() => {
         <div class="flex items-center gap-3">
           <h1 class="text-xl font-semibold tracking-tight">{{ unit.number }}</h1>
           <Badge :variant="unit.isActive ? 'secondary' : 'outline'">{{ unit.isActive ? 'Activa' : 'Inactiva' }}</Badge>
+          <Button variant="ghost" size="icon" class="size-8" @click="router.push(`/admin/unidades/${unitId}/editar`)">
+            <Pencil class="size-3.5" />
+            <span class="sr-only">Editar unidad</span>
+          </Button>
         </div>
         <p v-if="unit.label" class="mt-1 text-sm text-muted-foreground">{{ unit.label }}</p>
       </div>

@@ -84,7 +84,7 @@ onMounted(() => {
             <!-- Meta: reporter + unit + date (hidden if anonymous) -->
             <div class="flex flex-wrap gap-x-4 gap-y-1 text-sm text-muted-foreground">
               <span v-if="!incident.isAnonymous && incident.reportedByName">Reportado por {{ incident.reportedByName }}</span>
-              <span v-if="!incident.isAnonymous && incident.unitNumber">Unidad {{ incident.unitNumber }}</span>
+              <span v-if="!incident.isAnonymous && (incident.unitLabel || incident.unitNumber)">{{ incident.unitLabel || incident.unitNumber }}</span>
               <span class="tabular-nums">{{ formatDate(incident.createdAt) }}</span>
             </div>
 

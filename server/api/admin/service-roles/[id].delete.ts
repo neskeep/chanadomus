@@ -1,6 +1,7 @@
 import { db } from '~~/server/db'
 import { serviceStaffRoles } from '~~/server/db/schema/service-staff-role'
 import { unitServiceStaff } from '~~/server/db/schema/unit-service-staff'
+import { providers } from '~~/server/db/schema/provider'
 import { eq, and } from 'drizzle-orm'
 
 export default defineEventHandler(async (event) => {
@@ -12,15 +13,26 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 400, message: 'Role ID es requerido' })
   }
 
-  // Check if role is in use
-  const inUse = await db
+  // Check if role is in use by staff
+  const inUseByStaff = await db
     .select({ id: unitServiceStaff.id })
     .from(unitServiceStaff)
     .where(eq(unitServiceStaff.roleId, roleId))
     .limit(1)
 
-  if (inUse.length > 0) {
-    throw createError({ statusCode: 409, message: 'No se puede eliminar un rol que está en uso' })
+  if (inUseByStaff.length > 0) {
+    throw createError({ statusCode: 409, message: 'No se puede eliminar un rol asignado a personal' })
+  }
+
+  // Check if role is in use by providers
+  const inUseByProvider = await db
+    .select({ id: providers.id })
+    .from(providers)
+    .where(eq(providers.serviceRoleId, roleId))
+    .limit(1)
+
+  if (inUseByProvider.length > 0) {
+    throw createError({ statusCode: 409, message: 'No se puede eliminar un rol asignado a proveedores' })
   }
 
   const [deleted] = await db

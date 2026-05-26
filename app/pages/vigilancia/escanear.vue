@@ -204,7 +204,7 @@ const resolvedConfig = computed(() => {
             <div v-if="scanResult.unitNumber" class="flex items-center gap-3">
               <Home class="size-4 shrink-0 text-white/50" />
               <span class="text-sm text-white/80">
-                {{ scanResult.unitNumber }}{{ scanResult.unitLabel ? ` — ${scanResult.unitLabel}` : '' }}
+                {{ scanResult.unitLabel || scanResult.unitNumber }}
               </span>
             </div>
             <div v-if="scanResult.visitorType" class="flex items-center gap-3">
@@ -230,7 +230,7 @@ const resolvedConfig = computed(() => {
             <div v-if="scanResult.unitNumber" class="flex items-center gap-3">
               <Home class="size-4 shrink-0 text-white/50" />
               <span class="text-sm text-white/80">
-                {{ scanResult.unitNumber }}{{ scanResult.unitLabel ? ` — ${scanResult.unitLabel}` : '' }}
+                {{ scanResult.unitLabel || scanResult.unitNumber }}
               </span>
             </div>
             <div class="flex items-center gap-3">
@@ -255,7 +255,7 @@ const resolvedConfig = computed(() => {
             <div v-if="scanResult.unitNumber" class="flex items-center gap-3">
               <Home class="size-4 shrink-0 text-white/50" />
               <span class="text-sm text-white/80">
-                {{ scanResult.unitNumber }}{{ scanResult.unitLabel ? ` — ${scanResult.unitLabel}` : '' }}
+                {{ scanResult.unitLabel || scanResult.unitNumber }}
               </span>
             </div>
             <Badge variant="secondary" class="text-xs">Pase de Residente</Badge>
@@ -276,7 +276,7 @@ const resolvedConfig = computed(() => {
             <div v-if="scanResult.unitNumber" class="flex items-center gap-3">
               <Home class="size-4 shrink-0 text-white/50" />
               <span class="text-sm text-white/80">
-                {{ scanResult.unitNumber }}{{ scanResult.unitLabel ? ` — ${scanResult.unitLabel}` : '' }}
+                {{ scanResult.unitLabel || scanResult.unitNumber }}
               </span>
             </div>
             <Badge variant="outline" class="border-white/20 text-xs text-white/80">Personal de Servicio</Badge>

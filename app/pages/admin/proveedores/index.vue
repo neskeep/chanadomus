@@ -403,7 +403,7 @@ function renderStars(rating: number | undefined): number[] {
                 class="ml-auto inline-flex shrink-0 rounded-lg px-1.5 py-0.5 text-[11px] font-medium"
                 :class="CATEGORY_COLORS[item.category]"
               >
-                {{ CATEGORY_LABELS[item.category] }}
+                {{ item.serviceRoleName ?? CATEGORY_LABELS[item.category] }}
               </span>
             </div>
             <!-- Row 2: Status · Phone | Actions inline -->

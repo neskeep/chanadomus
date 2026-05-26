@@ -252,7 +252,7 @@ async function handleReview() {
               class="inline-flex rounded-lg px-2 py-0.5 text-xs font-medium"
               :class="CATEGORY_COLORS[provider.category]"
             >
-              {{ CATEGORY_LABELS[provider.category] }}
+              {{ provider.serviceRoleName ?? CATEGORY_LABELS[provider.category] }}
             </span>
             <span
               class="inline-flex rounded-lg px-2 py-0.5 text-xs font-medium"

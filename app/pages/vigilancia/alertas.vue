@@ -171,75 +171,73 @@ onMounted(async () => {
       aria-live="assertive"
     >
       <!-- Header bar pulsating -->
-      <div class="flex items-center justify-between bg-destructive px-4 py-3 animate-pulse">
+      <div class="flex items-center justify-between bg-destructive px-4 py-2.5 animate-pulse">
         <div class="flex items-center gap-2">
-          <ShieldAlert class="size-6 text-destructive-foreground" aria-hidden="true" />
-          <span class="text-lg font-bold text-destructive-foreground">ALERTA DE PÁNICO</span>
+          <ShieldAlert class="size-5 shrink-0 text-destructive-foreground" aria-hidden="true" />
+          <span class="text-sm font-bold text-destructive-foreground sm:text-base">ALERTA DE PÁNICO</span>
         </div>
-        <div class="flex items-center gap-2">
-          <Volume2 class="size-4 text-destructive-foreground animate-pulse" />
-          <span class="text-sm tabular-nums text-destructive-foreground/80">{{ activeAlertElapsed }}</span>
+        <div class="flex items-center gap-1.5">
+          <Volume2 class="size-3.5 shrink-0 text-destructive-foreground animate-pulse" />
+          <span class="text-xs tabular-nums text-destructive-foreground/80 sm:text-sm">{{ activeAlertElapsed }}</span>
         </div>
       </div>
 
       <!-- Body with person info -->
-      <div class="bg-background p-5">
-        <div class="flex flex-col gap-5 md:flex-row md:items-start md:justify-between">
-          <!-- Person info -->
-          <div class="flex items-start gap-4">
-            <Avatar class="size-16 shrink-0 overflow-hidden ring-2 ring-destructive/30">
-              <AvatarImage v-if="activeAlert.userImage" :src="activeAlert.userImage" :alt="activeAlert.userName" />
-              <AvatarFallback class="bg-destructive/10 text-destructive text-xl font-bold">
-                {{ activeAlert.userName?.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2) || '?' }}
-              </AvatarFallback>
-            </Avatar>
-            <div class="min-w-0">
-              <p class="text-xl font-bold">{{ activeAlert.userName }}</p>
-              <p class="text-3xl font-bold tabular-nums text-destructive">
-                {{ activeAlert.unitLabel ?? activeAlert.unitNumber ?? 'Sin unidad asignada' }}
-              </p>
-              <p v-if="activeAlert.userEmail" class="mt-1 text-sm text-muted-foreground">
-                {{ activeAlert.userEmail }}
-              </p>
-            </div>
+      <div class="bg-background p-4 sm:p-5">
+        <!-- Person row -->
+        <div class="flex items-center gap-3">
+          <Avatar class="size-14 shrink-0 overflow-hidden ring-2 ring-destructive/30 sm:size-16">
+            <AvatarImage v-if="activeAlert.userImage" :src="activeAlert.userImage" :alt="activeAlert.userName" />
+            <AvatarFallback class="bg-destructive/10 text-destructive text-lg font-bold">
+              {{ activeAlert.userName?.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2) || '?' }}
+            </AvatarFallback>
+          </Avatar>
+          <div class="min-w-0 flex-1">
+            <p class="truncate text-lg font-bold sm:text-xl">{{ activeAlert.userName }}</p>
+            <p class="truncate text-xl font-bold text-destructive sm:text-2xl">
+              {{ activeAlert.unitLabel ?? activeAlert.unitNumber ?? 'Sin unidad asignada' }}
+            </p>
+            <p v-if="activeAlert.userEmail" class="truncate text-xs text-muted-foreground sm:text-sm">
+              {{ activeAlert.userEmail }}
+            </p>
           </div>
+        </div>
 
-          <!-- Actions -->
-          <div class="flex shrink-0 flex-col gap-2 sm:flex-row md:flex-col">
-            <!-- Call button -->
-            <Button
-              v-if="activeAlert.userPhone"
-              variant="outline"
-              size="lg"
-              class="gap-2"
-              @click="handleCall()"
-            >
-              <Phone class="size-4" />
-              Llamar — {{ activeAlert.userPhone }}
-            </Button>
-            <p v-else class="text-sm text-muted-foreground">Sin teléfono registrado</p>
+        <!-- Actions -->
+        <div class="mt-4 flex flex-col gap-2">
+          <!-- Call button -->
+          <Button
+            v-if="activeAlert.userPhone"
+            variant="outline"
+            size="lg"
+            class="w-full gap-2"
+            @click="handleCall()"
+          >
+            <Phone class="size-4" />
+            Llamar — {{ activeAlert.userPhone }}
+          </Button>
+          <p v-else class="text-center text-sm text-muted-foreground">Sin teléfono registrado</p>
 
-            <!-- Resolve button -->
-            <Button
-              size="lg"
-              class="gap-2 bg-primary font-bold"
-              @click="openResolveDialog"
-            >
-              <CheckCircle2 class="size-4" />
-              Atender alerta
-            </Button>
+          <!-- Resolve button -->
+          <Button
+            size="lg"
+            class="w-full gap-2 bg-primary font-bold"
+            @click="openResolveDialog"
+          >
+            <CheckCircle2 class="size-4" />
+            Atender alerta
+          </Button>
 
-            <!-- Silence button -->
-            <Button
-              variant="ghost"
-              size="sm"
-              class="gap-2 text-muted-foreground"
-              @click="handleSilence"
-            >
-              <VolumeX class="size-4" />
-              Silenciar alarma
-            </Button>
-          </div>
+          <!-- Silence button -->
+          <Button
+            variant="ghost"
+            size="sm"
+            class="w-full gap-2 text-muted-foreground"
+            @click="handleSilence"
+          >
+            <VolumeX class="size-4" />
+            Silenciar alarma
+          </Button>
         </div>
       </div>
     </div>
