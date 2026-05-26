@@ -1,6 +1,7 @@
 import { db } from '~~/server/db'
 import { user } from '~~/server/db/schema/auth'
 import { units } from '~~/server/db/schema/unit'
+import { staff } from '~~/server/db/schema/staff'
 import { eq, and, or, ilike, asc, sql } from 'drizzle-orm'
 import { USER_ROLES, type UserRole } from '~~/shared/types/auth'
 
@@ -27,6 +28,9 @@ export default defineEventHandler(async (event) => {
     conditions.push(or(ilike(user.name, term), ilike(user.email, term))!)
   }
 
+  // COALESCE: conserjes tienen unitId en staff, no en user
+  const effectiveUnitId = sql<string>`COALESCE(${user.unitId}, ${staff.unitId})`
+
   const rows = await db
     .select({
       id: user.id,
@@ -37,13 +41,14 @@ export default defineEventHandler(async (event) => {
       role: user.role,
       banned: user.banned,
       banReason: user.banReason,
-      unitId: user.unitId,
+      unitId: effectiveUnitId,
       unitNumber: units.number,
       unitLabel: units.label,
       createdAt: user.createdAt,
     })
     .from(user)
-    .leftJoin(units, eq(user.unitId, units.id))
+    .leftJoin(staff, and(eq(staff.userId, user.id), eq(staff.tenantId, tenantId)))
+    .leftJoin(units, sql`${units.id} = COALESCE(${user.unitId}, ${staff.unitId})`)
     .where(and(...conditions))
     .orderBy(
       sql`CASE ${user.role}
