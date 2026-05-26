@@ -16,6 +16,8 @@ interface FormState {
   unitId: string
   visitorType: 'invitado' | 'proveedor'
   vehiclePlate: string
+  isCustomDestination: boolean
+  customDestination: string
 }
 
 const form = reactive<FormState>({
@@ -24,6 +26,8 @@ const form = reactive<FormState>({
   unitId: '',
   visitorType: 'invitado',
   vehiclePlate: '',
+  isCustomDestination: false,
+  customDestination: '',
 })
 
 const units = ref<Unit[]>([])
@@ -33,11 +37,16 @@ const lastResult = ref<{
   visitorName: string
   unitNumber: string
   unitLabel: string | null
+  customDestination: string | null
   result: AccessResult
 } | null>(null)
 
 const isValid = computed(() => {
-  return form.visitorName.trim() !== '' && form.unitId !== ''
+  const hasVisitor = form.visitorName.trim() !== '' && form.visitorDocument.trim() !== ''
+  const hasDestination = form.isCustomDestination
+    ? form.customDestination.trim() !== ''
+    : form.unitId !== ''
+  return hasVisitor && hasDestination
 })
 
 onMounted(async () => {
@@ -63,9 +72,10 @@ async function submit(result: 'allowed' | 'denied') {
       body: {
         visitorName: form.visitorName.trim(),
         visitorDocument: form.visitorDocument.trim() || undefined,
-        unitId: form.unitId,
+        unitId: form.isCustomDestination ? undefined : form.unitId,
         visitorType: form.visitorType,
         vehiclePlate: form.vehiclePlate.trim() || undefined,
+        customDestination: form.isCustomDestination ? form.customDestination.trim() : undefined,
         result,
       },
     })
@@ -74,6 +84,7 @@ async function submit(result: 'allowed' | 'denied') {
       visitorName: response.data.visitorName || form.visitorName.trim(),
       unitNumber: response.data.unitNumber || '',
       unitLabel: response.data.unitLabel || null,
+      customDestination: form.isCustomDestination ? form.customDestination.trim() : null,
       result: response.data.result,
     }
 
@@ -83,6 +94,8 @@ async function submit(result: 'allowed' | 'denied') {
     form.unitId = ''
     form.visitorType = 'invitado'
     form.vehiclePlate = ''
+    form.isCustomDestination = false
+    form.customDestination = ''
   }
   catch (err: unknown) {
     const message = err instanceof Error ? err.message : 'Error al registrar la entrada'
@@ -114,22 +127,51 @@ async function submit(result: 'allowed' | 'denied') {
 
         <!-- Cédula -->
         <div class="space-y-1.5">
-          <Label for="visitor-doc">Cédula <span class="text-xs text-muted-foreground">(opcional)</span></Label>
+          <Label for="visitor-doc">Cédula <span class="text-destructive">*</span></Label>
           <Input
             id="visitor-doc"
             v-model="form.visitorDocument"
             placeholder="V-12345678"
+            required
             class="h-12 text-base"
           />
         </div>
 
-        <!-- Unidad destino -->
+        <!-- Destino -->
         <div class="space-y-1.5">
-          <Label>Unidad destino <span class="text-destructive">*</span></Label>
+          <div class="flex items-center justify-between">
+            <Label>Destino <span class="text-destructive">*</span></Label>
+            <div class="flex items-center rounded-full border p-0.5">
+              <button
+                type="button"
+                class="rounded-full px-3 py-1 text-xs font-medium transition-colors"
+                :class="!form.isCustomDestination ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-foreground'"
+                @click="form.isCustomDestination = false; form.customDestination = ''"
+              >
+                Unidad
+              </button>
+              <button
+                type="button"
+                class="rounded-full px-3 py-1 text-xs font-medium transition-colors"
+                :class="form.isCustomDestination ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-foreground'"
+                @click="form.isCustomDestination = true; form.unitId = ''"
+              >
+                Otro
+              </button>
+            </div>
+          </div>
           <UnitCombobox
+            v-if="!form.isCustomDestination"
             v-model="form.unitId"
             :units="units"
             placeholder="Buscar rancho..."
+            required
+          />
+          <Input
+            v-else
+            v-model="form.customDestination"
+            placeholder="Ej: Farola entrada principal, Área de piscina..."
+            class="h-12 text-base"
             required
           />
         </div>
@@ -199,7 +241,7 @@ async function submit(result: 'allowed' | 'denied') {
         <div class="flex items-center justify-between">
           <p class="text-sm font-semibold">{{ lastResult.visitorName }}</p>
           <Badge variant="outline" class="text-[11px]">
-            {{ lastResult.unitLabel || lastResult.unitNumber }}
+            {{ lastResult.customDestination || lastResult.unitLabel || lastResult.unitNumber }}
           </Badge>
         </div>
         <p

@@ -309,6 +309,20 @@
       "when": 1785398400000,
       "tag": "0043_vehicle_pass_temporary",
       "breakpoints": true
+    },
+    {
+      "idx": 44,
+      "version": "7",
+      "when": 1785484800000,
+      "tag": "0044_incident_unit_nullable",
+      "breakpoints": true
+    },
+    {
+      "idx": 45,
+      "version": "7",
+      "when": 1785571200000,
+      "tag": "0045_resident_pass_unit_nullable",
+      "breakpoints": true
     }
   ]
 }

@@ -39,7 +39,7 @@ const providerPageOverride = computed(() => {
   if (!provider.value) return null
   return {
     title: provider.value.name,
-    breadcrumbs: [{ label: 'Proveedores', to: '/mi-chana/proveedores' }],
+    breadcrumbs: [{ label: 'Proveedores y servicios', to: '/mi-chana/proveedores' }],
   }
 })
 usePageInfoOverride(providerPageOverride)

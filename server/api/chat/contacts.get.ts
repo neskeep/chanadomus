@@ -2,6 +2,7 @@ import { db } from '~~/server/db'
 import { chatRooms, chatRoomMembers } from '~~/server/db/schema/chat'
 import { user } from '~~/server/db/schema/auth'
 import { units } from '~~/server/db/schema/unit'
+import { staff } from '~~/server/db/schema/staff'
 import { eq, and, ne, inArray } from 'drizzle-orm'
 import { requireTenant } from '~~/server/utils/auth'
 import type { ChatContact } from '~~/shared/types/chat'
@@ -30,7 +31,36 @@ export default defineEventHandler(async (event) => {
 
   // Filter by role visibility
   const allowedRoles = getRoleVisibility(role)
-  const visibleUsers = allUsers.filter(u => allowedRoles.includes(u.role ?? 'propietario'))
+  let visibleUsers = allUsers.filter(u => allowedRoles.includes(u.role ?? 'propietario'))
+
+  // Conserje: restrict propietarios to only those in the same ranch
+  if (role === 'conserje') {
+    const [staffRecord] = await db
+      .select({ unitId: staff.unitId })
+      .from(staff)
+      .where(
+        and(
+          eq(staff.userId, authUser.id),
+          eq(staff.tenantId, tenantId),
+          eq(staff.isActive, true),
+        ),
+      )
+      .limit(1)
+
+    const conserjeUnitId = staffRecord?.unitId
+    if (conserjeUnitId) {
+      visibleUsers = visibleUsers.filter(u => {
+        if ((u.role ?? 'propietario') === 'propietario') {
+          return u.unitId === conserjeUnitId
+        }
+        return true // admin, vigilancia, conserje pass through
+      })
+    }
+    else {
+      // No unit assigned — hide all propietarios
+      visibleUsers = visibleUsers.filter(u => (u.role ?? 'propietario') !== 'propietario')
+    }
+  }
 
   // Fetch unit labels for users with unitId
   const unitIds = [...new Set(visibleUsers.map(u => u.unitId).filter((id): id is string => !!id))]
@@ -111,7 +141,7 @@ function getRoleVisibility(role: string): string[] {
     case 'propietario':
       return ['propietario', 'conserje', 'vigilancia', 'admin']
     case 'conserje':
-      return ['propietario', 'admin', 'vigilancia']
+      return ['propietario', 'admin', 'vigilancia', 'conserje']
     case 'vigilancia':
       return ['propietario', 'conserje', 'admin']
     default:

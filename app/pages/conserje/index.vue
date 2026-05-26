@@ -10,7 +10,7 @@ const { formatDateTime } = useFormatDate()
 
 const quickActions = [
   { label: 'Reportar Incidencia', to: '/conserje/incidencias/nueva', icon: ClipboardList },
-  { label: 'Proveedores', to: '/mi-chana/proveedores', icon: Store },
+  { label: 'Proveedores y servicios', to: '/mi-chana/proveedores', icon: Store },
   { label: 'Registrar Acceso', to: '/conserje/registrar-acceso', icon: DoorOpen },
 ]
 </script>
@@ -34,7 +34,7 @@ const quickActions = [
         :is-loading="isLoading"
       />
       <StatCard
-        label="Proveedores"
+        label="Proveedores y servicios"
         :value="stats?.activeProviders ?? 0"
         :icon="Wrench"
         :icon-bg-class="ICON_BG.success"

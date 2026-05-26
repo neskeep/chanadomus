@@ -8,10 +8,6 @@ export default defineEventHandler(async (event) => {
   const session = await requireAuth(event)
 
   const role = session.user.role ?? ''
-  if (!['propietario', 'admin', 'conserje'].includes(role)) {
-    throw createError({ statusCode: 403, message: 'Sin permisos' })
-  }
-
   const userId = session.user.id
   const unitId = await getUnitIdForPass(userId, tenantId, role)
   const now = new Date()
@@ -48,7 +44,7 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 500, message: 'Error al crear pase de residente' })
   }
 
-  const unitDetails = await getUnitDetails(newPass.unitId)
+  const unitDetails = newPass.unitId ? await getUnitDetails(newPass.unitId) : null
   return {
     data: {
       id: newPass.id,
@@ -56,8 +52,8 @@ export default defineEventHandler(async (event) => {
       expiresAt: newPass.expiresAt.toISOString(),
       createdAt: newPass.createdAt.toISOString(),
       unitId: newPass.unitId,
-      unitNumber: unitDetails.number,
-      unitLabel: unitDetails.label,
+      unitNumber: unitDetails?.number ?? null,
+      unitLabel: unitDetails?.label ?? null,
     },
   }
 })

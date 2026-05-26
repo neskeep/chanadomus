@@ -6,7 +6,7 @@ import { units } from './unit'
 export const residentPasses = pgTable('resident_passes', {
   id: uuid('id').primaryKey().defaultRandom(),
   userId: text('user_id').notNull().references(() => user.id),
-  unitId: uuid('unit_id').notNull().references(() => units.id),
+  unitId: uuid('unit_id').references(() => units.id),
   token: text('token').notNull().unique(),
   isActive: boolean('is_active').notNull().default(true),
   expiresAt: timestamp('expires_at').notNull(),

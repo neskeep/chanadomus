@@ -78,7 +78,7 @@ const DOCS_GROUPS: DocsTocGroup[] = [
     icon: 'Wrench',
     items: [
       { id: 'personal', label: 'Personal de servicio' },
-      { id: 'proveedores', label: 'Proveedores' },
+      { id: 'proveedores', label: 'Proveedores y servicios' },
     ],
   },
   {

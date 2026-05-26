@@ -99,7 +99,7 @@ export default defineEventHandler(async (event) => {
     status: row.status,
     isAnonymous: row.isAnonymous,
     reportedById: hideReporter ? '' : row.reportedById,
-    unitId: hideReporter ? '' : row.unitId,
+    unitId: hideReporter ? null : row.unitId,
     unitNumber: hideReporter ? undefined : (row.unitNumber ?? undefined),
     unitLabel: hideReporter ? undefined : (row.unitLabel ?? undefined),
     reportedByName: hideReporter ? undefined : (row.reportedByName ?? undefined),

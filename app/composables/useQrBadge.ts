@@ -16,19 +16,13 @@ export function useQrBadge() {
     const origin = typeof window !== 'undefined' ? window.location.origin : ''
     const accessUrl = `${origin}/acceso/${data.qrToken}`
 
-    // Generate QR as SVG string
-    const qrSvgRaw = await QRCode.toString(accessUrl, {
-      type: 'svg',
-      width: 180,
+    // Generate QR as base64 PNG to avoid nested SVG rendering issues on Android
+    const qrDataUrl = await QRCode.toDataURL(accessUrl, {
+      width: 540,
       margin: 1,
       color: { dark: '#1F2933', light: '#FFFFFF' },
     })
-
-    // Extract viewBox and inner content, then create a clean nested SVG
-    const viewBoxMatch = qrSvgRaw.match(/viewBox="([^"]*)"/)
-    const viewBox = viewBoxMatch ? viewBoxMatch[1] : '0 0 180 180'
-    const innerContent = qrSvgRaw.replace(/<\/?svg[^>]*>/g, '')
-    const qrEmbedded = `<svg xmlns="http://www.w3.org/2000/svg" x="80" y="101" width="180" height="180" viewBox="${viewBox}">${innerContent}</svg>`
+    const qrEmbedded = `<image href="${qrDataUrl}" x="80" y="101" width="180" height="180" />`
 
     const role = data.roleName ?? 'Sin rol'
     const unit = data.unitLabel || data.unitNumber || null

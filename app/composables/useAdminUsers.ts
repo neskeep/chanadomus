@@ -110,6 +110,23 @@ export function useAdminUsers() {
     }
   }
 
+  async function deleteUser(userId: string) {
+    isSubmitting.value = true
+    error.value = null
+    try {
+      await $fetch(`/api/admin/users/${userId}`, { method: 'DELETE' })
+      await fetchUsers()
+    }
+    catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Error al eliminar usuario'
+      error.value = message
+      throw err
+    }
+    finally {
+      isSubmitting.value = false
+    }
+  }
+
   return {
     userList,
     isLoading,
@@ -120,5 +137,6 @@ export function useAdminUsers() {
     updateUser,
     toggleBan,
     resetPassword,
+    deleteUser,
   }
 }

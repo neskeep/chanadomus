@@ -9,7 +9,7 @@ import type { ProviderCategory } from '~~/shared/types/provider'
 import { PROVIDER_CATEGORIES } from '~~/shared/types/provider'
 import { PROVIDER_CATEGORY_COLORS as CATEGORY_COLORS } from '~/composables/useColorMap'
 
-useHead({ title: 'Directorio de Proveedores' })
+useHead({ title: 'Proveedores y servicios' })
 
 const { target, isMounted } = useTopbarPortal()
 const { role } = useAuth()

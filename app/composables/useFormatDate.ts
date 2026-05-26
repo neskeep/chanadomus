@@ -74,8 +74,8 @@ export function useFormatDate() {
     return relativeFormatter.format(0, 'second')
   }
 
-  const formatCurrency = (amount: number, currency: string = 'VES'): string => {
-    const prefix = currency === 'VES' ? 'Bs.' : '$'
+  const formatCurrency = (amount: number, currency: string = 'USD'): string => {
+    const prefix = '$'
     const formatted = amount.toLocaleString(LOCALE, {
       minimumFractionDigits: 2,
       maximumFractionDigits: 2,

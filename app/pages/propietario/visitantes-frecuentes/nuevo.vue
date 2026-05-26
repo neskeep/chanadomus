@@ -15,7 +15,7 @@ const visitorType = ref<VisitorType>('invitado')
 const vehiclePlate = ref('')
 
 const isFormValid = computed(() => {
-  return visitorName.value.trim() !== '' && !!userUnitId.value
+  return visitorName.value.trim() !== '' && visitorDocument.value.trim() !== '' && !!userUnitId.value
 })
 
 async function handleSubmit() {
@@ -59,11 +59,12 @@ async function handleSubmit() {
 
           <!-- Cedula -->
           <div class="space-y-1.5">
-            <Label for="visitor-document">Cedula <span class="text-xs text-muted-foreground">(opcional)</span></Label>
+            <Label for="visitor-document">Cédula <span class="text-destructive">*</span></Label>
             <Input
               id="visitor-document"
               v-model="visitorDocument"
               placeholder="V-12345678"
+              required
               class="h-12 text-base"
             />
           </div>

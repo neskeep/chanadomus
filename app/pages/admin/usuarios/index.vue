@@ -9,6 +9,7 @@ import {
   Mail,
   Building2,
   Loader2,
+  Trash2,
 } from 'lucide-vue-next'
 import { toast } from 'vue-sonner'
 import { ROLE_LABELS, USER_ROLES, type UserRole } from '~~/shared/types/auth'
@@ -16,7 +17,7 @@ import type { UserWithUnit } from '~~/shared/types/auth'
 
 useHead({ title: 'Usuarios' })
 
-const { userList, isLoading, isSubmitting, error, fetchUsers, toggleBan, resetPassword } = useAdminUsers()
+const { userList, isLoading, isSubmitting, error, fetchUsers, toggleBan, resetPassword, deleteUser } = useAdminUsers()
 
 const { target, isMounted } = useTopbarPortal()
 
@@ -120,6 +121,27 @@ async function handleToggleBan() {
   }
   catch {
     toast.error(error.value ?? 'Error al cambiar estado')
+  }
+}
+
+// Delete Dialog
+const deleteDialogOpen = ref(false)
+const deleteTargetUser = ref<UserWithUnit | null>(null)
+
+function openDeleteDialog(user: UserWithUnit) {
+  deleteTargetUser.value = user
+  deleteDialogOpen.value = true
+}
+
+async function handleDeleteUser() {
+  if (!deleteTargetUser.value) return
+  try {
+    await deleteUser(deleteTargetUser.value.id)
+    toast.success('Usuario eliminado correctamente')
+    deleteDialogOpen.value = false
+  }
+  catch {
+    toast.error(error.value ?? 'Error al eliminar usuario')
   }
 }
 
@@ -253,6 +275,15 @@ onMounted(() => {
                     <ShieldCheck v-if="user.banned" class="size-4" />
                     <Ban v-else class="size-4" />
                   </Button>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    class="size-10 text-destructive hover:text-destructive"
+                    aria-label="Eliminar usuario"
+                    @click="openDeleteDialog(user)"
+                  >
+                    <Trash2 class="size-4" />
+                  </Button>
                 </div>
               </TableCell>
             </TableRow>
@@ -310,6 +341,14 @@ onMounted(() => {
                 >
                   <ShieldCheck v-if="user.banned" class="size-3" />
                   <Ban v-else class="size-3" />
+                </Button>
+                <Button
+                  variant="ghost"
+                  class="h-6 px-2 text-[11px] text-destructive hover:text-destructive"
+                  aria-label="Eliminar usuario"
+                  @click="openDeleteDialog(user)"
+                >
+                  <Trash2 class="size-3" />
                 </Button>
               </span>
             </div>
@@ -393,6 +432,30 @@ onMounted(() => {
           >
             <Loader2 v-if="isSubmitting" class="mr-2 size-4 animate-spin" />
             {{ banUser?.banned ? 'Reactivar' : 'Suspender' }}
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
+    <!-- Delete AlertDialog -->
+    <AlertDialog v-model:open="deleteDialogOpen">
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>Eliminar usuario</AlertDialogTitle>
+          <AlertDialogDescription>
+            ¿Estás seguro de eliminar a <span class="font-semibold">{{ deleteTargetUser?.name }}</span>?
+            Esta acción es irreversible y eliminará todos sus datos asociados.
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+
+        <AlertDialogFooter>
+          <AlertDialogCancel>Cancelar</AlertDialogCancel>
+          <AlertDialogAction
+            class="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            :disabled="isSubmitting"
+            @click="handleDeleteUser"
+          >
+            <Loader2 v-if="isSubmitting" class="mr-2 size-4 animate-spin" />
+            {{ isSubmitting ? 'Eliminando...' : 'Eliminar' }}
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>

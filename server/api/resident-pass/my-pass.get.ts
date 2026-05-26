@@ -8,10 +8,6 @@ export default defineEventHandler(async (event) => {
   const session = await requireAuth(event)
 
   const role = session.user.role ?? ''
-  if (!['propietario', 'admin', 'conserje'].includes(role)) {
-    throw createError({ statusCode: 403, message: 'Sin permisos' })
-  }
-
   const userId = session.user.id
   const unitId = await getUnitIdForPass(userId, tenantId, role)
   const now = new Date()
@@ -31,7 +27,7 @@ export default defineEventHandler(async (event) => {
 
   // If active pass exists and not expired, return it
   if (existingPass && existingPass.expiresAt > now) {
-    const unitDetails = await getUnitDetails(existingPass.unitId)
+    const unitDetails = existingPass.unitId ? await getUnitDetails(existingPass.unitId) : null
     return {
       data: {
         id: existingPass.id,
@@ -39,8 +35,8 @@ export default defineEventHandler(async (event) => {
         expiresAt: existingPass.expiresAt.toISOString(),
         createdAt: existingPass.createdAt.toISOString(),
         unitId: existingPass.unitId,
-        unitNumber: unitDetails.number,
-        unitLabel: unitDetails.label,
+        unitNumber: unitDetails?.number ?? null,
+        unitLabel: unitDetails?.label ?? null,
       },
     }
   }
@@ -73,7 +69,7 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 500, message: 'Error al crear pase de residente' })
   }
 
-  const newUnitDetails = await getUnitDetails(newPass.unitId)
+  const newUnitDetails = newPass.unitId ? await getUnitDetails(newPass.unitId) : null
   return {
     data: {
       id: newPass.id,
@@ -81,8 +77,8 @@ export default defineEventHandler(async (event) => {
       expiresAt: newPass.expiresAt.toISOString(),
       createdAt: newPass.createdAt.toISOString(),
       unitId: newPass.unitId,
-      unitNumber: newUnitDetails.number,
-      unitLabel: newUnitDetails.label,
+      unitNumber: newUnitDetails?.number ?? null,
+      unitLabel: newUnitDetails?.label ?? null,
     },
   }
 })

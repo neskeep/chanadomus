@@ -66,8 +66,8 @@ async function seed() {
     console.log(`  ${u.role}: ${u.email} / Yolo2026!`)
   }
 
-  // 3. Create 86 units (ranchos)
-  const unitValues = Array.from({ length: 86 }, (_, i) => ({
+  // 3. Create 74 units (ranchos) — R-075 to R-086 don't exist
+  const unitValues = Array.from({ length: 74 }, (_, i) => ({
     number: `R-${String(i + 1).padStart(3, '0')}`,
     label: `Rancho ${i + 1}`,
     tenantId: tenant.id,

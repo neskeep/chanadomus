@@ -86,10 +86,7 @@ export default defineEventHandler(async (event) => {
     .from(user)
     .where(eq(user.id, session.user.id))
 
-  const resolvedUnitId = formUnitId || userData?.unitId
-  if (!resolvedUnitId) {
-    throw createError({ statusCode: 400, message: 'Se requiere una unidad para la incidencia' })
-  }
+  const resolvedUnitId = formUnitId || userData?.unitId || null
 
   // Save photos to disk
   const uploadsDir = join(process.cwd(), 'uploads', 'incidents')

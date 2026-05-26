@@ -9,6 +9,13 @@ interface UpdateBody {
 
 export default defineEventHandler(async (event) => {
   const session = await requireAuth(event)
+
+  // Solo admin y propietario pueden editar su perfil
+  const userRole = session.user.role
+  if (userRole !== 'admin' && userRole !== 'propietario') {
+    throw createError({ statusCode: 403, message: 'No tienes permisos para editar tu perfil' })
+  }
+
   const body = await readBody<UpdateBody>(event)
 
   const updates: Record<string, unknown> = { updatedAt: new Date() }

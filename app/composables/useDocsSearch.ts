@@ -178,7 +178,7 @@ const SEARCH_INDEX: DocsSearchEntry[] = [
   },
   {
     id: 'proveedores',
-    title: 'Proveedores',
+    title: 'Proveedores y servicios',
     group: 'Servicios',
     keywords: ['proveedor', 'contratista', 'empresa', 'servicio externo', 'cotización', 'contrato', 'presupuesto', 'obra', 'reparación', 'fumigación', 'alberca', 'piscina'],
     description: 'Directorio y gestión de proveedores externos',

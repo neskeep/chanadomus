@@ -28,14 +28,12 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 404, message: 'Visitante frecuente no encontrado' })
   }
 
-  // Conserje puede eliminar visitantes de su unidad; propietario/admin solo los suyos
-  if (role === 'conserje') {
-    const staffUnitId = await getStaffUnitId(user.id, tenantId)
-    if (existing.unitId !== staffUnitId) {
+  // Verificar que el visitante pertenece a la unidad del usuario (propietario y conserje comparten)
+  if (role !== 'admin') {
+    const userUnitId = await getUnitIdForPass(user.id, tenantId, role as string)
+    if (!userUnitId || existing.unitId !== userUnitId) {
       throw createError({ statusCode: 403, message: 'No tienes permiso para eliminar este visitante' })
     }
-  } else if (role !== 'admin' && existing.ownerId !== user.id) {
-    throw createError({ statusCode: 403, message: 'No tienes permiso para eliminar este visitante' })
   }
 
   await db

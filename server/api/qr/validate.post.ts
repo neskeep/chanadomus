@@ -219,7 +219,7 @@ async function logAccess(params: {
   authorizedBy?: string
   visitorName?: string | null
   visitorDocument?: string | null
-  unitId?: string
+  unitId?: string | null
   unitNumber?: string | null
   unitLabel?: string | null
   vehiclePassId?: string
@@ -294,7 +294,7 @@ async function validateResidentPass(
     })
     .from(residentPasses)
     .innerJoin(user, eq(user.id, residentPasses.userId))
-    .innerJoin(units, eq(units.id, residentPasses.unitId))
+    .leftJoin(units, eq(units.id, residentPasses.unitId))
     .where(
       and(
         eq(residentPasses.token, token),

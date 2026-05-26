@@ -11,6 +11,12 @@ const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp']
 export default defineEventHandler(async (event) => {
   const session = await requireAuth(event)
 
+  // Solo admin y propietario pueden cambiar su avatar
+  const userRole = session.user.role
+  if (userRole !== 'admin' && userRole !== 'propietario') {
+    throw createError({ statusCode: 403, message: 'No tienes permisos para cambiar tu foto de perfil' })
+  }
+
   const formData = await readMultipartFormData(event)
   if (!formData || formData.length === 0) {
     throw createError({ statusCode: 400, message: 'No se recibió archivo' })
