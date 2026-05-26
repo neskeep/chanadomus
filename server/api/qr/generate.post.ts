@@ -95,7 +95,7 @@ export default defineEventHandler(async (event) => {
       .where(
         and(
           eq(frequentVisitors.id, body.frequentVisitorId),
-          eq(frequentVisitors.ownerId, user.id),
+          eq(frequentVisitors.unitId, body.unitId),
           eq(frequentVisitors.tenantId, tenantId),
         ),
       )

@@ -32,8 +32,9 @@ export async function getStaffUnitId(userId: string, tenantId: string): Promise<
  * Obtiene el unitId para un usuario según su rol.
  * - conserje: desde staff table (obligatorio, sin fallbacks)
  * - propietario/admin: desde la tabla user (obligatorio)
+ * - vigilancia/otros: desde la tabla user (puede ser null)
  */
-export async function getUnitIdForPass(userId: string, tenantId: string, role: string): Promise<string> {
+export async function getUnitIdForPass(userId: string, tenantId: string, role: string): Promise<string | null> {
   if (role === 'conserje') {
     const [staffRecord] = await db
       .select({ unitId: staff.unitId })
@@ -47,17 +48,19 @@ export async function getUnitIdForPass(userId: string, tenantId: string, role: s
     return staffRecord.unitId
   }
 
-  // propietario/admin: user table
+  // Todos los demás roles: user table
   const [userData] = await db
     .select({ unitId: user.unitId })
     .from(user)
     .where(eq(user.id, userId))
     .limit(1)
 
-  if (!userData?.unitId) {
+  // Para propietario, unitId es obligatorio
+  if (role === 'propietario' && !userData?.unitId) {
     throw createError({ statusCode: 400, message: 'Usuario sin unidad asignada' })
   }
-  return userData.unitId
+
+  return userData?.unitId ?? null
 }
 
 /**

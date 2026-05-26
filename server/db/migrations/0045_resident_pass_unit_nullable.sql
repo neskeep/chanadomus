@@ -1,0 +1,1 @@
+ALTER TABLE "resident_passes" ALTER COLUMN "unit_id" DROP NOT NULL;

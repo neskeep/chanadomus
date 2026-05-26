@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { Loader2, Share2, Plus, QrCode, Users } from 'lucide-vue-next'
+import { toast } from 'vue-sonner'
 import type { VisitorType } from '~~/shared/types/qr'
 import QRCode from 'qrcode'
 
@@ -91,17 +92,19 @@ async function handleGenerate() {
     qrDataUrl.value = await QRCode.toDataURL(accessUrl, { width: 256, margin: 2 })
 
     // Save as frequent visitor if requested
-    if (saveAsFrequent.value && !frequentVisitorId.value) {
+    if (saveAsFrequent.value && !frequentVisitorId.value && userUnitId.value) {
       try {
         await addFrequentVisitor({
           visitorName: visitorName.value.trim(),
           visitorDocument: visitorDocument.value.trim() || undefined,
           visitorType: visitorType.value,
-          unitId: userUnitId.value!,
+          unitId: userUnitId.value,
         })
+        toast.success('Visitante guardado como frecuente')
       }
-      catch {
-        // Non-blocking
+      catch (err) {
+        console.warn('[nueva-visita] Error al guardar visitante frecuente:', err)
+        toast.error('No se pudo guardar como visitante frecuente')
       }
     }
   }
@@ -272,7 +275,7 @@ const { formatDateTime } = useFormatDate()
           </p>
 
           <div v-if="!frequentVisitorId" class="flex items-center gap-2">
-            <Checkbox id="save-frequent" v-model:checked="saveAsFrequent" />
+            <Checkbox id="save-frequent" :checked="saveAsFrequent" @click="saveAsFrequent = !saveAsFrequent" />
             <Label for="save-frequent" class="text-sm font-normal text-muted-foreground">Guardar como visitante frecuente</Label>
           </div>
         </div>

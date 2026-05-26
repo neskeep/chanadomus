@@ -78,8 +78,12 @@ watch(() => route.path, () => {
           <SheetDescription>Opciones de navegación adicionales</SheetDescription>
         </SheetHeader>
 
-        <!-- User profile row -->
-        <div class="flex items-center gap-3 px-5 pt-1 pb-3">
+        <!-- User profile row (tappable link to profile) -->
+        <NuxtLink
+          to="/mi-chana/perfil"
+          class="flex items-center gap-3 px-5 pt-1 pb-3 transition-colors hover:bg-accent"
+          @click="moreOpen = false"
+        >
           <Avatar class="size-9">
             <AvatarImage v-if="user?.image" :src="user.image" :alt="user.name" />
             <AvatarFallback class="bg-primary/10 text-primary text-xs font-semibold">
@@ -90,7 +94,8 @@ watch(() => route.path, () => {
             <span class="truncate text-sm font-semibold">{{ user?.name }}</span>
             <span class="text-xs text-muted-foreground">{{ roleLabel }}</span>
           </div>
-        </div>
+          <span class="text-xs text-muted-foreground">Mi Perfil</span>
+        </NuxtLink>
 
         <Separator />
 

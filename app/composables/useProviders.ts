@@ -17,6 +17,7 @@ interface FetchProvidersParams {
   page?: number
   limit?: number
   category?: ProviderCategory
+  serviceRoleId?: string
   search?: string
   status?: Provider['status']
 }
@@ -43,6 +44,7 @@ export function useProviders() {
       if (params.page) query.page = params.page
       if (params.limit) query.limit = params.limit
       if (params.category) query.category = params.category
+      if (params.serviceRoleId) query.serviceRoleId = params.serviceRoleId
       if (params.search) query.search = params.search
       if (params.status) query.status = params.status
 

@@ -70,7 +70,6 @@ const filteredIncidents = computed(() => {
   const q = searchQuery.value.trim().toLowerCase()
   return incidents.value.filter(i =>
     i.title.toLowerCase().includes(q)
-    || i.unitNumber?.toLowerCase().includes(q)
     || i.reportedByName?.toLowerCase().includes(q),
   )
 })
@@ -161,7 +160,6 @@ const { formatDate } = useFormatDate()
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Unidad</TableHead>
               <TableHead>Título</TableHead>
               <TableHead>Reportado por</TableHead>
               <TableHead>Prioridad</TableHead>
@@ -174,7 +172,6 @@ const { formatDate } = useFormatDate()
               v-for="item in filteredIncidents"
               :key="item.id"
             >
-              <TableCell class="font-medium">{{ item.unitLabel || item.unitNumber || '—' }}</TableCell>
               <TableCell class="max-w-[200px]">
                 <NuxtLink :to="`/vigilancia/incidencias/${item.id}`" class="block truncate font-medium text-primary underline-offset-2 hover:underline">
                   {{ item.title }}
@@ -229,8 +226,6 @@ const { formatDate } = useFormatDate()
                 <span :class="STATUS_CONFIG[item.status].class.replace(/bg-\S+/g, '')" class="font-medium">
                   {{ STATUS_CONFIG[item.status].label }}
                 </span>
-                <span class="opacity-30">·</span>
-                <span class="shrink-0">{{ item.unitLabel || item.unitNumber || '—' }}</span>
                 <span class="opacity-30">·</span>
                 <span class="truncate">{{ item.reportedByName ?? '—' }}</span>
                 <template v-if="item.isAnonymous">

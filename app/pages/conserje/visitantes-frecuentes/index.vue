@@ -180,8 +180,8 @@ function createQr(visitor: FrequentVisitor) {
             <Input id="edit-name" v-model="editForm.visitorName" placeholder="Nombre completo" required />
           </div>
           <div class="space-y-1.5">
-            <Label for="edit-document">Cedula <span class="text-xs text-muted-foreground">(opcional)</span></Label>
-            <Input id="edit-document" v-model="editForm.visitorDocument" placeholder="V-12345678" />
+            <Label for="edit-document">Cédula <span class="text-destructive">*</span></Label>
+            <Input id="edit-document" v-model="editForm.visitorDocument" placeholder="V-12345678" required />
           </div>
           <div class="space-y-1.5">
             <Label for="edit-type">Tipo</Label>

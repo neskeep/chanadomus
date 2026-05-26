@@ -128,7 +128,7 @@ onMounted(() => {
               <UnitCombobox
                 v-model="formUnit"
                 :units="units"
-                placeholder="Buscar rancho..."
+                placeholder="Buscar unidad..."
                 required
               />
             </div>
@@ -156,7 +156,7 @@ onMounted(() => {
           <!-- Amount + Description row -->
           <div class="grid gap-4 sm:grid-cols-2">
             <div class="space-y-1.5">
-              <Label for="amount-input">Monto (Bs) <span class="text-destructive">*</span></Label>
+              <Label for="amount-input">Monto ($) <span class="text-destructive">*</span></Label>
               <Input
                 id="amount-input"
                 v-model="formAmount"

@@ -16,6 +16,7 @@ export default defineEventHandler(async (event) => {
 
   const query = getQuery(event)
   const category = query.category as string | undefined
+  const serviceRoleId = query.serviceRoleId as string | undefined
   const status = query.status as string | undefined
   const search = query.search as string | undefined
   const page = Math.max(1, parseInt(query.page as string, 10) || 1)
@@ -43,7 +44,9 @@ export default defineEventHandler(async (event) => {
     conditions.push(eq(providers.status, status as ProviderStatus))
   }
 
-  if (category) {
+  if (serviceRoleId) {
+    conditions.push(eq(providers.serviceRoleId, serviceRoleId))
+  } else if (category) {
     conditions.push(eq(providers.category, category as ProviderCategory))
   }
 

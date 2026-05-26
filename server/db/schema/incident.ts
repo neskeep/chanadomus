@@ -15,7 +15,7 @@ export const incidents = pgTable('incidents', {
   priority: incidentPriorityEnum('priority').notNull().default('medium'),
   status: incidentStatusEnum('status').notNull().default('open'),
   reportedById: text('reported_by_id').notNull().references(() => user.id),
-  unitId: uuid('unit_id').notNull().references(() => units.id),
+  unitId: uuid('unit_id').references(() => units.id),
   tenantId: uuid('tenant_id').notNull().references(() => tenants.id),
   createdAt: timestamp('created_at').notNull().defaultNow(),
   updatedAt: timestamp('updated_at').notNull().defaultNow(),

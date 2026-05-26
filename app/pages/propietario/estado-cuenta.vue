@@ -68,7 +68,7 @@ const formattedBalance = computed(() => {
                 class="shrink-0 text-sm font-semibold tabular-nums"
                 :class="record.type === 'abono' ? 'text-primary' : 'text-destructive'"
               >
-                {{ record.type === 'abono' ? '+' : '-' }} Bs {{ record.amount }}
+                {{ record.type === 'abono' ? '+' : '-' }} $ {{ record.amount }}
               </span>
             </div>
             <div class="mt-0.5 flex items-center gap-x-2">

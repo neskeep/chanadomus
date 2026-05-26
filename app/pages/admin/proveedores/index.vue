@@ -15,7 +15,7 @@ import type {
 } from '~~/shared/types/provider'
 import { PROVIDER_CATEGORIES } from '~~/shared/types/provider'
 
-useHead({ title: 'Gestion de Proveedores' })
+useHead({ title: 'Proveedores y servicios' })
 
 const {
   providers,
@@ -31,7 +31,7 @@ const {
 // Filters & pagination
 const currentPage = ref(1)
 const searchQuery = ref('')
-const filterCategory = ref<ProviderCategory | ''>('')
+const filterCategory = ref('')
 const filterStatus = ref<ProviderStatus | ''>('')
 
 const { target, isMounted } = useTopbarPortal()
@@ -94,10 +94,10 @@ const pendingSuggestions = computed(() =>
 )
 
 async function loadProviders() {
-  const params: { page?: number; category?: ProviderCategory; status?: ProviderStatus } = {
+  const params: { page?: number; serviceRoleId?: string; status?: ProviderStatus } = {
     page: currentPage.value,
   }
-  if (filterCategory.value) params.category = filterCategory.value
+  if (filterCategory.value) params.serviceRoleId = filterCategory.value
   if (filterStatus.value) params.status = filterStatus.value
   await fetchProviders(params)
 }

@@ -15,7 +15,7 @@ const props = withDefaults(defineProps<{
   disabled?: boolean
 }>(), {
   modelValue: undefined,
-  placeholder: 'Seleccionar rancho',
+  placeholder: 'Seleccionar unidad',
   required: false,
   disabled: false,
 })
@@ -55,21 +55,64 @@ function toggle() {
   }
 }
 
-// Filter only ranchos (R-XXX), sort by label alphabetically
-const ranchoOptions = computed(() =>
-  props.units
-    .filter(u => u.number.startsWith('R-'))
-    .sort((a, b) => (a.label ?? a.number).localeCompare(b.label ?? b.number, 'es')),
-)
+// Group units by type prefix
+interface UnitGroup {
+  key: string
+  label: string
+  units: UnitOption[]
+}
 
-const filteredOptions = computed(() => {
-  if (!search.value.trim()) return ranchoOptions.value
-  const q = search.value.trim().toLowerCase()
-  return ranchoOptions.value.filter(u =>
-    (u.label ?? '').toLowerCase().includes(q)
-    || u.number.toLowerCase().includes(q),
-  )
+const groupOrder: Record<string, string> = {
+  'R': 'Ranchos',
+  'P': 'Parcelas',
+}
+
+function sortUnits(list: UnitOption[]) {
+  return [...list].sort((a, b) => (a.label ?? a.number).localeCompare(b.label ?? b.number, 'es'))
+}
+
+function getPrefix(unit: UnitOption): string {
+  const dash = unit.number.indexOf('-')
+  return dash > 0 ? unit.number.slice(0, dash) : ''
+}
+
+const groupedOptions = computed<UnitGroup[]>(() => {
+  const source = search.value.trim()
+    ? (() => {
+        const q = search.value.trim().toLowerCase()
+        return props.units.filter(u =>
+          (u.label ?? '').toLowerCase().includes(q)
+          || u.number.toLowerCase().includes(q),
+        )
+      })()
+    : props.units
+
+  const groups = new Map<string, UnitOption[]>()
+  for (const unit of source) {
+    const prefix = getPrefix(unit)
+    if (!groups.has(prefix)) groups.set(prefix, [])
+    groups.get(prefix)!.push(unit)
+  }
+
+  // Known prefixes first in order, then unknown
+  const known = Object.keys(groupOrder)
+  const result: UnitGroup[] = []
+  for (const k of known) {
+    const items = groups.get(k)
+    if (items?.length) {
+      result.push({ key: k, label: groupOrder[k], units: sortUnits(items) })
+      groups.delete(k)
+    }
+  }
+  for (const [k, items] of groups) {
+    if (items.length) {
+      result.push({ key: k, label: k || 'Otros', units: sortUnits(items) })
+    }
+  }
+  return result
 })
+
+const hasResults = computed(() => groupedOptions.value.some(g => g.units.length > 0))
 
 const selectedLabel = computed(() => {
   if (!props.modelValue) return null
@@ -126,7 +169,7 @@ function close() {
           <input
             data-unit-search
             v-model="search"
-            placeholder="Buscar rancho..."
+            placeholder="Buscar unidad..."
             class="w-full bg-transparent text-sm outline-none placeholder:text-muted-foreground"
             @keydown.escape="close"
           />
@@ -134,23 +177,32 @@ function close() {
 
         <!-- List -->
         <div class="max-h-56 overflow-y-auto overscroll-contain p-1">
-          <template v-if="filteredOptions.length > 0">
-            <button
-              v-for="unit in filteredOptions"
-              :key="unit.id"
-              type="button"
-              class="flex w-full items-center gap-2 rounded-xl px-2.5 py-2 text-sm transition-colors hover:bg-accent"
-              @click="selectUnit(unit.id)"
-            >
-              <Check
-                class="size-4 shrink-0"
-                :class="modelValue === unit.id ? 'opacity-100' : 'opacity-0'"
-              />
-              <span>{{ unit.label ?? unit.number }}</span>
-            </button>
+          <template v-if="hasResults">
+            <div v-for="(group, gi) in groupedOptions" :key="group.key">
+              <div
+                v-if="groupedOptions.length > 1"
+                class="px-2.5 pb-1 text-xs font-medium text-muted-foreground"
+                :class="gi > 0 ? 'mt-2 border-t pt-2' : 'pt-1'"
+              >
+                {{ group.label }}
+              </div>
+              <button
+                v-for="unit in group.units"
+                :key="unit.id"
+                type="button"
+                class="flex w-full items-center gap-2 rounded-xl px-2.5 py-2 text-sm transition-colors hover:bg-accent"
+                @click="selectUnit(unit.id)"
+              >
+                <Check
+                  class="size-4 shrink-0"
+                  :class="modelValue === unit.id ? 'opacity-100' : 'opacity-0'"
+                />
+                <span>{{ unit.label ?? unit.number }}</span>
+              </button>
+            </div>
           </template>
           <p v-else class="py-4 text-center text-sm text-muted-foreground">
-            No se encontraron ranchos
+            No se encontraron unidades
           </p>
         </div>
       </div>

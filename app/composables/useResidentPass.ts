@@ -5,8 +5,8 @@ interface ResidentPassResponse {
   token: string
   expiresAt: string
   createdAt: string
-  unitId: string
-  unitNumber: string
+  unitId: string | null
+  unitNumber: string | null
   unitLabel: string | null
 }
 

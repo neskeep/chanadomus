@@ -6,6 +6,7 @@ import {
   Loader2,
   XCircle,
   EyeOff,
+  Plus,
 } from 'lucide-vue-next'
 import type { IncidentStatus, IncidentPriority } from '~~/shared/types/incident'
 import { INCIDENT_STATUS_COLORS, INCIDENT_STATUS_LABELS, INCIDENT_PRIORITY_COLORS, INCIDENT_PRIORITY_LABELS } from '~/composables/useColorMap'
@@ -69,7 +70,6 @@ const filteredIncidents = computed(() => {
   const q = searchQuery.value.trim().toLowerCase()
   return incidents.value.filter(i =>
     i.title.toLowerCase().includes(q)
-    || i.unitNumber?.toLowerCase().includes(q)
     || i.reportedByName?.toLowerCase().includes(q),
   )
 })
@@ -101,13 +101,26 @@ const { formatDate } = useFormatDate()
     <ErrorAlert v-if="error" :message="error" class="mb-4" />
 
     <Teleport :to="target" defer v-if="isMounted">
-      <TopbarSearch v-model="searchQuery" placeholder="Buscar incidencia...">
-        <TopbarFilters :active="filterStatus !== '' || filterPriority !== ''" @clear="filterStatus = ''; filterPriority = ''">
-          <TopbarFilterGroup v-model="filterStatus" label="Estado" :options="statusOptions" />
-          <TopbarFilterGroup v-model="filterPriority" label="Prioridad" :options="priorityOptions" />
-        </TopbarFilters>
-      </TopbarSearch>
+      <div class="flex items-center gap-2">
+        <TopbarSearch v-model="searchQuery" placeholder="Buscar incidencia...">
+          <TopbarFilters :active="filterStatus !== '' || filterPriority !== ''" @clear="filterStatus = ''; filterPriority = ''">
+            <TopbarFilterGroup v-model="filterStatus" label="Estado" :options="statusOptions" />
+            <TopbarFilterGroup v-model="filterPriority" label="Prioridad" :options="priorityOptions" />
+          </TopbarFilters>
+        </TopbarSearch>
+        <Button size="sm" @click="navigateTo('/conserje/incidencias/nueva')">
+          <Plus class="mr-1.5 size-3.5" />
+          Reportar
+        </Button>
+      </div>
     </Teleport>
+
+    <!-- Mobile action button -->
+    <TopbarMobileAction>
+      <Button size="icon" variant="ghost" class="size-9" @click="navigateTo('/conserje/incidencias/nueva')">
+        <Plus class="size-4" />
+      </Button>
+    </TopbarMobileAction>
 
     <!-- Mobile search -->
     <div class="mb-4 md:hidden">
@@ -128,7 +141,14 @@ const { formatDate } = useFormatDate()
       :icon="AlertTriangle"
       title="No hay incidencias"
       :description="filterStatus || filterPriority ? 'Prueba cambiando los filtros' : 'Los reportes aparecerán aquí'"
-    />
+    >
+      <template v-if="!filterStatus && !filterPriority" #action>
+        <Button size="sm" @click="navigateTo('/conserje/incidencias/nueva')">
+          <Plus class="mr-1.5 size-3.5" />
+          Reportar incidencia
+        </Button>
+      </template>
+    </EmptyState>
 
     <!-- Table (desktop) / Cards (mobile) -->
     <div v-else>
@@ -137,7 +157,6 @@ const { formatDate } = useFormatDate()
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Unidad</TableHead>
               <TableHead>Título</TableHead>
               <TableHead>Reportado por</TableHead>
               <TableHead>Prioridad</TableHead>
@@ -150,7 +169,6 @@ const { formatDate } = useFormatDate()
               v-for="item in filteredIncidents"
               :key="item.id"
             >
-              <TableCell class="font-medium">{{ item.unitLabel || item.unitNumber || '—' }}</TableCell>
               <TableCell class="max-w-[200px]">
                 <NuxtLink :to="`/conserje/incidencias/${item.id}`" class="block truncate font-medium text-primary underline-offset-2 hover:underline">
                   {{ item.title }}
@@ -205,8 +223,6 @@ const { formatDate } = useFormatDate()
                 <span :class="STATUS_CONFIG[item.status].class.replace(/bg-\S+/g, '')" class="font-medium">
                   {{ STATUS_CONFIG[item.status].label }}
                 </span>
-                <span class="opacity-30">·</span>
-                <span class="shrink-0">{{ item.unitLabel || item.unitNumber || '—' }}</span>
                 <span class="opacity-30">·</span>
                 <span class="truncate">{{ item.reportedByName ?? '—' }}</span>
                 <template v-if="item.isAnonymous">

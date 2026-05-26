@@ -112,7 +112,6 @@ onMounted(() => {
 
             <!-- Meta: unit + reporter + date -->
             <div class="flex flex-wrap gap-x-4 gap-y-1 text-sm text-muted-foreground">
-              <span v-if="incident.unitLabel || incident.unitNumber">{{ incident.unitLabel || incident.unitNumber }}</span>
               <span v-if="incident.reportedByName" class="inline-flex items-center gap-1.5">
                 Reportado por {{ incident.reportedByName }}
                 <span v-if="incident.isAnonymous" class="inline-flex items-center gap-0.5 rounded-lg bg-muted px-1.5 py-0.5 text-[10px] font-medium">

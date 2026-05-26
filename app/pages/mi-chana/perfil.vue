@@ -53,7 +53,7 @@ const roleLabel = computed(() => {
   return ROLE_LABELS[profile.value.role as UserRole] ?? profile.value.role
 })
 
-const hasUnit = computed(() => role.value === 'propietario' || role.value === 'conserje')
+const canEditProfile = computed(() => role.value === 'admin' || role.value === 'propietario')
 
 const isExpired = computed(() => {
   if (!pass.value?.expiresAt) return false
@@ -141,10 +141,8 @@ async function handleDownloadBadge() {
 
 onMounted(async () => {
   await fetchProfile()
-  if (hasUnit.value) {
-    await fetchMyPass()
-    await generateQrImage()
-  }
+  await fetchMyPass()
+  await generateQrImage()
 })
 </script>
 
@@ -175,6 +173,7 @@ onMounted(async () => {
                   </AvatarFallback>
                 </Avatar>
                 <button
+                  v-if="canEditProfile"
                   class="absolute bottom-0 right-0 flex size-6 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-sm hover:bg-primary/90"
                   aria-label="Cambiar foto"
                   :disabled="isSubmitting"
@@ -187,6 +186,7 @@ onMounted(async () => {
                 </div>
               </div>
               <input
+                v-if="canEditProfile"
                 ref="fileInput"
                 type="file"
                 accept="image/jpeg,image/png,image/webp"
@@ -218,8 +218,8 @@ onMounted(async () => {
           </CardContent>
         </Card>
 
-        <!-- Editable form -->
-        <Card>
+        <!-- Editable form (solo admin y propietario) -->
+        <Card v-if="canEditProfile">
           <CardContent class="p-5 md:p-6">
             <h3 class="mb-4 text-sm font-semibold">Editar información</h3>
             <form class="space-y-4" @submit.prevent="handleSubmit">
@@ -336,7 +336,7 @@ onMounted(async () => {
       </div>
 
       <!-- Right column: QR pass (1/3, only propietario) -->
-      <div v-if="hasUnit" class="space-y-4">
+      <div class="space-y-4">
         <Card>
           <CardContent class="flex flex-col items-center p-5 md:p-6">
             <!-- Header -->

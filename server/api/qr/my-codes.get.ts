@@ -12,7 +12,7 @@ function computeStatus(expiresAt: Date, usedAt: Date | null): QrStatus {
 
 export default defineEventHandler(async (event) => {
   const { tenantId, user } = await requireTenant(event)
-  await requireRole(event, ['propietario', 'admin', 'conserje'])
+  const session = await requireRole(event, ['propietario', 'admin', 'conserje'])
 
   const query = getQuery(event)
   const statusFilter = (query.status as string) || 'all'
@@ -21,8 +21,12 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 400, message: 'status debe ser "all", "active", "used" o "expired"' })
   }
 
-  // Todos los roles filtran por ownerId (cada usuario ve sus propios códigos)
-  const unitFilter = eq(qrCodes.ownerId, user.id)
+  // Filtrar por unitId para que propietario y conserje vean todos los pases de su unidad
+  const userUnitId = await getUnitIdForPass(user.id, tenantId, session.user.role as string)
+  if (!userUnitId) {
+    throw createError({ statusCode: 400, message: 'Usuario sin unidad asignada' })
+  }
+  const unitFilter = eq(qrCodes.unitId, userUnitId)
 
   const rows = await db
     .select({

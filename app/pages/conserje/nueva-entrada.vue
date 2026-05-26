@@ -37,7 +37,7 @@ const lastResult = ref<{
 } | null>(null)
 
 const isValid = computed(() => {
-  return form.visitorName.trim() !== '' && form.unitId !== ''
+  return form.visitorName.trim() !== '' && form.visitorDocument.trim() !== '' && form.unitId !== ''
 })
 
 onMounted(async () => {
@@ -114,11 +114,12 @@ async function submit(result: 'allowed' | 'denied') {
 
         <!-- Cédula -->
         <div class="space-y-1.5">
-          <Label for="visitor-doc">Cédula <span class="text-xs text-muted-foreground">(opcional)</span></Label>
+          <Label for="visitor-doc">Cédula <span class="text-destructive">*</span></Label>
           <Input
             id="visitor-doc"
             v-model="form.visitorDocument"
             placeholder="V-12345678"
+            required
             class="h-12 text-base"
           />
         </div>

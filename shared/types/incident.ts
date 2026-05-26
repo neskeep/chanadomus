@@ -8,7 +8,7 @@ export interface Incident {
   priority: IncidentPriority
   status: IncidentStatus
   reportedById: string
-  unitId: string
+  unitId: string | null
   unitNumber?: string // joined from units
   unitLabel?: string // joined from units
   reportedByName?: string // joined from users

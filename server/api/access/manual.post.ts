@@ -8,9 +8,10 @@ import { broadcastAccessEvent } from '~~/server/utils/ws-access'
 interface ManualEntryBody {
   visitorName: string
   visitorDocument?: string
-  unitId: string
+  unitId?: string
   visitorType: 'invitado' | 'proveedor'
   vehiclePlate?: string
+  customDestination?: string
   result: 'allowed' | 'denied'
 }
 
@@ -29,17 +30,22 @@ export default defineEventHandler(async (event) => {
   if (!body.visitorName?.trim()) {
     throw createError({ statusCode: 400, message: 'visitorName es requerido' })
   }
-  if (!body.unitId?.trim()) {
-    throw createError({ statusCode: 400, message: 'unitId es requerido' })
+  if (!body.unitId?.trim() && !body.customDestination?.trim()) {
+    throw createError({ statusCode: 400, message: 'unitId o customDestination es requerido' })
   }
   if (!body.result || !['allowed', 'denied'].includes(body.result)) {
     throw createError({ statusCode: 400, message: 'result debe ser allowed o denied' })
   }
 
-  // 3. Build notes from vehiclePlate if present
-  const notes = body.vehiclePlate?.trim()
-    ? `Placa: ${body.vehiclePlate.trim()}`
-    : null
+  // 3. Build notes from customDestination and vehiclePlate
+  const noteParts: string[] = []
+  if (body.customDestination?.trim()) {
+    noteParts.push(`Destino: ${body.customDestination.trim()}`)
+  }
+  if (body.vehiclePlate?.trim()) {
+    noteParts.push(`Placa: ${body.vehiclePlate.trim()}`)
+  }
+  const notes = noteParts.length > 0 ? noteParts.join(' | ') : null
 
   // 4. Create access log
   const manualLogs = await db
@@ -49,7 +55,7 @@ export default defineEventHandler(async (event) => {
       authorizedBy: session.user.id,
       visitorName: body.visitorName.trim(),
       visitorDocument: body.visitorDocument?.trim() ?? null,
-      unitId: body.unitId,
+      unitId: body.unitId?.trim() || null,
       result: body.result,
       tenantId,
       notes,
@@ -58,15 +64,23 @@ export default defineEventHandler(async (event) => {
 
   const log = manualLogs[0]!
 
-  // 5. Get unit info for the event
-  const [unit] = await db
-    .select({
-      number: units.number,
-      label: units.label,
-    })
-    .from(units)
-    .where(eq(units.id, body.unitId))
-    .limit(1)
+  // 5. Get unit info for the event (only if unitId provided)
+  let unitNumber: string | null = null
+  let unitLabel: string | null = null
+
+  if (body.unitId?.trim()) {
+    const [unit] = await db
+      .select({
+        number: units.number,
+        label: units.label,
+      })
+      .from(units)
+      .where(eq(units.id, body.unitId))
+      .limit(1)
+
+    unitNumber = unit?.number ?? null
+    unitLabel = unit?.label ?? null
+  }
 
   // 6. Broadcast event
   const accessEvent: AccessEvent = {
@@ -75,8 +89,8 @@ export default defineEventHandler(async (event) => {
     result: body.result,
     visitorName: body.visitorName.trim(),
     visitorDocument: body.visitorDocument?.trim() ?? null,
-    unitNumber: unit?.number ?? null,
-    unitLabel: unit?.label ?? null,
+    unitNumber,
+    unitLabel,
     notes,
     exitAt: null,
     createdAt: log.createdAt.toISOString(),
