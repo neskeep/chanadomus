@@ -8,13 +8,13 @@ import {
   ArrowDownRight,
   ArrowUpRight,
   AlertTriangle,
-  Users,
+  Home,
 } from 'lucide-vue-next'
 import type { DateValue } from 'reka-ui'
 
 useHead({ title: 'Panel Financiero' })
 
-const { summaries, isLoading: summaryLoading, totalUnits, totalInDebt, fetchSummary } = useFinanceSummary()
+const { summaries, isLoading: summaryLoading, totalUnits, totalRanchos, totalParcelas, totalInDebt, fetchSummary } = useFinanceSummary()
 const { movements, isLoading: movementsLoading, error: movementsError, totalPages, fetchMovements } = useFinanceMovements()
 const {
   reports,
@@ -249,13 +249,24 @@ onMounted(() => {
         icon-bg-class="bg-destructive/10 text-destructive"
         :is-loading="summaryLoading"
       />
-      <StatCard
-        label="Unidades"
-        :value="totalUnits"
-        :icon="Users"
-        icon-bg-class="bg-secondary/10 text-secondary"
-        :is-loading="summaryLoading"
-      />
+      <Card class="p-3 sm:p-4">
+        <div class="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+          <div class="flex size-7 shrink-0 items-center justify-center rounded-lg bg-secondary/10 text-secondary sm:order-2 sm:size-10">
+            <Home class="size-3.5 sm:size-5" />
+          </div>
+          <div class="flex min-w-0 flex-col gap-0.5 sm:order-1 sm:gap-1">
+            <template v-if="summaryLoading">
+              <Skeleton class="h-4 w-12 sm:h-5 sm:w-16" />
+              <Skeleton class="h-6 w-10 sm:h-8 sm:w-24" />
+            </template>
+            <template v-else>
+              <p class="text-[11px] leading-tight text-muted-foreground sm:text-sm">Unidades</p>
+              <p class="text-lg font-bold tabular-nums tracking-tight sm:text-2xl">{{ totalUnits }}</p>
+              <p class="text-[11px] text-muted-foreground sm:text-xs">{{ totalRanchos }} Ranchos · {{ totalParcelas }} Parcelas</p>
+            </template>
+          </div>
+        </div>
+      </Card>
       <StatCard
         label="En mora"
         :value="totalInDebt"

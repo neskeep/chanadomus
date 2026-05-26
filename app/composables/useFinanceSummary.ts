@@ -24,6 +24,8 @@ export function useFinanceSummary() {
   }
 
   const totalUnits = computed(() => summaries.value.length)
+  const totalRanchos = computed(() => summaries.value.filter(s => s.unitNumber.startsWith('R-')).length)
+  const totalParcelas = computed(() => summaries.value.filter(s => s.unitNumber.startsWith('P-')).length)
   const totalInDebt = computed(() => summaries.value.filter(s => s.isInDebt).length)
 
   return {
@@ -31,6 +33,8 @@ export function useFinanceSummary() {
     isLoading,
     error,
     totalUnits,
+    totalRanchos,
+    totalParcelas,
     totalInDebt,
     fetchSummary,
   }
