@@ -1,24 +1,32 @@
 <script setup lang="ts">
-import { Loader2, ArrowUpRight, ArrowDownLeft, CalendarIcon } from 'lucide-vue-next'
+import { Loader2, ArrowUpRight, ArrowDownLeft, CalendarIcon, Trash2 } from 'lucide-vue-next'
 import { CalendarDate, getLocalTimeZone, today } from '@internationalized/date'
 import type { DateValue } from 'reka-ui'
 import { toast } from 'vue-sonner'
-import type { RecordType, RecordCategory } from '~~/shared/types/financial'
+import type { RecordType, RecordCategory, FinancialRecord } from '~~/shared/types/financial'
 
-useHead({ title: 'Registrar Movimiento' })
+useHead({ title: 'Editar Movimiento' })
 
+const route = useRoute()
 const router = useRouter()
-const { isSubmitting, error, createRecord } = useFinanceRecords()
+const id = route.params.id as string
+
+const { isSubmitting, error, updateRecord, deleteRecord } = useFinanceRecords()
 const { units, fetchUnits } = useUnits()
 
+// --- Loading state ---
+const record = ref<FinancialRecord | null>(null)
+const loadingRecord = ref(true)
+const loadError = ref<string | null>(null)
+
 // --- Form state ---
-const formUnit = ref('')
 const formType = ref<RecordType | ''>('')
 const formCategory = ref<RecordCategory | ''>('')
 const formAmount = ref('')
 const formDescription = ref('')
 const formDate = shallowRef<DateValue>(today(getLocalTimeZone()))
 const datePickerOpen = ref(false)
+const isDeleting = ref(false)
 
 function dateToISO(d: DateValue): string {
   return `${d.year}-${String(d.month).padStart(2, '0')}-${String(d.day).padStart(2, '0')}`
@@ -29,9 +37,14 @@ function formatPickerDate(d: DateValue): string {
   return date.toLocaleDateString('es-VE', { weekday: 'short', day: 'numeric', month: 'short' })
 }
 
+const unitLabel = computed(() => {
+  if (!record.value) return ''
+  const unit = units.value.find(u => u.id === record.value?.unitId)
+  return unit ? (unit.label || unit.number) : record.value.unitId
+})
+
 const canSubmit = computed(() =>
-  formUnit.value
-  && formType.value
+  formType.value
   && formCategory.value
   && formAmount.value
   && parseFloat(formAmount.value) > 0
@@ -41,26 +54,64 @@ const canSubmit = computed(() =>
   && !error.value,
 )
 
+async function loadRecordData() {
+  loadingRecord.value = true
+  loadError.value = null
+  try {
+    const res = await $fetch<{ data: FinancialRecord }>(`/api/finance/records/${id}`)
+    record.value = res.data
+
+    // Pre-fill form
+    formType.value = res.data.type
+    formCategory.value = res.data.category
+    formAmount.value = res.data.amount
+    formDescription.value = res.data.description
+
+    // Parse ISO date to CalendarDate
+    const d = new Date(res.data.date)
+    formDate.value = new CalendarDate(d.getFullYear(), d.getMonth() + 1, d.getDate())
+  }
+  catch (err: unknown) {
+    loadError.value = err instanceof Error ? err.message : 'Error al cargar registro'
+  }
+  finally {
+    loadingRecord.value = false
+  }
+}
+
 async function handleSubmit() {
   if (!canSubmit.value) return
   try {
-    await createRecord({
-      unitId: formUnit.value,
+    await updateRecord(id, {
       type: formType.value as RecordType,
       category: formCategory.value as RecordCategory,
       amount: formAmount.value,
       description: formDescription.value,
       date: dateToISO(formDate.value),
     })
-    toast.success('Movimiento registrado correctamente')
+    toast.success('Movimiento actualizado correctamente')
     router.push('/admin/finanzas')
   }
   catch {
-    toast.error(error.value ?? 'Error al registrar movimiento')
+    toast.error(error.value ?? 'Error al actualizar movimiento')
+  }
+}
+
+async function handleDelete() {
+  isDeleting.value = true
+  try {
+    await deleteRecord(id)
+    toast.success('Movimiento eliminado correctamente')
+    router.push('/admin/finanzas')
+  }
+  catch {
+    toast.error(error.value ?? 'Error al eliminar movimiento')
+    isDeleting.value = false
   }
 }
 
 onMounted(() => {
+  loadRecordData()
   fetchUnits()
 })
 </script>
@@ -69,7 +120,55 @@ onMounted(() => {
   <div>
     <Card>
       <CardContent class="p-5 md:p-8">
-        <form class="space-y-6" @submit.prevent="handleSubmit">
+        <!-- Loading skeleton -->
+        <div v-if="loadingRecord" class="space-y-6">
+          <div class="space-y-1.5">
+            <Skeleton class="h-4 w-32" />
+            <div class="grid grid-cols-2 gap-3">
+              <Skeleton class="h-16 rounded-lg" />
+              <Skeleton class="h-16 rounded-lg" />
+            </div>
+          </div>
+          <div class="space-y-1.5">
+            <Skeleton class="h-4 w-24" />
+            <div class="grid grid-cols-2 gap-3">
+              <Skeleton class="h-14 rounded-lg" />
+              <Skeleton class="h-14 rounded-lg" />
+            </div>
+          </div>
+          <div class="grid gap-4 sm:grid-cols-2">
+            <div class="space-y-1.5">
+              <Skeleton class="h-4 w-16" />
+              <Skeleton class="h-12 rounded-lg" />
+            </div>
+            <div class="space-y-1.5">
+              <Skeleton class="h-4 w-16" />
+              <Skeleton class="h-12 rounded-lg" />
+            </div>
+          </div>
+          <div class="grid gap-4 sm:grid-cols-2">
+            <div class="space-y-1.5">
+              <Skeleton class="h-4 w-20" />
+              <Skeleton class="h-12 rounded-lg" />
+            </div>
+            <div class="space-y-1.5">
+              <Skeleton class="h-4 w-24" />
+              <Skeleton class="h-12 rounded-lg" />
+            </div>
+          </div>
+          <Skeleton class="h-12 w-full rounded-lg" />
+        </div>
+
+        <!-- Load error -->
+        <div v-else-if="loadError" class="py-12 text-center">
+          <p class="text-destructive">{{ loadError }}</p>
+          <Button variant="outline" class="mt-4" @click="loadRecordData">
+            Reintentar
+          </Button>
+        </div>
+
+        <!-- Form -->
+        <form v-else class="space-y-6" @submit.prevent="handleSubmit">
           <!-- Error -->
           <ErrorAlert v-if="error" :message="error" />
 
@@ -126,7 +225,7 @@ onMounted(() => {
 
           <!-- Category selector -->
           <div class="space-y-1.5">
-            <Label>Categoría <span class="text-destructive">*</span></Label>
+            <Label>Categoria <span class="text-destructive">*</span></Label>
             <div class="grid grid-cols-2 gap-3">
               <button
                 type="button"
@@ -157,16 +256,13 @@ onMounted(() => {
             </div>
           </div>
 
-          <!-- Unit + Date row -->
+          <!-- Unit (readonly) + Date row -->
           <div class="grid gap-4 sm:grid-cols-2">
             <div class="space-y-1.5">
-              <Label>Unidad <span class="text-destructive">*</span></Label>
-              <UnitCombobox
-                v-model="formUnit"
-                :units="units"
-                placeholder="Buscar unidad..."
-                required
-              />
+              <Label>Unidad</Label>
+              <div class="flex h-12 items-center rounded-lg border bg-muted/50 px-3 text-base text-muted-foreground">
+                {{ unitLabel }}
+              </div>
             </div>
 
             <div class="space-y-1.5">
@@ -206,7 +302,7 @@ onMounted(() => {
               <p class="text-xs text-muted-foreground">Sin puntos de miles</p>
             </div>
             <div class="space-y-1.5">
-              <Label for="description-input">Descripción <span class="text-destructive">*</span></Label>
+              <Label for="description-input">Descripcion <span class="text-destructive">*</span></Label>
               <Input
                 id="description-input"
                 v-model="formDescription"
@@ -225,9 +321,39 @@ onMounted(() => {
             class="h-12 w-full text-base font-semibold"
             :disabled="!canSubmit"
           >
-            <Loader2 v-if="isSubmitting" class="mr-2 size-4 animate-spin" />
-            {{ isSubmitting ? 'Registrando...' : 'Registrar Movimiento' }}
+            <Loader2 v-if="isSubmitting && !isDeleting" class="mr-2 size-4 animate-spin" />
+            {{ isSubmitting && !isDeleting ? 'Guardando...' : 'Guardar Cambios' }}
           </Button>
+
+          <!-- Delete -->
+          <AlertDialog>
+            <AlertDialogTrigger as-child>
+              <Button
+                type="button"
+                variant="outline"
+                class="h-12 w-full text-base text-destructive hover:bg-destructive/5"
+                :disabled="isDeleting"
+              >
+                <Loader2 v-if="isDeleting" class="mr-2 size-4 animate-spin" />
+                <Trash2 v-else class="mr-2 size-4" />
+                {{ isDeleting ? 'Eliminando...' : 'Eliminar registro' }}
+              </Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Eliminar este registro?</AlertDialogTitle>
+                <AlertDialogDescription>
+                  Esta accion no se puede deshacer. El movimiento sera eliminado permanentemente.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                <AlertDialogAction variant="destructive" @click="handleDelete">
+                  Eliminar
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
         </form>
       </CardContent>
     </Card>

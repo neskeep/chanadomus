@@ -38,6 +38,7 @@ export default defineEventHandler(async (event) => {
     id: row.id,
     unitId: row.unitId,
     type: row.type,
+    category: row.category,
     amount: row.amount,
     description: row.description,
     date: row.date.toISOString(),

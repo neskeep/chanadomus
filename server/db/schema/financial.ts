@@ -5,12 +5,14 @@ import { units } from './unit'
 
 // Enums
 export const recordTypeEnum = pgEnum('record_type', ['cargo', 'abono'])
+export const recordCategoryEnum = pgEnum('record_category', ['ordinaria', 'extraordinaria'])
 
 // Financial Records
 export const financialRecords = pgTable('financial_records', {
   id: uuid('id').primaryKey().defaultRandom(),
   unitId: uuid('unit_id').notNull().references(() => units.id),
   type: recordTypeEnum('type').notNull(),
+  category: recordCategoryEnum('category').notNull(),
   amount: numeric('amount', { precision: 12, scale: 2 }).notNull(),
   description: text('description').notNull(),
   date: timestamp('date').notNull(), // fecha del movimiento

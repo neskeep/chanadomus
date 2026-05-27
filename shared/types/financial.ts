@@ -1,9 +1,11 @@
 export type RecordType = 'cargo' | 'abono'
+export type RecordCategory = 'ordinaria' | 'extraordinaria'
 
 export interface FinancialRecord {
   id: string
   unitId: string
   type: RecordType
+  category: RecordCategory
   amount: string // numeric viene como string de PG
   description: string
   date: string // ISO string
@@ -28,6 +30,7 @@ export interface UnitSummary {
 export interface MovementWithUnit {
   id: string
   type: RecordType
+  category: RecordCategory
   amount: string
   description: string
   date: string

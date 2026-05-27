@@ -1,6 +1,6 @@
 import { db } from '~~/server/db'
 import { financialRecords } from '~~/server/db/schema/financial'
-import { eq, and, desc } from 'drizzle-orm'
+import { eq, and, gte, lte, desc } from 'drizzle-orm'
 import type { FinancialRecord, AccountStatement } from '~~/shared/types/financial'
 
 export default defineEventHandler(async (event) => {
@@ -12,14 +12,30 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 400, message: 'Usuario sin unidad asignada' })
   }
 
+  // Parse optional date filters
+  const query = getQuery(event)
+  const from = typeof query.from === 'string' ? query.from : undefined
+  const to = typeof query.to === 'string' ? query.to : undefined
+
+  // Build WHERE conditions
+  const conditions = [
+    eq(financialRecords.unitId, unitId),
+    eq(financialRecords.tenantId, session.tenantId),
+  ]
+  if (from) {
+    conditions.push(gte(financialRecords.date, new Date(from)))
+  }
+  if (to) {
+    const toDate = new Date(to)
+    toDate.setHours(23, 59, 59, 999)
+    conditions.push(lte(financialRecords.date, toDate))
+  }
+
   // Query movimientos de la unidad
   const rows = await db
     .select()
     .from(financialRecords)
-    .where(and(
-      eq(financialRecords.unitId, unitId),
-      eq(financialRecords.tenantId, session.tenantId),
-    ))
+    .where(and(...conditions))
     .orderBy(desc(financialRecords.date))
 
   // Calcular saldo: abonos positivos, cargos negativos
@@ -34,6 +50,7 @@ export default defineEventHandler(async (event) => {
     id: row.id,
     unitId: row.unitId,
     type: row.type,
+    category: row.category,
     amount: row.amount,
     description: row.description,
     date: row.date.toISOString(),
