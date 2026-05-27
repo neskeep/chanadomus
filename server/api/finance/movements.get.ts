@@ -14,11 +14,13 @@ export default defineEventHandler(async (event) => {
   const from = typeof query.from === 'string' ? query.from : undefined
   const to = typeof query.to === 'string' ? query.to : undefined
   const type = query.type === 'cargo' || query.type === 'abono' ? query.type : undefined
+  const category = query.category === 'ordinaria' || query.category === 'extraordinaria' ? query.category : undefined
 
   const conditions = [eq(financialRecords.tenantId, session.tenantId)]
   if (from) conditions.push(gte(financialRecords.date, new Date(from)))
   if (to) conditions.push(lte(financialRecords.date, new Date(to)))
   if (type) conditions.push(eq(financialRecords.type, type))
+  if (category) conditions.push(eq(financialRecords.category, category))
 
   const where = conditions.length === 1 ? conditions[0]! : and(...conditions)!
 
@@ -37,6 +39,7 @@ export default defineEventHandler(async (event) => {
       description: financialRecords.description,
       date: financialRecords.date,
       unitId: financialRecords.unitId,
+      category: financialRecords.category,
       unitNumber: units.number,
       unitLabel: units.label,
       createdAt: financialRecords.createdAt,
@@ -51,6 +54,7 @@ export default defineEventHandler(async (event) => {
   const data: MovementWithUnit[] = rows.map(r => ({
     id: r.id,
     type: r.type,
+    category: r.category,
     amount: r.amount,
     description: r.description,
     date: r.date.toISOString(),

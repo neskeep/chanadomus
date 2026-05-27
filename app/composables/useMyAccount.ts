@@ -5,11 +5,13 @@ export function useMyAccount() {
   const isLoading = ref(false)
   const error = ref<string | null>(null)
 
-  async function fetchStatement() {
+  async function fetchStatement(params?: { from?: string, to?: string }) {
     isLoading.value = true
     error.value = null
     try {
-      const res = await $fetch<{ data: AccountStatement }>('/api/finance/my-account')
+      const res = await $fetch<{ data: AccountStatement }>('/api/finance/my-account', {
+        query: params,
+      })
       statement.value = res.data
     }
     catch (err: unknown) {

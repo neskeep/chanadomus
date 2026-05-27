@@ -8,7 +8,7 @@ export function useFinanceMovements() {
     page: 1, limit: 20, total: 0, totalPages: 0,
   })
 
-  async function fetchMovements(params?: { page?: number; from?: string; to?: string; type?: string }) {
+  async function fetchMovements(params?: { page?: number; from?: string; to?: string; type?: string; category?: string }) {
     isLoading.value = true
     error.value = null
     try {

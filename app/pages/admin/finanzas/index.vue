@@ -39,14 +39,22 @@ const typeOptions = [
   { value: 'abono', label: 'Abonos' },
 ]
 
+const categoryOptions = [
+  { value: 'ordinaria', label: 'Ordinaria' },
+  { value: 'extraordinaria', label: 'Extraordinaria' },
+]
+
+const filterCategory = ref<'ordinaria' | 'extraordinaria' | ''>('')
+
 const hasActiveFilters = computed(() =>
-  filterFrom.value !== undefined || filterTo.value !== undefined || filterType.value !== '',
+  filterFrom.value !== undefined || filterTo.value !== undefined || filterType.value !== '' || filterCategory.value !== '',
 )
 
 function clearAllFilters() {
   filterFrom.value = undefined
   filterTo.value = undefined
   filterType.value = ''
+  filterCategory.value = ''
 }
 
 function dateValueToISO(d: DateValue | undefined): string | undefined {
@@ -72,11 +80,16 @@ function loadMovements() {
     from: dateValueToISO(filterFrom.value),
     to: dateValueToISO(filterTo.value),
     type: filterType.value || undefined,
+    category: filterCategory.value || undefined,
   })
 }
 
 watch([currentPage], () => loadMovements())
 watch(filterType, () => {
+  currentPage.value = 1
+  loadMovements()
+})
+watch(filterCategory, () => {
   currentPage.value = 1
   loadMovements()
 })
@@ -164,6 +177,7 @@ onMounted(() => {
     <Teleport v-if="isMounted" :to="target" defer>
       <TopbarFilters :active="hasActiveFilters" @clear="clearAllFilters">
         <TopbarFilterGroup v-model="filterType" label="Tipo" :options="typeOptions" />
+        <TopbarFilterGroup v-model="filterCategory" label="Categoría" :options="categoryOptions" />
         <div>
           <p class="mb-1.5 text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
             Rango de fechas
@@ -279,7 +293,7 @@ onMounted(() => {
     <!-- 2-col layout: main + reports sidebar -->
     <div class="grid gap-6 lg:grid-cols-12">
       <!-- Main content -->
-      <section class="lg:col-span-7">
+      <section class="min-w-0 lg:col-span-7">
         <!-- Tabs -->
         <div class="mb-3 flex items-center justify-between border-b">
           <div class="flex items-center gap-1">
@@ -333,6 +347,7 @@ onMounted(() => {
                     <TableHead>Unidad</TableHead>
                     <TableHead>Descripción</TableHead>
                     <TableHead>Tipo</TableHead>
+                    <TableHead>Categoría</TableHead>
                     <TableHead class="text-right">Monto</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -362,6 +377,11 @@ onMounted(() => {
                         {{ mov.type === 'cargo' ? 'Cargo' : 'Abono' }}
                       </Badge>
                     </TableCell>
+                    <TableCell>
+                      <Badge variant="outline" class="text-[11px]">
+                        {{ mov.category === 'ordinaria' ? 'Ordinaria' : 'Extraordinaria' }}
+                      </Badge>
+                    </TableCell>
                     <TableCell
                       class="text-right font-semibold tabular-nums"
                       :class="mov.type === 'cargo' ? 'text-destructive' : 'text-primary'"
@@ -374,37 +394,40 @@ onMounted(() => {
             </div>
 
             <!-- Mobile cards -->
-            <div class="space-y-2 md:hidden">
+            <div class="space-y-2 overflow-hidden md:hidden">
               <Card
                 v-for="mov in movements"
                 :key="mov.id"
-                class="cursor-pointer transition-colors hover:bg-muted/50"
+                class="cursor-pointer overflow-hidden transition-colors hover:bg-muted/50"
                 @click="router.push(`/admin/finanzas/${mov.unitId}`)"
               >
                 <CardContent class="px-3 py-2.5">
-                  <div class="flex items-center gap-1.5">
-                    <p class="min-w-0 flex-1 truncate text-sm font-medium">{{ mov.description }}</p>
-                    <Badge
-                      :variant="mov.type === 'cargo' ? 'destructive' : 'default'"
-                      class="shrink-0 text-[11px]"
-                    >
-                      <ArrowDownRight v-if="mov.type === 'cargo'" class="mr-0.5 size-3" />
-                      <ArrowUpRight v-else class="mr-0.5 size-3" />
-                      {{ mov.type === 'cargo' ? 'Cargo' : 'Abono' }}
-                    </Badge>
-                  </div>
-                  <div class="mt-0.5 flex items-center justify-between">
-                    <div class="flex items-center gap-x-1 text-[11px] text-muted-foreground">
-                      <span class="font-medium">{{ mov.unitLabel || mov.unitNumber }}</span>
-                      <span class="opacity-30">&middot;</span>
-                      <span class="tabular-nums">{{ formatDate(mov.date) }}</span>
-                    </div>
+                  <div class="flex items-start justify-between gap-2">
+                    <p class="min-w-0 truncate text-sm font-medium">{{ mov.description }}</p>
                     <span
-                      class="text-sm font-semibold tabular-nums"
+                      class="shrink-0 text-sm font-semibold tabular-nums"
                       :class="mov.type === 'cargo' ? 'text-destructive' : 'text-primary'"
                     >
                       {{ mov.type === 'cargo' ? '-' : '+' }} {{ formatCurrency(parseFloat(mov.amount)) }}
                     </span>
+                  </div>
+                  <div class="mt-1 flex items-center justify-between">
+                    <div class="flex min-w-0 items-center gap-x-1.5 text-[11px] text-muted-foreground">
+                      <span class="truncate font-medium">{{ mov.unitLabel || mov.unitNumber }}</span>
+                      <span class="shrink-0 opacity-30">&middot;</span>
+                      <span class="shrink-0 tabular-nums">{{ formatDate(mov.date) }}</span>
+                    </div>
+                    <div class="flex shrink-0 items-center gap-1">
+                      <Badge
+                        :variant="mov.type === 'cargo' ? 'destructive' : 'default'"
+                        class="h-4 px-1.5 text-[10px]"
+                      >
+                        {{ mov.type === 'cargo' ? 'Cargo' : 'Abono' }}
+                      </Badge>
+                      <Badge variant="outline" class="h-4 px-1.5 text-[10px]">
+                        {{ mov.category === 'ordinaria' ? 'Ord.' : 'Ext.' }}
+                      </Badge>
+                    </div>
                   </div>
                 </CardContent>
               </Card>
@@ -480,7 +503,7 @@ onMounted(() => {
       </section>
 
       <!-- Reports sidebar -->
-      <section class="lg:col-span-5">
+      <section class="min-w-0 lg:col-span-5">
         <div class="mb-3 flex items-center justify-between">
           <h2 class="text-base font-semibold">Informes</h2>
           <Button variant="ghost" size="sm" as-child class="h-6 px-2 text-[11px] text-muted-foreground">

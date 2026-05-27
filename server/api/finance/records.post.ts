@@ -9,7 +9,7 @@ export default defineEventHandler(async (event) => {
   const body = await readBody(event)
 
   // Validar campos requeridos
-  const { unitId, type, amount, description, date } = body ?? {}
+  const { unitId, type, amount, description, date, category } = body ?? {}
 
   if (!unitId || typeof unitId !== 'string') {
     throw createError({ statusCode: 400, message: 'unitId es requerido y debe ser un string' })
@@ -32,6 +32,10 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 400, message: 'description es requerido y no puede estar vacio' })
   }
 
+  if (category !== 'ordinaria' && category !== 'extraordinaria') {
+    throw createError({ statusCode: 400, message: 'category debe ser "ordinaria" o "extraordinaria"' })
+  }
+
   if (!date || typeof date !== 'string') {
     throw createError({ statusCode: 400, message: 'date es requerido y debe ser un string ISO' })
   }
@@ -47,6 +51,7 @@ export default defineEventHandler(async (event) => {
     .values({
       unitId,
       type,
+      category,
       amount: String(parsedAmount),
       description: description.trim(),
       date: parsedDate,
@@ -60,6 +65,7 @@ export default defineEventHandler(async (event) => {
     id: row.id,
     unitId: row.unitId,
     type: row.type,
+    category: row.category,
     amount: row.amount,
     description: row.description,
     date: row.date.toISOString(),
