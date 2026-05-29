@@ -268,6 +268,7 @@ function participationText(poll: Poll): string {
                     </NuxtLink>
                   </Button>
                   <Button
+                    v-if="poll.status !== 'active'"
                     variant="ghost"
                     size="icon"
                     class="size-10 text-destructive hover:text-destructive"
@@ -344,6 +345,7 @@ function participationText(poll: Poll): string {
                   </NuxtLink>
                 </Button>
                 <Button
+                  v-if="poll.status !== 'active'"
                   variant="ghost"
                   size="icon"
                   class="size-6 text-destructive hover:text-destructive"
