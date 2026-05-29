@@ -61,5 +61,27 @@ export default defineEventHandler(async (event) => {
     }
   })
 
-  return { data }
+  // Aggregate totals — separate query for accurate sums
+  const totalsConditions: ReturnType<typeof sql>[] = [
+    eq(financialRecords.tenantId, session.tenantId),
+  ]
+  if (from) totalsConditions.push(gte(financialRecords.date, new Date(from)))
+  if (to) totalsConditions.push(lte(financialRecords.date, new Date(to)))
+
+  const [totals] = await db
+    .select({
+      totalCobrado: sql<number>`cast(coalesce(sum(case when ${financialRecords.type} = 'abono' then cast(${financialRecords.amount} as numeric) else 0 end), 0) as float)`,
+      totalCargado: sql<number>`cast(coalesce(sum(case when ${financialRecords.type} = 'cargo' then cast(${financialRecords.amount} as numeric) else 0 end), 0) as float)`,
+    })
+    .from(financialRecords)
+    .where(and(...totalsConditions))
+
+  return {
+    data,
+    totals: {
+      totalCobrado: totals?.totalCobrado ?? 0,
+      totalCargado: totals?.totalCargado ?? 0,
+      pendiente: (totals?.totalCargado ?? 0) - (totals?.totalCobrado ?? 0),
+    },
+  }
 })

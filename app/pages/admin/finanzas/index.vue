@@ -14,7 +14,7 @@ import type { DateValue } from 'reka-ui'
 
 useHead({ title: 'Panel Financiero' })
 
-const { summaries, isLoading: summaryLoading, totalUnits, totalRanchos, totalParcelas, totalInDebt, fetchSummary } = useFinanceSummary()
+const { summaries, totals, isLoading: summaryLoading, totalUnits, totalRanchos, totalParcelas, totalInDebt, fetchSummary } = useFinanceSummary()
 const { movements, isLoading: movementsLoading, error: movementsError, totalPages, fetchMovements } = useFinanceMovements()
 const {
   reports,
@@ -142,20 +142,7 @@ function getMonthLabel(month: number): string {
   return meses[month - 1] ?? ''
 }
 
-// --- Stats ---
-const totalCollected = computed(() => {
-  return summaries.value.reduce((sum, s) => {
-    const b = parseFloat(s.balance)
-    return b > 0 ? sum + b : sum
-  }, 0)
-})
-
-const totalDebt = computed(() => {
-  return summaries.value.reduce((sum, s) => {
-    const b = parseFloat(s.balance)
-    return b < 0 ? sum + Math.abs(b) : sum
-  }, 0)
-})
+// --- Stats (from server aggregates) ---
 
 function formatBalance(balance: string): string {
   const num = parseFloat(balance)
@@ -250,17 +237,19 @@ onMounted(() => {
     <!-- Stats cards -->
     <div class="mb-6 grid grid-cols-2 gap-3 lg:grid-cols-4">
       <StatCard
-        label="Total recaudado"
-        :value="formatCurrency(totalCollected)"
+        label="Total cobrado"
+        :value="formatCurrency(totals.totalCobrado)"
         :icon="Wallet"
         icon-bg-class="bg-primary/10 text-primary"
+        tooltip="Suma de todos los pagos (abonos) recibidos"
         :is-loading="summaryLoading"
       />
       <StatCard
-        label="Total adeudado"
-        :value="formatCurrency(totalDebt)"
+        label="Pendiente"
+        :value="formatCurrency(totals.pendiente)"
         :icon="AlertTriangle"
         icon-bg-class="bg-destructive/10 text-destructive"
+        tooltip="Saldo total pendiente de cobro: cargos menos abonos"
         :is-loading="summaryLoading"
       />
       <Card class="p-3 sm:p-4">
@@ -286,6 +275,7 @@ onMounted(() => {
         :value="totalInDebt"
         :icon="AlertTriangle"
         icon-bg-class="bg-destructive/10 text-destructive"
+        tooltip="Unidades con saldo pendiente de pago"
         :is-loading="summaryLoading"
       />
     </div>
