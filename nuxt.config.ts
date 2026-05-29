@@ -9,7 +9,7 @@ export default defineNuxtConfig({
     head: {
       link: [
         { rel: 'manifest', href: '/manifest.webmanifest' },
-        { rel: 'apple-touch-icon', href: '/icons/icon-192.png' },
+        { rel: 'apple-touch-icon', sizes: '180x180', href: '/icons/apple-touch-icon.png' },
       ],
       meta: [
         { name: 'theme-color', content: '#19C2C0' },
