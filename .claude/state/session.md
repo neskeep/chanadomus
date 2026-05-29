@@ -2,44 +2,46 @@
 
 ## Ultima Sesion
 - **Fecha**: 2026-05-26
-- **Sesion #**: 57
+- **Sesion #**: 60
 - **Branch**: dev
-- **Estado**: Completada — handoff por contexto agotado (91%)
+- **Estado**: Completada — 4 tasks finalizados, merged a main, deployed
 
-## Completado Sesion 57
+## Completado Sesion 60
 
-### Permisos de perfil
-- Solo admin y propietario pueden editar nombre, telefono y avatar
-- Todos los roles pueden ver su perfil y cambiar contraseña
-- Backend: guards 403 en `profile.patch.ts` y `avatar.post.ts`
-- Frontend: `canEditProfile` computed oculta form y boton avatar
+### 1. Fix mobile cards overflow
+- Causa raiz: CSS Grid sin `min-w-0` en hijos expandia columnas a 770px en viewport 375px
+- Fix: `min-w-0` en ambas `<section>` hijas del grid en `app/pages/admin/finanzas/index.vue`
+- Verificado con Playwright: scrollWidth === clientWidth, sin overflow
 
-### QR para todos los usuarios
-- Schema: `resident_passes.unitId` ahora nullable (migracion 0045)
-- `incidents.unitId` tambien nullable (migracion 0044)
-- Backend: `getUnitIdForPass` retorna `string | null`, endpoints sin restriccion de rol
-- `qr/validate.post.ts`: leftJoin con units para passes sin unidad
-- Backfill: 105 passes creados en dev, 3 en produccion (2 vigilantes + 1 admin)
-- Tipos: `ResidentPassResponse.unitId` y `unitNumber` nullable
+### 2. Filtros propietario estado-cuenta
+- `server/api/finance/my-account.get.ts` — acepta query params `from` y `to`
+- `app/composables/useMyAccount.ts` — `fetchStatement(params?)` con date params
+- `app/pages/propietario/estado-cuenta.vue` — TopbarFilters con tipo/categoria (client-side) y rango de fechas (server-side), filteredRecords computed, contador de resultados
 
-### Mobile: acceso a perfil
-- `AppBottomNav.vue`: fila de usuario en Sheet "Mas" es ahora NuxtLink a `/mi-chana/perfil`
+### 3. API CRUD registros financieros
+- `server/api/finance/records/[id].get.ts` — GET registro individual
+- `server/api/finance/records/[id].patch.ts` — PATCH parcial (type, category, amount, description, date)
+- `server/api/finance/records/[id].delete.ts` — DELETE con verificacion tenant scope
+- `app/composables/useFinanceRecords.ts` — `updateRecord()` y `deleteRecord()` agregados
 
-### Fix: editar usuario conserje
-- `GET /api/admin/users`: COALESCE con `.as()` para resolver unitId desde tabla `staff`
-- El boton "Guardar Cambios" ahora se habilita correctamente para conserjes
+### 4. UI edicion + delete
+- `app/pages/admin/finanzas/editar/[id].vue` — formulario pre-llenado, unidad readonly, AlertDialog delete
+- `app/pages/admin/finanzas/[id].vue` — boton editar (Pencil) en tabla desktop + NuxtLink en cards mobile
 
-### Produccion
-- Registros financieros borrados (9 registros) — inicio en cero para el cliente
-- 3 deploys a Coolify via dispatch directo de `ApplicationDeploymentJob`
-- Migraciones 0044 y 0045 aplicadas en produccion
+### Deploy
+- Commit: `35f668f` en dev, merged a main `00b7e2c`, pushed
+- Produccion: migracion 0046 ya aplicada, 667 registros intactos, backup en `/tmp/chanadomus-backups/`
 
-## Pendiente
-- Distinguir Ranchos (74) vs Parcelas (43) en el card de Unidades del panel de finanzas
-- Verificar que Coolify no sobreescriba volumen uploads en deploys
+## Issues abiertos
 
-## Entorno
-- Docker corriendo en VPS 207.246.116.220
-- Branch dev, todo commiteado y mergeado a main
-- Password de test: Yolo2026!
-- Deploy: via tinker → ApplicationDeploymentJob dispatch
+### Issues previos (sesion 58)
+- Fechas typo en 2 registros (El Molino, Samsara)
+- Flamboyant R-013 saldo extraordinaria -$3,000 requiere revision manual
+
+## DB local
+- Docker `chanadomus-db-1` con dump de produccion
+- Usuarios demo con password `Yolo2026!`:
+  - admin@chanadomus.com (admin)
+  - propietario@chanadomus.com (propietario, Rancho Demo)
+  - conserje@chanadomus.com (conserje, Guayacan I via staff)
+  - vigilante@chanadomus.com (vigilancia)

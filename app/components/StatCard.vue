@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type { Component } from 'vue'
-import { TrendingUp, TrendingDown } from 'lucide-vue-next'
+import { Info, TrendingUp, TrendingDown } from 'lucide-vue-next'
 import { TREND_COLORS } from '~/composables/useColorMap'
 
 interface TrendInfo {
@@ -14,6 +14,7 @@ interface Props {
   icon: Component
   iconBgClass: string
   trend?: TrendInfo
+  tooltip?: string
   isLoading?: boolean
 }
 
@@ -34,7 +35,19 @@ withDefaults(defineProps<Props>(), {
           <Skeleton class="h-6 w-10 sm:h-8 sm:w-24" />
         </template>
         <template v-else>
-          <p class="text-[11px] leading-tight text-muted-foreground sm:text-sm">{{ label }}</p>
+          <div class="flex items-center gap-1">
+            <p class="text-[11px] leading-tight text-muted-foreground sm:text-sm">{{ label }}</p>
+            <TooltipProvider v-if="tooltip" :delay-duration="200">
+              <Tooltip>
+                <TooltipTrigger as-child>
+                  <Info class="size-3 shrink-0 cursor-help text-muted-foreground/50 transition-colors hover:text-muted-foreground" />
+                </TooltipTrigger>
+                <TooltipContent side="top" class="max-w-56 text-xs">
+                  {{ tooltip }}
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          </div>
           <p class="text-lg font-bold tabular-nums tracking-tight sm:text-2xl">{{ value }}</p>
         </template>
       </div>

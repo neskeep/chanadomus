@@ -7,6 +7,7 @@ import {
   Download,
   FileText,
   Home,
+  Info,
   Megaphone,
   Percent,
   ShieldAlert,
@@ -27,10 +28,10 @@ import {
   LineElement,
   PointElement,
   Title,
-  Tooltip,
+  Tooltip as ChartTooltip,
 } from 'chart.js'
 
-ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, BarElement, Title, Tooltip, Legend, Filler)
+ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, BarElement, Title, ChartTooltip, Legend, Filler)
 
 useHead({ title: 'Panel Administrador' })
 
@@ -145,10 +146,11 @@ const groupedChartOpts = {
     <!-- Financial hero: 3 stat cards + collection rate with progress -->
     <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
       <StatCard
-        label="Cobrado"
+        label="Cobrado este mes"
         :value="trends?.financialKpis ? formatCurrency(trends.financialKpis.totalAbonos) : '—'"
         :icon="ClipboardCheck"
         :icon-bg-class="ICON_BG.success"
+        tooltip="Total de pagos recibidos en el mes actual"
         :is-loading="isLoading"
       />
       <StatCard
@@ -156,6 +158,7 @@ const groupedChartOpts = {
         :value="trends?.financialKpis ? formatCurrency(trends.financialKpis.pendingBalance) : '—'"
         :icon="Wallet"
         :icon-bg-class="ICON_BG.danger"
+        tooltip="Saldo total pendiente de cobro acumulado"
         :is-loading="isLoading"
       />
       <StatCard
@@ -163,23 +166,36 @@ const groupedChartOpts = {
         :value="stats?.unitsInDebt ?? 0"
         :icon="Home"
         :icon-bg-class="ICON_BG.warning"
+        tooltip="Unidades con pagos pendientes respecto al total"
         :is-loading="isLoading"
       />
       <!-- Collection rate: custom card with Progress bar -->
-      <Card class="p-4">
-        <div class="flex items-start justify-between">
-          <div class="flex flex-col gap-1">
+      <Card class="p-3 sm:p-4">
+        <div class="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+          <div class="flex size-7 shrink-0 items-center justify-center rounded-lg sm:order-2 sm:size-10" :class="ICON_BG.teal">
+            <Percent class="size-3.5 sm:size-5" />
+          </div>
+          <div class="flex min-w-0 flex-col gap-0.5 sm:order-1 sm:gap-1">
             <template v-if="isLoading">
-              <Skeleton class="h-5 w-16" />
-              <Skeleton class="h-8 w-24" />
+              <Skeleton class="h-4 w-12 sm:h-5 sm:w-16" />
+              <Skeleton class="h-6 w-10 sm:h-8 sm:w-24" />
             </template>
             <template v-else>
-              <p class="text-sm text-muted-foreground">Cobranza</p>
-              <p class="text-2xl font-bold tabular-nums tracking-tight">{{ collectionRate.toFixed(1) }}%</p>
+              <div class="flex items-center gap-1">
+                <p class="text-[11px] leading-tight text-muted-foreground sm:text-sm">Cobranza</p>
+                <TooltipProvider :delay-duration="200">
+                  <Tooltip>
+                    <TooltipTrigger as-child>
+                      <Info class="size-3 shrink-0 cursor-help text-muted-foreground/50 transition-colors hover:text-muted-foreground" />
+                    </TooltipTrigger>
+                    <TooltipContent side="top" class="max-w-56 text-xs">
+                      Porcentaje de cobranza del mes actual: abonos recibidos vs cargos emitidos
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              </div>
+              <p class="text-lg font-bold tabular-nums tracking-tight sm:text-2xl">{{ collectionRate.toFixed(1) }}%</p>
             </template>
-          </div>
-          <div :class="['flex size-10 items-center justify-center rounded-lg', ICON_BG.teal]">
-            <Percent class="size-5" />
           </div>
         </div>
         <Progress v-if="!isLoading" :model-value="collectionRate" class="mt-3 h-1.5" />

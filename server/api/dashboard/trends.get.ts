@@ -33,7 +33,8 @@ export default defineEventHandler(async (event) => {
   const now = new Date()
   const sixMonthsAgo = new Date(now.getFullYear(), now.getMonth() - 5, 1)
   const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000)
-  const currentMonthStart = new Date(now.getFullYear(), now.getMonth(), 1)
+  // Use SQL string to avoid JS Date timezone offset with timestamp columns
+  const currentMonthISO = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-01`
 
   const [incidentsByMonth, accessByDay, financeByMonth, financialKpis] = await Promise.all([
     // incidentsByMonth — last 6 months
@@ -119,7 +120,7 @@ export default defineEventHandler(async (event) => {
             .from(financialRecords)
             .where(and(
               eq(financialRecords.tenantId, tenantId),
-              gte(financialRecords.date, currentMonthStart),
+              dsql`${financialRecords.date} >= ${currentMonthISO}::date`,
             )),
 
           // All-time pending balance
