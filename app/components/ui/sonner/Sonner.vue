@@ -24,12 +24,7 @@ const props = defineProps<ToasterProps>()
       '--normal-border': 'var(--border)',
       '--border-radius': 'var(--radius)',
     }"
-    :toast-options="{
-      classes: {
-        toast: 'rounded-lg',
-      },
-    }"
-    v-bind="props"
+    v-bind="{ ...props, toastOptions: { ...props.toastOptions, classes: { ...props.toastOptions?.classes, toast: ['rounded-lg', props.toastOptions?.classes?.toast].filter(Boolean).join(' ') } } }"
   >
     <template #success-icon>
       <CircleCheckIcon class="size-4" />

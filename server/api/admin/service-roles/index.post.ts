@@ -2,8 +2,8 @@ import { db } from '~~/server/db'
 import { serviceStaffRoles } from '~~/server/db/schema/service-staff-role'
 
 export default defineEventHandler(async (event) => {
-  const session = await requireRole(event, ['admin'])
-  const tenantId = (session.user as Record<string, unknown>).tenantId as string
+  await requireRole(event, ['admin'])
+  const { tenantId } = await requireTenant(event)
 
   const body = await readBody<{ name?: string; description?: string; displayOrder?: number }>(event)
 

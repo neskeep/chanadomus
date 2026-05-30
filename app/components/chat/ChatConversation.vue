@@ -13,8 +13,7 @@ import {
   Search,
   AtSign,
 } from 'lucide-vue-next'
-import type { ChatMessage } from '~~/shared/types/chat'
-import type { ChatCommandDefinition, ChatCommandResult, ChatMentionResult } from '~~/shared/types/chat'
+import type { ChatMessage, ChatCommandResult, ChatMentionResult  } from '~~/shared/types/chat'
 
 const props = defineProps<{
   roomId: string
@@ -146,7 +145,7 @@ function handleFileSelect(event: Event) {
 }
 
 function removePendingImage(index: number) {
-  URL.revokeObjectURL(pendingPreviews.value[index])
+  URL.revokeObjectURL(pendingPreviews.value[index]!)
   pendingImages.value.splice(index, 1)
   pendingPreviews.value.splice(index, 1)
 }
@@ -330,7 +329,7 @@ defineExpose({ connected })
                     loading="lazy"
                     class="max-h-64 max-w-56 rounded-xl object-cover transition-opacity hover:opacity-90 md:max-w-72"
                     alt="Imagen"
-                  />
+                  >
                 </a>
               </div>
               <!-- Text content -->
@@ -351,7 +350,7 @@ defineExpose({ connected })
           <div v-else class="max-w-3/4">
             <div class="mb-1 flex items-center gap-1.5 pl-1">
               <div v-if="group.userImage" class="size-5 shrink-0 overflow-hidden rounded-lg">
-                <img :src="group.userImage" :alt="group.userName" class="size-full object-cover" />
+                <img :src="group.userImage" :alt="group.userName" class="size-full object-cover" >
               </div>
               <div
                 v-else
@@ -387,7 +386,7 @@ defineExpose({ connected })
                       loading="lazy"
                       class="max-h-64 max-w-56 rounded-xl object-cover transition-opacity hover:opacity-90 md:max-w-72"
                       alt="Imagen"
-                    />
+                    >
                   </a>
                 </div>
                 <!-- Text content -->
@@ -431,7 +430,7 @@ defineExpose({ connected })
           :src="preview"
           class="size-16 rounded-lg object-cover"
           alt="Preview"
-        />
+        >
         <button
           class="absolute -right-1 -top-1 flex size-5 items-center justify-center rounded-full bg-destructive text-white shadow-sm"
           @click="removePendingImage(idx)"
@@ -514,7 +513,7 @@ defineExpose({ connected })
               @mouseenter="commands.selectedIndex.value = idx"
             >
               <div v-if="isMentionResult(item) && item.image" class="size-6 shrink-0 overflow-hidden rounded-lg">
-                <img :src="item.image" :alt="item.name" class="size-full object-cover" />
+                <img :src="item.image" :alt="item.name" class="size-full object-cover" >
               </div>
               <div
                 v-else-if="isMentionResult(item)"
@@ -545,7 +544,7 @@ defineExpose({ connected })
         multiple
         class="hidden"
         @change="handleFileSelect"
-      />
+      >
 
       <!-- Image upload button -->
       <Button

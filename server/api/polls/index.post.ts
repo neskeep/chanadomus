@@ -1,66 +1,37 @@
+import { z } from 'zod'
 import { db } from '~~/server/db'
 import { polls, pollOptions } from '~~/server/db/schema/poll'
 import { sendPushToAll } from '~~/server/utils/web-push'
 import type { Poll, PollOption, PollStatus, PollType } from '~~/shared/types/poll'
 
-const VALID_STATUSES: PollStatus[] = ['draft', 'active']
-const VALID_TYPES: PollType[] = ['single', 'multiple']
+const createPollSchema = z.object({
+  title: z.string().min(1, 'El titulo es requerido').max(200, 'El titulo no puede exceder 200 caracteres'),
+  description: z.string().optional().nullable(),
+  type: z.enum(['single', 'multiple']).default('single'),
+  status: z.enum(['draft', 'active']).default('draft'),
+  deadline: z.string().refine((v) => !isNaN(new Date(v).getTime()), 'Fecha limite invalida').optional().nullable(),
+  options: z.array(z.string().min(1, 'Cada opcion debe ser un texto no vacio').max(500, 'Cada opcion no puede exceder 500 caracteres'))
+    .min(2, 'Se requieren al menos 2 opciones')
+    .max(20, 'Maximo 20 opciones permitidas'),
+})
 
 export default defineEventHandler(async (event) => {
   const session = await requireTenant(event)
   await requireRole(event, ['admin'])
 
-  const body = await readBody(event)
-  if (!body || typeof body !== 'object') {
-    throw createError({ statusCode: 400, message: 'Datos invalidos' })
-  }
+  const body = await validateBody(event, createPollSchema)
 
-  // Validate title
-  const title = typeof body.title === 'string' ? body.title.trim() : ''
-  if (!title) {
-    throw createError({ statusCode: 400, message: 'El titulo es requerido' })
-  }
-  if (title.length > 200) {
-    throw createError({ statusCode: 400, message: 'El titulo no puede exceder 200 caracteres' })
-  }
+  const title = body.title.trim()
+  const description = body.description?.trim() || null
+  const type: PollType = body.type
+  const status: PollStatus = body.status
 
-  // Validate description
-  const description = typeof body.description === 'string' ? body.description.trim() || null : null
-
-  // Validate type
-  const type: PollType = VALID_TYPES.includes(body.type as PollType) ? (body.type as PollType) : 'single'
-
-  // Validate status
-  const status: PollStatus = VALID_STATUSES.includes(body.status as PollStatus) ? (body.status as PollStatus) : 'draft'
-
-  // Validate deadline
   let deadline: Date | null = null
   if (body.deadline) {
-    deadline = new Date(body.deadline as string)
-    if (isNaN(deadline.getTime())) {
-      throw createError({ statusCode: 400, message: 'Fecha limite invalida' })
-    }
+    deadline = new Date(body.deadline)
   }
 
-  // Validate options
-  if (!Array.isArray(body.options) || body.options.length < 2) {
-    throw createError({ statusCode: 400, message: 'Se requieren al menos 2 opciones' })
-  }
-
-  const optionTexts: string[] = []
-  for (const opt of body.options) {
-    if (typeof opt !== 'string' || !opt.trim()) {
-      throw createError({ statusCode: 400, message: 'Cada opcion debe ser un texto no vacio' })
-    }
-    if (opt.trim().length > 500) {
-      throw createError({ statusCode: 400, message: 'Cada opcion no puede exceder 500 caracteres' })
-    }
-    optionTexts.push(opt.trim())
-  }
-
-  if (optionTexts.length > 20) {
-    throw createError({ statusCode: 400, message: 'Maximo 20 opciones permitidas' })
-  }
+  const optionTexts = body.options.map((opt) => opt.trim())
 
   // Determine publishedAt
   const now = new Date()

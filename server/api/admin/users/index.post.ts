@@ -1,34 +1,30 @@
+import { z } from 'zod'
 import { db } from '~~/server/db'
 import { user, account } from '~~/server/db/schema/auth'
 import { eq } from 'drizzle-orm'
 import { hashPassword } from 'better-auth/crypto'
 import { USER_ROLES, type UserRole } from '~~/shared/types/auth'
 
-interface CreateBody {
-  name: string
-  email: string
-  password: string
-  role: UserRole
-  unitId?: string
-  phone?: string
-}
+const createUserSchema = z.object({
+  name: z.string().min(1, 'El nombre es requerido'),
+  email: z.string().email('Email invalido').min(1, 'El email es requerido'),
+  password: z.string().min(8, 'La contrasena debe tener al menos 8 caracteres'),
+  role: z.enum(USER_ROLES, { message: 'Rol invalido' }),
+  unitId: z.string().optional(),
+  phone: z.string().optional(),
+}).refine((data) => {
+  const ROLES_REQUIRING_UNIT: UserRole[] = ['propietario', 'conserje']
+  if (ROLES_REQUIRING_UNIT.includes(data.role) && !data.unitId) {
+    return false
+  }
+  return true
+}, { message: 'Este rol requiere una unidad asignada', path: ['unitId'] })
 
 export default defineEventHandler(async (event) => {
-  const session = await requireRole(event, ['admin'])
-  const tenantId = (session.user as Record<string, unknown>).tenantId as string
+  await requireRole(event, ['admin'])
+  const { tenantId } = await requireTenant(event)
 
-  const body = await readBody<CreateBody>(event)
-
-  if (!body.name?.trim()) throw createError({ statusCode: 400, message: 'El nombre es requerido' })
-  if (!body.email?.trim()) throw createError({ statusCode: 400, message: 'El email es requerido' })
-  if (!body.password || body.password.length < 8) throw createError({ statusCode: 400, message: 'La contrasena debe tener al menos 8 caracteres' })
-  if (!body.role || !USER_ROLES.includes(body.role)) throw createError({ statusCode: 400, message: 'Rol invalido' })
-
-  // Propietarios y conserjes requieren unidad obligatoria
-  const ROLES_REQUIRING_UNIT: UserRole[] = ['propietario', 'conserje']
-  if (ROLES_REQUIRING_UNIT.includes(body.role) && !body.unitId) {
-    throw createError({ statusCode: 400, message: 'Este rol requiere una unidad asignada' })
-  }
+  const body = await validateBody(event, createUserSchema)
 
   // Check email uniqueness
   const [existing] = await db

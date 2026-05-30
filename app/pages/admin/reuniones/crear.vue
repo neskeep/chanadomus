@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { Loader2, CalendarIcon, Clock } from 'lucide-vue-next'
-import { CalendarDate, getLocalTimeZone, today } from '@internationalized/date'
 import type { DateValue } from 'reka-ui'
 import { toast } from 'vue-sonner'
 import type { MeetingType, CreateMeeting } from '~~/shared/types/meeting'

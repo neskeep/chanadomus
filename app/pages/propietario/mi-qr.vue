@@ -107,7 +107,7 @@ async function handleDownloadBadge() {
             :src="qrDataUrl"
             alt="QR de acceso personal del residente"
             class="size-72 rounded-lg"
-          />
+          >
 
           <Separator />
 

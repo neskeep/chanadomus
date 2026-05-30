@@ -12,8 +12,8 @@ interface UpdateBody {
 }
 
 export default defineEventHandler(async (event) => {
-  const session = await requireRole(event, ['admin'])
-  const tenantId = (session.user as Record<string, unknown>).tenantId as string
+  await requireRole(event, ['admin'])
+  const { tenantId } = await requireTenant(event)
   const id = getRouterParam(event, 'id')
 
   if (!id) throw createError({ statusCode: 400, message: 'ID requerido' })

@@ -11,10 +11,11 @@ import {
 } from 'lucide-vue-next'
 import { toast } from 'vue-sonner'
 import type {
-  Meeting,
   MeetingType,
   MeetingStatus,
 } from '~~/shared/types/meeting'
+
+import { MEETING_TYPE_COLORS as TYPE_COLORS, MEETING_STATUS_COLORS as STATUS_COLORS } from '~/composables/useColorMap'
 
 useHead({ title: 'Gestion de Reuniones' })
 
@@ -22,7 +23,6 @@ const { formatDateTime } = useFormatDate()
 
 const {
   meetings,
-  meta,
   isLoading,
   error,
   fetchMeetings,
@@ -52,8 +52,6 @@ const meetingStatusOptions = [
 // Delete dialog
 const deleteId = ref<string | null>(null)
 const deleteDialogOpen = ref(false)
-
-import { MEETING_TYPE_COLORS as TYPE_COLORS, MEETING_STATUS_COLORS as STATUS_COLORS } from '~/composables/useColorMap'
 
 const TYPE_LABELS: Record<MeetingType, string> = {
   ordinaria: 'Ordinaria',
@@ -122,7 +120,7 @@ async function handleDelete() {
 <template>
   <div>
     <!-- Topbar actions -->
-    <Teleport :to="target" defer v-if="isMounted">
+    <Teleport v-if="isMounted" :to="target" defer>
       <TopbarFilters :active="filterType !== '' || filterStatus !== ''" @clear="filterType = ''; filterStatus = ''">
         <TopbarFilterGroup v-model="filterType" label="Tipo" :options="typeOptions" />
         <TopbarFilterGroup v-model="filterStatus" label="Estado" :options="meetingStatusOptions" />

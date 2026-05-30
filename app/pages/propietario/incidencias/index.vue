@@ -1,8 +1,9 @@
 <script setup lang="ts">
+import type {
+  Clock} from 'lucide-vue-next';
 import {
   AlertTriangle,
   Plus,
-  Clock,
   CheckCircle2,
   Loader2,
   XCircle,
@@ -45,7 +46,7 @@ const { formatDate } = useFormatDate()
 <template>
   <div>
     <!-- Topbar actions (desktop) -->
-    <Teleport :to="target" defer v-if="isMounted">
+    <Teleport v-if="isMounted" :to="target" defer>
       <Button size="sm" @click="navigateTo('/propietario/incidencias/nueva')">
         <Plus class="mr-1.5 size-3.5" />
         Reportar

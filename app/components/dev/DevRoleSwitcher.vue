@@ -3,7 +3,7 @@ import { Shield, HardHat, Home, Settings, ChevronUp, Loader2 } from 'lucide-vue-
 import { ROLE_LABELS, type UserRole } from '~~/shared/types/auth'
 import { authClient } from '~/lib/auth-client'
 
-const { user, role } = useAuth()
+const { role } = useAuth()
 
 const isOpen = ref(false)
 const isSwitching = ref(false)

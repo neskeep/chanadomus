@@ -18,12 +18,8 @@ import { broadcastAccessEvent } from '~~/server/utils/ws-access'
 import { checkOpenEntry } from '~~/server/utils/access-entry-exit'
 
 export default defineEventHandler(async (event) => {
-  const session = await requireAuth(event)
-  const tenantId = (session.user as Record<string, unknown>).tenantId as string | undefined
-
-  if (!tenantId) {
-    throw createError({ statusCode: 403, message: 'Usuario sin tenant asignado' })
-  }
+  const session = await requireTenant(event)
+  const { tenantId } = session
 
   const body = await readBody<{ token: string; direction: 'entry' | 'exit'; occupantCount?: number }>(event)
 

@@ -96,7 +96,7 @@ export function useQrScanner() {
 
       canvas.width = video.videoWidth
       canvas.height = video.videoHeight
-      ctx.drawImage(video, 0, 0, canvas.width, canvas.height)
+      ctx.drawImage(video as CanvasImageSource, 0, 0, canvas.width, canvas.height)
 
       const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height)
       const code = jsQR(imageData.data, imageData.width, imageData.height, {

@@ -8,7 +8,7 @@ const MONTHS = [
   'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre',
 ]
 
-const { reports, meta, isLoading, error, totalPages, fetchReports } = useFinancialReports()
+const { reports, isLoading, error, totalPages, fetchReports } = useFinancialReports()
 
 const currentPage = ref(1)
 

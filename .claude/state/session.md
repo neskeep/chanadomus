@@ -1,45 +1,73 @@
 # Estado de Sesion — ChanaDomus
 
 ## Ultima Sesion
-- **Fecha**: 2026-05-26
-- **Sesion #**: 60
-- **Branch**: dev
-- **Estado**: Completada — 4 tasks finalizados, merged a main, deployed
+- **Fecha**: 2026-05-30
+- **Sesion #**: 61
+- **Branch**: `feat/quality-gates` (desde dev, SIN commit aún)
+- **Estado**: Pausada — 4 fases implementadas, pendiente commit + solicitudes del cliente
 
-## Completado Sesion 60
+## Completado Sesion 61
 
-### 1. Fix mobile cards overflow
-- Causa raiz: CSS Grid sin `min-w-0` en hijos expandia columnas a 770px en viewport 375px
-- Fix: `min-w-0` en ambas `<section>` hijas del grid en `app/pages/admin/finanzas/index.vue`
-- Verificado con Playwright: scrollWidth === clientWidth, sin overflow
+### Quality Gates — 4 fases implementadas (163 archivos, +2403/-627 líneas)
 
-### 2. Filtros propietario estado-cuenta
-- `server/api/finance/my-account.get.ts` — acepta query params `from` y `to`
-- `app/composables/useMyAccount.ts` — `fetchStatement(params?)` con date params
-- `app/pages/propietario/estado-cuenta.vue` — TopbarFilters con tipo/categoria (client-side) y rango de fechas (server-side), filteredRecords computed, contador de resultados
+#### Fase 1: CI Quality Gates
+- ESLint con `@nuxt/eslint` + reglas strict configuradas (`eslint.config.mjs`)
+- `nuxt typecheck` + lint + tests en `.github/workflows/deploy.yml` como job separado `quality-gates` antes del build
+- Scripts: `pnpm lint`, `pnpm typecheck`, `pnpm test:ci`
 
-### 3. API CRUD registros financieros
-- `server/api/finance/records/[id].get.ts` — GET registro individual
-- `server/api/finance/records/[id].patch.ts` — PATCH parcial (type, category, amount, description, date)
-- `server/api/finance/records/[id].delete.ts` — DELETE con verificacion tenant scope
-- `app/composables/useFinanceRecords.ts` — `updateRecord()` y `deleteRecord()` agregados
+#### Fase 2: Pre-commit hooks
+- Husky + lint-staged — bloquea commits con errores de lint
+- `.husky/pre-commit` ejecuta `pnpm lint-staged`
 
-### 4. UI edicion + delete
-- `app/pages/admin/finanzas/editar/[id].vue` — formulario pre-llenado, unidad readonly, AlertDialog delete
-- `app/pages/admin/finanzas/[id].vue` — boton editar (Pencil) en tabla desktop + NuxtLink en cards mobile
+#### Fase 3: Validación y estandarización
+- `server/utils/validate.ts` — helper `validateBody/validateQuery/validateParams` con Zod
+- 7 endpoints críticos con Zod schemas (finance, users, polls, meetings, providers, invitaciones)
+- 58 endpoints migrados de cast manual `(session.user as Record<...>).tenantId` a `requireTenant()`
+- `drizzle-zod` instalado para futuras generaciones de schemas
 
-### Deploy
-- Commit: `35f668f` en dev, merged a main `00b7e2c`, pushed
-- Produccion: migracion 0046 ya aplicada, 667 registros intactos, backup en `/tmp/chanadomus-backups/`
+#### Fase 4: Testing con Vitest
+- `vitest.config.ts` configurado con happy-dom
+- 121 tests en 8 archivos:
+  - `tests/shared/auth-types.test.ts` — roles, route mapping, permisos
+  - `tests/shared/permissions.test.ts` — matrix de permisos por rol
+  - `tests/unit/validate.test.ts` — helper de validación
+  - `tests/unit/finance-validation.test.ts` — schemas de finanzas
+  - `tests/unit/user-validation.test.ts` — schema de creación de usuarios
+  - `tests/unit/poll-validation.test.ts` — schema de votaciones
+  - `tests/unit/meeting-validation.test.ts` — schema de reuniones
+  - `tests/unit/provider-validation.test.ts` — schema de proveedores
+
+#### Fixes adicionales durante la sesión
+- 75 errores TypeScript corregidos (null checks, unused vars, import types)
+- 185 problemas ESLint corregidos (unused imports, empty blocks, prefer-const)
+- Duplicated imports resueltos: `VehiclePass` y `AccessDirection` ya no están en 2 archivos
+
+### Verificación
+- `pnpm lint` → 0 errores
+- `pnpm typecheck` → 0 errores TS (exit 0)
+- `pnpm test:ci` → 121/121 passing (556ms)
+- `pnpm build` → exitoso
+
+## Pendiente (branch `feat/quality-gates`)
+- **SIN COMMIT** — todo está staged pero no commiteado
+- Commit y PR a `dev` cuando el usuario lo decida
+
+## Solicitudes del cliente (próxima sesión)
+1. **Campo "orden de visualización"** — ya existe en `admin/roles-servicio/crear`. Implementar también en:
+   - Votaciones
+   - Reuniones
+   - Normativas
+   - Carteleras (anuncios)
+2. Estos módulos probablemente necesitan: columna `displayOrder` en schema, UI de ordenamiento, ordenamiento en queries
 
 ## Issues abiertos
 
-### Issues previos (sesion 58)
+### Issues previos (sesión 58)
 - Fechas typo en 2 registros (El Molino, Samsara)
-- Flamboyant R-013 saldo extraordinaria -$3,000 requiere revision manual
+- Flamboyant R-013 saldo extraordinaria -$3,000 requiere revisión manual
 
 ## DB local
-- Docker `chanadomus-db-1` con dump de produccion
+- Docker `chanadomus-db-1` con dump de producción
 - Usuarios demo con password `Yolo2026!`:
   - admin@chanadomus.com (admin)
   - propietario@chanadomus.com (propietario, Rancho Demo)

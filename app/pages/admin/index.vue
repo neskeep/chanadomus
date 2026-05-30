@@ -10,7 +10,6 @@ import {
   Info,
   Megaphone,
   Percent,
-  ShieldAlert,
   Store,
   Users,
   Vote,
@@ -124,21 +123,21 @@ const groupedChartOpts = {
 <template>
   <div class="space-y-8">
     <!-- Topbar: export actions -->
-    <Teleport :to="target" defer v-if="isMounted">
-      <Button variant="ghost" size="icon" class="size-8" @click="exportCsv" title="Exportar CSV">
+    <Teleport v-if="isMounted" :to="target" defer>
+      <Button variant="ghost" size="icon" class="size-8" title="Exportar CSV" @click="exportCsv">
         <Download class="size-4" />
       </Button>
-      <Button variant="ghost" size="icon" class="size-8" @click="exportPdf" title="Exportar PDF">
+      <Button variant="ghost" size="icon" class="size-8" title="Exportar PDF" @click="exportPdf">
         <FileText class="size-4" />
       </Button>
     </Teleport>
 
     <!-- Mobile action buttons -->
     <TopbarMobileAction>
-      <Button variant="ghost" size="icon" class="size-9" @click="exportCsv" title="Exportar CSV">
+      <Button variant="ghost" size="icon" class="size-9" title="Exportar CSV" @click="exportCsv">
         <Download class="size-4" />
       </Button>
-      <Button variant="ghost" size="icon" class="size-9" @click="exportPdf" title="Exportar PDF">
+      <Button variant="ghost" size="icon" class="size-9" title="Exportar PDF" @click="exportPdf">
         <FileText class="size-4" />
       </Button>
     </TopbarMobileAction>
@@ -212,7 +211,7 @@ const groupedChartOpts = {
             <AlertTriangle class="size-4 text-amber-600" />
           </div>
           <div class="flex-1">
-            <p class="text-sm font-medium">{{ stats.openIncidents }} incidencias abiertas</p>
+            <p class="text-sm font-medium">{{ stats!.openIncidents }} incidencias abiertas</p>
           </div>
           <ChevronRight class="size-4 text-muted-foreground" />
         </NuxtLink>
@@ -221,7 +220,7 @@ const groupedChartOpts = {
             <Store class="size-4 text-blue-600" />
           </div>
           <div class="flex-1">
-            <p class="text-sm font-medium">{{ stats.pendingProviders }} proveedores por aprobar</p>
+            <p class="text-sm font-medium">{{ stats!.pendingProviders }} proveedores por aprobar</p>
           </div>
           <ChevronRight class="size-4 text-muted-foreground" />
         </NuxtLink>

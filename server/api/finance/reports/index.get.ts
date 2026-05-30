@@ -13,10 +13,11 @@ export default defineEventHandler(async (event) => {
   const offset = (page - 1) * limit
 
   // Count total
-  const [{ count }] = await db
+  const countResult = await db
     .select({ count: sql<number>`count(*)::int` })
     .from(financialReports)
     .where(eq(financialReports.tenantId, session.tenantId))
+  const count = countResult[0]?.count ?? 0
 
   // Fetch paginated
   const rows = await db

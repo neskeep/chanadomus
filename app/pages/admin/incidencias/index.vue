@@ -12,7 +12,7 @@ import { INCIDENT_STATUS_COLORS, INCIDENT_STATUS_LABELS, INCIDENT_PRIORITY_COLOR
 
 useHead({ title: 'Gestion de Incidencias' })
 
-const { incidents, meta, isLoading, error, totalPages, fetchIncidents } = useIncidents()
+const { incidents, isLoading, error, totalPages, fetchIncidents } = useIncidents()
 
 const { target, isMounted } = useTopbarPortal()
 
@@ -101,7 +101,7 @@ const { formatDate } = useFormatDate()
     <!-- Error -->
     <ErrorAlert v-if="error" :message="error" class="mb-4" />
 
-    <Teleport :to="target" defer v-if="isMounted">
+    <Teleport v-if="isMounted" :to="target" defer>
       <TopbarSearch v-model="searchQuery" placeholder="Buscar incidencia...">
         <TopbarFilters :active="filterStatus !== '' || filterPriority !== ''" @clear="filterStatus = ''; filterPriority = ''">
           <TopbarFilterGroup v-model="filterStatus" label="Estado" :options="statusOptions" />

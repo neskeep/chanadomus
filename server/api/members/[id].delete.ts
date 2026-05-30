@@ -3,8 +3,8 @@ import { householdMembers } from '~~/server/db/schema/household'
 import { eq, and } from 'drizzle-orm'
 
 export default defineEventHandler(async (event) => {
-  const session = await requireRole(event, ['admin'])
-  const tenantId = (session.user as Record<string, unknown>).tenantId as string
+  await requireRole(event, ['admin'])
+  const { tenantId } = await requireTenant(event)
 
   const memberId = getRouterParam(event, 'id')
   if (!memberId) {

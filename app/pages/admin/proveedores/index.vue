@@ -13,13 +13,12 @@ import type {
   ProviderCategory,
   ProviderStatus,
 } from '~~/shared/types/provider'
-import { PROVIDER_CATEGORIES } from '~~/shared/types/provider'
+import { PROVIDER_CATEGORY_COLORS as CATEGORY_COLORS, PROVIDER_STATUS_COLORS, PROVIDER_STATUS_LABELS } from '~/composables/useColorMap'
 
 useHead({ title: 'Proveedores y servicios' })
 
 const {
   providers,
-  meta,
   isLoading,
   error,
   totalPages,
@@ -51,8 +50,6 @@ const providerStatusOptions = [
 // Delete dialog
 const deleteId = ref<string | null>(null)
 const deleteDialogOpen = ref(false)
-
-import { PROVIDER_CATEGORY_COLORS as CATEGORY_COLORS, PROVIDER_STATUS_COLORS, PROVIDER_STATUS_LABELS } from '~/composables/useColorMap'
 
 const CATEGORY_LABELS: Record<ProviderCategory, string> = {
   plomeria: 'Plomeria',
@@ -173,7 +170,7 @@ function renderStars(rating: number | undefined): number[] {
 <template>
   <div>
     <!-- Topbar actions -->
-    <Teleport :to="target" defer v-if="isMounted">
+    <Teleport v-if="isMounted" :to="target" defer>
       <TopbarSearch v-model="searchQuery" placeholder="Buscar proveedor...">
         <TopbarFilters :active="filterCategory !== '' || filterStatus !== ''" @clear="filterCategory = ''; filterStatus = ''">
           <TopbarFilterGroup v-model="filterCategory" label="Categoria" :options="providerCategoryOptions" />

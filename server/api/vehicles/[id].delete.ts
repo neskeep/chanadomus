@@ -3,8 +3,8 @@ import { vehicles } from '~~/server/db/schema/vehicle'
 import { eq, and } from 'drizzle-orm'
 
 export default defineEventHandler(async (event) => {
-  const session = await requireRole(event, ['admin'])
-  const tenantId = (session.user as Record<string, unknown>).tenantId as string
+  await requireRole(event, ['admin'])
+  const { tenantId } = await requireTenant(event)
 
   const vehicleId = getRouterParam(event, 'id')
   if (!vehicleId) {

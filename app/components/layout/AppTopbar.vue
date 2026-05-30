@@ -8,7 +8,7 @@ const pageInfo = usePageInfo()
       <!-- Breadcrumb mode -->
       <Breadcrumb v-if="pageInfo.breadcrumbs?.length">
         <BreadcrumbList>
-          <template v-for="(crumb, i) in pageInfo.breadcrumbs" :key="crumb.to">
+          <template v-for="crumb in pageInfo.breadcrumbs" :key="crumb.to">
             <BreadcrumbItem>
               <BreadcrumbLink as-child>
                 <NuxtLink :to="crumb.to" class="text-sm">

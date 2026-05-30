@@ -13,7 +13,7 @@ import { POLL_STATUS_COLORS, POLL_STATUS_LABELS } from '~/composables/useColorMa
 useHead({ title: 'Votaciones' })
 
 const { formatDate } = useFormatDate()
-const { polls, meta, isLoading, isSubmitting, error, totalPages, fetchPolls, vote } = usePolls()
+const { polls, isLoading, isSubmitting, error, totalPages, fetchPolls, vote } = usePolls()
 
 const { target, isMounted } = useTopbarPortal()
 
@@ -105,7 +105,7 @@ function getParticipation(poll: Poll): string {
 <template>
   <div>
     <!-- Topbar actions -->
-    <Teleport :to="target" defer v-if="isMounted">
+    <Teleport v-if="isMounted" :to="target" defer>
       <TopbarFilters :active="activeTab !== 'active'" @clear="activeTab = 'active'">
         <TopbarFilterGroup v-model="activeTab" label="Estado" :options="statusOptions" />
       </TopbarFilters>
@@ -203,7 +203,7 @@ function getParticipation(poll: Poll): string {
                     'hover:bg-muted/50': selectedOption[poll.id] !== opt.id,
                   }"
                 >
-                  <RadioGroupItem :value="opt.id" :id="`opt-${opt.id}`" />
+                  <RadioGroupItem :id="`opt-${opt.id}`" :value="opt.id" />
                   <Label :for="`opt-${opt.id}`" class="flex-1 cursor-pointer text-sm">
                     {{ opt.text }}
                   </Label>

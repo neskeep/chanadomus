@@ -2,7 +2,7 @@ import { db } from '~~/server/db'
 import { polls, pollOptions, pollVotes } from '~~/server/db/schema/poll'
 import { user } from '~~/server/db/schema/auth'
 import { units } from '~~/server/db/schema/unit'
-import { eq, and, count, sql } from 'drizzle-orm'
+import { eq, and, count } from 'drizzle-orm'
 import type { Poll, PollOption, PollVote } from '~~/shared/types/poll'
 
 export default defineEventHandler(async (event) => {

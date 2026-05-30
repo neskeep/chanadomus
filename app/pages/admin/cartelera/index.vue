@@ -18,7 +18,6 @@ const { formatDate } = useFormatDate()
 
 const {
   announcements,
-  meta,
   isLoading,
   error,
   totalPages,
@@ -137,7 +136,7 @@ async function handleDelete() {
 <template>
   <div>
     <!-- Topbar actions -->
-    <Teleport :to="target" defer v-if="isMounted">
+    <Teleport v-if="isMounted" :to="target" defer>
       <TopbarSearch v-model="searchQuery" placeholder="Buscar anuncio...">
         <TopbarFilters :active="filterCategory !== ''" @clear="filterCategory = ''">
           <TopbarFilterGroup v-model="filterCategory" label="Categoria" :options="categoryOptions" />

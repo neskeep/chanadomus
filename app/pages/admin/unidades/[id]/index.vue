@@ -231,7 +231,7 @@ onMounted(() => {
 
 <template>
   <div>
-    <Teleport :to="target" defer v-if="isMounted">
+    <Teleport v-if="isMounted" :to="target" defer>
       <Button v-if="activeTab === 'members'" size="sm" @click="navigateToAddMember()">
         <Plus class="mr-1 size-4" />
         Agregar
@@ -633,7 +633,7 @@ onMounted(() => {
         </div>
 
         <DialogFooter>
-          <Button v-if="!generatedInvitationUrl" @click="handleCreateInvitation" :disabled="invitationsSubmitting">
+          <Button v-if="!generatedInvitationUrl" :disabled="invitationsSubmitting" @click="handleCreateInvitation">
             <Loader2 v-if="invitationsSubmitting" class="mr-2 size-4 animate-spin" />
             Generar enlace
           </Button>

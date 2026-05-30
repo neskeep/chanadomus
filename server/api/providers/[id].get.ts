@@ -2,7 +2,7 @@ import { db } from '~~/server/db'
 import { providers, providerReviews } from '~~/server/db/schema/provider'
 import { user } from '~~/server/db/schema/auth'
 import { serviceStaffRoles } from '~~/server/db/schema/service-staff-role'
-import { eq, and, desc, count, avg } from 'drizzle-orm'
+import { eq, and, desc } from 'drizzle-orm'
 import type { Provider, ProviderReview } from '~~/shared/types/provider'
 
 export default defineEventHandler(async (event) => {

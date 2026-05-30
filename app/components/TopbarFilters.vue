@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import { SlidersHorizontal, X } from 'lucide-vue-next'
+import { SlidersHorizontal } from 'lucide-vue-next'
 
-const props = defineProps<{
+defineProps<{
   active?: boolean
 }>()
 

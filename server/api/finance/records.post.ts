@@ -1,49 +1,24 @@
+import { z } from 'zod'
 import { db } from '~~/server/db'
 import { financialRecords } from '~~/server/db/schema/financial'
 import type { FinancialRecord } from '~~/shared/types/financial'
+
+const createRecordSchema = z.object({
+  unitId: z.string().min(1, 'unitId es requerido'),
+  type: z.enum(['cargo', 'abono'], { message: 'type debe ser "cargo" o "abono"' }),
+  amount: z.number().positive('amount debe ser un numero mayor a 0'),
+  description: z.string().min(1, 'description es requerido y no puede estar vacio'),
+  category: z.enum(['ordinaria', 'extraordinaria'], { message: 'category debe ser "ordinaria" o "extraordinaria"' }),
+  date: z.string().min(1, 'date es requerido').refine((v) => !isNaN(new Date(v).getTime()), 'date debe ser una fecha valida en formato ISO'),
+})
 
 export default defineEventHandler(async (event) => {
   const session = await requireTenant(event)
   await requireRole(event, ['admin'])
 
-  const body = await readBody(event)
-
-  // Validar campos requeridos
-  const { unitId, type, amount, description, date, category } = body ?? {}
-
-  if (!unitId || typeof unitId !== 'string') {
-    throw createError({ statusCode: 400, message: 'unitId es requerido y debe ser un string' })
-  }
-
-  if (type !== 'cargo' && type !== 'abono') {
-    throw createError({ statusCode: 400, message: 'type debe ser "cargo" o "abono"' })
-  }
-
-  if (amount === undefined || amount === null || amount === '') {
-    throw createError({ statusCode: 400, message: 'amount es requerido' })
-  }
-
-  const parsedAmount = parseFloat(String(amount))
-  if (isNaN(parsedAmount) || parsedAmount <= 0) {
-    throw createError({ statusCode: 400, message: 'amount debe ser un numero mayor a 0' })
-  }
-
-  if (!description || typeof description !== 'string' || description.trim() === '') {
-    throw createError({ statusCode: 400, message: 'description es requerido y no puede estar vacio' })
-  }
-
-  if (category !== 'ordinaria' && category !== 'extraordinaria') {
-    throw createError({ statusCode: 400, message: 'category debe ser "ordinaria" o "extraordinaria"' })
-  }
-
-  if (!date || typeof date !== 'string') {
-    throw createError({ statusCode: 400, message: 'date es requerido y debe ser un string ISO' })
-  }
+  const { unitId, type, amount, description, date, category } = await validateBody(event, createRecordSchema)
 
   const parsedDate = new Date(date)
-  if (isNaN(parsedDate.getTime())) {
-    throw createError({ statusCode: 400, message: 'date debe ser una fecha valida en formato ISO' })
-  }
 
   // Insertar registro
   const [row] = await db
@@ -52,13 +27,15 @@ export default defineEventHandler(async (event) => {
       unitId,
       type,
       category,
-      amount: String(parsedAmount),
+      amount: String(amount),
       description: description.trim(),
       date: parsedDate,
       createdById: session.user.id,
       tenantId: session.tenantId,
     })
     .returning()
+
+  if (!row) throw createError({ statusCode: 500, message: 'Error al crear registro' })
 
   // Mapear a tipo del contrato
   const record: FinancialRecord = {

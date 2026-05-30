@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Loader2, CalendarIcon } from 'lucide-vue-next'
-import { CalendarDate, getLocalTimeZone, today } from '@internationalized/date'
+import { getLocalTimeZone, today } from '@internationalized/date'
 import type { DateValue } from 'reka-ui'
 import { toast } from 'vue-sonner'
 import type { VehiclePassType } from '~~/shared/types/vehicle-pass'

@@ -3,7 +3,6 @@ import {
   Users,
   Car,
   Phone,
-  Home,
   CircleOff,
 } from 'lucide-vue-next'
 import type { HouseholdRelationship } from '~~/shared/types/household'

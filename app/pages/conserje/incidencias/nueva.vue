@@ -181,7 +181,7 @@ onUnmounted(() => {
                   :src="photo.preview"
                   :alt="`Foto ${index + 1}`"
                   class="size-24 rounded-lg border object-cover"
-                />
+                >
                 <button
                   type="button"
                   class="absolute -right-1.5 -top-1.5 flex size-5 items-center justify-center rounded-lg bg-destructive text-destructive-foreground shadow-sm"
@@ -205,7 +205,7 @@ onUnmounted(() => {
                   multiple
                   class="hidden"
                   @change="onFileChange"
-                />
+                >
               </label>
             </div>
           </div>

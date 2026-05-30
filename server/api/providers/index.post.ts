@@ -1,37 +1,29 @@
+import { z } from 'zod'
 import { db } from '~~/server/db'
 import { providers } from '~~/server/db/schema/provider'
-import type { Provider, ProviderCategory, CreateProvider } from '~~/shared/types/provider'
+import type { Provider } from '~~/shared/types/provider'
 
-const VALID_CATEGORIES: ProviderCategory[] = [
-  'plomeria', 'electricidad', 'jardineria', 'cerrajeria', 'limpieza',
-  'pintura', 'albanileria', 'seguridad', 'fumigacion', 'otro',
-]
+const createProviderSchema = z.object({
+  name: z.string().min(1, 'El nombre es requerido').max(200, 'El nombre no puede exceder 200 caracteres'),
+  phone: z.string().max(50, 'El telefono no puede exceder 50 caracteres').optional().nullable(),
+  photo: z.string().optional().nullable(),
+  schedule: z.string().optional().nullable(),
+  address: z.string().max(500, 'La direccion no puede exceder 500 caracteres').optional().nullable(),
+  services: z.array(z.string()).optional().nullable(),
+  costs: z.string().optional().nullable(),
+  notes: z.string().optional().nullable(),
+  category: z.enum(['plomeria', 'electricidad', 'jardineria', 'cerrajeria', 'limpieza', 'pintura', 'albanileria', 'seguridad', 'fumigacion', 'otro']).optional(),
+  serviceRoleId: z.string().optional().nullable(),
+}).refine((data) => {
+  if (!data.serviceRoleId && !data.category) return false
+  return true
+}, { message: 'La categoria es requerida', path: ['category'] })
 
 export default defineEventHandler(async (event) => {
   const session = await requireTenant(event)
   await requireRole(event, ['admin', 'conserje'])
 
-  const body = await readBody<CreateProvider>(event)
-
-  // Validate required fields
-  if (!body.name || !body.name.trim()) {
-    throw createError({ statusCode: 400, message: 'El nombre es requerido' })
-  }
-  if (body.name.trim().length > 200) {
-    throw createError({ statusCode: 400, message: 'El nombre no puede exceder 200 caracteres' })
-  }
-  // Category validation: accept serviceRoleId OR legacy category enum
-  if (!body.serviceRoleId && (!body.category || !VALID_CATEGORIES.includes(body.category))) {
-    throw createError({ statusCode: 400, message: 'La categoria es requerida' })
-  }
-
-  // Validate optional fields
-  if (body.phone && body.phone.length > 50) {
-    throw createError({ statusCode: 400, message: 'El telefono no puede exceder 50 caracteres' })
-  }
-  if (body.address && body.address.length > 500) {
-    throw createError({ statusCode: 400, message: 'La direccion no puede exceder 500 caracteres' })
-  }
+  const body = await validateBody(event, createProviderSchema)
 
   const rows = await db
     .insert(providers)

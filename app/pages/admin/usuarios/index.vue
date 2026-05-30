@@ -12,8 +12,8 @@ import {
   Trash2,
 } from 'lucide-vue-next'
 import { toast } from 'vue-sonner'
-import { ROLE_LABELS, USER_ROLES, type UserRole } from '~~/shared/types/auth'
-import type { UserWithUnit } from '~~/shared/types/auth'
+import { USER_ROLES, ROLE_LABELS } from '~~/shared/types/auth'
+import type { UserWithUnit, UserRole } from '~~/shared/types/auth'
 
 useHead({ title: 'Usuarios' })
 
@@ -157,7 +157,7 @@ onMounted(() => {
 
 <template>
   <div>
-    <Teleport :to="target" defer v-if="isMounted">
+    <Teleport v-if="isMounted" :to="target" defer>
       <TopbarSearch v-model="searchQuery" placeholder="Buscar usuarios...">
         <TopbarFilters :active="selectedRole !== '' || sortBy !== 'role'" @clear="selectedRole = ''; sortBy = 'role'">
           <TopbarFilterGroup v-model="selectedRole" label="Rol" :options="roleOptions" />

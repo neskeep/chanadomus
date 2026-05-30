@@ -15,7 +15,7 @@ export function useAccessStream() {
     return `${wsProtocol.value}://${window.location.host}/_ws/access`
   })
 
-  const { status, data, send } = useWebSocket(wsUrl, {
+  const { status, data } = useWebSocket(wsUrl, {
     autoReconnect: {
       retries: -1,
       delay: 3000,

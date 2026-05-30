@@ -21,13 +21,15 @@ export default defineNuxtConfig({
 
   modules: [
     '@vueuse/nuxt',
+    '@nuxt/eslint',
   ],
 
   css: ['~/assets/css/main.css'],
 
   vite: {
     plugins: [
-      (await import('@tailwindcss/vite')).default(),
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (await import('@tailwindcss/vite')).default() as any,
     ],
     optimizeDeps: {
       include: [

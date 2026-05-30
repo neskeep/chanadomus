@@ -1,10 +1,16 @@
+import { z } from 'zod'
 import { db } from '~~/server/db'
 import { invitations } from '~~/server/db/schema/invitation'
-import { units } from '~~/server/db/schema/unit'
 import { user, account } from '~~/server/db/schema/auth'
 import { eq } from 'drizzle-orm'
 import { hashPassword } from 'better-auth/crypto'
-import type { RegisterPayload } from '~~/shared/types/invitation'
+
+const registerSchema = z.object({
+  name: z.string().min(1, 'El nombre es requerido'),
+  email: z.string().email('Email invalido').min(1, 'El email es requerido'),
+  password: z.string().min(8, 'La contrasena debe tener al menos 8 caracteres'),
+  phone: z.string().optional(),
+})
 
 export default defineEventHandler(async (event) => {
   const token = getRouterParam(event, 'token')
@@ -13,18 +19,7 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 400, message: 'Token de invitacion requerido' })
   }
 
-  const body = await readBody<RegisterPayload>(event)
-
-  // Validate payload
-  if (!body.name?.trim()) {
-    throw createError({ statusCode: 400, message: 'El nombre es requerido' })
-  }
-  if (!body.email?.trim()) {
-    throw createError({ statusCode: 400, message: 'El email es requerido' })
-  }
-  if (!body.password || body.password.length < 8) {
-    throw createError({ statusCode: 400, message: 'La contrasena debe tener al menos 8 caracteres' })
-  }
+  const body = await validateBody(event, registerSchema)
 
   // Look up invitation
   const [invitation] = await db

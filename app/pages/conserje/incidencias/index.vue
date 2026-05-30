@@ -100,7 +100,7 @@ const { formatDate } = useFormatDate()
     <!-- Error -->
     <ErrorAlert v-if="error" :message="error" class="mb-4" />
 
-    <Teleport :to="target" defer v-if="isMounted">
+    <Teleport v-if="isMounted" :to="target" defer>
       <div class="flex items-center gap-2">
         <TopbarSearch v-model="searchQuery" placeholder="Buscar incidencia...">
           <TopbarFilters :active="filterStatus !== '' || filterPriority !== ''" @clear="filterStatus = ''; filterPriority = ''">

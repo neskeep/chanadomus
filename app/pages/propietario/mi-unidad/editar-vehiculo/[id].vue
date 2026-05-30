@@ -324,7 +324,7 @@ onMounted(() => loadVehicle())
                 :src="qrImageUrl"
                 alt="QR de acceso del vehiculo"
                 class="size-48 rounded-lg md:size-56"
-              />
+              >
 
               <Separator class="my-3 w-full" />
 

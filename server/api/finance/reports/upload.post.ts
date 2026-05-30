@@ -86,6 +86,8 @@ export default defineEventHandler(async (event) => {
     })
     .returning()
 
+  if (!row) throw createError({ statusCode: 500, message: 'Error al crear reporte' })
+
   const report: FinancialReport = {
     id: row.id,
     title: row.title,

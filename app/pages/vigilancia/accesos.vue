@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Shield, CheckCircle2, XCircle, AlertTriangle, QrCode, UserPlus, Wifi, LogOut } from 'lucide-vue-next'
+import { Shield, QrCode, UserPlus, Wifi, LogOut } from 'lucide-vue-next'
 import type { AccessResult, EntryType } from '~~/shared/types/access'
 
 useHead({ title: 'Registro de Accesos' })

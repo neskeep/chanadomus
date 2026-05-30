@@ -5,12 +5,11 @@ import { unitServiceStaff } from '~~/server/db/schema/unit-service-staff'
 import { eq, and, desc, inArray } from 'drizzle-orm'
 
 export default defineEventHandler(async (event) => {
-  const session = await requireAuth(event)
-  const user = session.user as Record<string, unknown>
-  const tenantId = user.tenantId as string | undefined
-  const unitId = user.unitId as string | undefined
+  const session = await requireTenant(event)
+  const { tenantId } = session
+  const unitId = (session.user as Record<string, unknown>).unitId as string | undefined
 
-  if (!tenantId || !unitId) {
+  if (!unitId) {
     throw createError({ statusCode: 403, message: 'Sin unidad asignada' })
   }
 

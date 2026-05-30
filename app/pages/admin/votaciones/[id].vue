@@ -3,7 +3,6 @@ import { Loader2, CalendarIcon } from 'lucide-vue-next'
 import { CalendarDate } from '@internationalized/date'
 import type { DateValue } from 'reka-ui'
 import { toast } from 'vue-sonner'
-import type { PollStatus } from '~~/shared/types/poll'
 
 const route = useRoute()
 const router = useRouter()

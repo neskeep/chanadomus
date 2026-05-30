@@ -1,6 +1,10 @@
 <script setup lang="ts">
 definePageMeta({ layout: false })
 useHead({ title: 'Sin conexión — ChanaDomus' })
+
+function reload() {
+  window.location.reload()
+}
 </script>
 
 <template>
@@ -23,7 +27,7 @@ useHead({ title: 'Sin conexión — ChanaDomus' })
       </p>
       <button
         class="mt-4 inline-flex items-center justify-center rounded-lg bg-primary px-6 py-3 text-base font-medium text-primary-foreground"
-        @click="() => location.reload()"
+        @click="reload"
       >
         Reintentar
       </button>

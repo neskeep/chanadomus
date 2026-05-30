@@ -2,7 +2,7 @@ import { db } from '~~/server/db'
 import { incidents } from '~~/server/db/schema/incident'
 import { units } from '~~/server/db/schema/unit'
 import { user } from '~~/server/db/schema/auth'
-import { eq, and, sql, desc, count } from 'drizzle-orm'
+import { eq, and, desc, count } from 'drizzle-orm'
 import type { Incident, IncidentStatus, IncidentPriority } from '~~/shared/types/incident'
 
 const VALID_STATUSES: IncidentStatus[] = ['open', 'in_progress', 'resolved', 'closed']

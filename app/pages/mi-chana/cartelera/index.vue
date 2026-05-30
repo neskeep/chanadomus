@@ -13,7 +13,7 @@ useHead({ title: 'Cartelera' })
 
 const { target, isMounted } = useTopbarPortal()
 const { formatDate } = useFormatDate()
-const { announcements, meta, isLoading, error, totalPages, fetchAnnouncements } = useAnnouncements()
+const { announcements, isLoading, error, totalPages, fetchAnnouncements } = useAnnouncements()
 
 const currentPage = ref(1)
 const activeCategory = ref<AnnouncementCategory | ''>('')
@@ -77,7 +77,7 @@ function isNew(publishedAt: string | null): boolean {
 <template>
   <div>
     <!-- Topbar actions -->
-    <Teleport :to="target" defer v-if="isMounted">
+    <Teleport v-if="isMounted" :to="target" defer>
       <TopbarFilters :active="activeCategory !== ''" @clear="activeCategory = ''">
         <TopbarFilterGroup v-model="activeCategory" label="Categoria" :options="categoryOptions" />
       </TopbarFilters>

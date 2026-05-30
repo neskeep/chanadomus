@@ -8,8 +8,8 @@ import type { VehiclePass, VehiclePassType } from '~~/shared/types/vehicle-pass'
 const VALID_TYPES: VehiclePassType[] = ['resident', 'guest', 'temporary']
 
 export default defineEventHandler(async (event) => {
-  const session = await requireRole(event, ['admin', 'vigilancia', 'conserje'])
-  const tenantId = (session.user as Record<string, unknown>).tenantId as string
+  await requireRole(event, ['admin', 'vigilancia', 'conserje'])
+  const { tenantId } = await requireTenant(event)
 
   const query = getQuery(event)
   const vehicleId = query.vehicleId as string | undefined

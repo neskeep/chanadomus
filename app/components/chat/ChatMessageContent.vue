@@ -54,15 +54,15 @@ const segments = computed((): Segment[] => {
       result.push({
         type: 'command',
         commandType: match[1] as ChatCommandType,
-        id: match[2],
-        label: match[3],
+        id: match[2]!,
+        label: match[3]!,
       })
     } else if (match[4] !== undefined) {
       // Mention: @[Name](userId)
       result.push({
         type: 'mention',
-        name: match[4],
-        userId: match[5],
+        name: match[4]!,
+        userId: match[5]!,
       })
     }
 
