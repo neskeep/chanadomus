@@ -89,7 +89,7 @@ function createQr(visitor: FrequentVisitor) {
 <template>
   <div>
     <!-- Topbar actions (desktop) -->
-    <Teleport :to="target" defer v-if="isMounted">
+    <Teleport v-if="isMounted" :to="target" defer>
       <Button size="sm" @click="navigateTo('/propietario/visitantes-frecuentes/nuevo')">
         <Plus class="mr-1.5 size-3.5" />
         Agregar

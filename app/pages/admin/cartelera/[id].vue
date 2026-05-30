@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Loader2, Paperclip, CalendarIcon } from 'lucide-vue-next'
+import { Loader2, CalendarIcon } from 'lucide-vue-next'
 import { CalendarDate } from '@internationalized/date'
 import type { DateValue } from 'reka-ui'
 import { toast } from 'vue-sonner'

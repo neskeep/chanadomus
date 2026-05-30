@@ -19,7 +19,6 @@ const { formatDate } = useFormatDate()
 
 const {
   polls,
-  meta,
   isLoading,
   error,
   totalPages,
@@ -137,7 +136,7 @@ function participationText(poll: Poll): string {
 <template>
   <div>
     <!-- Topbar actions -->
-    <Teleport :to="target" defer v-if="isMounted">
+    <Teleport v-if="isMounted" :to="target" defer>
       <TopbarSearch v-model="searchQuery" placeholder="Buscar votacion...">
         <TopbarFilters :active="filterStatus !== ''" @clear="filterStatus = ''">
           <TopbarFilterGroup v-model="filterStatus" label="Estado" :options="statusOptions" />

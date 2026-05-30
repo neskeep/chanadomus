@@ -7,12 +7,8 @@ import { eq, desc, and } from 'drizzle-orm'
 import { alias } from 'drizzle-orm/pg-core'
 
 export default defineEventHandler(async (event) => {
-  const session = await requireRole(event, ['admin', 'vigilancia'])
-  const tenantId = (session.user as Record<string, unknown>).tenantId as string | undefined
-
-  if (!tenantId) {
-    throw createError({ statusCode: 403, message: 'Usuario sin tenant asignado' })
-  }
+  await requireRole(event, ['admin', 'vigilancia'])
+  const { tenantId } = await requireTenant(event)
 
   const resolver = alias(user, 'resolver')
 

@@ -114,7 +114,8 @@ const quickActions = [
     </div>
     <Card class="sm:hidden">
       <CardContent class="flex items-center divide-x p-0">
-        <div v-for="(stat, idx) in [
+        <div
+v-for="(stat, idx) in [
           { label: 'Incidencias', value: stats?.myOpenIncidents ?? 0, icon: AlertTriangle, bg: ICON_BG.warning },
           { label: 'Votaciones', value: stats?.activePolls ?? 0, icon: Vote, bg: ICON_BG.purple },
           { label: 'Visitas', value: stats?.myActiveVisits ?? 0, icon: Users, bg: ICON_BG.info },

@@ -26,7 +26,7 @@ async function fetchUnit() {
     const res = await $fetch<{ data: { id: string, number: string, label: string | null }[] }>('/api/units')
     unit.value = res.data.find(u => u.id === unitId) ?? null
   }
-  catch {}
+  catch { /* ignore */ }
 }
 
 // Breadcrumb

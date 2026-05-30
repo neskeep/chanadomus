@@ -59,7 +59,7 @@ onMounted(() => {
 
 <template>
   <div>
-    <Teleport :to="target" defer v-if="isMounted">
+    <Teleport v-if="isMounted" :to="target" defer>
       <TopbarSearch v-model="searchQuery" placeholder="Buscar unidad..." />
     </Teleport>
 

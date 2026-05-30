@@ -9,6 +9,10 @@ import {
 import type { Meeting, MeetingType, MeetingStatus } from '~~/shared/types/meeting'
 import { MEETING_TYPES, MEETING_STATUSES } from '~~/shared/types/meeting'
 
+// --- Type / Status helpers ---
+
+import { MEETING_TYPE_COLORS as TYPE_COLORS, MEETING_STATUS_COLORS as STATUS_COLORS } from '~/composables/useColorMap'
+
 useHead({ title: 'Reuniones' })
 
 const { meetings, isLoading, error, fetchMeetings } = useMeetings()
@@ -29,10 +33,6 @@ function formatTime(iso: string): string {
 
 const { formatMonthYear } = useFormatDate()
 
-// --- Type / Status helpers ---
-
-import { MEETING_TYPE_COLORS as TYPE_COLORS, MEETING_STATUS_COLORS as STATUS_COLORS } from '~/composables/useColorMap'
-
 function typeLabel(key: MeetingType): string {
   return MEETING_TYPES.find(t => t.key === key)?.label ?? key
 }
@@ -52,7 +52,7 @@ const groupedMeetings = computed(() => {
       currentLabel = label
       groups.push({ label, meetings: [] })
     }
-    groups[groups.length - 1].meetings.push(m)
+    groups[groups.length - 1]!.meetings.push(m)
   }
   return groups
 })

@@ -1,5 +1,3 @@
-import type { ResidentPass } from '~~/shared/types/resident-pass'
-
 interface ResidentPassResponse {
   id: string
   token: string

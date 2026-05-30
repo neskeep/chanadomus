@@ -3,8 +3,8 @@ import { vehicles } from '~~/server/db/schema/vehicle'
 import { eq, and } from 'drizzle-orm'
 
 export default defineEventHandler(async (event) => {
-  const session = await requireAuth(event)
-  const tenantId = (session.user as Record<string, unknown>).tenantId as string
+  const session = await requireTenant(event)
+  const { tenantId } = session
   const unitId = (session.user as Record<string, unknown>).unitId as string
 
   if (!unitId) {

@@ -126,7 +126,7 @@ export default defineEventHandler(async (event) => {
 
   // Get user vote if user has a unitId
   const userUnitId = (session.user as Record<string, unknown>).unitId as string | undefined
-  let userVotesMap = new Map<string, PollVote>()
+  const userVotesMap = new Map<string, PollVote>()
 
   if (userUnitId) {
     const userVotes = await db

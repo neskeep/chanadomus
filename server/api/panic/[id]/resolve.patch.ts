@@ -5,11 +5,7 @@ import { broadcastPanicDismiss } from '~~/server/utils/ws-panic'
 
 export default defineEventHandler(async (event) => {
   const session = await requireRole(event, ['admin', 'vigilancia'])
-  const tenantId = (session.user as Record<string, unknown>).tenantId as string | undefined
-
-  if (!tenantId) {
-    throw createError({ statusCode: 403, message: 'Usuario sin tenant asignado' })
-  }
+  const { tenantId } = await requireTenant(event)
 
   const id = getRouterParam(event, 'id')
 

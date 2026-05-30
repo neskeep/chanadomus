@@ -3,12 +3,12 @@ import { vehiclePasses } from '~~/server/db/schema/vehicle-pass'
 import { vehicles } from '~~/server/db/schema/vehicle'
 import { units } from '~~/server/db/schema/unit'
 import { user } from '~~/server/db/schema/auth'
-import { eq, and, sql } from 'drizzle-orm'
+import { eq, and } from 'drizzle-orm'
 import type { VehiclePass } from '~~/shared/types/vehicle-pass'
 
 export default defineEventHandler(async (event) => {
-  const session = await requireRole(event, ['admin', 'vigilancia', 'conserje'])
-  const tenantId = (session.user as Record<string, unknown>).tenantId as string
+  await requireRole(event, ['admin', 'vigilancia', 'conserje'])
+  const { tenantId } = await requireTenant(event)
   const id = getRouterParam(event, 'id')
 
   if (!id) {

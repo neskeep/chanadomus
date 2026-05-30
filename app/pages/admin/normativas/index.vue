@@ -52,7 +52,7 @@ onMounted(() => {
 <template>
   <div>
     <!-- Topbar actions -->
-    <Teleport :to="target" defer v-if="isMounted">
+    <Teleport v-if="isMounted" :to="target" defer>
       <NuxtLink to="/admin/normativas/subir">
         <Button size="sm">
           <Plus class="mr-1.5 size-3.5" />

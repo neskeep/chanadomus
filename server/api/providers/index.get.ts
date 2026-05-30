@@ -96,7 +96,7 @@ export default defineEventHandler(async (event) => {
 
   // Get average ratings and review counts for these providers
   const providerIds = rows.map(r => r.id)
-  let ratingsMap = new Map<string, { avg: number; count: number }>()
+  const ratingsMap = new Map<string, { avg: number; count: number }>()
 
   if (providerIds.length > 0) {
     const ratingRows = await db

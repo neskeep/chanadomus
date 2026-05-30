@@ -140,7 +140,7 @@ async function handleSubmit() {
                   accept="application/pdf"
                   class="hidden"
                   @change="handlePdfSelect"
-                />
+                >
                 <span v-if="formPdfFile" class="truncate text-sm text-muted-foreground">
                   {{ formPdfFile.name }}
                 </span>

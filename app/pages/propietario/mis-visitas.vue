@@ -100,7 +100,7 @@ const statusConfig: Record<QrStatus, { label: string; variant: 'default' | 'seco
 <template>
   <div>
     <!-- Topbar actions (desktop) -->
-    <Teleport :to="target" defer v-if="isMounted">
+    <Teleport v-if="isMounted" :to="target" defer>
       <TopbarFilters :active="activeFilter !== ''" @clear="activeFilter = ''">
         <TopbarFilterGroup v-model="activeFilter" label="Estado" :options="filterOptions" />
       </TopbarFilters>
@@ -188,7 +188,7 @@ const statusConfig: Record<QrStatus, { label: string; variant: 'default' | 'seco
               :src="expandedQrUrl"
               alt="Codigo QR de acceso"
               class="size-48 rounded-lg"
-            />
+            >
             <Button variant="outline" @click.stop="handleShare(code.token)">
               <Share2 class="size-4" />
               Compartir

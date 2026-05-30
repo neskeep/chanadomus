@@ -13,7 +13,18 @@
     "db:migrate": "drizzle-kit migrate",
     "db:migrate:prod": "MIGRATIONS_DIR=./server/db/migrations node scripts/migrate.mjs",
     "db:seed": "npx tsx --env-file=.env server/db/seed.ts",
-    "db:backfill-passes": "npx tsx --env-file=.env server/db/backfill-passes.ts"
+    "db:backfill-passes": "npx tsx --env-file=.env server/db/backfill-passes.ts",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "typecheck": "nuxt typecheck",
+    "test": "vitest",
+    "test:ci": "vitest run",
+    "prepare": "husky"
+  },
+  "lint-staged": {
+    "*.{ts,vue}": [
+      "eslint --fix"
+    ]
   },
   "dependencies": {
     "@internationalized/date": "^3.12.1",
@@ -26,6 +37,7 @@
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "drizzle-orm": "^0.45.2",
+    "drizzle-zod": "^0.8.3",
     "jspdf": "^4.2.1",
     "jspdf-autotable": "^5.0.7",
     "jsqr": "^1.4.0",
@@ -55,9 +67,16 @@
     ]
   },
   "devDependencies": {
+    "@nuxt/eslint": "^1.15.2",
+    "@nuxt/test-utils": "^4.0.3",
     "@types/node": "^25.6.0",
     "@types/qrcode": "^1.5.6",
     "@types/web-push": "^3.6.4",
-    "drizzle-kit": "^0.31.10"
+    "drizzle-kit": "^0.31.10",
+    "eslint": "^10.4.0",
+    "happy-dom": "^20.9.0",
+    "husky": "^9.1.7",
+    "lint-staged": "^17.0.5",
+    "vitest": "^4.1.7"
   }
 }

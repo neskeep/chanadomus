@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { FileTextIcon, SearchIcon } from 'lucide-vue-next'
 
-const { query, results, isOpen, closeSearch, selectResult } = useDocsSearch()
+const { query, results, isOpen, selectResult } = useDocsSearch()
 
 const inputRef = ref<HTMLInputElement>()
 

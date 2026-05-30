@@ -100,7 +100,7 @@ const groupedOptions = computed<UnitGroup[]>(() => {
   for (const k of known) {
     const items = groups.get(k)
     if (items?.length) {
-      result.push({ key: k, label: groupOrder[k], units: sortUnits(items) })
+      result.push({ key: k, label: groupOrder[k]!, units: sortUnits(items) })
       groups.delete(k)
     }
   }
@@ -167,12 +167,12 @@ function close() {
         <div class="flex items-center gap-2 border-b px-3 py-2.5">
           <Search class="size-4 shrink-0 text-muted-foreground" />
           <input
-            data-unit-search
             v-model="search"
+            data-unit-search
             placeholder="Buscar unidad..."
             class="w-full bg-transparent text-sm outline-none placeholder:text-muted-foreground"
             @keydown.escape="close"
-          />
+          >
         </div>
 
         <!-- List -->

@@ -143,14 +143,14 @@ export default defineEventHandler(async (event): Promise<{ data: ChatCommandResu
 
     case 'normativa': {
       const rows = await db
-        .select({ id: regulations.id, title: regulations.title, category: regulations.category })
+        .select({ id: regulations.id, title: regulations.title })
         .from(regulations)
         .where(and(eq(regulations.tenantId, tenantId), ilike(regulations.title, searchPattern)))
         .orderBy(desc(regulations.createdAt))
         .limit(LIMIT)
 
       return {
-        data: rows.map((r) => ({ id: r.id, label: r.title, sublabel: r.category, type })),
+        data: rows.map((r) => ({ id: r.id, label: r.title, sublabel: undefined, type })),
       }
     }
   }

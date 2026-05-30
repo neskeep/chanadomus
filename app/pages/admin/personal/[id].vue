@@ -8,7 +8,7 @@ const route = useRoute()
 const router = useRouter()
 const staffId = route.params.id as string
 
-const { staffList, isLoading, isSubmitting, error, fetchStaff, updateStaffMember, uploadAvatar, generateQr, getQrToken, roleOptions, fetchRoles } = useStaff()
+const { staffList, isLoading, isSubmitting, error, fetchStaff, updateStaffMember, uploadAvatar, generateQr, roleOptions, fetchRoles } = useStaff()
 
 // Breadcrumb
 const pageOverride = computed(() => ({
@@ -249,7 +249,7 @@ onMounted(async () => {
                 accept="image/jpeg,image/png,image/webp"
                 class="hidden"
                 @change="handleAvatarChange"
-              />
+              >
 
               <!-- Name + role -->
               <div class="min-w-0 flex-1">
@@ -377,7 +377,7 @@ onMounted(async () => {
                 :src="qrDataUrl"
                 alt="QR de acceso del personal"
                 class="size-48 rounded-lg md:size-56"
-              />
+              >
               <Skeleton v-else class="size-48 rounded-lg md:size-56" />
 
               <Separator class="my-3 w-full" />

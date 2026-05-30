@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { SwitchCamera, CheckCircle2, XCircle, AlertTriangle, Camera, ScanLine, User, Home, Clock, RotateCcw, Car, HardHat, LogIn, LogOut } from 'lucide-vue-next'
+import { SwitchCamera, CheckCircle2, XCircle, AlertTriangle, Camera, User, Home, Clock, RotateCcw, Car, HardHat, LogIn, LogOut } from 'lucide-vue-next'
 import type { ValidationStatus } from '~~/shared/types/qr'
 import { VALIDATION_STATUS_COLORS, VALIDATION_STATUS_LABELS, ACCESS_DIRECTION_COLORS, ACCESS_DIRECTION_LABELS } from '~/composables/useColorMap'
 
@@ -17,7 +17,6 @@ const {
   startScanning,
   stopScanning,
   toggleCamera,
-  resetScan,
   resetToSelection,
 } = useQrScanner()
 
@@ -53,7 +52,7 @@ const resolvedConfig = computed(() => {
 
 <template>
   <div class="-mx-4 -my-6 lg:-mx-6 flex h-[calc(100dvh-3rem-4.5rem)] md:h-[calc(100dvh-3.5rem)] flex-col overflow-hidden bg-black">
-    <Teleport :to="target" defer v-if="isMounted && selectedDirection">
+    <Teleport v-if="isMounted && selectedDirection" :to="target" defer>
       <Button variant="ghost" size="sm" @click="toggleCamera">
         <SwitchCamera class="mr-1 size-4" />
         Cámara

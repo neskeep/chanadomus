@@ -15,7 +15,7 @@ defineProps<{
       v-model="model"
       :placeholder="placeholder ?? 'Buscar...'"
       class="w-full bg-transparent px-2 text-sm outline-none placeholder:text-muted-foreground md:w-[130px] lg:w-[180px]"
-    />
+    >
     <slot />
   </div>
 </template>

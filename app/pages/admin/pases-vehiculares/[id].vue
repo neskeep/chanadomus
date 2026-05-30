@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Car, Download, Loader2, ScanLine, ShieldOff, ShieldCheck } from 'lucide-vue-next'
+import { Car, Download, Loader2, ScanLine, ShieldOff } from 'lucide-vue-next'
 import { toast } from 'vue-sonner'
 import QRCode from 'qrcode'
 import type { VehiclePass } from '~~/shared/types/vehicle-pass'
@@ -265,7 +265,7 @@ onMounted(() => {
               :src="qrDataUrl"
               alt="QR del pase vehicular"
               class="size-48 rounded-lg md:size-56"
-            />
+            >
             <Skeleton v-else class="size-48 rounded-lg md:size-56" />
 
             <Separator class="my-3 w-full" />

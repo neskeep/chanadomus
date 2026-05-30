@@ -94,7 +94,7 @@ async function handleSubmit() {
                 v-model="formServiceRoleId"
                 :roles="serviceRoles"
                 required
-                @create="(r) => serviceRoles.push(r)"
+                @create="(r: { id: string; name: string }) => serviceRoles.push({ ...r, description: null, isActive: true, displayOrder: 0 })"
               />
             </div>
           </div>

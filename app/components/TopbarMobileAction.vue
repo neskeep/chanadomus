@@ -8,7 +8,7 @@ const { mobileTarget, isMounted } = useTopbarPortal()
 </script>
 
 <template>
-  <Teleport :to="mobileTarget" v-if="isMounted">
+  <Teleport v-if="isMounted" :to="mobileTarget">
     <slot />
   </Teleport>
 </template>

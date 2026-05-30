@@ -3,8 +3,8 @@ import { units } from '~~/server/db/schema/unit'
 import { eq, and } from 'drizzle-orm'
 
 export default defineEventHandler(async (event) => {
-  const session = await requireRole(event, ['admin'])
-  const tenantId = (session.user as Record<string, unknown>).tenantId as string
+  await requireRole(event, ['admin'])
+  const { tenantId } = await requireTenant(event)
 
   const id = getRouterParam(event, 'id')
   if (!id) {

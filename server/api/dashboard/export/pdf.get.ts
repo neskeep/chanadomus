@@ -1,8 +1,6 @@
 import { jsPDF } from 'jspdf'
 import autoTable from 'jspdf-autotable'
 import { db } from '~~/server/db'
-import { financialRecords } from '~~/server/db/schema/financial'
-import { units } from '~~/server/db/schema/unit'
 import { incidents } from '~~/server/db/schema/incident'
 import { polls } from '~~/server/db/schema/poll'
 import { meetings } from '~~/server/db/schema/meeting'

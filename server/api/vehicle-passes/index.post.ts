@@ -7,7 +7,7 @@ import type { CreateVehiclePassInput } from '~~/shared/types/vehicle-pass'
 
 export default defineEventHandler(async (event) => {
   const session = await requireRole(event, ['admin'])
-  const tenantId = (session.user as Record<string, unknown>).tenantId as string
+  const { tenantId } = await requireTenant(event)
 
   const body = await readBody<CreateVehiclePassInput>(event)
 

@@ -304,7 +304,7 @@ const { formatDateTime } = useFormatDate()
             :src="qrDataUrl"
             alt="Pase de acceso"
             class="size-64 rounded-lg"
-          />
+          >
 
           <Separator />
 

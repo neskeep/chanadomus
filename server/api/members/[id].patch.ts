@@ -5,8 +5,8 @@ import { eq, and } from 'drizzle-orm'
 const VALID_RELATIONSHIPS = ['owner', 'spouse', 'child', 'tenant', 'other'] as const
 
 export default defineEventHandler(async (event) => {
-  const session = await requireRole(event, ['admin'])
-  const tenantId = (session.user as Record<string, unknown>).tenantId as string
+  await requireRole(event, ['admin'])
+  const { tenantId } = await requireTenant(event)
 
   const memberId = getRouterParam(event, 'id')
   if (!memberId) {

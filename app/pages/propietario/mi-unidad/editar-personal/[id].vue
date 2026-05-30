@@ -387,7 +387,7 @@ onMounted(() => loadData())
                 :src="qrDataUrl"
                 alt="QR de acceso"
                 class="size-48 rounded-lg md:size-56"
-              />
+              >
 
               <Separator class="my-3 w-full" />
 

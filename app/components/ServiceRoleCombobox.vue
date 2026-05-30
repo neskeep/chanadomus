@@ -147,13 +147,13 @@ async function handleCreate() {
         <div class="flex items-center gap-2 border-b px-3 py-2.5">
           <Search class="size-4 shrink-0 text-muted-foreground" />
           <input
-            data-role-search
             v-model="search"
+            data-role-search
             placeholder="Buscar o crear categoría..."
             class="w-full bg-transparent text-sm outline-none placeholder:text-muted-foreground"
             @keydown.escape="close"
             @keydown.enter="canCreate ? handleCreate() : undefined"
-          />
+          >
         </div>
 
         <!-- List -->

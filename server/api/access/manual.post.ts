@@ -18,11 +18,7 @@ interface ManualEntryBody {
 export default defineEventHandler(async (event) => {
   // 1. Auth: only conserje and admin
   const session = await requireRole(event, ['conserje', 'vigilancia', 'admin'])
-  const tenantId = (session.user as Record<string, unknown>).tenantId as string | undefined
-
-  if (!tenantId) {
-    throw createError({ statusCode: 403, message: 'Usuario sin tenant asignado' })
-  }
+  const { tenantId } = await requireTenant(event)
 
   // 2. Parse and validate body
   const body = await readBody<ManualEntryBody>(event)

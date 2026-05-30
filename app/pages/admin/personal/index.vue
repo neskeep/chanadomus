@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Plus, Pencil, Trash2, Users, Phone, Clock, Loader2, QrCode, Share2, Ban, Home, Download } from 'lucide-vue-next'
+import { Plus, Pencil, Trash2, Users, Phone, Clock, Loader2, QrCode, Share2, Home, Download } from 'lucide-vue-next'
 import { toast } from 'vue-sonner'
 import QRCode from 'qrcode'
 import type { Staff } from '~~/shared/types/staff'
@@ -164,7 +164,7 @@ onMounted(() => {
 
 <template>
   <div>
-    <Teleport :to="target" defer v-if="isMounted">
+    <Teleport v-if="isMounted" :to="target" defer>
       <TopbarSearch v-model="searchQuery" placeholder="Buscar personal...">
         <TopbarFilters :active="selectedRole !== ''" @clear="selectedRole = ''">
           <TopbarFilterGroup v-model="selectedRole" label="Rol" :options="filterRoleOptions" />
@@ -398,7 +398,7 @@ onMounted(() => {
             :src="qrImageUrl"
             :alt="`QR de acceso para ${qrStaff?.name}`"
             class="size-[280px] rounded-lg"
-          />
+          >
 
           <p class="text-center text-[11px] text-muted-foreground">
             Este pase permite acceso recurrente. El vigilante lo escanea cada vez que ingresa.

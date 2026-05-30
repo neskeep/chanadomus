@@ -34,7 +34,8 @@ function handleToggle(category: PushCategory, enabled: boolean) {
     <Card class="p-4">
       <div class="flex items-center justify-between gap-4">
         <div class="flex items-center gap-3">
-          <div :class="[
+          <div
+:class="[
             'flex size-8 items-center justify-center rounded-md',
             isSubscribed ? 'bg-primary/10 text-primary' : 'bg-muted text-muted-foreground',
           ]">

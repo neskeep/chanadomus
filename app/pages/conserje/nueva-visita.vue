@@ -310,7 +310,7 @@ function handleReset() {
               :src="qrDataUrl"
               alt="Pase de acceso"
               class="size-64 rounded-lg"
-            />
+            >
 
             <Separator />
 

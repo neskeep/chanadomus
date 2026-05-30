@@ -15,7 +15,6 @@ const { target, isMounted } = useTopbarPortal()
 const { role } = useAuth()
 const {
   providers,
-  meta,
   isLoading,
   error,
   totalPages,

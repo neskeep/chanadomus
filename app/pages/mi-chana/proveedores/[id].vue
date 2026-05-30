@@ -9,8 +9,10 @@ import {
   Loader2,
 } from 'lucide-vue-next'
 import { toast } from 'vue-sonner'
-import type { Provider, ProviderCategory, ProviderReview, UpdateProvider } from '~~/shared/types/provider'
+import type { Provider, ProviderCategory, UpdateProvider } from '~~/shared/types/provider'
 import { PROVIDER_CATEGORIES } from '~~/shared/types/provider'
+
+import { PROVIDER_CATEGORY_COLORS as CATEGORY_COLORS, PROVIDER_STATUS_COLORS, PROVIDER_STATUS_LABELS } from '~/composables/useColorMap'
 
 definePageMeta({ layout: 'default' })
 
@@ -64,8 +66,6 @@ const reviewOpen = ref(false)
 const reviewRating = ref(0)
 const reviewHover = ref(0)
 const reviewComment = ref('')
-
-import { PROVIDER_CATEGORY_COLORS as CATEGORY_COLORS, PROVIDER_STATUS_COLORS, PROVIDER_STATUS_LABELS } from '~/composables/useColorMap'
 
 const CATEGORY_LABELS: Record<ProviderCategory, string> = {
   plomeria: 'Plomeria',
@@ -176,7 +176,7 @@ const canSubmitReview = computed(() =>
 async function handleReview() {
   if (!canSubmitReview.value) return
   try {
-    const review = await submitReview(providerId.value, {
+    await submitReview(providerId.value, {
       rating: reviewRating.value,
       comment: reviewComment.value.trim() || undefined,
     })
@@ -193,7 +193,7 @@ async function handleReview() {
 
 <template>
   <div>
-    <Teleport :to="target" defer v-if="isMounted">
+    <Teleport v-if="isMounted" :to="target" defer>
       <template v-if="canManage && provider">
         <Button variant="outline" size="sm" @click="openEditDialog">
           <Pencil class="mr-1.5 size-3.5" />

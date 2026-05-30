@@ -1,9 +1,19 @@
+import { z } from 'zod'
 import { db } from '~~/server/db'
 import { meetings } from '~~/server/db/schema/meeting'
 import { sendPushToAll } from '~~/server/utils/web-push'
-import type { Meeting, MeetingType, CreateMeeting } from '~~/shared/types/meeting'
+import type { Meeting, MeetingType } from '~~/shared/types/meeting'
 
-const VALID_TYPES: MeetingType[] = ['ordinaria', 'extraordinaria', 'comite', 'informativa']
+const createMeetingSchema = z.object({
+  title: z.string().min(1, 'El titulo es requerido').max(200, 'El titulo no puede exceder 200 caracteres'),
+  description: z.string().optional().nullable(),
+  date: z.string().min(1, 'La fecha es requerida').refine((v) => !isNaN(new Date(v).getTime()), 'Fecha invalida'),
+  endDate: z.string().refine((v) => !isNaN(new Date(v).getTime()), 'Fecha de fin invalida').optional().nullable(),
+  location: z.string().optional().nullable(),
+  meetingLink: z.string().optional().nullable(),
+  type: z.enum(['ordinaria', 'extraordinaria', 'comite', 'informativa'], { message: 'El tipo de reunion es requerido y debe ser valido' }),
+  agenda: z.string().optional().nullable(),
+})
 
 function mapMeeting(row: Record<string, unknown>): Meeting {
   return {
@@ -29,41 +39,18 @@ export default defineEventHandler(async (event) => {
   const session = await requireTenant(event)
   await requireRole(event, ['admin'])
 
-  const body = await readBody<CreateMeeting>(event)
-
-  // Validate required fields
-  if (!body.title || !body.title.trim()) {
-    throw createError({ statusCode: 400, message: 'El titulo es requerido' })
-  }
-  if (body.title.trim().length > 200) {
-    throw createError({ statusCode: 400, message: 'El titulo no puede exceder 200 caracteres' })
-  }
-  if (!body.date) {
-    throw createError({ statusCode: 400, message: 'La fecha es requerida' })
-  }
+  const body = await validateBody(event, createMeetingSchema)
 
   const meetingDate = new Date(body.date)
-  if (isNaN(meetingDate.getTime())) {
-    throw createError({ statusCode: 400, message: 'Fecha invalida' })
-  }
   if (meetingDate <= new Date()) {
     throw createError({ statusCode: 400, message: 'La fecha debe ser futura' })
   }
 
-  if (!body.type || !VALID_TYPES.includes(body.type)) {
-    throw createError({ statusCode: 400, message: 'El tipo de reunion es requerido y debe ser valido' })
-  }
-
-  // Validate optional endDate
   let endDate: Date | null = null
   if (body.endDate) {
     endDate = new Date(body.endDate)
-    if (isNaN(endDate.getTime())) {
-      throw createError({ statusCode: 400, message: 'Fecha de fin invalida' })
-    }
   }
 
-  // Validate meetingLink if provided
   const meetingLink = body.meetingLink?.trim() || null
 
   const rows = await db

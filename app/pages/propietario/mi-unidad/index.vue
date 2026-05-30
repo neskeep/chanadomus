@@ -150,7 +150,7 @@ const addRoutes: Record<string, string> = {
   staff: '/propietario/mi-unidad/crear-personal',
 }
 function handleAddAction() {
-  router.push(addRoutes[activeTab.value])
+  router.push(addRoutes[activeTab.value]!)
 }
 
 // ---- Navigation to edit pages ----
@@ -732,7 +732,7 @@ onMounted(() => fetchAll())
             :src="qrImageUrl"
             :alt="`QR de acceso para ${qrTarget?.name}`"
             class="size-[280px] rounded-lg"
-          />
+          >
           <p class="text-center text-[11px] text-muted-foreground">
             Este pase permite acceso recurrente. El vigilante lo escanea cada vez que ingresa.
           </p>

@@ -133,7 +133,7 @@ onMounted(async () => {
             :src="qrDataUrl"
             alt="Código QR de acceso"
             class="size-56 rounded-lg"
-          />
+          >
 
           <!-- Pass info -->
           <div class="w-full space-y-2 text-center">

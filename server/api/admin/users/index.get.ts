@@ -6,8 +6,8 @@ import { eq, and, or, ilike, asc, sql } from 'drizzle-orm'
 import { USER_ROLES, type UserRole } from '~~/shared/types/auth'
 
 export default defineEventHandler(async (event) => {
-  const session = await requireRole(event, ['admin'])
-  const tenantId = (session.user as Record<string, unknown>).tenantId as string
+  await requireRole(event, ['admin'])
+  const { tenantId } = await requireTenant(event)
 
   const query = getQuery(event)
   const role = query.role as string | undefined

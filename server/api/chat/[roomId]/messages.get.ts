@@ -61,7 +61,7 @@ export default defineEventHandler(async (event) => {
 
   // Fetch attachments for all messages in one query
   const messageIds = result.map(r => r.id)
-  let attachmentMap: Record<string, ChatAttachment[]> = {}
+  const attachmentMap: Record<string, ChatAttachment[]> = {}
 
   if (messageIds.length > 0) {
     const attachmentRows = await db
@@ -71,7 +71,7 @@ export default defineEventHandler(async (event) => {
 
     for (const a of attachmentRows) {
       if (!attachmentMap[a.messageId]) attachmentMap[a.messageId] = []
-      attachmentMap[a.messageId].push({
+      attachmentMap[a.messageId]!.push({
         id: a.id,
         filePath: a.filePath,
         width: a.width,

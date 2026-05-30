@@ -5,8 +5,8 @@ import { serviceStaffRoles } from '~~/server/db/schema/service-staff-role'
 import { eq, and, asc } from 'drizzle-orm'
 
 export default defineEventHandler(async (event) => {
-  const session = await requireRole(event, ['admin'])
-  const tenantId = (session.user as Record<string, unknown>).tenantId as string
+  await requireRole(event, ['admin'])
+  const { tenantId } = await requireTenant(event)
 
   const query = getQuery(event)
   const roleId = query.roleId as string | undefined

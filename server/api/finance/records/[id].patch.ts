@@ -1,7 +1,16 @@
+import { z } from 'zod'
 import { db } from '~~/server/db'
 import { financialRecords } from '~~/server/db/schema/financial'
 import { eq, and } from 'drizzle-orm'
 import type { FinancialRecord } from '~~/shared/types/financial'
+
+const updateRecordSchema = z.object({
+  type: z.enum(['cargo', 'abono'], { message: 'type debe ser "cargo" o "abono"' }).optional(),
+  category: z.enum(['ordinaria', 'extraordinaria'], { message: 'category debe ser "ordinaria" o "extraordinaria"' }).optional(),
+  amount: z.number().positive('amount debe ser un numero mayor a 0').optional(),
+  description: z.string().min(1, 'description no puede estar vacio').optional(),
+  date: z.string().refine((v) => !isNaN(new Date(v).getTime()), 'date debe ser una fecha valida').optional(),
+}).refine((data) => Object.keys(data).length > 0, { message: 'No se proporcionaron campos para actualizar' })
 
 export default defineEventHandler(async (event) => {
   const session = await requireTenant(event)
@@ -25,52 +34,27 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 404, message: 'Registro no encontrado' })
   }
 
-  const body = await readBody(event)
+  const body = await validateBody(event, updateRecordSchema)
   const updates: Record<string, unknown> = {}
 
-  // Validar campos opcionales
   if (body.type !== undefined) {
-    if (body.type !== 'cargo' && body.type !== 'abono') {
-      throw createError({ statusCode: 400, message: 'type debe ser "cargo" o "abono"' })
-    }
     updates.type = body.type
   }
 
   if (body.category !== undefined) {
-    if (body.category !== 'ordinaria' && body.category !== 'extraordinaria') {
-      throw createError({ statusCode: 400, message: 'category debe ser "ordinaria" o "extraordinaria"' })
-    }
     updates.category = body.category
   }
 
   if (body.amount !== undefined) {
-    const parsedAmount = parseFloat(String(body.amount))
-    if (isNaN(parsedAmount) || parsedAmount <= 0) {
-      throw createError({ statusCode: 400, message: 'amount debe ser un numero mayor a 0' })
-    }
-    updates.amount = String(parsedAmount)
+    updates.amount = String(body.amount)
   }
 
   if (body.description !== undefined) {
-    if (typeof body.description !== 'string' || body.description.trim() === '') {
-      throw createError({ statusCode: 400, message: 'description no puede estar vacio' })
-    }
     updates.description = body.description.trim()
   }
 
   if (body.date !== undefined) {
-    if (typeof body.date !== 'string') {
-      throw createError({ statusCode: 400, message: 'date debe ser un string ISO' })
-    }
-    const parsedDate = new Date(body.date)
-    if (isNaN(parsedDate.getTime())) {
-      throw createError({ statusCode: 400, message: 'date debe ser una fecha valida' })
-    }
-    updates.date = parsedDate
-  }
-
-  if (Object.keys(updates).length === 0) {
-    throw createError({ statusCode: 400, message: 'No se proporcionaron campos para actualizar' })
+    updates.date = new Date(body.date)
   }
 
   const [row] = await db
@@ -81,6 +65,8 @@ export default defineEventHandler(async (event) => {
       eq(financialRecords.tenantId, session.tenantId),
     ))
     .returning()
+
+  if (!row) throw createError({ statusCode: 404, message: 'Registro no encontrado' })
 
   const record: FinancialRecord = {
     id: row.id,

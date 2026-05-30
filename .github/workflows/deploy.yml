@@ -9,7 +9,31 @@ env:
   IMAGE_NAME: ${{ github.repository }}
 
 jobs:
+  quality-gates:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      - name: Lint
+        run: pnpm lint
+
+      - name: TypeCheck
+        run: pnpm typecheck
+
+      - name: Tests
+        run: pnpm test:ci
+
   build-and-deploy:
+    needs: quality-gates
     runs-on: ubuntu-latest
     permissions:
       contents: read

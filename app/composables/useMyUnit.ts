@@ -1,5 +1,6 @@
 import type { HouseholdMember, HouseholdRelationship, HouseholdMemberPass } from '~~/shared/types/household'
-import type { Vehicle, VehiclePass } from '~~/shared/types/vehicle'
+import type { Vehicle } from '~~/shared/types/vehicle'
+import type { VehiclePass } from '~~/shared/types/vehicle-pass'
 import type { UnitServiceStaff, ServiceStaffRole, ServiceStaffPass, StaffAttendanceLog } from '~~/shared/types/unit-service-staff'
 
 // --- Member types ---

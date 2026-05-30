@@ -1,7 +1,8 @@
 <script setup lang="ts">
+import type {
+  Clock} from 'lucide-vue-next';
 import {
   AlertTriangle,
-  Clock,
   CheckCircle2,
   Loader2,
   XCircle,
@@ -108,7 +109,7 @@ onMounted(() => {
                     :src="`/api/incidents/photos/${photo.filePath}`"
                     alt="Foto de incidencia"
                     class="size-28 shrink-0 rounded-lg border object-cover transition-opacity hover:opacity-80"
-                  />
+                  >
                 </a>
               </div>
             </div>

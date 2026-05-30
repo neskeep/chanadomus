@@ -1,7 +1,7 @@
 import { db } from '~~/server/db'
 import { chatRooms, chatRoomMembers } from '~~/server/db/schema/chat'
 import { user } from '~~/server/db/schema/auth'
-import { eq, and, ne, inArray } from 'drizzle-orm'
+import { eq, and, inArray } from 'drizzle-orm'
 import { requireTenant } from '~~/server/utils/auth'
 
 interface DirectChatBody {

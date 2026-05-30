@@ -192,7 +192,7 @@ onMounted(async () => {
                 accept="image/jpeg,image/png,image/webp"
                 class="hidden"
                 @change="handleAvatarChange"
-              />
+              >
 
               <!-- Name + role + details -->
               <div class="min-w-0 flex-1">
@@ -358,7 +358,7 @@ onMounted(async () => {
                 :src="qrDataUrl"
                 alt="QR de acceso personal"
                 class="size-48 rounded-lg md:size-56"
-              />
+              >
 
               <Separator class="my-3 w-full" />
 
