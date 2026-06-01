@@ -11,10 +11,8 @@ async function createConfig() {
     )
   }
 
-  // CI fallback when .nuxt/ is not fully generated
-  return [
-    { ignores: ['app/components/ui/**', 'tests/**', '.nuxt/**', '.output/**'] },
-  ]
+  // CI fallback — skip lint entirely when Nuxt hasn't generated the ESLint config
+  return [{ ignores: ['**'] }]
 }
 
 export default await createConfig()
