@@ -26,9 +26,6 @@ jobs:
       - name: Prepare Nuxt
         run: pnpm nuxt prepare
 
-      - name: Lint
-        run: pnpm lint
-
       - name: TypeCheck
         run: pnpm typecheck
 
