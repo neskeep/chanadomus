@@ -12,6 +12,8 @@ interface ServiceRole {
   id: string
   name: string
   description: string | null
+  appliesToStaff: boolean
+  appliesToProviders: boolean
   isActive: boolean
   displayOrder: number
   tenantId: string
@@ -31,6 +33,8 @@ const editName = ref('')
 const editDescription = ref('')
 const editIsActive = ref(true)
 const editDisplayOrder = ref(0)
+const editAppliesToStaff = ref(true)
+const editAppliesToProviders = ref(false)
 
 // --- Delete AlertDialog ---
 const deleteDialogOpen = ref(false)
@@ -61,6 +65,8 @@ function openEdit(role: ServiceRole) {
   editDescription.value = role.description ?? ''
   editIsActive.value = role.isActive
   editDisplayOrder.value = role.displayOrder
+  editAppliesToStaff.value = role.appliesToStaff
+  editAppliesToProviders.value = role.appliesToProviders
   editDialogOpen.value = true
 }
 
@@ -75,6 +81,8 @@ async function handleEdit() {
         description: editDescription.value.trim() || null,
         isActive: editIsActive.value,
         displayOrder: editDisplayOrder.value,
+        appliesToStaff: editAppliesToStaff.value,
+        appliesToProviders: editAppliesToProviders.value,
       },
     })
     const idx = roles.value.findIndex(r => r.id === editingRole.value!.id)
@@ -166,6 +174,7 @@ onMounted(fetchRoles)
             <TableRow>
               <TableHead>Nombre</TableHead>
               <TableHead>Descripción</TableHead>
+              <TableHead>Aplica a</TableHead>
               <TableHead class="w-[100px]">Acciones</TableHead>
             </TableRow>
           </TableHeader>
@@ -183,6 +192,12 @@ onMounted(fetchRoles)
               </TableCell>
               <TableCell class="text-muted-foreground">
                 {{ role.description ?? '—' }}
+              </TableCell>
+              <TableCell>
+                <div class="flex items-center gap-1">
+                  <Badge v-if="role.appliesToStaff" variant="secondary" class="text-[11px]">Personal</Badge>
+                  <Badge v-if="role.appliesToProviders" variant="outline" class="text-[11px]">Proveedores</Badge>
+                </div>
               </TableCell>
               <TableCell>
                 <div class="flex items-center gap-1">
@@ -224,7 +239,12 @@ onMounted(fetchRoles)
               <p class="min-w-0 flex-1 truncate text-sm font-semibold">{{ role.name }}</p>
               <Badge v-if="!role.isActive" variant="outline" class="shrink-0 text-[11px]">Inactivo</Badge>
             </div>
-            <!-- Row 2: Description -->
+            <!-- Row 2: Applies to badges -->
+            <div class="mt-0.5 flex items-center gap-1">
+              <Badge v-if="role.appliesToStaff" variant="secondary" class="text-[10px]">Personal</Badge>
+              <Badge v-if="role.appliesToProviders" variant="outline" class="text-[10px]">Proveedores</Badge>
+            </div>
+            <!-- Row 3: Description -->
             <p v-if="role.description" class="mt-0.5 truncate text-[11px] text-muted-foreground">
               {{ role.description }}
             </p>
@@ -295,6 +315,16 @@ onMounted(fetchRoles)
               placeholder="0"
               class="h-12 text-base"
             />
+          </div>
+
+          <div class="flex items-center justify-between">
+            <Label for="edit-applies-staff" class="cursor-pointer">Aplica a personal</Label>
+            <Switch id="edit-applies-staff" v-model="editAppliesToStaff" />
+          </div>
+
+          <div class="flex items-center justify-between">
+            <Label for="edit-applies-providers" class="cursor-pointer">Aplica a proveedores</Label>
+            <Switch id="edit-applies-providers" v-model="editAppliesToProviders" />
           </div>
 
           <div class="flex items-center justify-between">

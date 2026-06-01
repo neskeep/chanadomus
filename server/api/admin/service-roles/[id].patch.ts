@@ -11,7 +11,7 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 400, message: 'Role ID es requerido' })
   }
 
-  const body = await readBody<{ name?: string; description?: string; isActive?: boolean; displayOrder?: number }>(event)
+  const body = await readBody<{ name?: string; description?: string; isActive?: boolean; displayOrder?: number; appliesToStaff?: boolean; appliesToProviders?: boolean }>(event)
 
   const updates: Record<string, unknown> = {}
   if (body.name !== undefined) {
@@ -23,6 +23,8 @@ export default defineEventHandler(async (event) => {
   if (body.description !== undefined) updates.description = body.description?.trim() || null
   if (body.isActive !== undefined) updates.isActive = body.isActive
   if (body.displayOrder !== undefined) updates.displayOrder = body.displayOrder
+  if (body.appliesToStaff !== undefined) updates.appliesToStaff = body.appliesToStaff
+  if (body.appliesToProviders !== undefined) updates.appliesToProviders = body.appliesToProviders
 
   if (Object.keys(updates).length === 0) {
     throw createError({ statusCode: 400, message: 'No se proporcionaron campos para actualizar' })

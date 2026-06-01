@@ -3,7 +3,7 @@ import {
   Home, Wallet, AlertTriangle, Building2, Users, Shield,
   MessageCircle, Megaphone, Vote, Wrench, Calendar,
   ScanLine, ClipboardList, QrCode, FileText, CreditCard, Car,
-  UserCog, ShieldAlert, BookOpen, UserPlus,
+  UserCog, ShieldAlert, BookOpen, UserPlus, History,
 } from 'lucide-vue-next'
 import { ROLE_REDIRECTS } from '~~/shared/types/auth'
 
@@ -32,6 +32,7 @@ export function useNavigation() {
             items: [
               { label: 'Inicio', icon: Home, to: '/admin' },
               { label: 'Finanzas', icon: Wallet, to: '/admin/finanzas' },
+              { label: 'Historial Accesos', icon: History, to: '/accesos/historial' },
               { label: 'Incidencias', icon: AlertTriangle, to: '/admin/incidencias' },
             ],
           },
@@ -106,6 +107,7 @@ export function useNavigation() {
               { label: 'Escanear', icon: ScanLine, to: '/vigilancia/escanear' },
               { label: 'Registrar Acceso', icon: UserPlus, to: '/vigilancia/registrar-acceso' },
               { label: 'Accesos', icon: ClipboardList, to: '/vigilancia/accesos' },
+              { label: 'Historial', icon: History, to: '/accesos/historial' },
               { label: 'Alertas', icon: ShieldAlert, to: '/vigilancia/alertas' },
               { label: 'Incidencias', icon: AlertTriangle, to: '/vigilancia/incidencias' },
               { label: 'Residentes', icon: Shield, to: '/vigilancia/residentes' },

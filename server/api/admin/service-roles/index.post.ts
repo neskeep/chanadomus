@@ -5,7 +5,7 @@ export default defineEventHandler(async (event) => {
   await requireRole(event, ['admin'])
   const { tenantId } = await requireTenant(event)
 
-  const body = await readBody<{ name?: string; description?: string; displayOrder?: number }>(event)
+  const body = await readBody<{ name?: string; description?: string; displayOrder?: number; appliesToStaff?: boolean; appliesToProviders?: boolean }>(event)
 
   if (!body.name || !body.name.trim()) {
     throw createError({ statusCode: 400, message: 'El nombre es requerido' })
@@ -16,6 +16,8 @@ export default defineEventHandler(async (event) => {
     .values({
       name: body.name.trim(),
       description: body.description?.trim() || null,
+      appliesToStaff: body.appliesToStaff ?? true,
+      appliesToProviders: body.appliesToProviders ?? false,
       displayOrder: body.displayOrder ?? 0,
       tenantId,
     })

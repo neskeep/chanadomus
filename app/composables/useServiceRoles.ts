@@ -15,7 +15,9 @@ export function useServiceRoles() {
     isLoading.value = true
     error.value = null
     try {
-      const res = await $fetch<{ data: ServiceRole[] }>('/api/admin/service-roles')
+      const res = await $fetch<{ data: ServiceRole[] }>('/api/admin/service-roles', {
+        params: { appliesTo: 'provider' },
+      })
       roles.value = res.data
     } catch (err: unknown) {
       error.value = err instanceof Error ? err.message : 'Error al cargar roles de servicio'
@@ -29,7 +31,7 @@ export function useServiceRoles() {
     try {
       const res = await $fetch<{ data: ServiceRole }>('/api/admin/service-roles', {
         method: 'POST',
-        body: { name: name.trim() },
+        body: { name: name.trim(), appliesToStaff: false, appliesToProviders: true },
       })
       // Add to local list
       roles.value.push(res.data)

@@ -2,54 +2,41 @@
 
 ## Ultima Sesion
 - **Fecha**: 2026-06-01
-- **Sesion #**: 62
+- **Sesion #**: 64
 - **Branch**: `main`
-- **Commit**: `0eff191` — feat(reuniones): structured minutes
+- **Commit**: pendiente
 - **Estado**: Completada
 
-## Completado Sesion 62
+## Completado Sesion 64
 
-### Reuniones — UX overhaul completo
+### Roles mezclados personal/proveedores (Issue #1 del cliente)
+- Reemplazado catalogo compartido `serviceStaffRoles` con dos booleans: `appliesToStaff` + `appliesToProviders`
+- Admin gestiona desde `/admin/roles-servicio` con switches por rol
+- Migracion `0050_add_service_role_type.sql` con clasificacion de roles existentes
+- API GET filtra por `appliesTo=staff|provider`, POST/PATCH aceptan los booleans
+- Composables `useStaff` y `useServiceRoles` filtran automaticamente
+- Endpoint `/api/my-unit/service-roles` filtra solo staff para propietarios
 
-#### Cards compactos (propietario)
-- `/mi-chana/reuniones/index.vue` — Cards de 2 filas (patron golden de accesos): titulo + badge tipo + hora en fila 1, meta inline con separadores en fila 2
-- Cards clickeables con NuxtLink al detalle, hover state `bg-muted/50`
+### Historial de accesos (Issue #6 del cliente — CRITICO LEGAL)
+- Nuevo endpoint `GET /api/access/history` con filtros: rango de fechas, resultado, tipo entrada, busqueda nombre/cedula, paginacion offset
+- Validacion Zod, max 90 dias de rango, count query optimizado
+- Composable `useAccessHistory` con filtros reactivos, default ultimos 7 dias
+- Pagina `/accesos/historial` compartida admin+vigilancia con tabla desktop + cards mobile
+- Filtros en topbar: resultado, tipo entrada, rango fechas con Calendar picker
+- Busqueda inline por nombre/cedula, paginacion, badge total registros
+- Ruta `/accesos` agregada a `ROUTE_ROLE_MAP` para admin y vigilancia
+- Nav links en sidebar admin ("Historial Accesos") y vigilancia ("Historial")
 
-#### Pagina de detalle (propietario) — NUEVA
-- `/mi-chana/reuniones/[id].vue` — Vista read-only con: header + badges, info card (fecha, hora, ubicacion, link), agenda como lista numerada, minuta estructurada (quorum, asistentes badges, puntos tratados con notas, acuerdos numerados, observaciones)
+### Issues menores
+- El Molino R-003: corregida fecha typo en abono `2025-03-05` → `2026-03-05` (data fix en DB)
+- Samsara R-010: balance de $2.86 es por diferencia real en monto de pago ($347.14 vs $350), no es typo
+- Flamboyant R-013: saldo -$3,000 en extraordinaria es por abonos sin cargo correspondiente. Requiere que el admin registre el cargo faltante. No es bug de codigo.
 
-#### Minuta estructurada (admin)
-- Schema: 3 columnas jsonb (`agenda_items`, `minutes_attendees_data`, `minutes_agreements_list`) + 5 columnas text legacy + `minutes_quorum` boolean
-- Migraciones: 0047 (displayOrder), 0048 (minutes text), 0049 (minutes jsonb)
-- Admin crear: agenda como list builder (input + agregar, items numerados, removibles)
-- Admin editar: asistentes via popover multi-select de usuarios del tenant, quorum switch, puntos tratados = textarea por cada punto de agenda, acuerdos como list builder, observaciones textarea
-- 4 APIs actualizadas (GET list, GET detail, POST, PATCH)
-
-#### Otros cambios incluidos en el commit
-- displayOrder y reorder en cartelera, votaciones, normativas, reuniones
-- Delete endpoint para pases vehiculares
-- Pass generation endpoints para miembros y vehiculos
-
-### Verificacion
-- `vue-tsc --noEmit` → 0 errores
-- Pre-commit hooks pasaron (ESLint)
-
-## Proxima sesion — Chat: prioridad de mensajes
-
-### Problema
-- Chats nuevos o con mensajes nuevos NO suben al tope de la lista
-- Las conversaciones tienen orden estatico (por fecha de creacion)
-- Los grupos tambien tienen posicion fija
-- Debe funcionar como WhatsApp: ultimo mensaje recibido/enviado = primera posicion
-
-### Investigar
-- Estructura actual del chat (rooms, messages, grupos)
-- Query de listado de rooms y su ORDER BY
-- Como agregar `lastMessageAt` o similar para ordenar por actividad
+## Validacion puntos del cliente (8 issues de vigilancia)
+- **TODOS RESUELTOS**: #1 roles, #2 orden votaciones, #3 agenda, #4 vehiculos, #5 duplicados, #6 historial, #7 personal admin
 
 ## Issues abiertos
-- Fechas typo en 2 registros (El Molino, Samsara) — sesion 58
-- Flamboyant R-013 saldo extraordinaria -$3,000 revision manual — sesion 58
+- Ninguno pendiente de codigo
 
 ## DB local
 - Docker `chanadomus-db-1` con dump de produccion

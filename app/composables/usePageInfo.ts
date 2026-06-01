@@ -67,6 +67,7 @@ const PAGE_MAP: Record<string, PageInfo> = {
   '/mi-chana/perfil': { title: 'Mi Perfil', description: 'Tu informacion personal' },
 
   // Vigilancia
+  '/accesos/historial': { title: 'Historial de Accesos', description: 'Consulta histórica de entradas y salidas' },
   '/vigilancia': { title: 'Panel de Vigilancia', description: 'Control de accesos del día' },
   '/vigilancia/incidencias': { title: 'Incidencias', description: 'Reportes y problemas del condominio' },
   '/vigilancia/escanear': { title: 'Escanear QR', description: 'Verifica el código del visitante' },

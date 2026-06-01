@@ -12,6 +12,7 @@ export default defineEventHandler(async (event) => {
     .where(and(
       eq(serviceStaffRoles.tenantId, tenantId),
       eq(serviceStaffRoles.isActive, true),
+      eq(serviceStaffRoles.appliesToStaff, true),
     ))
     .orderBy(asc(serviceStaffRoles.displayOrder), asc(serviceStaffRoles.name))
 

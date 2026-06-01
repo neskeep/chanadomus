@@ -7,6 +7,8 @@ export const serviceStaffRoles = pgTable('service_staff_roles', {
   id: uuid('id').primaryKey().defaultRandom(),
   name: text('name').notNull(),
   description: text('description'),
+  appliesToStaff: boolean('applies_to_staff').notNull().default(true),
+  appliesToProviders: boolean('applies_to_providers').notNull().default(false),
   isActive: boolean('is_active').notNull().default(true),
   displayOrder: integer('display_order').notNull().default(0),
   tenantId: uuid('tenant_id').notNull().references(() => tenants.id),

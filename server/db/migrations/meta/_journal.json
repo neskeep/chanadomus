@@ -351,6 +351,13 @@
       "when": 1780335148893,
       "tag": "0049_tricky_namora",
       "breakpoints": true
+    },
+    {
+      "idx": 50,
+      "version": "7",
+      "when": 1780421600000,
+      "tag": "0050_add_service_role_type",
+      "breakpoints": true
     }
   ]
 }

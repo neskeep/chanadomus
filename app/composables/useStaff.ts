@@ -23,7 +23,7 @@ export function useStaff() {
   async function fetchRoles() {
     try {
       const res = await $fetch<{ data: ServiceStaffRole[] }>('/api/admin/service-roles', {
-        params: { includeInactive: 'true' },
+        params: { includeInactive: 'true', appliesTo: 'staff' },
       })
       roleOptions.value = res.data
     }

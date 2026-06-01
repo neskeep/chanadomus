@@ -8,10 +8,17 @@ export default defineEventHandler(async (event) => {
 
   const query = getQuery(event)
   const includeInactive = query.includeInactive === 'true'
+  const appliesTo = query.appliesTo as 'staff' | 'provider' | undefined
 
   const conditions = [eq(serviceStaffRoles.tenantId, tenantId)]
   if (!includeInactive) {
     conditions.push(eq(serviceStaffRoles.isActive, true))
+  }
+  if (appliesTo === 'staff') {
+    conditions.push(eq(serviceStaffRoles.appliesToStaff, true))
+  }
+  else if (appliesTo === 'provider') {
+    conditions.push(eq(serviceStaffRoles.appliesToProviders, true))
   }
 
   const rows = await db

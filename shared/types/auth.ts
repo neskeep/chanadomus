@@ -18,6 +18,7 @@ export const ROLE_LABELS: Record<UserRole, string> = {
 /** Route prefix -> roles allowed to access */
 export const ROUTE_ROLE_MAP: Record<string, UserRole[]> = {
   '/admin': ['admin'],
+  '/accesos': ['admin', 'vigilancia'],
   '/propietario': ['admin', 'propietario'],
   '/conserje': ['admin', 'conserje'],
   '/vigilancia': ['admin', 'vigilancia'],

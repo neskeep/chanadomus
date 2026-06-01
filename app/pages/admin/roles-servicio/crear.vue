@@ -10,6 +10,8 @@ const router = useRouter()
 const formName = ref('')
 const formDescription = ref('')
 const formDisplayOrder = ref(0)
+const formAppliesToStaff = ref(true)
+const formAppliesToProviders = ref(false)
 const isSubmitting = ref(false)
 
 const canSubmit = computed(() =>
@@ -26,6 +28,8 @@ async function handleSubmit() {
         name: formName.value.trim(),
         description: formDescription.value.trim() || null,
         displayOrder: formDisplayOrder.value,
+        appliesToStaff: formAppliesToStaff.value,
+        appliesToProviders: formAppliesToProviders.value,
       },
     })
     toast.success('Rol creado correctamente')
@@ -80,6 +84,17 @@ async function handleSubmit() {
               placeholder="0"
               class="h-12 text-base"
             />
+          </div>
+
+          <!-- Aplica a -->
+          <div class="flex items-center justify-between">
+            <Label for="applies-staff" class="cursor-pointer">Aplica a personal</Label>
+            <Switch id="applies-staff" v-model="formAppliesToStaff" />
+          </div>
+
+          <div class="flex items-center justify-between">
+            <Label for="applies-providers" class="cursor-pointer">Aplica a proveedores</Label>
+            <Switch id="applies-providers" v-model="formAppliesToProviders" />
           </div>
 
           <!-- Submit -->
