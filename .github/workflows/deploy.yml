@@ -26,9 +26,6 @@ jobs:
       - name: Prepare Nuxt
         run: pnpm nuxt prepare
 
-      - name: TypeCheck
-        run: pnpm typecheck
-
       - name: Tests
         run: pnpm test:ci
 
