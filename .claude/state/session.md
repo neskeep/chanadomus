@@ -1,73 +1,58 @@
 # Estado de Sesion — ChanaDomus
 
 ## Ultima Sesion
-- **Fecha**: 2026-05-30
-- **Sesion #**: 61
-- **Branch**: `feat/quality-gates` (desde dev, SIN commit aún)
-- **Estado**: Pausada — 4 fases implementadas, pendiente commit + solicitudes del cliente
+- **Fecha**: 2026-06-01
+- **Sesion #**: 62
+- **Branch**: `main`
+- **Commit**: `0eff191` — feat(reuniones): structured minutes
+- **Estado**: Completada
 
-## Completado Sesion 61
+## Completado Sesion 62
 
-### Quality Gates — 4 fases implementadas (163 archivos, +2403/-627 líneas)
+### Reuniones — UX overhaul completo
 
-#### Fase 1: CI Quality Gates
-- ESLint con `@nuxt/eslint` + reglas strict configuradas (`eslint.config.mjs`)
-- `nuxt typecheck` + lint + tests en `.github/workflows/deploy.yml` como job separado `quality-gates` antes del build
-- Scripts: `pnpm lint`, `pnpm typecheck`, `pnpm test:ci`
+#### Cards compactos (propietario)
+- `/mi-chana/reuniones/index.vue` — Cards de 2 filas (patron golden de accesos): titulo + badge tipo + hora en fila 1, meta inline con separadores en fila 2
+- Cards clickeables con NuxtLink al detalle, hover state `bg-muted/50`
 
-#### Fase 2: Pre-commit hooks
-- Husky + lint-staged — bloquea commits con errores de lint
-- `.husky/pre-commit` ejecuta `pnpm lint-staged`
+#### Pagina de detalle (propietario) — NUEVA
+- `/mi-chana/reuniones/[id].vue` — Vista read-only con: header + badges, info card (fecha, hora, ubicacion, link), agenda como lista numerada, minuta estructurada (quorum, asistentes badges, puntos tratados con notas, acuerdos numerados, observaciones)
 
-#### Fase 3: Validación y estandarización
-- `server/utils/validate.ts` — helper `validateBody/validateQuery/validateParams` con Zod
-- 7 endpoints críticos con Zod schemas (finance, users, polls, meetings, providers, invitaciones)
-- 58 endpoints migrados de cast manual `(session.user as Record<...>).tenantId` a `requireTenant()`
-- `drizzle-zod` instalado para futuras generaciones de schemas
+#### Minuta estructurada (admin)
+- Schema: 3 columnas jsonb (`agenda_items`, `minutes_attendees_data`, `minutes_agreements_list`) + 5 columnas text legacy + `minutes_quorum` boolean
+- Migraciones: 0047 (displayOrder), 0048 (minutes text), 0049 (minutes jsonb)
+- Admin crear: agenda como list builder (input + agregar, items numerados, removibles)
+- Admin editar: asistentes via popover multi-select de usuarios del tenant, quorum switch, puntos tratados = textarea por cada punto de agenda, acuerdos como list builder, observaciones textarea
+- 4 APIs actualizadas (GET list, GET detail, POST, PATCH)
 
-#### Fase 4: Testing con Vitest
-- `vitest.config.ts` configurado con happy-dom
-- 121 tests en 8 archivos:
-  - `tests/shared/auth-types.test.ts` — roles, route mapping, permisos
-  - `tests/shared/permissions.test.ts` — matrix de permisos por rol
-  - `tests/unit/validate.test.ts` — helper de validación
-  - `tests/unit/finance-validation.test.ts` — schemas de finanzas
-  - `tests/unit/user-validation.test.ts` — schema de creación de usuarios
-  - `tests/unit/poll-validation.test.ts` — schema de votaciones
-  - `tests/unit/meeting-validation.test.ts` — schema de reuniones
-  - `tests/unit/provider-validation.test.ts` — schema de proveedores
+#### Otros cambios incluidos en el commit
+- displayOrder y reorder en cartelera, votaciones, normativas, reuniones
+- Delete endpoint para pases vehiculares
+- Pass generation endpoints para miembros y vehiculos
 
-#### Fixes adicionales durante la sesión
-- 75 errores TypeScript corregidos (null checks, unused vars, import types)
-- 185 problemas ESLint corregidos (unused imports, empty blocks, prefer-const)
-- Duplicated imports resueltos: `VehiclePass` y `AccessDirection` ya no están en 2 archivos
+### Verificacion
+- `vue-tsc --noEmit` → 0 errores
+- Pre-commit hooks pasaron (ESLint)
 
-### Verificación
-- `pnpm lint` → 0 errores
-- `pnpm typecheck` → 0 errores TS (exit 0)
-- `pnpm test:ci` → 121/121 passing (556ms)
-- `pnpm build` → exitoso
+## Proxima sesion — Chat: prioridad de mensajes
 
-## Pendiente (branch `feat/quality-gates`)
-- **SIN COMMIT** — todo está staged pero no commiteado
-- Commit y PR a `dev` cuando el usuario lo decida
+### Problema
+- Chats nuevos o con mensajes nuevos NO suben al tope de la lista
+- Las conversaciones tienen orden estatico (por fecha de creacion)
+- Los grupos tambien tienen posicion fija
+- Debe funcionar como WhatsApp: ultimo mensaje recibido/enviado = primera posicion
 
-## Solicitudes del cliente (próxima sesión)
-1. **Campo "orden de visualización"** — ya existe en `admin/roles-servicio/crear`. Implementar también en:
-   - Votaciones
-   - Reuniones
-   - Normativas
-   - Carteleras (anuncios)
-2. Estos módulos probablemente necesitan: columna `displayOrder` en schema, UI de ordenamiento, ordenamiento en queries
+### Investigar
+- Estructura actual del chat (rooms, messages, grupos)
+- Query de listado de rooms y su ORDER BY
+- Como agregar `lastMessageAt` o similar para ordenar por actividad
 
 ## Issues abiertos
-
-### Issues previos (sesión 58)
-- Fechas typo en 2 registros (El Molino, Samsara)
-- Flamboyant R-013 saldo extraordinaria -$3,000 requiere revisión manual
+- Fechas typo en 2 registros (El Molino, Samsara) — sesion 58
+- Flamboyant R-013 saldo extraordinaria -$3,000 revision manual — sesion 58
 
 ## DB local
-- Docker `chanadomus-db-1` con dump de producción
+- Docker `chanadomus-db-1` con dump de produccion
 - Usuarios demo con password `Yolo2026!`:
   - admin@chanadomus.com (admin)
   - propietario@chanadomus.com (propietario, Rancho Demo)

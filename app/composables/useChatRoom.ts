@@ -15,6 +15,8 @@ const MAX_IMAGE_SIZE = 10 * 1024 * 1024 // 10MB
 const MAX_IMAGES = 5
 
 export function useChatRoom(roomId: Ref<string> | string) {
+  const { updateRoomLastMessage, clearUnreadCount } = useChatRooms()
+
   const messages = ref<ChatMessage[]>([])
   const isLoading = ref(false)
   const connected = ref(false)
@@ -105,6 +107,14 @@ export function useChatRoom(roomId: Ref<string> | string) {
 
         if (parsed.type === 'message' && parsed.data) {
           messages.value.push(parsed.data)
+
+          // Update sidebar room list with new message
+          const rid = unref(roomId)
+          updateRoomLastMessage(rid, {
+            content: parsed.data.content ?? '',
+            createdAt: parsed.data.createdAt,
+            userName: parsed.data.user?.name ?? '',
+          }, true)
         }
         else if (parsed.type === 'error' && parsed.message) {
           error.value = parsed.message
@@ -233,6 +243,7 @@ export function useChatRoom(roomId: Ref<string> | string) {
   async function markAsRead() {
     const rid = unref(roomId)
     if (!rid) return
+    clearUnreadCount(rid)
     try {
       await $fetch(`/api/chat/${rid}/read`, { method: 'POST' })
     }
@@ -245,6 +256,10 @@ export function useChatRoom(roomId: Ref<string> | string) {
     messages.value = []
     hasMore.value = true
     error.value = null
+    const rid = unref(roomId)
+    if (rid) {
+      clearUnreadCount(rid)
+    }
     fetchHistory()
     connect()
     startPing()
