@@ -25,6 +25,7 @@ export default defineEventHandler(async (event) => {
   let category = ''
   let status = ''
   let expiresAt = ''
+  let displayOrder = 0
   let pdfFile: { filename: string; data: Buffer; type: string } | null = null
 
   for (const part of formData) {
@@ -38,6 +39,9 @@ export default defineEventHandler(async (event) => {
       status = part.data.toString('utf-8').trim()
     } else if (part.name === 'expires_at') {
       expiresAt = part.data.toString('utf-8').trim()
+    } else if (part.name === 'displayOrder') {
+      const parsed = parseInt(part.data.toString('utf-8').trim(), 10)
+      if (!isNaN(parsed) && parsed >= 0) displayOrder = parsed
     } else if (part.name === 'attachment' && part.data.length > 0) {
       pdfFile = {
         filename: part.filename ?? 'document.pdf',
@@ -116,6 +120,7 @@ export default defineEventHandler(async (event) => {
       category: category as AnnouncementCategory,
       status: status as AnnouncementStatus,
       attachmentPath,
+      displayOrder,
       authorId: session.user.id,
       tenantId: session.tenantId,
       publishedAt,
@@ -150,6 +155,7 @@ export default defineEventHandler(async (event) => {
     authorId: row.authorId,
     authorName: session.user.name ?? undefined,
     tenantId: row.tenantId,
+    displayOrder: row.displayOrder,
     publishedAt: row.publishedAt?.toISOString() ?? null,
     expiresAt: row.expiresAt?.toISOString() ?? null,
     createdAt: row.createdAt.toISOString(),

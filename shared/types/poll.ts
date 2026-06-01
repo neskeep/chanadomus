@@ -34,6 +34,7 @@ export interface Poll {
   deadline: string | null
   publishedAt: string | null
   closedAt: string | null
+  displayOrder: number
   createdAt: string
   updatedAt: string
   options?: PollOption[]

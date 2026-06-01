@@ -15,6 +15,7 @@ const formStatus = ref<'draft' | 'active'>('draft')
 const formDeadline = shallowRef<DateValue | undefined>(undefined)
 const deadlinePickerOpen = ref(false)
 const formOptions = ref<string[]>(['', ''])
+const formDisplayOrder = ref(0)
 
 function dateToISO(d: DateValue): string {
   return `${d.year}-${String(d.month).padStart(2, '0')}-${String(d.day).padStart(2, '0')}`
@@ -50,6 +51,7 @@ async function handleSubmit() {
       status: formStatus.value,
       deadline: formDeadline.value ? dateToISO(formDeadline.value) : undefined,
       options,
+      displayOrder: formDisplayOrder.value,
     })
     toast.success('Votación creada correctamente')
     router.push('/admin/votaciones')
@@ -159,6 +161,19 @@ async function handleSubmit() {
                 </SelectContent>
               </Select>
             </div>
+          </div>
+
+          <!-- Orden de visualización -->
+          <div class="space-y-1.5">
+            <Label for="poll-order">Orden de visualización</Label>
+            <Input
+              id="poll-order"
+              v-model.number="formDisplayOrder"
+              type="number"
+              min="0"
+              placeholder="0"
+              class="h-12 text-base"
+            />
           </div>
 
           <!-- Submit -->

@@ -8,7 +8,10 @@ import {
   Lock,
   Calendar,
   FileText,
+  GripVertical,
+  Check,
 } from 'lucide-vue-next'
+import draggable from 'vuedraggable'
 import { toast } from 'vue-sonner'
 import type { Poll, PollStatus } from '~~/shared/types/poll'
 import { POLL_STATUS_COLORS, POLL_STATUS_LABELS } from '~/composables/useColorMap'
@@ -16,6 +19,7 @@ import { POLL_STATUS_COLORS, POLL_STATUS_LABELS } from '~/composables/useColorMa
 useHead({ title: 'Gestion de Votaciones' })
 
 const { formatDate } = useFormatDate()
+const { isReordering, isSaving, saveOrder } = useReorder()
 
 const {
   polls,
@@ -64,6 +68,31 @@ const filteredPolls = computed(() => {
     || p.createdByName?.toLowerCase().includes(q),
   )
 })
+
+// Local writable copy for drag-and-drop
+const localPolls = ref<Poll[]>([])
+watch(filteredPolls, val => { localPolls.value = [...val] }, { immediate: true })
+
+function toggleReorder() {
+  if (isReordering.value) {
+    handleSaveOrder()
+  }
+  else {
+    searchQuery.value = ''
+    filterStatus.value = ''
+    isReordering.value = true
+  }
+}
+
+async function handleSaveOrder() {
+  const items = localPolls.value.map((item, index) => ({
+    id: item.id,
+    displayOrder: index,
+  }))
+  await saveOrder('polls', items)
+  toast.success('Orden guardado')
+  isReordering.value = false
+}
 
 async function loadPolls() {
   const params: FetchParams = { page: currentPage.value }
@@ -142,6 +171,10 @@ function participationText(poll: Poll): string {
           <TopbarFilterGroup v-model="filterStatus" label="Estado" :options="statusOptions" />
         </TopbarFilters>
       </TopbarSearch>
+      <Button size="icon" variant="ghost" class="size-8" :disabled="isSaving" :title="isReordering ? 'Guardar orden' : 'Reordenar'" @click="toggleReorder">
+        <Check v-if="isReordering" class="size-4 text-primary" />
+        <GripVertical v-else class="size-4" />
+      </Button>
       <NuxtLink to="/admin/votaciones/crear">
         <Button size="sm">
           <Plus class="mr-1.5 size-3.5" />
@@ -152,6 +185,10 @@ function participationText(poll: Poll): string {
 
     <!-- Mobile action button -->
     <TopbarMobileAction>
+      <Button size="icon" variant="ghost" class="size-9" :disabled="isSaving" :title="isReordering ? 'Guardar orden' : 'Reordenar'" @click="toggleReorder">
+        <Check v-if="isReordering" class="size-4 text-primary" />
+        <GripVertical v-else class="size-4" />
+      </Button>
       <Button size="icon" variant="ghost" class="size-9" as-child>
         <NuxtLink to="/admin/votaciones/crear">
           <Plus class="size-4" />
@@ -195,6 +232,7 @@ function participationText(poll: Poll): string {
         <Table>
           <TableHeader>
             <TableRow>
+              <TableHead v-if="isReordering" class="w-8" />
               <TableHead>Título</TableHead>
               <TableHead>Estado</TableHead>
               <TableHead>Participación</TableHead>
@@ -203,7 +241,45 @@ function participationText(poll: Poll): string {
               <TableHead class="text-right">Acciones</TableHead>
             </TableRow>
           </TableHeader>
-          <TableBody>
+          <draggable
+            v-if="isReordering"
+            v-model="localPolls"
+            tag="tbody"
+            item-key="id"
+            handle=".drag-handle"
+            ghost-class="opacity-50"
+            :animation="200"
+          >
+            <template #item="{ element: poll }: { element: Poll }">
+              <TableRow>
+                <TableCell class="w-8 px-2">
+                  <GripVertical class="drag-handle size-4 cursor-grab text-muted-foreground active:cursor-grabbing" />
+                </TableCell>
+                <TableCell class="max-w-[220px]">
+                  <p class="truncate font-medium">{{ poll.title }}</p>
+                </TableCell>
+                <TableCell>
+                  <span
+                    class="inline-flex rounded-lg px-2 py-0.5 text-xs font-medium"
+                    :class="STATUS_CONFIG[poll.status].class"
+                  >
+                    {{ STATUS_CONFIG[poll.status].label }}
+                  </span>
+                </TableCell>
+                <TableCell class="text-muted-foreground">
+                  {{ participationText(poll) }}
+                </TableCell>
+                <TableCell class="text-muted-foreground">
+                  {{ poll.deadline ? formatDate(poll.deadline) : '—' }}
+                </TableCell>
+                <TableCell class="text-muted-foreground">
+                  {{ formatDate(poll.createdAt) }}
+                </TableCell>
+                <TableCell />
+              </TableRow>
+            </template>
+          </draggable>
+          <TableBody v-else>
             <TableRow v-for="poll in filteredPolls" :key="poll.id">
               <TableCell class="max-w-[220px]">
                 <p class="truncate font-medium">{{ poll.title }}</p>
@@ -283,8 +359,36 @@ function participationText(poll: Poll): string {
         </Table>
       </div>
 
-      <!-- Mobile cards -->
-      <div class="space-y-2 md:hidden">
+      <!-- Mobile cards (reorder mode) -->
+      <draggable
+        v-if="isReordering"
+        v-model="localPolls"
+        item-key="id"
+        handle=".drag-handle"
+        ghost-class="opacity-50"
+        :animation="200"
+        class="space-y-2 md:hidden"
+      >
+        <template #item="{ element: poll }: { element: Poll }">
+          <Card class="min-w-0">
+            <CardContent class="flex items-center gap-2 px-3 py-2.5">
+              <GripVertical class="drag-handle size-4 shrink-0 cursor-grab text-muted-foreground active:cursor-grabbing" />
+              <div class="min-w-0 flex-1">
+                <p class="truncate text-sm font-semibold">{{ poll.title }}</p>
+                <span
+                  class="inline-flex rounded-lg px-2 py-0.5 text-[11px] font-medium"
+                  :class="STATUS_CONFIG[poll.status].class"
+                >
+                  {{ STATUS_CONFIG[poll.status].label }}
+                </span>
+              </div>
+            </CardContent>
+          </Card>
+        </template>
+      </draggable>
+
+      <!-- Mobile cards (normal mode) -->
+      <div v-else class="space-y-2 md:hidden">
         <Card v-for="poll in filteredPolls" :key="poll.id" class="min-w-0">
           <CardContent class="px-3 py-2.5">
             <!-- Row 1: Title + Status badge + Date -->

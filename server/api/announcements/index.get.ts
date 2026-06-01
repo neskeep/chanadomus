@@ -1,7 +1,7 @@
 import { db } from '~~/server/db'
 import { announcements } from '~~/server/db/schema/announcement'
 import { user } from '~~/server/db/schema/auth'
-import { eq, and, desc, count } from 'drizzle-orm'
+import { eq, and, asc, desc, count } from 'drizzle-orm'
 import type { Announcement, AnnouncementCategory, AnnouncementStatus } from '~~/shared/types/announcement'
 
 const VALID_CATEGORIES: AnnouncementCategory[] = ['general', 'mantenimiento', 'seguridad', 'financiero', 'evento', 'urgente']
@@ -68,12 +68,13 @@ export default defineEventHandler(async (event) => {
       expiresAt: announcements.expiresAt,
       createdAt: announcements.createdAt,
       updatedAt: announcements.updatedAt,
+      displayOrder: announcements.displayOrder,
       authorName: user.name,
     })
     .from(announcements)
     .leftJoin(user, eq(announcements.authorId, user.id))
     .where(whereClause)
-    .orderBy(desc(announcements.publishedAt), desc(announcements.createdAt))
+    .orderBy(asc(announcements.displayOrder), desc(announcements.publishedAt), desc(announcements.createdAt))
     .limit(limit)
     .offset(offset)
 
@@ -87,6 +88,7 @@ export default defineEventHandler(async (event) => {
     authorId: row.authorId,
     authorName: row.authorName ?? undefined,
     tenantId: row.tenantId,
+    displayOrder: row.displayOrder,
     publishedAt: row.publishedAt?.toISOString() ?? null,
     expiresAt: row.expiresAt?.toISOString() ?? null,
     createdAt: row.createdAt.toISOString(),

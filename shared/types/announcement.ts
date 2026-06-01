@@ -13,6 +13,7 @@ export interface Announcement {
   tenantId: string
   publishedAt: string | null
   expiresAt: string | null
+  displayOrder: number
   createdAt: string
   updatedAt: string
 }

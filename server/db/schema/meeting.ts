@@ -1,4 +1,4 @@
-import { pgTable, pgEnum, uuid, text, timestamp, index } from 'drizzle-orm/pg-core'
+import { pgTable, pgEnum, uuid, text, timestamp, integer, boolean, jsonb, index } from 'drizzle-orm/pg-core'
 import { tenants } from './tenant'
 import { user } from './auth'
 
@@ -30,9 +30,18 @@ export const meetings = pgTable('meetings', {
   status: meetingStatusEnum('status').notNull().default('programada'),
   agenda: text('agenda'),
   minutes: text('minutes'),
+  minutesAttendees: text('minutes_attendees'),
+  minutesQuorum: boolean('minutes_quorum'),
+  minutesPoints: text('minutes_points'),
+  minutesAgreements: text('minutes_agreements'),
+  minutesNotes: text('minutes_notes'),
+  agendaItems: jsonb('agenda_items').$type<{ text: string; discussed?: string }[]>(),
+  minutesAttendeesData: jsonb('minutes_attendees_data').$type<{ id: string; name: string }[]>(),
+  minutesAgreementsList: jsonb('minutes_agreements_list').$type<string[]>(),
   createdById: text('created_by_id').notNull().references(() => user.id),
   tenantId: uuid('tenant_id').notNull().references(() => tenants.id),
   createdAt: timestamp('created_at').notNull().defaultNow(),
+  displayOrder: integer('display_order').notNull().default(0),
   updatedAt: timestamp('updated_at').notNull().defaultNow(),
 }, (table) => [
   index('meeting_tenant_idx').on(table.tenantId),

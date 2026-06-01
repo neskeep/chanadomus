@@ -1,4 +1,5 @@
 import type { Vehicle } from '~~/shared/types/vehicle'
+import type { VehiclePass } from '~~/shared/types/vehicle-pass'
 
 interface CreateVehicleData {
   plate: string
@@ -101,6 +102,29 @@ export function useUnitVehicles(unitId: Ref<string> | string) {
     }
   }
 
+  async function generateVehiclePass(vehicleId: string): Promise<VehiclePass> {
+    isSubmitting.value = true
+    error.value = null
+    try {
+      const res = await $fetch<{ data: VehiclePass }>(
+        `/api/units/${unref(unitId)}/vehicles/${vehicleId}/pass`,
+        {
+          method: 'POST',
+        },
+      )
+      await fetchVehicles()
+      return res.data
+    }
+    catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Error al generar pase de vehículo'
+      error.value = message
+      throw err
+    }
+    finally {
+      isSubmitting.value = false
+    }
+  }
+
   return {
     vehicles,
     isLoading,
@@ -110,5 +134,6 @@ export function useUnitVehicles(unitId: Ref<string> | string) {
     createVehicle,
     updateVehicle,
     deleteVehicle,
+    generateVehiclePass,
   }
 }

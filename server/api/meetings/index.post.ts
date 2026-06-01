@@ -2,7 +2,7 @@ import { z } from 'zod'
 import { db } from '~~/server/db'
 import { meetings } from '~~/server/db/schema/meeting'
 import { sendPushToAll } from '~~/server/utils/web-push'
-import type { Meeting, MeetingType } from '~~/shared/types/meeting'
+import type { Meeting, MeetingType, AgendaItem, MeetingAttendee } from '~~/shared/types/meeting'
 
 const createMeetingSchema = z.object({
   title: z.string().min(1, 'El titulo es requerido').max(200, 'El titulo no puede exceder 200 caracteres'),
@@ -13,6 +13,8 @@ const createMeetingSchema = z.object({
   meetingLink: z.string().optional().nullable(),
   type: z.enum(['ordinaria', 'extraordinaria', 'comite', 'informativa'], { message: 'El tipo de reunion es requerido y debe ser valido' }),
   agenda: z.string().optional().nullable(),
+  agendaItems: z.array(z.object({ text: z.string().min(1) })).optional(),
+  displayOrder: z.number().int().min(0).default(0),
 })
 
 function mapMeeting(row: Record<string, unknown>): Meeting {
@@ -28,8 +30,17 @@ function mapMeeting(row: Record<string, unknown>): Meeting {
     status: row.status as string as Meeting['status'],
     agenda: row.agenda as string | null,
     minutes: row.minutes as string | null,
+    minutesAttendees: row.minutesAttendees as string | null,
+    minutesQuorum: row.minutesQuorum as boolean | null,
+    minutesPoints: row.minutesPoints as string | null,
+    minutesAgreements: row.minutesAgreements as string | null,
+    minutesNotes: row.minutesNotes as string | null,
+    agendaItems: (row.agendaItems as AgendaItem[] | null) ?? null,
+    minutesAttendeesData: (row.minutesAttendeesData as MeetingAttendee[] | null) ?? null,
+    minutesAgreementsList: (row.minutesAgreementsList as string[] | null) ?? null,
     createdById: row.createdById as string,
     tenantId: row.tenantId as string,
+    displayOrder: row.displayOrder as number,
     createdAt: (row.createdAt as Date).toISOString(),
     updatedAt: (row.updatedAt as Date).toISOString(),
   }
@@ -65,6 +76,8 @@ export default defineEventHandler(async (event) => {
       type: body.type,
       status: 'programada',
       agenda: body.agenda?.trim() || null,
+      agendaItems: body.agendaItems ?? null,
+      displayOrder: body.displayOrder,
       createdById: session.user.id,
       tenantId: session.tenantId,
     })

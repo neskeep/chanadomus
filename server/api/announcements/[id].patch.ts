@@ -64,6 +64,14 @@ export default defineEventHandler(async (event) => {
     updateValues.category = body.category
   }
 
+  if (body.displayOrder !== undefined) {
+    const order = Number(body.displayOrder)
+    if (!Number.isInteger(order) || order < 0) {
+      throw createError({ statusCode: 400, message: 'displayOrder debe ser un entero >= 0' })
+    }
+    updateValues.displayOrder = order
+  }
+
   if (body.expiresAt !== undefined) {
     if (body.expiresAt === null) {
       updateValues.expiresAt = null
@@ -130,6 +138,7 @@ export default defineEventHandler(async (event) => {
     authorId: updated.authorId,
     authorName: author?.name ?? undefined,
     tenantId: updated.tenantId,
+    displayOrder: updated.displayOrder,
     publishedAt: updated.publishedAt?.toISOString() ?? null,
     expiresAt: updated.expiresAt?.toISOString() ?? null,
     createdAt: updated.createdAt.toISOString(),

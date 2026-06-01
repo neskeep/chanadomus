@@ -43,6 +43,7 @@ export default defineEventHandler(async (event) => {
       expiresAt: announcements.expiresAt,
       createdAt: announcements.createdAt,
       updatedAt: announcements.updatedAt,
+      displayOrder: announcements.displayOrder,
       authorName: user.name,
     })
     .from(announcements)
@@ -63,6 +64,7 @@ export default defineEventHandler(async (event) => {
     authorId: row.authorId,
     authorName: row.authorName ?? undefined,
     tenantId: row.tenantId,
+    displayOrder: row.displayOrder,
     publishedAt: row.publishedAt?.toISOString() ?? null,
     expiresAt: row.expiresAt?.toISOString() ?? null,
     createdAt: row.createdAt.toISOString(),

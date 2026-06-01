@@ -330,6 +330,27 @@
       "when": 1779844990667,
       "tag": "0046_burly_typhoid_mary",
       "breakpoints": true
+    },
+    {
+      "idx": 47,
+      "version": "7",
+      "when": 1780148989062,
+      "tag": "0047_smooth_grandmaster",
+      "breakpoints": true
+    },
+    {
+      "idx": 48,
+      "version": "7",
+      "when": 1780333992771,
+      "tag": "0048_quiet_red_hulk",
+      "breakpoints": true
+    },
+    {
+      "idx": 49,
+      "version": "7",
+      "when": 1780335148893,
+      "tag": "0049_tricky_namora",
+      "breakpoints": true
     }
   ]
 }

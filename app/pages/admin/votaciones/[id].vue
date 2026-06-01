@@ -24,6 +24,7 @@ const formDescription = ref('')
 const formStatus = ref<'draft' | 'active'>('draft')
 const formDeadline = shallowRef<DateValue | undefined>(undefined)
 const deadlinePickerOpen = ref(false)
+const formDisplayOrder = ref(0)
 const loaded = ref(false)
 
 function dateToISO(d: DateValue): string {
@@ -51,6 +52,7 @@ async function loadPoll() {
     formDescription.value = poll.description ?? ''
     formStatus.value = poll.status === 'closed' ? 'draft' : poll.status as 'draft' | 'active'
     formDeadline.value = poll.deadline ? parseISODate(poll.deadline) : undefined
+    formDisplayOrder.value = poll.displayOrder ?? 0
     loaded.value = true
   }
   catch {
@@ -66,6 +68,7 @@ async function handleSubmit() {
       description: formDescription.value.trim() || null,
       status: formStatus.value,
       deadline: formDeadline.value ? dateToISO(formDeadline.value) : null,
+      displayOrder: formDisplayOrder.value,
     })
     toast.success('Votación actualizada correctamente')
     router.push('/admin/votaciones')
@@ -155,6 +158,19 @@ onMounted(() => {
                 </SelectContent>
               </Select>
             </div>
+          </div>
+
+          <!-- Orden de visualización -->
+          <div class="space-y-1.5">
+            <Label for="poll-order">Orden de visualización</Label>
+            <Input
+              id="poll-order"
+              v-model.number="formDisplayOrder"
+              type="number"
+              min="0"
+              placeholder="0"
+              class="h-12 text-base"
+            />
           </div>
 
           <!-- Submit -->

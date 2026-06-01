@@ -20,6 +20,7 @@ export const polls = pgTable('polls', {
   publishedAt: timestamp('published_at'),
   closedAt: timestamp('closed_at'),
   createdAt: timestamp('created_at').notNull().defaultNow(),
+  displayOrder: integer('display_order').notNull().default(0),
   updatedAt: timestamp('updated_at').notNull().defaultNow(),
 }, (table) => [
   index('poll_tenant_idx').on(table.tenantId),

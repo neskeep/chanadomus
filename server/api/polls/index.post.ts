@@ -13,6 +13,7 @@ const createPollSchema = z.object({
   options: z.array(z.string().min(1, 'Cada opcion debe ser un texto no vacio').max(500, 'Cada opcion no puede exceder 500 caracteres'))
     .min(2, 'Se requieren al menos 2 opciones')
     .max(20, 'Maximo 20 opciones permitidas'),
+  displayOrder: z.number().int().min(0).default(0),
 })
 
 export default defineEventHandler(async (event) => {
@@ -46,6 +47,7 @@ export default defineEventHandler(async (event) => {
         description,
         type,
         status,
+        displayOrder: body.displayOrder,
         createdById: session.user.id,
         tenantId: session.tenantId,
         deadline,
@@ -109,6 +111,7 @@ export default defineEventHandler(async (event) => {
     closedAt: result.poll.closedAt?.toISOString() ?? null,
     createdAt: result.poll.createdAt.toISOString(),
     updatedAt: result.poll.updatedAt.toISOString(),
+    displayOrder: result.poll.displayOrder,
     options,
     totalVotes: 0,
     totalUnits: 0,

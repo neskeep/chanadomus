@@ -26,6 +26,7 @@ const formCategory = ref<AnnouncementCategory>('general')
 const formStatus = ref<AnnouncementStatus>('draft')
 const formExpiresAt = shallowRef<DateValue | undefined>(undefined)
 const expiresPickerOpen = ref(false)
+const formDisplayOrder = ref(0)
 const loaded = ref(false)
 
 function dateToISO(d: DateValue): string {
@@ -56,6 +57,7 @@ async function loadAnnouncement() {
     formCategory.value = announcement.category
     formStatus.value = announcement.status
     formExpiresAt.value = announcement.expiresAt ? parseISODate(announcement.expiresAt) : undefined
+    formDisplayOrder.value = announcement.displayOrder ?? 0
     loaded.value = true
   }
   catch {
@@ -66,11 +68,12 @@ async function loadAnnouncement() {
 async function handleSubmit() {
   if (!canSubmit.value) return
   try {
-    const data: Partial<Pick<Announcement, 'title' | 'body' | 'category' | 'status' | 'expiresAt'>> = {
+    const data: Partial<Pick<Announcement, 'title' | 'body' | 'category' | 'status' | 'expiresAt'>> & { displayOrder?: number } = {
       title: formTitle.value.trim(),
       body: formBody.value.trim(),
       category: formCategory.value,
       status: formStatus.value,
+      displayOrder: formDisplayOrder.value,
     }
     if (formExpiresAt.value) data.expiresAt = dateToISO(formExpiresAt.value)
     await updateAnnouncement(id, data)
@@ -182,6 +185,19 @@ onMounted(() => {
               </PopoverContent>
             </Popover>
             <p class="text-xs text-muted-foreground">Se archiva automáticamente en esta fecha</p>
+          </div>
+
+          <!-- Orden de visualización -->
+          <div class="space-y-1.5">
+            <Label for="announcement-order">Orden de visualización</Label>
+            <Input
+              id="announcement-order"
+              v-model.number="formDisplayOrder"
+              type="number"
+              min="0"
+              placeholder="0"
+              class="h-12 text-base"
+            />
           </div>
 
           <!-- Submit -->

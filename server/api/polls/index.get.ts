@@ -2,7 +2,7 @@ import { db } from '~~/server/db'
 import { polls, pollOptions, pollVotes } from '~~/server/db/schema/poll'
 import { user } from '~~/server/db/schema/auth'
 import { units } from '~~/server/db/schema/unit'
-import { eq, and, desc, count, sql, inArray } from 'drizzle-orm'
+import { eq, and, asc, desc, count, sql, inArray } from 'drizzle-orm'
 import type { Poll, PollOption, PollStatus, PollVote } from '~~/shared/types/poll'
 
 const VALID_STATUSES: PollStatus[] = ['draft', 'active', 'closed']
@@ -65,12 +65,13 @@ export default defineEventHandler(async (event) => {
       closedAt: polls.closedAt,
       createdAt: polls.createdAt,
       updatedAt: polls.updatedAt,
+      displayOrder: polls.displayOrder,
       createdByName: user.name,
     })
     .from(polls)
     .leftJoin(user, eq(polls.createdById, user.id))
     .where(whereClause)
-    .orderBy(desc(polls.createdAt))
+    .orderBy(asc(polls.displayOrder), desc(polls.createdAt))
     .limit(limit)
     .offset(offset)
 
@@ -185,6 +186,7 @@ export default defineEventHandler(async (event) => {
       closedAt: row.closedAt?.toISOString() ?? null,
       createdAt: row.createdAt.toISOString(),
       updatedAt: row.updatedAt.toISOString(),
+      displayOrder: row.displayOrder,
       options,
       totalVotes: pollTotalVotes,
       totalUnits,

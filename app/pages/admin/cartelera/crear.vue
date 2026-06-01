@@ -18,6 +18,7 @@ const formExpiresAt = shallowRef<DateValue | undefined>(undefined)
 const expiresPickerOpen = ref(false)
 const formPdfFile = ref<File | null>(null)
 const pdfInputRef = ref<HTMLInputElement | null>(null)
+const formDisplayOrder = ref(0)
 
 function dateToISO(d: DateValue): string {
   return `${d.year}-${String(d.month).padStart(2, '0')}-${String(d.day).padStart(2, '0')}`
@@ -50,6 +51,7 @@ async function handleSubmit() {
     formData.append('status', formStatus.value)
     if (formExpiresAt.value) formData.append('expires_at', dateToISO(formExpiresAt.value))
     if (formPdfFile.value) formData.append('attachment', formPdfFile.value)
+    formData.append('displayOrder', String(formDisplayOrder.value))
     await createAnnouncement(formData)
     toast.success('Anuncio creado correctamente')
     router.push('/admin/cartelera')
@@ -165,6 +167,19 @@ async function handleSubmit() {
               </Popover>
               <p class="text-xs text-muted-foreground">Se archiva automáticamente en esta fecha</p>
             </div>
+          </div>
+
+          <!-- Orden de visualización -->
+          <div class="space-y-1.5">
+            <Label for="announcement-order">Orden de visualización</Label>
+            <Input
+              id="announcement-order"
+              v-model.number="formDisplayOrder"
+              type="number"
+              min="0"
+              placeholder="0"
+              class="h-12 text-base"
+            />
           </div>
 
           <!-- Submit -->

@@ -12,6 +12,7 @@ const formTitle = ref('')
 const formPdfFile = ref<File | null>(null)
 const pdfInputRef = ref<HTMLInputElement | null>(null)
 const currentPdfName = ref('')
+const formDisplayOrder = ref(0)
 
 const canSubmit = computed(() =>
   formTitle.value.trim().length > 0
@@ -29,6 +30,7 @@ onMounted(async () => {
   }
   formTitle.value = regulation.title
   currentPdfName.value = regulation.attachmentPath
+  formDisplayOrder.value = regulation.displayOrder ?? 0
 })
 
 function handlePdfSelect(event: Event) {
@@ -48,6 +50,7 @@ async function handleSubmit() {
     const formData = new FormData()
     formData.append('title', formTitle.value.trim())
     if (formPdfFile.value) formData.append('attachment', formPdfFile.value)
+    formData.append('displayOrder', String(formDisplayOrder.value))
     await updateRegulation(route.params.id as string, formData)
     toast.success('Normativa actualizada')
     router.push('/admin/normativas')
@@ -121,6 +124,19 @@ async function handleSubmit() {
               </span>
             </div>
             <p class="text-xs text-muted-foreground">Opcional. Solo si deseas reemplazar el PDF actual.</p>
+          </div>
+
+          <!-- Orden de visualización -->
+          <div class="space-y-1.5">
+            <Label for="regulation-order">Orden de visualización</Label>
+            <Input
+              id="regulation-order"
+              v-model.number="formDisplayOrder"
+              type="number"
+              min="0"
+              placeholder="0"
+              class="h-12 text-base"
+            />
           </div>
 
           <!-- Submit -->

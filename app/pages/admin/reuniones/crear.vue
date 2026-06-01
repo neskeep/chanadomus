@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import { Loader2, CalendarIcon, Clock } from 'lucide-vue-next'
+import { Loader2, CalendarIcon, Clock, Plus, X } from 'lucide-vue-next'
 import type { DateValue } from 'reka-ui'
 import { toast } from 'vue-sonner'
-import type { MeetingType, CreateMeeting } from '~~/shared/types/meeting'
+import type { MeetingType, CreateMeeting, AgendaItem } from '~~/shared/types/meeting'
 import { MEETING_TYPES } from '~~/shared/types/meeting'
 
 useHead({ title: 'Nueva Reunión' })
@@ -22,7 +22,20 @@ const endDatePickerOpen = ref(false)
 const formLocation = ref('')
 const formMeetingLink = ref('')
 const formType = ref<MeetingType>('ordinaria')
-const formAgenda = ref('')
+const formAgendaItems = ref<AgendaItem[]>([])
+const newAgendaItem = ref('')
+const formDisplayOrder = ref(0)
+
+function addAgendaItem() {
+  const text = newAgendaItem.value.trim()
+  if (!text) return
+  formAgendaItems.value.push({ text })
+  newAgendaItem.value = ''
+}
+
+function removeAgendaItem(index: number) {
+  formAgendaItems.value.splice(index, 1)
+}
 
 function formatPickerDate(d: DateValue): string {
   const date = new Date(d.year, d.month - 1, d.day)
@@ -57,7 +70,8 @@ async function handleSubmit() {
       location: formLocation.value.trim() || undefined,
       meetingLink: formMeetingLink.value.trim() || undefined,
       type: formType.value,
-      agenda: formAgenda.value.trim() || undefined,
+      agendaItems: formAgendaItems.value.length > 0 ? formAgendaItems.value : undefined,
+      displayOrder: formDisplayOrder.value,
     }
     await createMeeting(data)
     toast.success('Reunión creada correctamente')
@@ -207,15 +221,64 @@ async function handleSubmit() {
             </Select>
           </div>
 
-          <!-- Agenda -->
+          <!-- Agenda (puntos) -->
+          <div class="space-y-3">
+            <Label>Puntos de agenda</Label>
+
+            <!-- Items existentes -->
+            <div v-if="formAgendaItems.length > 0" class="space-y-2">
+              <div
+                v-for="(item, idx) in formAgendaItems"
+                :key="idx"
+                class="flex items-center gap-2 rounded-lg border bg-muted/30 px-3 py-2"
+              >
+                <span class="flex size-6 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-xs font-semibold text-primary">
+                  {{ idx + 1 }}
+                </span>
+                <span class="flex-1 text-sm">{{ item.text }}</span>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  class="size-7 shrink-0 p-0 text-muted-foreground hover:text-destructive"
+                  @click="removeAgendaItem(idx)"
+                >
+                  <X class="size-4" />
+                </Button>
+              </div>
+            </div>
+
+            <!-- Agregar nuevo punto -->
+            <div class="flex gap-2">
+              <Input
+                v-model="newAgendaItem"
+                placeholder="Escribir punto de agenda..."
+                class="h-10 flex-1 text-base"
+                @keydown.enter.prevent="addAgendaItem"
+              />
+              <Button
+                type="button"
+                variant="outline"
+                class="h-10 shrink-0 gap-1.5"
+                :disabled="!newAgendaItem.trim()"
+                @click="addAgendaItem"
+              >
+                <Plus class="size-4" />
+                Agregar
+              </Button>
+            </div>
+          </div>
+
+          <!-- Orden de visualización -->
           <div class="space-y-1.5">
-            <Label for="meet-agenda">Agenda</Label>
-            <Textarea
-              id="meet-agenda"
-              v-model="formAgenda"
-              placeholder="Puntos a tratar..."
-              rows="3"
-              class="text-base"
+            <Label for="meeting-order">Orden de visualización</Label>
+            <Input
+              id="meeting-order"
+              v-model.number="formDisplayOrder"
+              type="number"
+              min="0"
+              placeholder="0"
+              class="h-12 text-base"
             />
           </div>
 

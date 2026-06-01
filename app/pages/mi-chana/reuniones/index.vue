@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import {
   Calendar,
-  Clock,
   MapPin,
   Video,
   FileText,
@@ -92,76 +91,60 @@ onMounted(() => {
 
           <!-- Meeting cards -->
           <div class="space-y-2">
-            <Card v-for="m in group.meetings" :key="m.id">
-              <CardContent class="flex gap-2.5 p-3">
+            <NuxtLink v-for="m in group.meetings" :key="m.id" :to="`/mi-chana/reuniones/${m.id}`" class="block">
+            <Card class="transition-colors hover:bg-muted/50">
+              <CardContent class="flex gap-2.5 px-3 py-2.5">
                 <!-- Date badge -->
                 <div class="flex size-12 shrink-0 flex-col items-center justify-center rounded-lg bg-primary/10 text-primary">
                   <span class="text-lg font-bold leading-none">{{ formatDay(m.date) }}</span>
                   <span class="text-xs capitalize">{{ formatMonthShort(m.date) }}</span>
                 </div>
 
-                <!-- Content -->
+                <!-- Content: 2 rows -->
                 <div class="min-w-0 flex-1">
-                  <h3 class="text-sm font-medium">{{ m.title }}</h3>
-
-                  <!-- Time -->
-                  <p class="mt-1 flex items-center gap-1.5 text-xs text-muted-foreground">
-                    <Clock class="size-3 shrink-0" />
-                    <span>
+                  <!-- Row 1: Title + Type Badge + Time -->
+                  <div class="flex items-center gap-1.5">
+                    <h3 class="min-w-0 flex-1 truncate text-sm font-semibold">{{ m.title }}</h3>
+                    <span class="shrink-0 rounded-lg px-2 py-0.5 text-[11px] font-medium" :class="TYPE_COLORS[m.type]">
+                      {{ typeLabel(m.type) }}
+                    </span>
+                    <span class="shrink-0 text-[11px] tabular-nums text-muted-foreground">
                       {{ formatTime(m.date) }}
                       <template v-if="m.endDate"> – {{ formatTime(m.endDate) }}</template>
                     </span>
-                  </p>
-
-                  <!-- Location -->
-                  <p
-                    v-if="m.location"
-                    class="mt-1 flex items-center gap-1.5 text-xs text-muted-foreground"
-                  >
-                    <MapPin class="size-3 shrink-0" />
-                    <span class="truncate">{{ m.location }}</span>
-                  </p>
-
-                  <!-- Meeting link -->
-                  <a
-                    v-if="m.meetingLink"
-                    :href="m.meetingLink"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    class="mt-1 inline-flex items-center gap-1.5 text-xs text-primary hover:underline"
-                  >
-                    <Video class="size-3 shrink-0" />
-                    Unirse a la reunión
-                  </a>
-
-                  <!-- Badges -->
-                  <div class="mt-2 flex flex-wrap gap-1.5">
-                    <span
-                      class="inline-flex rounded-lg px-2 py-0.5 text-xs font-medium"
-                      :class="TYPE_COLORS[m.type]"
-                    >
-                      {{ typeLabel(m.type) }}
-                    </span>
-                    <span
-                      v-if="m.status !== 'programada'"
-                      class="inline-flex rounded-lg px-2 py-0.5 text-xs font-medium"
-                      :class="STATUS_COLORS[m.status]"
-                    >
-                      {{ statusLabel(m.status) }}
-                    </span>
                   </div>
 
-                  <!-- Agenda preview -->
-                  <p
-                    v-if="m.agenda"
-                    class="mt-2 flex items-start gap-1.5 text-xs text-muted-foreground"
-                  >
-                    <FileText class="mt-0.5 size-3 shrink-0" />
-                    <span class="line-clamp-2">{{ m.agenda.slice(0, 100) }}{{ m.agenda.length > 100 ? '...' : '' }}</span>
-                  </p>
+                  <!-- Row 2: Meta inline -->
+                  <div class="mt-0.5 flex items-center gap-x-1 text-[11px] text-muted-foreground">
+                    <!-- Status (only if not 'programada') -->
+                    <template v-if="m.status !== 'programada'">
+                      <span class="font-medium" :class="STATUS_COLORS[m.status]">{{ statusLabel(m.status) }}</span>
+                      <span class="opacity-30">&middot;</span>
+                    </template>
+                    <!-- Location -->
+                    <template v-if="m.location">
+                      <MapPin class="size-3 shrink-0" />
+                      <span class="truncate">{{ m.location }}</span>
+                    </template>
+                    <!-- Meeting link -->
+                    <template v-if="m.meetingLink">
+                      <span v-if="m.location" class="opacity-30">&middot;</span>
+                      <a :href="m.meetingLink" target="_blank" rel="noopener noreferrer" class="inline-flex shrink-0 items-center gap-1 text-primary hover:underline" @click.stop>
+                        <Video class="size-3" />
+                        Unirse
+                      </a>
+                    </template>
+                    <!-- Agenda preview -->
+                    <template v-if="m.agenda">
+                      <span v-if="m.location || m.meetingLink" class="opacity-30">&middot;</span>
+                      <FileText class="size-3 shrink-0" />
+                      <span class="truncate">{{ m.agenda.slice(0, 60) }}{{ m.agenda.length > 60 ? '…' : '' }}</span>
+                    </template>
+                  </div>
                 </div>
               </CardContent>
             </Card>
+            </NuxtLink>
           </div>
         </section>
       </div>

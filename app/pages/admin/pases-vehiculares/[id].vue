@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Car, Download, Loader2, ScanLine, ShieldOff } from 'lucide-vue-next'
+import { Car, Download, Loader2, ScanLine, ShieldOff, Trash2 } from 'lucide-vue-next'
 import { toast } from 'vue-sonner'
 import QRCode from 'qrcode'
 import type { VehiclePass } from '~~/shared/types/vehicle-pass'
@@ -10,7 +10,7 @@ const route = useRoute()
 const router = useRouter()
 const passId = route.params.id as string
 
-const { deactivatePass } = useVehiclePasses()
+const { deactivatePass, deletePass } = useVehiclePasses()
 const { formatDate } = useFormatDate()
 const { downloadBadge, isGenerating: isDownloadingBadge } = useQrBadge()
 
@@ -91,6 +91,28 @@ async function handleDeactivate() {
   }
   finally {
     isDeactivating.value = false
+  }
+}
+
+// Delete
+const isDeleting = ref(false)
+const deleteDialogOpen = ref(false)
+
+async function handleDelete() {
+  isDeleting.value = true
+  try {
+    const ok = await deletePass(passId)
+    if (ok) {
+      toast.success('Pase eliminado')
+      router.push('/admin/pases-vehiculares')
+    }
+    else {
+      toast.error('Error al eliminar pase')
+    }
+  }
+  finally {
+    isDeleting.value = false
+    deleteDialogOpen.value = false
   }
 }
 
@@ -348,10 +370,44 @@ onMounted(() => {
                 <ShieldOff class="size-4 text-destructive" />
                 <span class="text-sm font-medium text-destructive">Pase desactivado</span>
               </div>
+
+              <!-- Delete button (always visible) -->
+              <Button
+                variant="ghost"
+                class="h-10 w-full text-sm text-destructive hover:text-destructive"
+                :disabled="isDeleting"
+                @click="deleteDialogOpen = true"
+              >
+                <Trash2 class="size-4" />
+                Eliminar Pase
+              </Button>
             </div>
           </CardContent>
         </Card>
       </div>
     </div>
+
+    <!-- Delete AlertDialog -->
+    <AlertDialog v-model:open="deleteDialogOpen">
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>Eliminar pase vehicular</AlertDialogTitle>
+          <AlertDialogDescription>
+            Esta acción no se puede deshacer. El pase será eliminado permanentemente.
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel>Cancelar</AlertDialogCancel>
+          <AlertDialogAction
+            class="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            :disabled="isDeleting"
+            @click="handleDelete"
+          >
+            <Loader2 v-if="isDeleting" class="mr-1.5 size-4 animate-spin" />
+            Eliminar
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
   </div>
 </template>

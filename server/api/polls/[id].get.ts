@@ -31,6 +31,7 @@ export default defineEventHandler(async (event) => {
       closedAt: polls.closedAt,
       createdAt: polls.createdAt,
       updatedAt: polls.updatedAt,
+      displayOrder: polls.displayOrder,
       createdByName: user.name,
     })
     .from(polls)
@@ -143,6 +144,7 @@ export default defineEventHandler(async (event) => {
     closedAt: row.closedAt?.toISOString() ?? null,
     createdAt: row.createdAt.toISOString(),
     updatedAt: row.updatedAt.toISOString(),
+    displayOrder: row.displayOrder,
     options: pollOptions_,
     totalVotes,
     totalUnits,

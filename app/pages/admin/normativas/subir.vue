@@ -9,6 +9,7 @@ const { isSubmitting, error, createRegulation } = useRegulations()
 const formTitle = ref('')
 const formPdfFile = ref<File | null>(null)
 const pdfInputRef = ref<HTMLInputElement | null>(null)
+const formDisplayOrder = ref(0)
 
 const canSubmit = computed(() =>
   formTitle.value.trim().length > 0
@@ -33,6 +34,7 @@ async function handleSubmit() {
     const formData = new FormData()
     formData.append('title', formTitle.value.trim())
     if (formPdfFile.value) formData.append('attachment', formPdfFile.value)
+    formData.append('displayOrder', String(formDisplayOrder.value))
     await createRegulation(formData)
     toast.success('Normativa publicada correctamente')
     router.push('/admin/normativas')
@@ -92,6 +94,19 @@ async function handleSubmit() {
               </span>
             </div>
             <p class="text-xs text-muted-foreground">Máximo 10MB. Solo archivos PDF.</p>
+          </div>
+
+          <!-- Orden de visualización -->
+          <div class="space-y-1.5">
+            <Label for="regulation-order">Orden de visualización</Label>
+            <Input
+              id="regulation-order"
+              v-model.number="formDisplayOrder"
+              type="number"
+              min="0"
+              placeholder="0"
+              class="h-12 text-base"
+            />
           </div>
 
           <!-- Submit -->

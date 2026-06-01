@@ -101,6 +101,24 @@ export function useVehiclePasses() {
     }
   }
 
+  async function deletePass(id: string): Promise<boolean> {
+    isLoading.value = true
+    error.value = null
+    try {
+      await $fetch(`/api/vehicle-passes/${id}`, { method: 'DELETE' })
+      passes.value = passes.value.filter(p => p.id !== id)
+      return true
+    }
+    catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Error al eliminar pase vehicular'
+      error.value = message
+      return false
+    }
+    finally {
+      isLoading.value = false
+    }
+  }
+
   return {
     passes: readonly(passes),
     isLoading: readonly(isLoading),
@@ -109,5 +127,6 @@ export function useVehiclePasses() {
     createPass,
     updatePass,
     deactivatePass,
+    deletePass,
   }
 }

@@ -1,4 +1,4 @@
-import type { HouseholdMember, HouseholdRelationship } from '~~/shared/types/household'
+import type { HouseholdMember, HouseholdMemberPass, HouseholdRelationship } from '~~/shared/types/household'
 
 interface CreateMemberData {
   name: string
@@ -100,6 +100,29 @@ export function useUnitMembers(unitId: Ref<string> | string) {
     }
   }
 
+  async function generateMemberPass(memberId: string): Promise<HouseholdMemberPass> {
+    isSubmitting.value = true
+    error.value = null
+    try {
+      const res = await $fetch<{ data: HouseholdMemberPass }>(
+        `/api/units/${unref(unitId)}/members/${memberId}/pass`,
+        {
+          method: 'POST',
+        },
+      )
+      await fetchMembers()
+      return res.data
+    }
+    catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Error al generar pase de miembro'
+      error.value = message
+      throw err
+    }
+    finally {
+      isSubmitting.value = false
+    }
+  }
+
   return {
     members,
     isLoading,
@@ -109,5 +132,6 @@ export function useUnitMembers(unitId: Ref<string> | string) {
     createMember,
     updateMember,
     deleteMember,
+    generateMemberPass,
   }
 }

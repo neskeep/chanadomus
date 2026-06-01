@@ -1,7 +1,7 @@
 import { db } from '~~/server/db'
 import { regulations } from '~~/server/db/schema/regulation'
 import { user } from '~~/server/db/schema/auth'
-import { eq, desc } from 'drizzle-orm'
+import { eq, asc, desc } from 'drizzle-orm'
 import type { Regulation } from '~~/shared/types/regulation'
 
 export default defineEventHandler(async (event) => {
@@ -15,6 +15,7 @@ export default defineEventHandler(async (event) => {
       authorId: regulations.authorId,
       authorName: user.name,
       tenantId: regulations.tenantId,
+      displayOrder: regulations.displayOrder,
       publishedAt: regulations.publishedAt,
       createdAt: regulations.createdAt,
       updatedAt: regulations.updatedAt,
@@ -22,7 +23,7 @@ export default defineEventHandler(async (event) => {
     .from(regulations)
     .leftJoin(user, eq(regulations.authorId, user.id))
     .where(eq(regulations.tenantId, session.tenantId))
-    .orderBy(desc(regulations.publishedAt))
+    .orderBy(asc(regulations.displayOrder), desc(regulations.publishedAt))
 
   const data: Regulation[] = rows.map(row => ({
     id: row.id,
@@ -31,6 +32,7 @@ export default defineEventHandler(async (event) => {
     authorId: row.authorId,
     authorName: row.authorName ?? undefined,
     tenantId: row.tenantId,
+    displayOrder: row.displayOrder,
     publishedAt: row.publishedAt.toISOString(),
     createdAt: row.createdAt.toISOString(),
     updatedAt: row.updatedAt.toISOString(),

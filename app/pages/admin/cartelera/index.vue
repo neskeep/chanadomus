@@ -7,14 +7,18 @@ import {
   Archive,
   Pencil,
   Trash2,
+  GripVertical,
+  Check,
 } from 'lucide-vue-next'
+import draggable from 'vuedraggable'
 import { toast } from 'vue-sonner'
-import type { AnnouncementCategory, AnnouncementStatus } from '~~/shared/types/announcement'
+import type { Announcement, AnnouncementCategory, AnnouncementStatus } from '~~/shared/types/announcement'
 import { ANNOUNCEMENT_CATEGORY_COLORS, ANNOUNCEMENT_CATEGORY_LABELS, ANNOUNCEMENT_STATUS_COLORS, ANNOUNCEMENT_STATUS_LABELS } from '~/composables/useColorMap'
 
 useHead({ title: 'Gestion de Anuncios' })
 
 const { formatDate } = useFormatDate()
+const { isReordering, isSaving, saveOrder } = useReorder()
 
 const {
   announcements,
@@ -75,6 +79,31 @@ const filteredAnnouncements = computed(() => {
     || a.authorName?.toLowerCase().includes(q),
   )
 })
+
+// Local writable copy for drag-and-drop
+const localAnnouncements = ref<Announcement[]>([])
+watch(filteredAnnouncements, val => { localAnnouncements.value = [...val] }, { immediate: true })
+
+function toggleReorder() {
+  if (isReordering.value) {
+    handleSaveOrder()
+  }
+  else {
+    searchQuery.value = ''
+    filterCategory.value = ''
+    isReordering.value = true
+  }
+}
+
+async function handleSaveOrder() {
+  const items = localAnnouncements.value.map((item, index) => ({
+    id: item.id,
+    displayOrder: index,
+  }))
+  await saveOrder('announcements', items)
+  toast.success('Orden guardado')
+  isReordering.value = false
+}
 
 async function loadAnnouncements() {
   const params: Record<string, unknown> = { page: currentPage.value }
@@ -142,6 +171,10 @@ async function handleDelete() {
           <TopbarFilterGroup v-model="filterCategory" label="Categoria" :options="categoryOptions" />
         </TopbarFilters>
       </TopbarSearch>
+      <Button size="icon" variant="ghost" class="size-8" :disabled="isSaving" :title="isReordering ? 'Guardar orden' : 'Reordenar'" @click="toggleReorder">
+        <Check v-if="isReordering" class="size-4 text-primary" />
+        <GripVertical v-else class="size-4" />
+      </Button>
       <NuxtLink to="/admin/cartelera/crear">
         <Button size="sm">
           <Plus class="mr-1.5 size-3.5" />
@@ -152,6 +185,10 @@ async function handleDelete() {
 
     <!-- Mobile action button -->
     <TopbarMobileAction>
+      <Button size="icon" variant="ghost" class="size-9" :disabled="isSaving" :title="isReordering ? 'Guardar orden' : 'Reordenar'" @click="toggleReorder">
+        <Check v-if="isReordering" class="size-4 text-primary" />
+        <GripVertical v-else class="size-4" />
+      </Button>
       <Button size="icon" variant="ghost" class="size-9" as-child>
         <NuxtLink to="/admin/cartelera/crear">
           <Plus class="size-4" />
@@ -207,6 +244,7 @@ async function handleDelete() {
         <Table>
           <TableHeader>
             <TableRow>
+              <TableHead v-if="isReordering" class="w-8" />
               <TableHead>Título</TableHead>
               <TableHead>Categoría</TableHead>
               <TableHead>Estado</TableHead>
@@ -215,7 +253,44 @@ async function handleDelete() {
               <TableHead class="text-right">Acciones</TableHead>
             </TableRow>
           </TableHeader>
-          <TableBody>
+          <draggable
+            v-if="isReordering"
+            v-model="localAnnouncements"
+            tag="tbody"
+            item-key="id"
+            handle=".drag-handle"
+            ghost-class="opacity-50"
+            :animation="200"
+          >
+            <template #item="{ element: item }: { element: Announcement }">
+              <TableRow>
+                <TableCell class="w-8 px-2">
+                  <GripVertical class="drag-handle size-4 cursor-grab text-muted-foreground active:cursor-grabbing" />
+                </TableCell>
+                <TableCell class="max-w-[200px] truncate font-medium">{{ item.title }}</TableCell>
+                <TableCell>
+                  <span
+                    class="inline-flex rounded-lg px-2 py-0.5 text-xs font-medium"
+                    :class="CATEGORY_CONFIG[item.category].class"
+                  >
+                    {{ CATEGORY_CONFIG[item.category].label }}
+                  </span>
+                </TableCell>
+                <TableCell>
+                  <span
+                    class="inline-flex rounded-lg px-2 py-0.5 text-xs font-medium"
+                    :class="STATUS_CONFIG[item.status].class"
+                  >
+                    {{ STATUS_CONFIG[item.status].label }}
+                  </span>
+                </TableCell>
+                <TableCell class="text-muted-foreground">{{ item.authorName ?? '—' }}</TableCell>
+                <TableCell class="text-muted-foreground">{{ formatDate(item.createdAt) }}</TableCell>
+                <TableCell />
+              </TableRow>
+            </template>
+          </draggable>
+          <TableBody v-else>
             <TableRow v-for="item in filteredAnnouncements" :key="item.id">
               <TableCell class="max-w-[200px] truncate font-medium">{{ item.title }}</TableCell>
               <TableCell>
@@ -285,8 +360,36 @@ async function handleDelete() {
         </Table>
       </div>
 
-      <!-- Mobile cards -->
-      <div class="space-y-2 md:hidden">
+      <!-- Mobile cards (reorder mode) -->
+      <draggable
+        v-if="isReordering"
+        v-model="localAnnouncements"
+        item-key="id"
+        handle=".drag-handle"
+        ghost-class="opacity-50"
+        :animation="200"
+        class="space-y-2 md:hidden"
+      >
+        <template #item="{ element: item }: { element: Announcement }">
+          <Card>
+            <CardContent class="flex items-center gap-2 px-3 py-2.5">
+              <GripVertical class="drag-handle size-4 shrink-0 cursor-grab text-muted-foreground active:cursor-grabbing" />
+              <div class="min-w-0 flex-1">
+                <p class="truncate text-sm font-semibold">{{ item.title }}</p>
+                <span
+                  class="inline-flex rounded-lg px-1.5 py-0.5 text-[11px] font-medium"
+                  :class="CATEGORY_CONFIG[item.category].class"
+                >
+                  {{ CATEGORY_CONFIG[item.category].label }}
+                </span>
+              </div>
+            </CardContent>
+          </Card>
+        </template>
+      </draggable>
+
+      <!-- Mobile cards (normal mode) -->
+      <div v-else class="space-y-2 md:hidden">
         <Card v-for="item in filteredAnnouncements" :key="item.id">
           <CardContent class="px-3 py-2.5">
             <!-- Row 1: Title + Category badge + Date -->

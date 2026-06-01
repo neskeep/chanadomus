@@ -5,6 +5,7 @@ export interface Regulation {
   authorId: string
   authorName?: string
   tenantId: string
+  displayOrder: number
   publishedAt: string
   createdAt: string
   updatedAt: string

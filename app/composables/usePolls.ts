@@ -18,6 +18,7 @@ interface CreatePollPayload {
   type?: 'single' | 'multiple'
   status?: PollStatus
   deadline?: string | null
+  displayOrder?: number
   options: string[]
 }
 
@@ -90,7 +91,7 @@ export function usePolls() {
     }
   }
 
-  async function updatePoll(id: string, data: Partial<Pick<Poll, 'title' | 'description' | 'status' | 'deadline'>>): Promise<Poll> {
+  async function updatePoll(id: string, data: Partial<Pick<Poll, 'title' | 'description' | 'status' | 'deadline' | 'displayOrder'>>): Promise<Poll> {
     isSubmitting.value = true
     error.value = null
     try {

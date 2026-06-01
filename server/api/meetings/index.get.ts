@@ -2,7 +2,7 @@ import { db } from '~~/server/db'
 import { meetings } from '~~/server/db/schema/meeting'
 import { user } from '~~/server/db/schema/auth'
 import { eq, and, count, gte, lte, asc } from 'drizzle-orm'
-import type { Meeting, MeetingType, MeetingStatus } from '~~/shared/types/meeting'
+import type { Meeting, MeetingType, MeetingStatus, AgendaItem, MeetingAttendee } from '~~/shared/types/meeting'
 
 const VALID_TYPES: MeetingType[] = ['ordinaria', 'extraordinaria', 'comite', 'informativa']
 const VALID_STATUSES: MeetingStatus[] = ['programada', 'en_curso', 'completada', 'cancelada']
@@ -20,9 +20,18 @@ function mapMeeting(row: Record<string, unknown>, createdByName?: string | null)
     status: row.status as MeetingStatus,
     agenda: row.agenda as string | null,
     minutes: row.minutes as string | null,
+    minutesAttendees: row.minutesAttendees as string | null,
+    minutesQuorum: row.minutesQuorum as boolean | null,
+    minutesPoints: row.minutesPoints as string | null,
+    minutesAgreements: row.minutesAgreements as string | null,
+    minutesNotes: row.minutesNotes as string | null,
+    agendaItems: (row.agendaItems as AgendaItem[] | null) ?? null,
+    minutesAttendeesData: (row.minutesAttendeesData as MeetingAttendee[] | null) ?? null,
+    minutesAgreementsList: (row.minutesAgreementsList as string[] | null) ?? null,
     createdById: row.createdById as string,
     createdByName: createdByName ?? undefined,
     tenantId: row.tenantId as string,
+    displayOrder: row.displayOrder as number,
     createdAt: (row.createdAt as Date).toISOString(),
     updatedAt: (row.updatedAt as Date).toISOString(),
   }
@@ -93,16 +102,25 @@ export default defineEventHandler(async (event) => {
       status: meetings.status,
       agenda: meetings.agenda,
       minutes: meetings.minutes,
+      minutesAttendees: meetings.minutesAttendees,
+      minutesQuorum: meetings.minutesQuorum,
+      minutesPoints: meetings.minutesPoints,
+      minutesAgreements: meetings.minutesAgreements,
+      minutesNotes: meetings.minutesNotes,
+      agendaItems: meetings.agendaItems,
+      minutesAttendeesData: meetings.minutesAttendeesData,
+      minutesAgreementsList: meetings.minutesAgreementsList,
       createdById: meetings.createdById,
       tenantId: meetings.tenantId,
       createdAt: meetings.createdAt,
       updatedAt: meetings.updatedAt,
+      displayOrder: meetings.displayOrder,
       createdByName: user.name,
     })
     .from(meetings)
     .leftJoin(user, eq(meetings.createdById, user.id))
     .where(whereClause)
-    .orderBy(asc(meetings.date))
+    .orderBy(asc(meetings.displayOrder), asc(meetings.date))
     .limit(limit)
     .offset(offset)
 

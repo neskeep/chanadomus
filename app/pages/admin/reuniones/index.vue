@@ -8,9 +8,13 @@ import {
   Video,
   MapPin,
   Clock,
+  GripVertical,
+  Check,
 } from 'lucide-vue-next'
+import draggable from 'vuedraggable'
 import { toast } from 'vue-sonner'
 import type {
+  Meeting,
   MeetingType,
   MeetingStatus,
 } from '~~/shared/types/meeting'
@@ -20,6 +24,7 @@ import { MEETING_TYPE_COLORS as TYPE_COLORS, MEETING_STATUS_COLORS as STATUS_COL
 useHead({ title: 'Gestion de Reuniones' })
 
 const { formatDateTime } = useFormatDate()
+const { isReordering, isSaving, saveOrder } = useReorder()
 
 const {
   meetings,
@@ -89,6 +94,31 @@ async function loadMeetings() {
   await fetchMeetings(params)
 }
 
+// Local writable copy for drag-and-drop
+const localMeetings = ref<Meeting[]>([])
+watch(meetings, val => { localMeetings.value = [...val] }, { immediate: true })
+
+function toggleReorder() {
+  if (isReordering.value) {
+    handleSaveOrder()
+  }
+  else {
+    filterType.value = ''
+    filterStatus.value = ''
+    isReordering.value = true
+  }
+}
+
+async function handleSaveOrder() {
+  const items = localMeetings.value.map((item, index) => ({
+    id: item.id,
+    displayOrder: index,
+  }))
+  await saveOrder('meetings', items)
+  toast.success('Orden guardado')
+  isReordering.value = false
+}
+
 watch([filterType, filterStatus], () => {
   loadMeetings()
 })
@@ -125,6 +155,10 @@ async function handleDelete() {
         <TopbarFilterGroup v-model="filterType" label="Tipo" :options="typeOptions" />
         <TopbarFilterGroup v-model="filterStatus" label="Estado" :options="meetingStatusOptions" />
       </TopbarFilters>
+      <Button size="icon" variant="ghost" class="size-8" :disabled="isSaving" :title="isReordering ? 'Guardar orden' : 'Reordenar'" @click="toggleReorder">
+        <Check v-if="isReordering" class="size-4 text-primary" />
+        <GripVertical v-else class="size-4" />
+      </Button>
       <NuxtLink to="/admin/reuniones/crear">
         <Button size="sm">
           <Plus class="mr-1.5 size-3.5" />
@@ -135,6 +169,10 @@ async function handleDelete() {
 
     <!-- Mobile action button -->
     <TopbarMobileAction>
+      <Button size="icon" variant="ghost" class="size-9" :disabled="isSaving" :title="isReordering ? 'Guardar orden' : 'Reordenar'" @click="toggleReorder">
+        <Check v-if="isReordering" class="size-4 text-primary" />
+        <GripVertical v-else class="size-4" />
+      </Button>
       <Button size="icon" variant="ghost" class="size-9" as-child>
         <NuxtLink to="/admin/reuniones/crear">
           <Plus class="size-4" />
@@ -178,6 +216,7 @@ async function handleDelete() {
         <Table>
           <TableHeader>
             <TableRow>
+              <TableHead v-if="isReordering" class="w-8" />
               <TableHead>Titulo</TableHead>
               <TableHead>Fecha / Hora</TableHead>
               <TableHead>Tipo</TableHead>
@@ -186,7 +225,51 @@ async function handleDelete() {
               <TableHead class="text-right">Acciones</TableHead>
             </TableRow>
           </TableHeader>
-          <TableBody>
+          <draggable
+            v-if="isReordering"
+            v-model="localMeetings"
+            tag="tbody"
+            item-key="id"
+            handle=".drag-handle"
+            ghost-class="opacity-50"
+            :animation="200"
+          >
+            <template #item="{ element: item }: { element: Meeting }">
+              <TableRow>
+                <TableCell class="w-8 px-2">
+                  <GripVertical class="drag-handle size-4 cursor-grab text-muted-foreground active:cursor-grabbing" />
+                </TableCell>
+                <TableCell class="font-medium">
+                  {{ item.title }}
+                </TableCell>
+                <TableCell>
+                  <div class="flex items-center gap-1.5 text-sm">
+                    <Clock class="size-3.5 shrink-0 text-muted-foreground" />
+                    <span>{{ formatDateTime(item.date) }}</span>
+                  </div>
+                </TableCell>
+                <TableCell>
+                  <span
+                    class="inline-flex rounded-lg px-2 py-0.5 text-xs font-medium"
+                    :class="TYPE_COLORS[item.type]"
+                  >
+                    {{ TYPE_LABELS[item.type] }}
+                  </span>
+                </TableCell>
+                <TableCell>
+                  <span
+                    class="inline-flex rounded-lg px-2 py-0.5 text-xs font-medium"
+                    :class="STATUS_COLORS[item.status]"
+                  >
+                    {{ STATUS_LABELS[item.status] }}
+                  </span>
+                </TableCell>
+                <TableCell />
+                <TableCell />
+              </TableRow>
+            </template>
+          </draggable>
+          <TableBody v-else>
             <TableRow v-for="item in meetings" :key="item.id">
               <TableCell class="font-medium">
                 {{ item.title }}
@@ -259,8 +342,37 @@ async function handleDelete() {
         </Table>
       </div>
 
-      <!-- Mobile cards -->
-      <div class="space-y-2 md:hidden">
+      <!-- Mobile cards (reorder mode) -->
+      <draggable
+        v-if="isReordering"
+        v-model="localMeetings"
+        item-key="id"
+        handle=".drag-handle"
+        ghost-class="opacity-50"
+        :animation="200"
+        class="space-y-2 md:hidden"
+      >
+        <template #item="{ element: item }: { element: Meeting }">
+          <Card class="px-3 py-2.5">
+            <div class="flex items-center gap-2">
+              <GripVertical class="drag-handle size-4 shrink-0 cursor-grab text-muted-foreground active:cursor-grabbing" />
+              <div class="min-w-0 flex-1">
+                <p class="truncate text-sm font-semibold">{{ item.title }}</p>
+                <span class="text-[11px] tabular-nums text-muted-foreground">{{ formatDateTime(item.date) }}</span>
+              </div>
+              <span
+                class="shrink-0 rounded-lg px-1.5 py-0.5 text-[11px] font-medium"
+                :class="TYPE_COLORS[item.type]"
+              >
+                {{ TYPE_LABELS[item.type] }}
+              </span>
+            </div>
+          </Card>
+        </template>
+      </draggable>
+
+      <!-- Mobile cards (normal mode) -->
+      <div v-else class="space-y-2 md:hidden">
         <Card v-for="item in meetings" :key="item.id" class="px-3 py-2.5">
           <!-- Row 1: Title + Type badge + Video link -->
           <div class="flex items-center gap-2">

@@ -1,4 +1,4 @@
-import { pgTable, pgEnum, uuid, text, timestamp, index } from 'drizzle-orm/pg-core'
+import { pgTable, pgEnum, uuid, text, timestamp, integer, index } from 'drizzle-orm/pg-core'
 import { tenants } from './tenant'
 import { user } from './auth'
 
@@ -19,6 +19,7 @@ export const announcements = pgTable('announcements', {
   publishedAt: timestamp('published_at'),
   expiresAt: timestamp('expires_at'),
   createdAt: timestamp('created_at').notNull().defaultNow(),
+  displayOrder: integer('display_order').notNull().default(0),
   updatedAt: timestamp('updated_at').notNull().defaultNow(),
 }, (table) => [
   index('announcement_tenant_idx').on(table.tenantId),

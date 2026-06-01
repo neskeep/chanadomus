@@ -34,11 +34,15 @@ export default defineEventHandler(async (event) => {
   }
 
   let title = ''
+  let displayOrder: number | undefined
   let pdfFile: { filename: string; data: Buffer; type: string } | null = null
 
   for (const part of formData) {
     if (part.name === 'title') {
       title = part.data.toString('utf-8').trim()
+    } else if (part.name === 'displayOrder') {
+      const parsed = parseInt(part.data.toString('utf-8').trim(), 10)
+      if (!isNaN(parsed) && parsed >= 0) displayOrder = parsed
     } else if (part.name === 'attachment' && part.data.length > 0) {
       pdfFile = {
         filename: part.filename ?? 'document.pdf',
@@ -82,13 +86,18 @@ export default defineEventHandler(async (event) => {
     attachmentPath = storedFileName
   }
 
+  const updateValues: Record<string, unknown> = {
+    title,
+    attachmentPath,
+    updatedAt: new Date(),
+  }
+  if (displayOrder !== undefined) {
+    updateValues.displayOrder = displayOrder
+  }
+
   const updated = await db
     .update(regulations)
-    .set({
-      title,
-      attachmentPath,
-      updatedAt: new Date(),
-    })
+    .set(updateValues)
     .where(eq(regulations.id, id))
     .returning()
 

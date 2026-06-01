@@ -67,6 +67,14 @@ export default defineEventHandler(async (event) => {
     updateValues.type = body.type
   }
 
+  if (body.displayOrder !== undefined) {
+    const order = Number(body.displayOrder)
+    if (!Number.isInteger(order) || order < 0) {
+      throw createError({ statusCode: 400, message: 'displayOrder debe ser un entero >= 0' })
+    }
+    updateValues.displayOrder = order
+  }
+
   if (body.deadline !== undefined) {
     if (body.deadline === null) {
       updateValues.deadline = null
@@ -203,6 +211,7 @@ export default defineEventHandler(async (event) => {
     closedAt: updated.closedAt?.toISOString() ?? null,
     createdAt: updated.createdAt.toISOString(),
     updatedAt: updated.updatedAt.toISOString(),
+    displayOrder: updated.displayOrder,
     options: pollOptionsList,
     totalVotes,
     totalUnits,
