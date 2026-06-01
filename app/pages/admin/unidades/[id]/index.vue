@@ -1,9 +1,10 @@
 <script setup lang="ts">
-import { Plus, Pencil, Trash2, Users, Car, Loader2, Mail, Link, Copy, Ban, QrCode, Share2, Download } from 'lucide-vue-next'
+import { Plus, Pencil, Trash2, Users, Car, HardHat, Loader2, Mail, Link, Copy, Ban, QrCode, Share2, Download } from 'lucide-vue-next'
 import { toast } from 'vue-sonner'
 import QRCode from 'qrcode'
 import type { HouseholdMember, HouseholdRelationship } from '~~/shared/types/household'
 import type { Vehicle } from '~~/shared/types/vehicle'
+import type { UnitServiceStaff } from '~~/shared/types/unit-service-staff'
 import type { Invitation, InvitationStatus } from '~~/shared/types/invitation'
 
 const router = useRouter()
@@ -51,6 +52,13 @@ const {
   deleteVehicle,
   generateVehiclePass,
 } = useUnitVehicles(unitId)
+
+const {
+  serviceStaff,
+  isLoading: staffLoading,
+  fetchServiceStaff,
+  generateStaffPass,
+} = useUnitServiceStaff(unitId)
 
 const { downloadBadge, isGenerating: isDownloadingBadge } = useQrBadge()
 
@@ -231,9 +239,9 @@ const qrDialogOpen = ref(false)
 const isGeneratingQr = ref(false)
 const qrImageUrl = ref('')
 const qrAccessUrl = ref('')
-const qrTarget = ref<{ name: string, subtitle: string, id: string, token: string | null, type: 'member' | 'vehicle' } | null>(null)
+const qrTarget = ref<{ name: string, subtitle: string, id: string, token: string | null, type: 'member' | 'vehicle' | 'staff' } | null>(null)
 
-async function handleShowQr(entity: { name?: string, plate?: string, id: string, passToken?: string }, type: 'member' | 'vehicle', subtitle: string) {
+async function handleShowQr(entity: { name?: string, plate?: string, id: string, passToken?: string }, type: 'member' | 'vehicle' | 'staff', subtitle: string) {
   const token = entity.passToken
   if (!token) return
   const name = type === 'vehicle' ? (entity as Vehicle).plate : (entity as HouseholdMember).name
@@ -254,8 +262,8 @@ async function handleShowQr(entity: { name?: string, plate?: string, id: string,
   }
 }
 
-async function handleGenerateQr(entity: { id: string, name?: string, plate?: string }, type: 'member' | 'vehicle', subtitle: string) {
-  const name = type === 'vehicle' ? (entity as Vehicle).plate : (entity as HouseholdMember).name
+async function handleGenerateQr(entity: { id: string, name?: string, plate?: string }, type: 'member' | 'vehicle' | 'staff', subtitle: string) {
+  const name = type === 'vehicle' ? (entity as Vehicle).plate : (entity as HouseholdMember | UnitServiceStaff).name
   qrTarget.value = { name, subtitle, id: entity.id, token: null, type }
   qrDialogOpen.value = true
   isGeneratingQr.value = true
@@ -265,8 +273,12 @@ async function handleGenerateQr(entity: { id: string, name?: string, plate?: str
       const res = await generateMemberPass(entity.id)
       token = res.token
     }
-    else {
+    else if (type === 'vehicle') {
       const res = await generateVehiclePass(entity.id)
+      token = res.token
+    }
+    else {
+      const res = await generateStaffPass(entity.id)
       token = res.token
     }
     qrTarget.value!.token = token
@@ -307,6 +319,7 @@ onMounted(() => {
   fetchUnit()
   fetchMembers()
   fetchVehicles()
+  fetchServiceStaff()
   fetchInvitations()
 })
 </script>
@@ -373,6 +386,10 @@ onMounted(() => {
         <TabsTrigger value="vehicles" class="flex-1">
           <Car class="mr-1.5 size-4" />
           Vehiculos
+        </TabsTrigger>
+        <TabsTrigger value="staff" class="flex-1">
+          <HardHat class="mr-1.5 size-4" />
+          Personal
         </TabsTrigger>
         <TabsTrigger value="invitations" class="flex-1">
           <Mail class="mr-1.5 size-4" />
@@ -620,6 +637,110 @@ onMounted(() => {
                   </Button>
                   <Button variant="ghost" class="h-6 px-2 text-[11px] text-destructive hover:text-destructive" @click="confirmDeleteVehicle(vehicle)">
                     <Trash2 class="size-3" />
+                  </Button>
+                </span>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </TabsContent>
+
+      <!-- Staff Tab -->
+      <TabsContent value="staff" class="mt-4">
+        <p class="mb-4 text-sm text-muted-foreground">{{ serviceStaff.length }} personal{{ serviceStaff.length !== 1 ? 'es' : '' }}</p>
+
+        <ListSkeleton v-if="staffLoading" :count="3" variant="row" />
+
+        <EmptyState
+          v-else-if="serviceStaff.length === 0"
+          :icon="HardHat"
+          title="Sin personal registrado"
+          description="El propietario puede registrar jardineros, domésticas u otro personal"
+        />
+
+        <!-- Desktop Table -->
+        <div v-else class="hidden overflow-x-auto rounded-lg border md:block">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Nombre</TableHead>
+                <TableHead>Rol</TableHead>
+                <TableHead>Telefono</TableHead>
+                <TableHead>Documento</TableHead>
+                <TableHead class="w-28 text-center">Pase QR</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              <TableRow v-for="staff in serviceStaff" :key="staff.id">
+                <TableCell class="font-medium">{{ staff.name }}</TableCell>
+                <TableCell>
+                  <Badge variant="secondary">{{ staff.roleName ?? 'Sin rol' }}</Badge>
+                </TableCell>
+                <TableCell class="text-muted-foreground">{{ staff.phone ?? '—' }}</TableCell>
+                <TableCell class="text-muted-foreground">{{ staff.idDocument ?? '—' }}</TableCell>
+                <TableCell class="text-center">
+                  <Button
+                    v-if="staff.passToken"
+                    variant="outline"
+                    size="sm"
+                    class="gap-1.5"
+                    @click="handleShowQr(staff, 'staff', staff.roleName ?? 'Personal')"
+                  >
+                    <QrCode class="size-3.5" />
+                    Ver QR
+                  </Button>
+                  <Button
+                    v-else
+                    variant="default"
+                    size="sm"
+                    class="gap-1.5"
+                    @click="handleGenerateQr(staff, 'staff', staff.roleName ?? 'Personal')"
+                  >
+                    <QrCode class="size-3.5" />
+                    Generar
+                  </Button>
+                </TableCell>
+              </TableRow>
+            </TableBody>
+          </Table>
+        </div>
+
+        <!-- Mobile Cards -->
+        <div v-if="!staffLoading && serviceStaff.length > 0" class="space-y-2 md:hidden">
+          <Card v-for="staff in serviceStaff" :key="staff.id">
+            <CardContent class="px-3 py-2.5">
+              <div class="flex items-center gap-1.5">
+                <p class="min-w-0 flex-1 truncate text-sm font-semibold">{{ staff.name }}</p>
+                <Badge variant="secondary" class="shrink-0 text-[11px]">{{ staff.roleName ?? 'Sin rol' }}</Badge>
+              </div>
+              <div class="mt-0.5 flex items-center gap-x-1 text-[11px] text-muted-foreground">
+                <template v-if="staff.phone">
+                  <span class="shrink-0 tabular-nums">{{ staff.phone }}</span>
+                </template>
+                <template v-if="staff.idDocument">
+                  <span class="opacity-30">·</span>
+                  <span class="truncate">{{ staff.idDocument }}</span>
+                </template>
+                <span class="ml-auto flex shrink-0 items-center gap-0.5">
+                  <Button
+                    v-if="staff.passToken"
+                    variant="outline"
+                    size="sm"
+                    class="h-6 gap-1 px-2 text-[11px]"
+                    @click="handleShowQr(staff, 'staff', staff.roleName ?? 'Personal')"
+                  >
+                    <QrCode class="size-3" />
+                    Ver QR
+                  </Button>
+                  <Button
+                    v-else
+                    variant="default"
+                    size="sm"
+                    class="h-6 gap-1 px-2 text-[11px]"
+                    @click="handleGenerateQr(staff, 'staff', staff.roleName ?? 'Personal')"
+                  >
+                    <QrCode class="size-3" />
+                    Generar
                   </Button>
                 </span>
               </div>
