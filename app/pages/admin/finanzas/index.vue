@@ -68,7 +68,7 @@ function formatPickerDate(d: DateValue): string {
 }
 
 // --- Tabs ---
-const activeTab = ref<'movements' | 'balances'>('movements')
+const activeTab = ref<'movements' | 'balances' | 'reports'>('movements')
 
 // --- Movements pagination & filter ---
 const currentPage = ref(1)
@@ -280,39 +280,46 @@ onMounted(() => {
       />
     </div>
 
-    <!-- 2-col layout: main + reports sidebar -->
-    <div class="grid gap-6 lg:grid-cols-12">
-      <!-- Main content -->
-      <section class="min-w-0 lg:col-span-7">
-        <!-- Tabs -->
-        <div class="mb-3 flex items-center justify-between border-b">
-          <div class="flex items-center gap-1">
-            <button
-              class="px-3 py-2 text-sm font-medium transition-colors"
-              :class="activeTab === 'movements'
-                ? 'border-b-2 border-primary text-foreground'
-                : 'text-muted-foreground hover:text-foreground'"
-              @click="activeTab = 'movements'"
-            >
-              Movimientos
-            </button>
-            <button
-              class="px-3 py-2 text-sm font-medium transition-colors"
-              :class="activeTab === 'balances'
-                ? 'border-b-2 border-primary text-foreground'
-                : 'text-muted-foreground hover:text-foreground'"
-              @click="activeTab = 'balances'"
-            >
-              Saldos por unidad
-            </button>
-          </div>
-          <Input
-            v-if="activeTab === 'balances'"
-            v-model="balanceSearch"
-            placeholder="Buscar unidad..."
-            class="mb-1 h-7 w-40 text-xs"
-          />
-        </div>
+    <!-- Tabs -->
+    <div class="mb-3 flex items-center justify-between border-b">
+      <div class="flex items-center gap-1">
+        <button
+          class="px-3 py-2 text-sm font-medium transition-colors"
+          :class="activeTab === 'movements'
+            ? 'border-b-2 border-primary text-foreground'
+            : 'text-muted-foreground hover:text-foreground'"
+          @click="activeTab = 'movements'"
+        >
+          Movimientos
+        </button>
+        <button
+          class="px-3 py-2 text-sm font-medium transition-colors"
+          :class="activeTab === 'balances'
+            ? 'border-b-2 border-primary text-foreground'
+            : 'text-muted-foreground hover:text-foreground'"
+          @click="activeTab = 'balances'"
+        >
+          Saldos por unidad
+        </button>
+        <button
+          class="px-3 py-2 text-sm font-medium transition-colors"
+          :class="activeTab === 'reports'
+            ? 'border-b-2 border-primary text-foreground'
+            : 'text-muted-foreground hover:text-foreground'"
+          @click="activeTab = 'reports'"
+        >
+          Informes
+        </button>
+      </div>
+      <Input
+        v-if="activeTab === 'balances'"
+        v-model="balanceSearch"
+        placeholder="Buscar unidad..."
+        class="mb-1 h-7 w-40 text-xs"
+      />
+    </div>
+
+    <section class="min-w-0">
 
         <!-- Tab: Movimientos -->
         <template v-if="activeTab === 'movements'">
@@ -490,57 +497,85 @@ onMounted(() => {
             />
           </template>
         </template>
+
+        <!-- Tab: Informes -->
+        <template v-if="activeTab === 'reports'">
+          <ListSkeleton v-if="reportsLoading" :count="3" variant="row" />
+
+          <ErrorAlert v-else-if="reportsError" :message="reportsError" />
+
+          <EmptyState
+            v-else-if="reports.length === 0"
+            :icon="FileText"
+            title="Sin informes"
+            description="Los informes financieros aparecerán aquí"
+          />
+
+          <template v-else>
+            <!-- Desktop table -->
+            <div class="hidden overflow-x-auto rounded-lg border md:block">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Título</TableHead>
+                    <TableHead>Período</TableHead>
+                    <TableHead class="w-[100px] text-right">Archivo</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  <TableRow v-for="report in reports" :key="report.id">
+                    <TableCell class="font-medium">
+                      {{ report.title }}
+                    </TableCell>
+                    <TableCell class="text-muted-foreground">
+                      {{ getMonthLabel(report.month) }} {{ report.year }}
+                    </TableCell>
+                    <TableCell class="text-right">
+                      <Button
+                        variant="ghost"
+                        class="h-6 gap-1 px-2 text-[11px] text-muted-foreground hover:text-foreground"
+                        as="a"
+                        :href="`/api/finance/reports/${report.filePath}`"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        <FileText class="size-3" />
+                        PDF
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                </TableBody>
+              </Table>
+            </div>
+
+            <!-- Mobile cards -->
+            <div class="space-y-2 md:hidden">
+              <Card v-for="report in reports" :key="report.id">
+                <CardContent class="flex items-center gap-3 px-3 py-2.5">
+                  <div class="min-w-0 flex-1">
+                    <p class="truncate text-sm font-semibold">{{ report.title }}</p>
+                    <p class="mt-0.5 text-[11px] text-muted-foreground">
+                      {{ getMonthLabel(report.month) }} {{ report.year }}
+                    </p>
+                  </div>
+                  <Button
+                    variant="ghost"
+                    class="h-6 shrink-0 gap-1 px-2 text-[11px] text-muted-foreground hover:text-foreground"
+                    as="a"
+                    :href="`/api/finance/reports/${report.filePath}`"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    <FileText class="size-3" />
+                    PDF
+                  </Button>
+                </CardContent>
+              </Card>
+            </div>
+
+            <ListPagination v-model:current-page="currentReportsPage" :total-pages="reportsTotalPages" class="mt-3" />
+          </template>
+        </template>
       </section>
-
-      <!-- Reports sidebar -->
-      <section class="min-w-0 lg:col-span-5">
-        <div class="mb-3 flex items-center justify-between">
-          <h2 class="text-base font-semibold">Informes</h2>
-          <Button variant="ghost" size="sm" as-child class="h-6 px-2 text-[11px] text-muted-foreground">
-            <NuxtLink to="/admin/finanzas/subir-informe">
-              <Upload class="mr-1 size-3" />
-              Subir
-            </NuxtLink>
-          </Button>
-        </div>
-
-        <ListSkeleton v-if="reportsLoading" :count="3" variant="row" />
-
-        <ErrorAlert v-else-if="reportsError" :message="reportsError" />
-
-        <EmptyState
-          v-else-if="reports.length === 0"
-          :icon="FileText"
-          title="Sin informes"
-          description="Los informes financieros aparecerán aquí"
-        />
-
-        <div v-else class="space-y-2">
-          <Card v-for="report in reports" :key="report.id">
-            <CardContent class="flex items-center gap-3 px-3 py-2.5">
-              <div class="min-w-0 flex-1">
-                <p class="truncate text-sm font-semibold">{{ report.title }}</p>
-                <p class="mt-0.5 text-[11px] text-muted-foreground">
-                  {{ getMonthLabel(report.month) }} {{ report.year }}
-                </p>
-              </div>
-              <Button
-                variant="ghost"
-                class="h-6 shrink-0 gap-1 px-2 text-[11px] text-muted-foreground hover:text-foreground"
-                as="a"
-                :href="`/api/finance/reports/${report.filePath}`"
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                <FileText class="size-3" />
-                PDF
-              </Button>
-            </CardContent>
-          </Card>
-
-          <ListPagination v-model:current-page="currentReportsPage" :total-pages="reportsTotalPages" />
-        </div>
-      </section>
-    </div>
   </div>
 </template>
