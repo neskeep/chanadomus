@@ -55,9 +55,10 @@ describe('Auth types', () => {
       }
     })
 
-    it('vigilancia ONLY has access to /vigilancia', () => {
+    it('vigilancia has access to /vigilancia and /accesos only', () => {
+      const allowedRoutes = ['/vigilancia', '/accesos']
       for (const [route, roles] of Object.entries(ROUTE_ROLE_MAP)) {
-        if (route === '/vigilancia') {
+        if (allowedRoutes.includes(route)) {
           expect(roles).toContain('vigilancia')
         } else {
           expect(roles).not.toContain('vigilancia')
