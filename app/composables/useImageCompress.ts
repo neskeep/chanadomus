@@ -1,5 +1,3 @@
-import heic2any from 'heic2any'
-
 const MAX_DIMENSION = 1920
 const QUALITY = 0.8
 
@@ -11,6 +9,7 @@ function isHeic(file: File): boolean {
 }
 
 async function heicToJpeg(file: File): Promise<File> {
+  const { default: heic2any } = await import('heic2any')
   const blob = await heic2any({ blob: file, toType: 'image/jpeg', quality: 0.9 })
   const result = Array.isArray(blob) ? blob[0]! : blob
   const name = file.name.replace(/\.hei[cf]$/i, '.jpg')
