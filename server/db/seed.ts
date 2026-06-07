@@ -6,6 +6,7 @@ import { tenants } from './schema/tenant'
 import { user, account } from './schema/auth'
 import { units } from './schema/unit'
 import { accessLogs } from './schema/access'
+import { staff } from './schema/staff'
 
 const connectionString = process.env.DATABASE_URL!
 const client = postgres(connectionString)
@@ -34,12 +35,16 @@ async function seed() {
   const hashedPassword = await hashPassword('Yolo2026!')
   const now = new Date()
   let vigilanteUserId = ''
+  let conserjeUserId = ''
 
   for (const u of SEED_USERS) {
     const userId = crypto.randomUUID()
 
     if (u.role === 'vigilancia') {
       vigilanteUserId = userId
+    }
+    if (u.role === 'conserje') {
+      conserjeUserId = userId
     }
 
     await db.insert(user).values({
@@ -83,6 +88,17 @@ async function seed() {
       .set({ unitId: rancho1.id })
       .where(eq(user.email, 'propietario@chanadomus.com'))
     console.log(`  Assigned ${rancho1.label} to propietario@chanadomus.com`)
+
+    // Assign conserje as staff of Rancho 1
+    await db.insert(staff).values({
+      name: 'Conserje Demo',
+      role: 'conserje',
+      userId: conserjeUserId,
+      unitId: rancho1.id,
+      tenantId: tenant.id,
+      isActive: true,
+    })
+    console.log(`  Conserje Demo assigned as staff of ${rancho1.label}`)
   }
 
   // 5. Create access logs (dummy data for vigilancia view)

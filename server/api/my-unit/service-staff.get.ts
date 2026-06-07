@@ -2,6 +2,7 @@ import { db } from '~~/server/db'
 import { unitServiceStaff } from '~~/server/db/schema/unit-service-staff'
 import { serviceStaffRoles } from '~~/server/db/schema/service-staff-role'
 import { serviceStaffPasses } from '~~/server/db/schema/service-staff-pass'
+import { staff } from '~~/server/db/schema/staff'
 import { eq, and, asc } from 'drizzle-orm'
 
 export default defineEventHandler(async (event) => {
@@ -13,7 +14,8 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 403, message: 'Usuario sin unidad asignada' })
   }
 
-  const rows = await db
+  // Service staff (jardinero, doméstica, etc.)
+  const serviceRows = await db
     .select({
       id: unitServiceStaff.id,
       unitId: unitServiceStaff.unitId,
@@ -45,10 +47,42 @@ export default defineEventHandler(async (event) => {
     )
     .orderBy(asc(unitServiceStaff.name))
 
-  const data = rows.map(row => ({
-    ...row,
-    hasPass: !!row.passToken,
-  }))
+  // Conserjes asignados a esta unidad (tabla staff)
+  const conserjeRows = await db
+    .select({
+      id: staff.id,
+      unitId: staff.unitId,
+      name: staff.name,
+      idDocument: staff.idDocument,
+      phone: staff.phone,
+      isActive: staff.isActive,
+      tenantId: staff.tenantId,
+      createdAt: staff.createdAt,
+    })
+    .from(staff)
+    .where(
+      and(
+        eq(staff.unitId, unitId),
+        eq(staff.tenantId, tenantId),
+        eq(staff.role, 'conserje'),
+        eq(staff.isActive, true),
+      ),
+    )
+    .orderBy(asc(staff.name))
+
+  const data = [
+    ...conserjeRows.map(row => ({
+      ...row,
+      roleId: null,
+      roleName: 'Conserje',
+      passToken: null,
+      hasPass: false,
+    })),
+    ...serviceRows.map(row => ({
+      ...row,
+      hasPass: !!row.passToken,
+    })),
+  ]
 
   return { data }
 })
