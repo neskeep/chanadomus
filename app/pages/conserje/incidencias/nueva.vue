@@ -13,7 +13,6 @@ const title = ref('')
 const description = ref('')
 const priority = ref<IncidentPriority>('medium')
 const isAnonymous = ref(false)
-const unitId = ref('')
 const photos = ref<{ file: File, preview: string }[]>([])
 const isCompressing = ref(false)
 
@@ -21,22 +20,9 @@ const MAX_PHOTOS = 3
 const MAX_FILE_SIZE = 10 * 1024 * 1024 // 10MB (after compression)
 const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/heic', 'image/heif']
 
-// Load units for selection
-const units = ref<Array<{ id: string; number: string; label: string | null }>>([])
-onMounted(async () => {
-  try {
-    const result = await $fetch('/api/units')
-    units.value = result.data
-  }
-  catch {
-    toast.error('Error al cargar las unidades')
-  }
-})
-
 const canSubmit = computed(() =>
   title.value.trim().length > 0
   && description.value.trim().length > 0
-  && unitId.value !== ''
   && !isCreating.value
   && !isCompressing.value,
 )
@@ -92,7 +78,6 @@ async function handleSubmit() {
   formData.append('description', description.value.trim())
   formData.append('priority', priority.value)
   formData.append('is_anonymous', String(isAnonymous.value))
-  formData.append('unit_id', unitId.value)
 
   photos.value.forEach((photo, i) => {
     formData.append(`photo_${i}`, photo.file)
@@ -141,17 +126,6 @@ onUnmounted(() => {
               placeholder="Describe el problema con detalle: ubicación, desde cuándo ocurre, etc."
               rows="4"
               class="text-base"
-              required
-            />
-          </div>
-
-          <!-- Unit -->
-          <div class="space-y-1.5">
-            <Label>Unidad relacionada <span class="text-destructive">*</span></Label>
-            <UnitCombobox
-              v-model="unitId"
-              :units="units"
-              placeholder="Buscar rancho..."
               required
             />
           </div>
