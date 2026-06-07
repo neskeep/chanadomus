@@ -8,7 +8,7 @@ import { join } from 'path'
 import { sendPushToRole } from '~~/server/utils/web-push'
 import type { Incident, IncidentPriority } from '~~/shared/types/incident'
 
-const MAX_PHOTO_SIZE = 5 * 1024 * 1024 // 5MB
+const MAX_PHOTO_SIZE = 10 * 1024 * 1024 // 10MB
 const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp']
 const MAX_PHOTOS = 3
 const VALID_PRIORITIES: IncidentPriority[] = ['low', 'medium', 'high']

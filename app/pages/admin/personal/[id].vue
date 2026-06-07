@@ -88,12 +88,14 @@ async function generateQrImage() {
 
 // Avatar upload
 async function handleAvatarChange(event: Event) {
+  const { compressImage } = useImageCompress()
   const input = event.target as HTMLInputElement
-  const file = input.files?.[0]
-  if (!file) return
+  const rawFile = input.files?.[0]
+  if (!rawFile) return
 
   uploadingAvatar.value = true
   try {
+    const file = await compressImage(rawFile)
     await uploadAvatar(staffId, file)
     toast.success('Foto actualizada')
   }
@@ -246,7 +248,7 @@ onMounted(async () => {
               <input
                 ref="fileInput"
                 type="file"
-                accept="image/jpeg,image/png,image/webp"
+                accept="image/jpeg,image/png,image/webp,image/heic,image/heif,.heic,.heif"
                 class="hidden"
                 @change="handleAvatarChange"
               >

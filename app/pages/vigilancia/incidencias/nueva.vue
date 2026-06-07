@@ -7,44 +7,59 @@ useHead({ title: 'Reportar Incidencia' })
 
 const router = useRouter()
 const { isCreating, error, createIncident } = useIncidents()
+const { compressImage } = useImageCompress()
 
 const title = ref('')
 const description = ref('')
 const priority = ref<IncidentPriority>('medium')
 const isAnonymous = ref(false)
 const photos = ref<{ file: File, preview: string }[]>([])
+const isCompressing = ref(false)
 
 const MAX_PHOTOS = 3
-const MAX_FILE_SIZE = 5 * 1024 * 1024 // 5MB
-const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp']
+const MAX_FILE_SIZE = 10 * 1024 * 1024 // 10MB (after compression)
+const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/heic', 'image/heif']
 
 const canSubmit = computed(() =>
   title.value.trim().length > 0
   && description.value.trim().length > 0
-  && !isCreating.value,
+  && !isCreating.value
+  && !isCompressing.value,
 )
 
-function onFileChange(event: Event) {
+async function onFileChange(event: Event) {
   const input = event.target as HTMLInputElement
   if (!input.files) return
 
-  for (const file of Array.from(input.files)) {
+  const files = Array.from(input.files)
+  input.value = ''
+
+  for (const rawFile of files) {
     if (photos.value.length >= MAX_PHOTOS) {
       toast.error(`Máximo ${MAX_PHOTOS} fotos permitidas`)
       break
     }
-    if (!ALLOWED_TYPES.includes(file.type)) {
-      toast.error('Solo se permiten imágenes JPG, PNG o WebP')
+    if (!ALLOWED_TYPES.includes(rawFile.type) && !/\.hei[cf]$/i.test(rawFile.name)) {
+      toast.error('Solo se permiten imágenes JPG, PNG, WebP o HEIC')
       continue
     }
-    if (file.size > MAX_FILE_SIZE) {
-      toast.error('La imagen no puede superar 5MB')
-      continue
-    }
-    photos.value.push({ file, preview: URL.createObjectURL(file) })
-  }
 
-  input.value = ''
+    isCompressing.value = true
+    try {
+      const file = await compressImage(rawFile)
+      if (file.size > MAX_FILE_SIZE) {
+        toast.error('La imagen es demasiado grande incluso después de comprimir')
+        continue
+      }
+      photos.value.push({ file, preview: URL.createObjectURL(file) })
+    }
+    catch {
+      toast.error('Error al procesar la imagen')
+    }
+    finally {
+      isCompressing.value = false
+    }
+  }
 }
 
 function removePhoto(index: number) {
@@ -175,7 +190,7 @@ onUnmounted(() => {
                 <span class="text-base text-muted-foreground">Toca para agregar foto</span>
                 <input
                   type="file"
-                  accept="image/jpeg,image/png,image/webp"
+                  accept="image/jpeg,image/png,image/webp,image/heic,image/heif,.heic,.heif"
                   multiple
                   class="hidden"
                   @change="onFileChange"
