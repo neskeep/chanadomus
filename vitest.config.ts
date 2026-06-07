@@ -5,7 +5,7 @@ export default defineConfig({
   test: {
     globals: true,
     environment: 'happy-dom',
-    include: ['tests/**/*.test.ts'],
+    include: ['tests/unit/**/*.test.ts', 'tests/shared/**/*.test.ts'],
     coverage: {
       provider: 'v8',
       include: ['server/utils/**', 'shared/**'],
