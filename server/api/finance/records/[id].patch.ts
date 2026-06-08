@@ -54,7 +54,7 @@ export default defineEventHandler(async (event) => {
   }
 
   if (body.date !== undefined) {
-    updates.date = new Date(body.date)
+    updates.date = new Date(`${body.date}T12:00:00`)
   }
 
   const [row] = await db

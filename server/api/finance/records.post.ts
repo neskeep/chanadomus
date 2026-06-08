@@ -18,7 +18,7 @@ export default defineEventHandler(async (event) => {
 
   const { unitId, type, amount, description, date, category } = await validateBody(event, createRecordSchema)
 
-  const parsedDate = new Date(date)
+  const parsedDate = new Date(`${date}T12:00:00`)
 
   // Insertar registro
   const [row] = await db
