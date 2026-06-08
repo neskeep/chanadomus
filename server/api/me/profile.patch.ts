@@ -5,6 +5,7 @@ import { eq } from 'drizzle-orm'
 interface UpdateBody {
   name?: string
   phone?: string | null
+  cedula?: string | null
 }
 
 export default defineEventHandler(async (event) => {
@@ -29,6 +30,10 @@ export default defineEventHandler(async (event) => {
 
   if (body.phone !== undefined) {
     updates.phone = body.phone?.trim() || null
+  }
+
+  if (body.cedula !== undefined) {
+    updates.cedula = body.cedula?.trim() || null
   }
 
   if (Object.keys(updates).length === 1) {

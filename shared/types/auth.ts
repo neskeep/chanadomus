@@ -35,6 +35,7 @@ export interface UserWithUnit {
   name: string
   email: string
   phone: string | null
+  cedula: string | null
   image: string | null
   role: UserRole
   banned: boolean
@@ -52,6 +53,7 @@ export interface CreateUserPayload {
   role: UserRole
   unitId?: string
   phone?: string
+  cedula?: string
 }
 
 export interface UpdateUserPayload {
@@ -60,4 +62,5 @@ export interface UpdateUserPayload {
   role?: UserRole
   unitId?: string | null
   phone?: string | null
+  cedula?: string | null
 }

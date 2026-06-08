@@ -29,6 +29,7 @@ const formConfirmPassword = ref('')
 const formRole = ref<string | undefined>(undefined)
 const formUnitId = ref<string | undefined>(undefined)
 const formPhone = ref('')
+const formCedula = ref('')
 
 const passwordMismatch = computed(() =>
   formConfirmPassword.value.length > 0
@@ -46,6 +47,7 @@ const showUnitField = computed(() =>
 
 const canSubmit = computed(() =>
   formName.value.trim().length > 0
+  && formCedula.value.trim().length > 0
   && formEmail.value.trim().length > 0
   && formPassword.value.length >= 8
   && formPassword.value === formConfirmPassword.value
@@ -64,6 +66,7 @@ async function handleSubmit() {
       role: formRole.value as UserRole,
       unitId: showUnitField.value ? (formUnitId.value === 'none' ? undefined : formUnitId.value) : undefined,
       phone: formPhone.value.trim() || undefined,
+      cedula: formCedula.value.trim() || undefined,
     })
     toast.success('Usuario creado correctamente')
     router.push('/admin/usuarios')
@@ -98,15 +101,16 @@ onMounted(() => {
             />
           </div>
 
-          <!-- Teléfono + Correo -->
+          <!-- Cédula + Correo -->
           <div class="grid gap-4 sm:grid-cols-2">
             <div class="space-y-1.5">
-              <Label for="user-phone">Teléfono</Label>
+              <Label for="user-cedula">Cédula <span class="text-destructive">*</span></Label>
               <Input
-                id="user-phone"
-                v-model="formPhone"
-                placeholder="0412-1234567"
+                id="user-cedula"
+                v-model="formCedula"
+                placeholder="V-12345678"
                 class="h-12 text-base"
+                required
               />
             </div>
             <div class="space-y-1.5">
@@ -118,6 +122,19 @@ onMounted(() => {
                 placeholder="correo@ejemplo.com"
                 class="h-12 text-base"
                 required
+              />
+            </div>
+          </div>
+
+          <!-- Teléfono -->
+          <div class="grid gap-4 sm:grid-cols-2">
+            <div class="space-y-1.5">
+              <Label for="user-phone">Teléfono</Label>
+              <Input
+                id="user-phone"
+                v-model="formPhone"
+                placeholder="0412-1234567"
+                class="h-12 text-base"
               />
             </div>
           </div>

@@ -11,6 +11,7 @@ interface UpdateBody {
   role?: UserRole
   unitId?: string | null
   phone?: string | null
+  cedula?: string | null
 }
 
 export default defineEventHandler(async (event) => {
@@ -36,6 +37,7 @@ export default defineEventHandler(async (event) => {
   if (body.role !== undefined) updates.role = body.role
   if (body.unitId !== undefined) updates.unitId = body.unitId || null
   if (body.phone !== undefined) updates.phone = body.phone?.trim() || null
+  if (body.cedula !== undefined) updates.cedula = body.cedula?.trim() || null
 
   // Validate unit requirement based on effective role
   const effectiveRole = (body.role ?? undefined) as UserRole | undefined

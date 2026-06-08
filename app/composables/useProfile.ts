@@ -3,6 +3,7 @@ interface UserProfile {
   name: string
   email: string
   phone: string | null
+  cedula: string | null
   image: string | null
   role: string | null
   unitId: string | null
@@ -32,7 +33,7 @@ export function useProfile() {
     }
   }
 
-  async function updateProfile(data: { name?: string; phone?: string | null }) {
+  async function updateProfile(data: { name?: string; phone?: string | null; cedula?: string | null }) {
     isSubmitting.value = true
     error.value = null
     try {

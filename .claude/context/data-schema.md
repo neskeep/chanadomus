@@ -49,6 +49,12 @@ tenant_id: uuid (FK -> tenants.id, NOT NULL)
 - FK: explicito con `references()`
 - Indices: en columnas de busqueda frecuente + tenant_id
 
+## Campo Cédula (user)
+- `cedula`: text, nullable en DB (usuarios existentes sin dato)
+- Unique index parcial: `(tenant_id, cedula) WHERE cedula IS NOT NULL`
+- Obligatorio en formularios de perfil y admin (validación frontend)
+- Solo backend puede setear (`input: false` en Better Auth)
+
 ## Roles (enum)
 ```
 user_role: 'admin' | 'propietario' | 'conserje' | 'vigilancia'

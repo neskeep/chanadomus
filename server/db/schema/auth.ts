@@ -1,4 +1,5 @@
-import { pgTable, text, timestamp, boolean, uuid, index } from 'drizzle-orm/pg-core'
+import { pgTable, text, timestamp, boolean, uuid, index, uniqueIndex } from 'drizzle-orm/pg-core'
+import { sql } from 'drizzle-orm'
 import { tenants } from './tenant'
 import { units } from './unit'
 
@@ -21,10 +22,14 @@ export const user = pgTable('user', {
   tenantId: uuid('tenant_id').notNull().references(() => tenants.id),
   unitId: uuid('unit_id').references(() => units.id), // nullable — no todos los roles tienen unidad
   phone: text('phone'),
+  cedula: text('cedula'), // nullable — usuarios existentes no tienen este dato aún
 }, (table) => [
   index('user_tenant_idx').on(table.tenantId),
   index('user_email_idx').on(table.email),
   index('user_unit_idx').on(table.unitId),
+  uniqueIndex('user_tenant_cedula_idx')
+    .on(table.tenantId, table.cedula)
+    .where(sql`${table.cedula} IS NOT NULL`),
 ])
 
 export const session = pgTable('session', {

@@ -14,6 +14,7 @@ const createUserSchema = z.object({
   role: z.enum(USER_ROLES, { message: 'Rol invalido' }),
   unitId: z.string().optional(),
   phone: z.string().optional(),
+  cedula: z.string().optional(),
 }).refine((data) => {
   const ROLES_REQUIRING_UNIT: UserRole[] = ['propietario', 'conserje']
   if (ROLES_REQUIRING_UNIT.includes(data.role) && !data.unitId) {
@@ -52,6 +53,7 @@ export default defineEventHandler(async (event) => {
     tenantId,
     unitId: body.unitId || null,
     phone: body.phone?.trim() || null,
+    cedula: body.cedula?.trim() || null,
     createdAt: now,
     updatedAt: now,
   })

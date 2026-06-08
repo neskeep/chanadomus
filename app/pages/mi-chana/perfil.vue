@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Camera, Download, Loader2, ScanLine, Mail, Building2, Phone, Shield, Lock, Eye, EyeOff } from 'lucide-vue-next'
+import { Camera, Download, Loader2, ScanLine, Mail, Building2, Phone, Shield, Lock, Eye, EyeOff, CreditCard } from 'lucide-vue-next'
 import { toast } from 'vue-sonner'
 import { ROLE_LABELS } from '~~/shared/types/auth'
 import type { UserRole } from '~~/shared/types/auth'
@@ -18,6 +18,7 @@ const { downloadBadge, isGenerating: isDownloadingBadge } = useQrBadge()
 
 const formName = ref('')
 const formPhone = ref('')
+const formCedula = ref('')
 const fileInput = ref<HTMLInputElement | null>(null)
 const uploadingAvatar = ref(false)
 
@@ -64,6 +65,7 @@ watch(profile, (val) => {
   if (val) {
     formName.value = val.name ?? ''
     formPhone.value = val.phone ?? ''
+    formCedula.value = val.cedula ?? ''
   }
 }, { immediate: true })
 
@@ -99,6 +101,7 @@ async function handleSubmit() {
     await updateProfile({
       name: formName.value.trim(),
       phone: formPhone.value.trim() || null,
+      cedula: formCedula.value.trim() || null,
     })
     toast.success('Perfil actualizado')
   }
@@ -214,6 +217,10 @@ onMounted(async () => {
                     <Phone class="size-3.5 shrink-0" />
                     <span>{{ profile.phone }}</span>
                   </div>
+                  <div v-if="profile.cedula" class="flex items-center gap-2 text-muted-foreground">
+                    <CreditCard class="size-3.5 shrink-0" />
+                    <span>{{ profile.cedula }}</span>
+                  </div>
                 </div>
               </div>
             </div>
@@ -235,7 +242,14 @@ onMounted(async () => {
                   <Input id="profile-phone" v-model="formPhone" placeholder="0412-1234567" class="h-12 text-base" />
                 </div>
               </div>
-              <Button type="submit" class="h-12 w-full text-base font-semibold sm:w-auto sm:px-8" :disabled="!formName.trim() || isSubmitting">
+              <div class="space-y-1.5">
+                <Label for="profile-cedula">Cédula <span class="text-destructive">*</span></Label>
+                <Input id="profile-cedula" v-model="formCedula" placeholder="V-12345678" class="h-12 text-base" />
+                <p v-if="!formCedula.trim()" class="text-sm text-destructive">
+                  La cédula es obligatoria
+                </p>
+              </div>
+              <Button type="submit" class="h-12 w-full text-base font-semibold sm:w-auto sm:px-8" :disabled="!formName.trim() || !formCedula.trim() || isSubmitting">
                 <Loader2 v-if="isSubmitting" class="mr-2 size-4 animate-spin" />
                 {{ isSubmitting ? 'Guardando...' : 'Guardar cambios' }}
               </Button>

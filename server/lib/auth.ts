@@ -36,6 +36,11 @@ export const auth = betterAuth({
         required: false,
         input: false,
       },
+      cedula: {
+        type: 'string',
+        required: false,
+        input: false,
+      },
     },
   },
 

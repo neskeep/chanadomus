@@ -34,6 +34,7 @@ export default defineEventHandler(async (event) => {
       name: user.name,
       email: user.email,
       phone: user.phone,
+      cedula: user.cedula,
       image: user.image,
       role: user.role,
       banned: user.banned,
