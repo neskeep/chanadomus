@@ -190,6 +190,7 @@ onUnmounted(() => {
               >
                 <Camera class="size-10 text-muted-foreground" />
                 <span class="text-base text-muted-foreground">Toca para agregar foto</span>
+                <span class="text-xs text-muted-foreground/70">JPG, PNG, WebP o HEIC — max. 10 MB por foto</span>
                 <input
                   type="file"
                   accept="image/jpeg,image/png,image/webp,image/heic,image/heif,.heic,.heif"
