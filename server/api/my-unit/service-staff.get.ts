@@ -3,6 +3,7 @@ import { unitServiceStaff } from '~~/server/db/schema/unit-service-staff'
 import { serviceStaffRoles } from '~~/server/db/schema/service-staff-role'
 import { serviceStaffPasses } from '~~/server/db/schema/service-staff-pass'
 import { staff } from '~~/server/db/schema/staff'
+import { residentPasses } from '~~/server/db/schema/resident-pass'
 import { eq, and, asc } from 'drizzle-orm'
 
 export default defineEventHandler(async (event) => {
@@ -47,7 +48,7 @@ export default defineEventHandler(async (event) => {
     )
     .orderBy(asc(unitServiceStaff.name))
 
-  // Conserjes asignados a esta unidad (tabla staff)
+  // Conserjes asignados a esta unidad (tabla staff) — also check resident_passes for their QR
   const conserjeRows = await db
     .select({
       id: staff.id,
@@ -59,8 +60,17 @@ export default defineEventHandler(async (event) => {
       tenantId: staff.tenantId,
       createdAt: staff.createdAt,
       qrToken: staff.qrToken,
+      residentPassToken: residentPasses.token,
     })
     .from(staff)
+    .leftJoin(
+      residentPasses,
+      and(
+        eq(residentPasses.userId, staff.userId),
+        eq(residentPasses.tenantId, staff.tenantId),
+        eq(residentPasses.isActive, true),
+      ),
+    )
     .where(
       and(
         eq(staff.unitId, unitId),
@@ -72,21 +82,24 @@ export default defineEventHandler(async (event) => {
     .orderBy(asc(staff.name))
 
   const data = [
-    ...conserjeRows.map(row => ({
-      id: row.id,
-      unitId: row.unitId,
-      name: row.name,
-      idDocument: row.idDocument,
-      phone: row.phone,
-      isActive: row.isActive,
-      tenantId: row.tenantId,
-      createdAt: row.createdAt,
-      roleId: null as string | null,
-      roleName: 'Conserje',
-      passToken: row.qrToken ?? null,
-      hasPass: !!row.qrToken,
-      source: 'staff' as const,
-    })),
+    ...conserjeRows.map((row) => {
+      const token = row.qrToken || row.residentPassToken || null
+      return {
+        id: row.id,
+        unitId: row.unitId,
+        name: row.name,
+        idDocument: row.idDocument,
+        phone: row.phone,
+        isActive: row.isActive,
+        tenantId: row.tenantId,
+        createdAt: row.createdAt,
+        roleId: null as string | null,
+        roleName: 'Conserje',
+        passToken: token,
+        hasPass: !!token,
+        source: 'staff' as const,
+      }
+    }),
     ...serviceRows.map(row => ({
       ...row,
       hasPass: !!row.passToken,
