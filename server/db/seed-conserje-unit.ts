@@ -1,4 +1,5 @@
 import 'dotenv/config'
+import { randomUUID } from 'node:crypto'
 import { eq, and } from 'drizzle-orm'
 import { drizzle } from 'drizzle-orm/postgres-js'
 import postgres from 'postgres'
@@ -46,6 +47,7 @@ async function run() {
       role: 'conserje',
       userId: conserje.id,
       unitId: propietario.unitId,
+      qrToken: randomUUID(),
       tenantId: tenant.id,
       isActive: true,
     })

@@ -1,6 +1,7 @@
 import { db } from '~~/server/db'
 import { unitServiceStaff } from '~~/server/db/schema/unit-service-staff'
 import { serviceStaffRoles } from '~~/server/db/schema/service-staff-role'
+import { staff } from '~~/server/db/schema/staff'
 import { eq, and } from 'drizzle-orm'
 
 export default defineEventHandler(async (event) => {
@@ -28,6 +29,51 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 400, message: 'El nombre no puede estar vacío' })
   }
 
+  // Check if this is a staff record (conserje)
+  const [staffRecord] = await db
+    .select({ id: staff.id })
+    .from(staff)
+    .where(
+      and(
+        eq(staff.id, staffId),
+        eq(staff.unitId, unitId),
+        eq(staff.tenantId, tenantId),
+        eq(staff.role, 'conserje'),
+      ),
+    )
+    .limit(1)
+
+  if (staffRecord) {
+    // Staff record: only allow name, phone, idDocument updates
+    const staffUpdateData: Record<string, unknown> = {}
+    if (body.name) staffUpdateData.name = body.name.trim()
+    if (body.idDocument !== undefined) staffUpdateData.idDocument = body.idDocument
+    if (body.phone !== undefined) staffUpdateData.phone = body.phone
+
+    if (Object.keys(staffUpdateData).length === 0) {
+      throw createError({ statusCode: 400, message: 'No hay campos para actualizar' })
+    }
+
+    const [updated] = await db
+      .update(staff)
+      .set(staffUpdateData)
+      .where(
+        and(
+          eq(staff.id, staffId),
+          eq(staff.unitId, unitId),
+          eq(staff.tenantId, tenantId),
+        ),
+      )
+      .returning()
+
+    if (!updated) {
+      throw createError({ statusCode: 404, message: 'Personal de servicio no encontrado' })
+    }
+
+    return { data: updated }
+  }
+
+  // Unit service staff record: keep original behavior
   // Validate roleId if provided
   if (body.roleId) {
     const [role] = await db

@@ -21,6 +21,7 @@ export interface UnitServiceStaff {
   createdAt: string
   hasPass?: boolean
   passToken?: string
+  source?: 'staff' | 'unit'
 }
 
 export interface ServiceStaffPass {

@@ -1,3 +1,4 @@
+import { randomUUID } from 'node:crypto'
 import { eq } from 'drizzle-orm'
 import { drizzle } from 'drizzle-orm/postgres-js'
 import postgres from 'postgres'
@@ -95,6 +96,7 @@ async function seed() {
       role: 'conserje',
       userId: conserjeUserId,
       unitId: rancho1.id,
+      qrToken: randomUUID(),
       tenantId: tenant.id,
       isActive: true,
     })

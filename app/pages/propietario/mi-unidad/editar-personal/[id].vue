@@ -36,9 +36,13 @@ const qrDataUrl = ref<string | null>(null)
 const isGeneratingQr = ref(false)
 const attendanceLogs = ref<StaffAttendanceLog[]>([])
 
+const isConserje = computed(() =>
+  currentStaff.value?.source === 'staff',
+)
+
 const canSubmit = computed(() =>
   formName.value.trim().length > 0
-  && formRoleId.value !== ''
+  && (isConserje.value || formRoleId.value !== '')
   && formDocument.value.trim().length > 0
   && !isSubmitting.value,
 )
@@ -109,12 +113,13 @@ async function loadData() {
 async function handleSubmit() {
   if (!canSubmit.value) return
   try {
-    await updateServiceStaff(staffId, {
+    const payload: Record<string, string | undefined> = {
       name: formName.value.trim(),
-      roleId: formRoleId.value,
       idDocument: formDocument.value.trim() || undefined,
       phone: formPhone.value.trim() || undefined,
-    })
+    }
+    if (!isConserje.value) payload.roleId = formRoleId.value
+    await updateServiceStaff(staffId, payload)
     toast.success('Personal actualizado correctamente')
     router.push('/propietario/mi-unidad?tab=staff')
   }
@@ -232,7 +237,11 @@ onMounted(() => loadData())
                     required
                   />
                 </div>
-                <div class="space-y-1.5">
+                <div v-if="isConserje" class="space-y-1.5">
+                  <Label>Rol</Label>
+                  <Input value="Conserje" disabled class="h-12 text-base" />
+                </div>
+                <div v-else class="space-y-1.5">
                   <Label for="staff-role">Rol <span class="text-destructive">*</span></Label>
                   <Select v-model="formRoleId">
                     <SelectTrigger id="staff-role" size="lg" class="text-base">
@@ -334,8 +343,8 @@ onMounted(() => loadData())
           </CardContent>
         </Card>
 
-        <!-- Delete Section -->
-        <Card class="border-destructive/20">
+        <!-- Delete Section (not for conserjes — admin only) -->
+        <Card v-if="!isConserje" class="border-destructive/20">
           <CardContent class="flex items-center justify-between p-5 md:p-6">
             <div>
               <p class="font-medium text-destructive">Eliminar personal</p>
@@ -404,62 +413,93 @@ onMounted(() => loadData())
 
               <Separator class="my-3 w-full" />
 
-              <div class="flex w-full gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  class="flex-1"
-                  @click="handleSharePass"
-                >
-                  <Share2 class="mr-1.5 size-3.5" />
-                  Compartir
-                </Button>
-                <AlertDialog>
-                  <AlertDialogTrigger as-child>
-                    <Button variant="outline" size="sm" class="flex-1 text-destructive hover:text-destructive">
-                      <Ban class="mr-1.5 size-3.5" />
-                      Revocar
-                    </Button>
-                  </AlertDialogTrigger>
-                  <AlertDialogContent>
-                    <AlertDialogHeader>
-                      <AlertDialogTitle>Revocar pase QR</AlertDialogTitle>
-                      <AlertDialogDescription>
-                        El pase QR actual dejara de funcionar y deberas generar uno nuevo si lo necesitas.
-                      </AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter>
-                      <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                      <AlertDialogAction
-                        class="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                        @click="handleRevokePass"
-                      >
-                        Revocar Pase
-                      </AlertDialogAction>
-                    </AlertDialogFooter>
-                  </AlertDialogContent>
-                </AlertDialog>
-              </div>
+              <!-- Conserje: read-only QR, only share + download -->
+              <template v-if="isConserje">
+                <p class="mt-2 text-center text-xs text-muted-foreground">Gestionado por la administracion</p>
+                <div class="mt-2 flex w-full gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    class="flex-1"
+                    @click="handleSharePass"
+                  >
+                    <Share2 class="mr-1.5 size-3.5" />
+                    Compartir
+                  </Button>
+                  <Button
+                    size="sm"
+                    class="flex-1"
+                    :disabled="isDownloadingBadge"
+                    @click="handleDownloadBadge"
+                  >
+                    <Loader2 v-if="isDownloadingBadge" class="mr-1.5 size-3.5 animate-spin" />
+                    <Download v-else class="mr-1.5 size-3.5" />
+                    Credencial
+                  </Button>
+                </div>
+              </template>
 
-              <!-- Download badge -->
-              <Button
-                class="mt-2 h-10 w-full text-sm"
-                :disabled="isDownloadingBadge"
-                @click="handleDownloadBadge"
-              >
-                <Loader2 v-if="isDownloadingBadge" class="size-4 animate-spin" />
-                <Download v-else class="size-4" />
-                Descargar Credencial
-              </Button>
+              <!-- Regular staff: full controls -->
+              <template v-else>
+                <div class="flex w-full gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    class="flex-1"
+                    @click="handleSharePass"
+                  >
+                    <Share2 class="mr-1.5 size-3.5" />
+                    Compartir
+                  </Button>
+                  <AlertDialog>
+                    <AlertDialogTrigger as-child>
+                      <Button variant="outline" size="sm" class="flex-1 text-destructive hover:text-destructive">
+                        <Ban class="mr-1.5 size-3.5" />
+                        Revocar
+                      </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>Revocar pase QR</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          El pase QR actual dejara de funcionar y deberas generar uno nuevo si lo necesitas.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                        <AlertDialogAction
+                          class="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                          @click="handleRevokePass"
+                        >
+                          Revocar Pase
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
+                </div>
+
+                <!-- Download badge -->
+                <Button
+                  class="mt-2 h-10 w-full text-sm"
+                  :disabled="isDownloadingBadge"
+                  @click="handleDownloadBadge"
+                >
+                  <Loader2 v-if="isDownloadingBadge" class="size-4 animate-spin" />
+                  <Download v-else class="size-4" />
+                  Descargar Credencial
+                </Button>
+              </template>
             </template>
 
-            <!-- No pass: generate -->
+            <!-- No pass -->
             <template v-else>
               <div class="py-4 text-center">
                 <Shield class="mx-auto mb-2 size-8 text-muted-foreground/50" />
                 <p class="text-sm text-muted-foreground">Sin pase de acceso</p>
+                <p v-if="isConserje" class="mt-1 text-xs text-muted-foreground/70">Contacta a la administracion para generar el pase</p>
               </div>
               <Button
+                v-if="!isConserje"
                 class="w-full"
                 :disabled="isGeneratingQr || isSubmitting"
                 @click="handleGeneratePass"

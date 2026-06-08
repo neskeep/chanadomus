@@ -58,6 +58,7 @@ export default defineEventHandler(async (event) => {
       isActive: staff.isActive,
       tenantId: staff.tenantId,
       createdAt: staff.createdAt,
+      qrToken: staff.qrToken,
     })
     .from(staff)
     .where(
@@ -72,15 +73,24 @@ export default defineEventHandler(async (event) => {
 
   const data = [
     ...conserjeRows.map(row => ({
-      ...row,
-      roleId: null,
+      id: row.id,
+      unitId: row.unitId,
+      name: row.name,
+      idDocument: row.idDocument,
+      phone: row.phone,
+      isActive: row.isActive,
+      tenantId: row.tenantId,
+      createdAt: row.createdAt,
+      roleId: null as string | null,
       roleName: 'Conserje',
-      passToken: null,
-      hasPass: false,
+      passToken: row.qrToken ?? null,
+      hasPass: !!row.qrToken,
+      source: 'staff' as const,
     })),
     ...serviceRows.map(row => ({
       ...row,
       hasPass: !!row.passToken,
+      source: 'unit' as const,
     })),
   ]
 

@@ -2,6 +2,7 @@ import { db } from '~~/server/db'
 import { accessLogs } from '~~/server/db/schema/access'
 import { serviceStaffPasses } from '~~/server/db/schema/service-staff-pass'
 import { unitServiceStaff } from '~~/server/db/schema/unit-service-staff'
+import { staff } from '~~/server/db/schema/staff'
 import { eq, and, desc, inArray } from 'drizzle-orm'
 
 export default defineEventHandler(async (event) => {
@@ -18,8 +19,8 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 400, message: 'ID de personal requerido' })
   }
 
-  // Verify staff belongs to user's unit
-  const [staff] = await db
+  // First try unit_service_staff
+  const [unitStaffRecord] = await db
     .select({ id: unitServiceStaff.id })
     .from(unitServiceStaff)
     .where(
@@ -31,28 +32,81 @@ export default defineEventHandler(async (event) => {
     )
     .limit(1)
 
-  if (!staff) {
+  if (unitStaffRecord) {
+    // Original behavior: get logs via service staff passes
+    const passes = await db
+      .select({ id: serviceStaffPasses.id })
+      .from(serviceStaffPasses)
+      .where(
+        and(
+          eq(serviceStaffPasses.staffId, staffId),
+          eq(serviceStaffPasses.tenantId, tenantId),
+        ),
+      )
+
+    if (passes.length === 0) {
+      return { data: [] }
+    }
+
+    const passIds = passes.map(p => p.id)
+
+    const logs = await db
+      .select({
+        id: accessLogs.id,
+        result: accessLogs.result,
+        entryType: accessLogs.entryType,
+        exitAt: accessLogs.exitAt,
+        createdAt: accessLogs.createdAt,
+        notes: accessLogs.notes,
+      })
+      .from(accessLogs)
+      .where(
+        and(
+          inArray(accessLogs.staffPassId, passIds),
+          eq(accessLogs.tenantId, tenantId),
+        ),
+      )
+      .orderBy(desc(accessLogs.createdAt))
+      .limit(50)
+
+    return {
+      data: logs.map(log => ({
+        id: log.id,
+        result: log.result,
+        entryType: log.entryType,
+        exitAt: log.exitAt?.toISOString() ?? null,
+        createdAt: log.createdAt.toISOString(),
+        notes: log.notes,
+      })),
+    }
+  }
+
+  // Check staff table (conserje)
+  const [staffRecord] = await db
+    .select({
+      id: staff.id,
+      qrToken: staff.qrToken,
+    })
+    .from(staff)
+    .where(
+      and(
+        eq(staff.id, staffId),
+        eq(staff.unitId, unitId),
+        eq(staff.tenantId, tenantId),
+        eq(staff.role, 'conserje'),
+      ),
+    )
+    .limit(1)
+
+  if (!staffRecord) {
     throw createError({ statusCode: 404, message: 'Personal no encontrado' })
   }
 
-  // Get all pass IDs for this staff (active + inactive for historical data)
-  const passes = await db
-    .select({ id: serviceStaffPasses.id })
-    .from(serviceStaffPasses)
-    .where(
-      and(
-        eq(serviceStaffPasses.staffId, staffId),
-        eq(serviceStaffPasses.tenantId, tenantId),
-      ),
-    )
-
-  if (passes.length === 0) {
+  if (!staffRecord.qrToken) {
     return { data: [] }
   }
 
-  const passIds = passes.map(p => p.id)
-
-  // Get access logs linked to these passes
+  // For staff, look up access logs via passToken (the scanned QR token)
   const logs = await db
     .select({
       id: accessLogs.id,
@@ -65,21 +119,21 @@ export default defineEventHandler(async (event) => {
     .from(accessLogs)
     .where(
       and(
-        inArray(accessLogs.staffPassId, passIds),
+        eq(accessLogs.passToken, staffRecord.qrToken),
         eq(accessLogs.tenantId, tenantId),
       ),
     )
     .orderBy(desc(accessLogs.createdAt))
     .limit(50)
 
-  const data = logs.map(log => ({
-    id: log.id,
-    result: log.result,
-    entryType: log.entryType,
-    exitAt: log.exitAt?.toISOString() ?? null,
-    createdAt: log.createdAt.toISOString(),
-    notes: log.notes,
-  }))
-
-  return { data }
+  return {
+    data: logs.map(log => ({
+      id: log.id,
+      result: log.result,
+      entryType: log.entryType,
+      exitAt: log.exitAt?.toISOString() ?? null,
+      createdAt: log.createdAt.toISOString(),
+      notes: log.notes,
+    })),
+  }
 })

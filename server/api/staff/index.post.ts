@@ -1,3 +1,4 @@
+import { randomUUID } from 'node:crypto'
 import { db } from '~~/server/db'
 import { staff } from '~~/server/db/schema/staff'
 import { serviceStaffRoles } from '~~/server/db/schema/service-staff-role'
@@ -61,6 +62,7 @@ export default defineEventHandler(async (event) => {
       shift: body.shift?.trim() || null,
       userId: body.userId || null,
       unitId: body.unitId || null,
+      qrToken: randomUUID(),
       tenantId,
     })
     .returning()
