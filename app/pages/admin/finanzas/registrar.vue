@@ -53,7 +53,7 @@ async function handleSubmit() {
       date: dateToISO(formDate.value),
     })
     toast.success('Movimiento registrado correctamente')
-    router.push('/admin/finanzas')
+    router.back()
   }
   catch {
     toast.error(error.value ?? 'Error al registrar movimiento')

@@ -70,7 +70,7 @@ async function handleSubmit() {
   try {
     await uploadReport(formData)
     toast.success('Informe subido correctamente')
-    router.push('/admin/finanzas')
+    router.back()
   }
   catch {
     toast.error(error.value ?? 'Error al subir informe')

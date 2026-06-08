@@ -90,7 +90,7 @@ async function handleSubmit() {
       date: dateToISO(formDate.value),
     })
     toast.success('Movimiento actualizado correctamente')
-    router.push('/admin/finanzas')
+    router.back()
   }
   catch {
     toast.error(error.value ?? 'Error al actualizar movimiento')
@@ -102,7 +102,7 @@ async function handleDelete() {
   try {
     await deleteRecord(id)
     toast.success('Movimiento eliminado correctamente')
-    router.push('/admin/finanzas')
+    router.back()
   }
   catch {
     toast.error(error.value ?? 'Error al eliminar movimiento')
