@@ -33,6 +33,7 @@ const statusConfig: Record<ValidationStatus, { label: string; bg: string; icon: 
   valid: { label: VALIDATION_STATUS_LABELS.valid, ...VALIDATION_STATUS_COLORS.valid },
   expired: { label: VALIDATION_STATUS_LABELS.expired, ...VALIDATION_STATUS_COLORS.expired },
   already_used: { label: VALIDATION_STATUS_LABELS.already_used, ...VALIDATION_STATUS_COLORS.already_used },
+  already_inside: { label: VALIDATION_STATUS_LABELS.already_inside, ...VALIDATION_STATUS_COLORS.already_inside },
   invalid: { label: VALIDATION_STATUS_LABELS.invalid, ...VALIDATION_STATUS_COLORS.invalid },
 }
 
@@ -172,7 +173,7 @@ const resolvedConfig = computed(() => {
               class="size-12"
             />
             <AlertTriangle
-              v-else-if="scanResult.status === 'expired' || scanResult.status === 'already_used'"
+              v-else-if="scanResult.status === 'expired' || scanResult.status === 'already_used' || scanResult.status === 'already_inside'"
               :class="resolvedConfig.icon"
               class="size-12"
             />
@@ -279,6 +280,25 @@ const resolvedConfig = computed(() => {
               </span>
             </div>
             <Badge variant="outline" class="border-white/20 text-xs text-white/80">Personal de Servicio</Badge>
+          </div>
+
+          <!-- Already inside details -->
+          <div
+            v-if="scanResult.status === 'already_inside'"
+            class="mt-6 w-full max-w-xs space-y-3 rounded-lg bg-white/10 p-4 backdrop-blur-sm"
+          >
+            <p class="text-sm text-white/80">
+              Esta persona ya registró entrada y aún no ha salido.
+            </p>
+            <div v-if="scanResult.entryAt" class="flex items-center gap-3">
+              <Clock class="size-4 shrink-0 text-white/50" />
+              <span class="text-sm text-white/80">
+                Entrada: {{ new Date(scanResult.entryAt).toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' }) }}
+              </span>
+            </div>
+            <p class="text-xs text-white/50">
+              Debe registrar salida antes de una nueva entrada.
+            </p>
           </div>
 
           <!-- Scan again button -->

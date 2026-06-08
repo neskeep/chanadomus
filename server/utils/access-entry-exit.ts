@@ -5,6 +5,51 @@ import { broadcastAccessMessage } from '~~/server/utils/ws-access'
 
 const OPEN_ENTRY_WINDOW_MS = 24 * 60 * 60 * 1000 // 24 hours
 
+export interface HasOpenEntryResult {
+  exists: boolean
+  logId?: string
+  entryAt?: string
+}
+
+/**
+ * Check if there's an open (non-expired) entry for this token — read-only, no side effects.
+ * Used to prevent duplicate consecutive entries for the same pass.
+ */
+export async function hasOpenEntry(passToken: string, tenantId: string): Promise<HasOpenEntryResult> {
+  const [openLog] = await db
+    .select({
+      id: accessLogs.id,
+      createdAt: accessLogs.createdAt,
+    })
+    .from(accessLogs)
+    .where(
+      and(
+        eq(accessLogs.passToken, passToken),
+        eq(accessLogs.tenantId, tenantId),
+        eq(accessLogs.result, 'allowed'),
+        isNull(accessLogs.exitAt),
+        eq(accessLogs.expiredOpen, false),
+      ),
+    )
+    .orderBy(desc(accessLogs.createdAt))
+    .limit(1)
+
+  if (!openLog) {
+    return { exists: false }
+  }
+
+  const elapsed = Date.now() - openLog.createdAt.getTime()
+  if (elapsed > OPEN_ENTRY_WINDOW_MS) {
+    return { exists: false }
+  }
+
+  return {
+    exists: true,
+    logId: openLog.id,
+    entryAt: openLog.createdAt.toISOString(),
+  }
+}
+
 export interface OpenEntryResult {
   /** 'exit' = found open entry within window → marked exit. 'expired' = found but >24h → flagged. null = no open entry. */
   action: 'exit' | 'expired' | null

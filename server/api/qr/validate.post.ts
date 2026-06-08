@@ -15,7 +15,7 @@ import { eq, and } from 'drizzle-orm'
 import type { ValidationResult } from '~~/shared/types/qr'
 import type { AccessEvent, AccessResult } from '~~/shared/types/access'
 import { broadcastAccessEvent } from '~~/server/utils/ws-access'
-import { checkOpenEntry } from '~~/server/utils/access-entry-exit'
+import { checkOpenEntry, hasOpenEntry } from '~~/server/utils/access-entry-exit'
 
 export default defineEventHandler(async (event) => {
   const session = await requireTenant(event)
@@ -33,6 +33,18 @@ export default defineEventHandler(async (event) => {
 
   const token = body.token.trim()
   const direction = body.direction
+
+  // Prevent duplicate consecutive entries — if there's an open entry, block re-entry
+  if (direction === 'entry') {
+    const openEntry = await hasOpenEntry(token, tenantId)
+    if (openEntry.exists) {
+      const result: ValidationResult = {
+        status: 'already_inside',
+        entryAt: openEntry.entryAt,
+      }
+      return { data: result }
+    }
+  }
 
   // Buscar QR por token con join a units
   const [record] = await db

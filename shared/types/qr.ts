@@ -1,6 +1,6 @@
 export type VisitorType = 'invitado' | 'proveedor'
 export type QrStatus = 'active' | 'used' | 'expired'
-export type ValidationStatus = 'valid' | 'expired' | 'already_used' | 'invalid'
+export type ValidationStatus = 'valid' | 'expired' | 'already_used' | 'already_inside' | 'invalid'
 export type AccessDirection = 'entry' | 'exit'
 
 export interface QrCodeRecord {
@@ -63,6 +63,8 @@ export interface ValidationResult {
   staffRole?: string
   /** Indicates this was a condo staff pass (personal del condominio) */
   isCondoStaff?: boolean
+  /** Timestamp of the existing open entry (for already_inside status) */
+  entryAt?: string
   /** Indicates this was a household member pass */
   isMemberPass?: boolean
   /** Household member name */

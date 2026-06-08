@@ -123,6 +123,7 @@ export const VALIDATION_STATUS_COLORS: Record<ValidationStatus, { bg: string; ic
   valid: { bg: 'bg-green-500', icon: 'text-green-500', accent: 'ring-green-500/30' },
   expired: { bg: 'bg-amber-500', icon: 'text-amber-500', accent: 'ring-amber-500/30' },
   already_used: { bg: 'bg-amber-500', icon: 'text-amber-500', accent: 'ring-amber-500/30' },
+  already_inside: { bg: 'bg-amber-500', icon: 'text-amber-500', accent: 'ring-amber-500/30' },
   invalid: { bg: 'bg-red-500', icon: 'text-red-500', accent: 'ring-red-500/30' },
 }
 
@@ -130,6 +131,7 @@ export const VALIDATION_STATUS_LABELS: Record<ValidationStatus, string> = {
   valid: 'Acceso autorizado',
   expired: 'Código expirado',
   already_used: 'Código ya utilizado',
+  already_inside: 'Ya tiene entrada activa',
   invalid: 'Código inválido',
 }
 
