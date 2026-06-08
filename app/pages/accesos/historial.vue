@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Shield, QrCode, UserPlus, Wifi, Search, CalendarIcon, RotateCcw } from 'lucide-vue-next'
+import { Shield, QrCode, UserPlus, Wifi, CalendarIcon, RotateCcw, FileDown } from 'lucide-vue-next'
 import type { DateValue } from 'reka-ui'
 import type { AccessResult, EntryType } from '~~/shared/types/access'
 
@@ -120,16 +120,15 @@ watch([filterFrom, filterTo], () => {
   applyFilters()
 })
 
-function handleSearch() {
-  filters.value.search = searchInput.value
-  applyFilters()
-}
-
-function handleSearchKeydown(e: KeyboardEvent) {
-  if (e.key === 'Enter') {
-    handleSearch()
-  }
-}
+// Debounced server-side search
+let searchTimeout: ReturnType<typeof setTimeout> | undefined
+watch(searchInput, (val) => {
+  clearTimeout(searchTimeout)
+  searchTimeout = setTimeout(() => {
+    filters.value.search = val
+    applyFilters()
+  }, 400)
+})
 
 function clearAllFilters() {
   filterResult.value = ''
@@ -138,6 +137,39 @@ function clearAllFilters() {
   filterTo.value = undefined
   searchInput.value = ''
   resetFilters()
+}
+
+// --- PDF export ---
+
+async function generatePdf() {
+  const { jsPDF } = await import('jspdf')
+  const autoTable = (await import('jspdf-autotable')).default
+
+  const doc = new jsPDF({ orientation: 'landscape' })
+
+  doc.setFontSize(14)
+  doc.text('Historial de Accesos', 14, 15)
+  doc.setFontSize(9)
+  doc.text(`Generado: ${new Date().toLocaleDateString('es-VE', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })}`, 14, 21)
+  doc.text(`Periodo: ${filters.value.from} — ${filters.value.to}`, 14, 26)
+
+  autoTable(doc, {
+    startY: 32,
+    head: [['Fecha/Hora', 'Visitante', 'Cédula', 'Destino', 'Tipo', 'Resultado', 'Salida']],
+    body: events.value.map(e => [
+      formatDateTime(e.createdAt),
+      e.visitorName || 'Visitante',
+      e.visitorDocument || '—',
+      e.unitLabel || e.unitNumber || e.notes || '—',
+      ENTRY_TYPE_CONFIG[e.entryType].label,
+      RESULT_CONFIG[e.result].label,
+      e.exitAt ? formatTime(e.exitAt) : '—',
+    ]),
+    styles: { fontSize: 8, cellPadding: 2 },
+    headStyles: { fillColor: [31, 41, 51] },
+  })
+
+  doc.save(`accesos-${filters.value.from}-${filters.value.to}.pdf`)
 }
 
 // --- Init ---
@@ -149,128 +181,130 @@ onMounted(() => {
 
 <template>
   <div>
-    <!-- Topbar: filters (desktop) -->
+    <!-- Desktop topbar: Search + Filters + PDF action -->
     <Teleport v-if="isMounted" :to="target" defer>
-      <TopbarFilters :active="hasActiveFilters" @clear="clearAllFilters">
-        <TopbarFilterGroup v-model="filterResult" label="Resultado" :options="resultOptions" />
-        <TopbarFilterGroup v-model="filterEntryType" label="Tipo de entrada" :options="entryTypeOptions" />
-        <div>
-          <p class="mb-1.5 text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
-            Rango de fechas
-          </p>
-          <div class="space-y-1.5">
-            <div>
-              <Label class="text-[11px] text-muted-foreground">Desde</Label>
-              <Popover v-model:open="fromPickerOpen">
-                <PopoverTrigger as-child>
-                  <Button variant="outline" class="mt-0.5 h-7 w-full justify-start text-xs font-normal">
-                    <CalendarIcon class="mr-1.5 size-3 shrink-0 text-muted-foreground" />
-                    <span v-if="filterFrom" class="truncate">{{ formatPickerDate(filterFrom) }}</span>
-                    <span v-else class="text-muted-foreground">Seleccionar</span>
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent class="w-auto p-0" align="start">
-                  <Calendar
-                    :model-value="filterFrom"
-                    locale="es"
-                    @update:model-value="(v: DateValue | undefined) => { filterFrom = v; fromPickerOpen = false }"
-                  />
-                </PopoverContent>
-              </Popover>
-            </div>
-            <div>
-              <Label class="text-[11px] text-muted-foreground">Hasta</Label>
-              <Popover v-model:open="toPickerOpen">
-                <PopoverTrigger as-child>
-                  <Button variant="outline" class="mt-0.5 h-7 w-full justify-start text-xs font-normal">
-                    <CalendarIcon class="mr-1.5 size-3 shrink-0 text-muted-foreground" />
-                    <span v-if="filterTo" class="truncate">{{ formatPickerDate(filterTo) }}</span>
-                    <span v-else class="text-muted-foreground">Seleccionar</span>
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent class="w-auto p-0" align="start">
-                  <Calendar
-                    :model-value="filterTo"
-                    locale="es"
-                    @update:model-value="(v: DateValue | undefined) => { filterTo = v; toPickerOpen = false }"
-                  />
-                </PopoverContent>
-              </Popover>
+      <TopbarSearch v-model="searchInput" placeholder="Buscar por nombre o cedula...">
+        <TopbarFilters :active="hasActiveFilters" @clear="clearAllFilters">
+          <TopbarFilterGroup v-model="filterResult" label="Resultado" :options="resultOptions" />
+          <TopbarFilterGroup v-model="filterEntryType" label="Tipo de entrada" :options="entryTypeOptions" />
+          <div>
+            <p class="mb-1.5 text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
+              Rango de fechas
+            </p>
+            <div class="space-y-1.5">
+              <div>
+                <Label class="text-[11px] text-muted-foreground">Desde</Label>
+                <Popover v-model:open="fromPickerOpen">
+                  <PopoverTrigger as-child>
+                    <Button variant="outline" class="mt-0.5 h-7 w-full justify-start text-xs font-normal">
+                      <CalendarIcon class="mr-1.5 size-3 shrink-0 text-muted-foreground" />
+                      <span v-if="filterFrom" class="truncate">{{ formatPickerDate(filterFrom) }}</span>
+                      <span v-else class="text-muted-foreground">Seleccionar</span>
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent class="w-auto p-0" align="start">
+                    <Calendar
+                      :model-value="filterFrom"
+                      locale="es"
+                      @update:model-value="(v: DateValue | undefined) => { filterFrom = v; fromPickerOpen = false }"
+                    />
+                  </PopoverContent>
+                </Popover>
+              </div>
+              <div>
+                <Label class="text-[11px] text-muted-foreground">Hasta</Label>
+                <Popover v-model:open="toPickerOpen">
+                  <PopoverTrigger as-child>
+                    <Button variant="outline" class="mt-0.5 h-7 w-full justify-start text-xs font-normal">
+                      <CalendarIcon class="mr-1.5 size-3 shrink-0 text-muted-foreground" />
+                      <span v-if="filterTo" class="truncate">{{ formatPickerDate(filterTo) }}</span>
+                      <span v-else class="text-muted-foreground">Seleccionar</span>
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent class="w-auto p-0" align="start">
+                    <Calendar
+                      :model-value="filterTo"
+                      locale="es"
+                      @update:model-value="(v: DateValue | undefined) => { filterTo = v; toPickerOpen = false }"
+                    />
+                  </PopoverContent>
+                </Popover>
+              </div>
             </div>
           </div>
-        </div>
-      </TopbarFilters>
+        </TopbarFilters>
+      </TopbarSearch>
+      <Button v-if="events.length > 0" variant="outline" size="sm" @click="generatePdf">
+        <FileDown class="mr-1.5 size-3.5" />
+        Exportar
+      </Button>
     </Teleport>
 
     <!-- Mobile topbar action -->
     <TopbarMobileAction>
-      <TopbarFilters :active="hasActiveFilters" @clear="clearAllFilters">
-        <TopbarFilterGroup v-model="filterResult" label="Resultado" :options="resultOptions" />
-        <TopbarFilterGroup v-model="filterEntryType" label="Tipo de entrada" :options="entryTypeOptions" />
-        <div>
-          <p class="mb-1.5 text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
-            Rango de fechas
-          </p>
-          <div class="space-y-1.5">
-            <div>
-              <Label class="text-[11px] text-muted-foreground">Desde</Label>
-              <Popover>
-                <PopoverTrigger as-child>
-                  <Button variant="outline" class="mt-0.5 h-7 w-full justify-start text-xs font-normal">
-                    <CalendarIcon class="mr-1.5 size-3 shrink-0 text-muted-foreground" />
-                    <span v-if="filterFrom" class="truncate">{{ formatPickerDate(filterFrom) }}</span>
-                    <span v-else class="text-muted-foreground">Seleccionar</span>
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent class="w-auto p-0" align="start">
-                  <Calendar
-                    :model-value="filterFrom"
-                    locale="es"
-                    @update:model-value="(v: DateValue | undefined) => { filterFrom = v }"
-                  />
-                </PopoverContent>
-              </Popover>
-            </div>
-            <div>
-              <Label class="text-[11px] text-muted-foreground">Hasta</Label>
-              <Popover>
-                <PopoverTrigger as-child>
-                  <Button variant="outline" class="mt-0.5 h-7 w-full justify-start text-xs font-normal">
-                    <CalendarIcon class="mr-1.5 size-3 shrink-0 text-muted-foreground" />
-                    <span v-if="filterTo" class="truncate">{{ formatPickerDate(filterTo) }}</span>
-                    <span v-else class="text-muted-foreground">Seleccionar</span>
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent class="w-auto p-0" align="start">
-                  <Calendar
-                    :model-value="filterTo"
-                    locale="es"
-                    @update:model-value="(v: DateValue | undefined) => { filterTo = v }"
-                  />
-                </PopoverContent>
-              </Popover>
-            </div>
-          </div>
-        </div>
-      </TopbarFilters>
+      <Button v-if="events.length > 0" size="icon" variant="ghost" class="size-9" @click="generatePdf">
+        <FileDown class="size-4" />
+      </Button>
     </TopbarMobileAction>
 
-    <!-- Inline search bar -->
-    <div class="mb-4 flex items-center gap-2">
-      <div class="relative flex-1">
-        <Search class="absolute left-2.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-        <Input
-          v-model="searchInput"
-          placeholder="Buscar por nombre o cedula..."
-          class="h-9 pl-9"
-          @keydown="handleSearchKeydown"
-        />
-      </div>
-      <Button size="sm" class="h-9 shrink-0" @click="handleSearch">
-        <Search class="mr-1.5 size-4" />
-        Buscar
-      </Button>
-      <Badge v-if="!isLoading && pagination.total > 0" variant="secondary" class="shrink-0 tabular-nums">
+    <!-- Mobile search -->
+    <div class="mb-4 md:hidden">
+      <TopbarSearch v-model="searchInput" placeholder="Buscar por nombre o cedula...">
+        <TopbarFilters :active="hasActiveFilters" @clear="clearAllFilters">
+          <TopbarFilterGroup v-model="filterResult" label="Resultado" :options="resultOptions" />
+          <TopbarFilterGroup v-model="filterEntryType" label="Tipo de entrada" :options="entryTypeOptions" />
+          <div>
+            <p class="mb-1.5 text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
+              Rango de fechas
+            </p>
+            <div class="space-y-1.5">
+              <div>
+                <Label class="text-[11px] text-muted-foreground">Desde</Label>
+                <Popover>
+                  <PopoverTrigger as-child>
+                    <Button variant="outline" class="mt-0.5 h-7 w-full justify-start text-xs font-normal">
+                      <CalendarIcon class="mr-1.5 size-3 shrink-0 text-muted-foreground" />
+                      <span v-if="filterFrom" class="truncate">{{ formatPickerDate(filterFrom) }}</span>
+                      <span v-else class="text-muted-foreground">Seleccionar</span>
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent class="w-auto p-0" align="start">
+                    <Calendar
+                      :model-value="filterFrom"
+                      locale="es"
+                      @update:model-value="(v: DateValue | undefined) => { filterFrom = v }"
+                    />
+                  </PopoverContent>
+                </Popover>
+              </div>
+              <div>
+                <Label class="text-[11px] text-muted-foreground">Hasta</Label>
+                <Popover>
+                  <PopoverTrigger as-child>
+                    <Button variant="outline" class="mt-0.5 h-7 w-full justify-start text-xs font-normal">
+                      <CalendarIcon class="mr-1.5 size-3 shrink-0 text-muted-foreground" />
+                      <span v-if="filterTo" class="truncate">{{ formatPickerDate(filterTo) }}</span>
+                      <span v-else class="text-muted-foreground">Seleccionar</span>
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent class="w-auto p-0" align="start">
+                    <Calendar
+                      :model-value="filterTo"
+                      locale="es"
+                      @update:model-value="(v: DateValue | undefined) => { filterTo = v }"
+                    />
+                  </PopoverContent>
+                </Popover>
+              </div>
+            </div>
+          </div>
+        </TopbarFilters>
+      </TopbarSearch>
+    </div>
+
+    <!-- Results count -->
+    <div v-if="!isLoading && pagination.total > 0" class="mb-3 md:hidden">
+      <Badge variant="secondary" class="tabular-nums">
         {{ pagination.total }} {{ pagination.total === 1 ? 'registro' : 'registros' }}
       </Badge>
     </div>
