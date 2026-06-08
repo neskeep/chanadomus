@@ -6,7 +6,7 @@ import type { FinancialRecord } from '~~/shared/types/financial'
 const createRecordSchema = z.object({
   unitId: z.string().min(1, 'unitId es requerido'),
   type: z.enum(['cargo', 'abono'], { message: 'type debe ser "cargo" o "abono"' }),
-  amount: z.number().positive('amount debe ser un numero mayor a 0'),
+  amount: z.coerce.number().positive('amount debe ser un numero mayor a 0'),
   description: z.string().min(1, 'description es requerido y no puede estar vacio'),
   category: z.enum(['ordinaria', 'extraordinaria'], { message: 'category debe ser "ordinaria" o "extraordinaria"' }),
   date: z.string().min(1, 'date es requerido').refine((v) => !isNaN(new Date(v).getTime()), 'date debe ser una fecha valida en formato ISO'),

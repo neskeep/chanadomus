@@ -7,7 +7,7 @@ import type { FinancialRecord } from '~~/shared/types/financial'
 const updateRecordSchema = z.object({
   type: z.enum(['cargo', 'abono'], { message: 'type debe ser "cargo" o "abono"' }).optional(),
   category: z.enum(['ordinaria', 'extraordinaria'], { message: 'category debe ser "ordinaria" o "extraordinaria"' }).optional(),
-  amount: z.number().positive('amount debe ser un numero mayor a 0').optional(),
+  amount: z.coerce.number().positive('amount debe ser un numero mayor a 0').optional(),
   description: z.string().min(1, 'description no puede estar vacio').optional(),
   date: z.string().refine((v) => !isNaN(new Date(v).getTime()), 'date debe ser una fecha valida').optional(),
 }).refine((data) => Object.keys(data).length > 0, { message: 'No se proporcionaron campos para actualizar' })
