@@ -1,7 +1,9 @@
 import { z } from 'zod'
 import { db } from '~~/server/db'
 import { user, account } from '~~/server/db/schema/auth'
-import { eq } from 'drizzle-orm'
+import { staff } from '~~/server/db/schema/staff'
+import { serviceStaffRoles } from '~~/server/db/schema/service-staff-role'
+import { eq, and } from 'drizzle-orm'
 import { hashPassword } from 'better-auth/crypto'
 import { USER_ROLES, type UserRole } from '~~/shared/types/auth'
 
@@ -64,6 +66,32 @@ export default defineEventHandler(async (event) => {
     createdAt: now,
     updatedAt: now,
   })
+
+  // Auto-create staff record for conserje/vigilancia roles
+  const STAFF_ROLES: UserRole[] = ['conserje', 'vigilancia']
+  if (STAFF_ROLES.includes(body.role)) {
+    // Find matching service_staff_role by name
+    const [matchingRole] = await db
+      .select({ id: serviceStaffRoles.id })
+      .from(serviceStaffRoles)
+      .where(
+        and(
+          eq(serviceStaffRoles.tenantId, tenantId),
+          eq(serviceStaffRoles.name, body.role === 'conserje' ? 'Conserje' : 'Vigilancia'),
+        ),
+      )
+
+    await db.insert(staff).values({
+      name: body.name.trim(),
+      role: body.role as 'conserje' | 'vigilancia',
+      roleId: matchingRole?.id ?? null,
+      phone: body.phone?.trim() || null,
+      userId,
+      unitId: body.unitId || null,
+      qrToken: crypto.randomUUID(),
+      tenantId,
+    })
+  }
 
   setResponseStatus(event, 201)
   return { data: { id: userId, name: body.name.trim(), email: body.email.trim().toLowerCase(), role: body.role } }

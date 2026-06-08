@@ -11,7 +11,15 @@ interface CreateStaffData {
   unitId?: string
 }
 
-type UpdateStaffData = Partial<CreateStaffData> & { unitId?: string | null }
+interface UpdateStaffData {
+  name?: string
+  roleId?: string
+  idDocument?: string
+  phone?: string
+  email?: string
+  shift?: string
+  unitId?: string | null
+}
 
 export function useStaff() {
   const staffList = ref<Staff[]>([])

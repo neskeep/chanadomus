@@ -13,16 +13,36 @@ const formDocument = ref('')
 const formPhone = ref('')
 const formEmail = ref('')
 const formShift = ref('none')
+const formUnit = ref('none')
+
+// --- Units ---
+const unitOptions = ref<{ id: string, number: string, label: string | null }[]>([])
+
+async function fetchUnits() {
+  try {
+    const res = await $fetch<{ data: { id: string, number: string, label: string | null }[] }>('/api/units')
+    unitOptions.value = res.data
+  }
+  catch { /* silent */ }
+}
 
 const activeRoles = computed(() => roleOptions.value.filter(r => r.isActive))
 
+const selectedRoleName = computed(() =>
+  roleOptions.value.find(r => r.id === formRole.value)?.name?.toLowerCase() ?? '',
+)
+
+const isConserjeRole = computed(() => selectedRoleName.value === 'conserje')
+
 onMounted(() => {
   fetchRoles()
+  fetchUnits()
 })
 
 const canSubmit = computed(() =>
   formName.value.trim().length > 0
   && formRole.value !== ''
+  && (!isConserjeRole.value || (formUnit.value !== '' && formUnit.value !== 'none'))
   && !isSubmitting.value,
 )
 
@@ -36,6 +56,7 @@ async function handleSubmit() {
       phone: formPhone.value.trim() || undefined,
       email: formEmail.value.trim() || undefined,
       shift: formShift.value === 'none' ? undefined : formShift.value || undefined,
+      unitId: formUnit.value !== 'none' && formUnit.value !== '' ? formUnit.value : undefined,
     })
     toast.success('Personal agregado correctamente')
     router.push('/admin/personal')
@@ -129,6 +150,28 @@ async function handleSubmit() {
                 </SelectContent>
               </Select>
             </div>
+          </div>
+
+          <!-- Unidad asignada -->
+          <div class="space-y-1.5">
+            <Label for="staff-unit">
+              Unidad asignada
+              <span v-if="isConserjeRole" class="text-destructive">*</span>
+            </Label>
+            <Select v-model="formUnit">
+              <SelectTrigger id="staff-unit" size="lg" class="text-base">
+                <SelectValue placeholder="Seleccionar unidad" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="none">Sin asignar</SelectItem>
+                <SelectItem v-for="unit in unitOptions" :key="unit.id" :value="unit.id">
+                  {{ unit.number }}{{ unit.label ? ` — ${unit.label}` : '' }}
+                </SelectItem>
+              </SelectContent>
+            </Select>
+            <p v-if="isConserjeRole" class="text-sm text-muted-foreground">
+              Los conserjes deben tener una unidad asignada
+            </p>
           </div>
 
           <!-- Submit -->

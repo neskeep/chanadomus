@@ -1,5 +1,7 @@
 import { db } from '~~/server/db'
 import { user } from '~~/server/db/schema/auth'
+import { staff } from '~~/server/db/schema/staff'
+import { serviceStaffRoles } from '~~/server/db/schema/service-staff-role'
 import { eq, and } from 'drizzle-orm'
 import { USER_ROLES, type UserRole } from '~~/shared/types/auth'
 
@@ -76,6 +78,51 @@ export default defineEventHandler(async (event) => {
     .returning()
 
   if (!updated) throw createError({ statusCode: 404, message: 'Usuario no encontrado' })
+
+  // Auto-create staff record if role changed to conserje/vigilancia and no staff exists
+  const STAFF_ROLES: UserRole[] = ['conserje', 'vigilancia']
+  const effectiveRoleForStaff = (updated.role ?? '') as UserRole
+  if (STAFF_ROLES.includes(effectiveRoleForStaff)) {
+    const [existingStaff] = await db
+      .select({ id: staff.id })
+      .from(staff)
+      .where(and(eq(staff.userId, id), eq(staff.tenantId, tenantId)))
+      .limit(1)
+
+    if (!existingStaff) {
+      const [matchingRole] = await db
+        .select({ id: serviceStaffRoles.id })
+        .from(serviceStaffRoles)
+        .where(
+          and(
+            eq(serviceStaffRoles.tenantId, tenantId),
+            eq(serviceStaffRoles.name, effectiveRoleForStaff === 'conserje' ? 'Conserje' : 'Vigilancia'),
+          ),
+        )
+
+      await db.insert(staff).values({
+        name: updated.name,
+        role: effectiveRoleForStaff as 'conserje' | 'vigilancia',
+        roleId: matchingRole?.id ?? null,
+        phone: updated.phone || null,
+        userId: id,
+        unitId: updated.unitId || null,
+        qrToken: crypto.randomUUID(),
+        tenantId,
+      })
+    }
+    else {
+      // Update existing staff record to sync unit and name
+      await db
+        .update(staff)
+        .set({
+          unitId: updated.unitId || null,
+          name: updated.name,
+          role: effectiveRoleForStaff as 'conserje' | 'vigilancia',
+        })
+        .where(and(eq(staff.userId, id), eq(staff.tenantId, tenantId)))
+    }
+  }
 
   return { data: updated }
 })
