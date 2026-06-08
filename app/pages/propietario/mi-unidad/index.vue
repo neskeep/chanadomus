@@ -563,6 +563,12 @@ onMounted(() => fetchAll())
                     <QrCode class="size-3.5" />
                     Ver QR
                   </Button>
+                  <span
+                    v-else-if="staff.source === 'staff'"
+                    class="text-xs text-muted-foreground"
+                  >
+                    Gestionado por admin
+                  </span>
                   <Button
                     v-else
                     variant="default"
@@ -580,7 +586,7 @@ onMounted(() => fetchAll())
                       <Pencil class="size-3.5" />
                       <span class="sr-only">Editar</span>
                     </Button>
-                    <Button variant="ghost" size="icon" class="size-10 text-destructive hover:text-destructive" @click="confirmDeleteStaff(staff)">
+                    <Button v-if="staff.source !== 'staff'" variant="ghost" size="icon" class="size-10 text-destructive hover:text-destructive" @click="confirmDeleteStaff(staff)">
                       <Trash2 class="size-3.5" />
                       <span class="sr-only">Eliminar</span>
                     </Button>
@@ -620,6 +626,12 @@ onMounted(() => fetchAll())
                     <QrCode class="size-3" />
                     Ver QR
                   </Button>
+                  <span
+                    v-else-if="staff.source === 'staff'"
+                    class="text-[10px] text-muted-foreground"
+                  >
+                    Admin
+                  </span>
                   <Button
                     v-else
                     variant="default"
@@ -633,7 +645,7 @@ onMounted(() => fetchAll())
                   <Button variant="ghost" class="h-6 px-2 text-[11px]" @click="navigateToEditStaff(staff)">
                     <Pencil class="size-3" />
                   </Button>
-                  <Button variant="ghost" class="h-6 px-2 text-[11px] text-destructive hover:text-destructive" @click="confirmDeleteStaff(staff)">
+                  <Button v-if="staff.source !== 'staff'" variant="ghost" class="h-6 px-2 text-[11px] text-destructive hover:text-destructive" @click="confirmDeleteStaff(staff)">
                     <Trash2 class="size-3" />
                   </Button>
                 </span>
