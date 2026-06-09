@@ -37,8 +37,7 @@ const canSubmit = computed(() =>
   && parseFloat(formAmount.value) > 0
   && formDescription.value.trim().length > 0
   && formDate.value
-  && !isSubmitting.value
-  && !error.value,
+  && !isSubmitting.value,
 )
 
 async function handleSubmit() {
