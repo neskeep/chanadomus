@@ -54,7 +54,13 @@ async function handleSubmit() {
     toast.success('Movimiento registrado correctamente')
     router.back()
   }
-  catch {
+  catch (err: unknown) {
+    const statusCode = (err as { statusCode?: number })?.statusCode
+    if (statusCode === 409) {
+      toast.warning('Este movimiento ya fue registrado previamente')
+      router.back()
+      return
+    }
     toast.error(error.value ?? 'Error al registrar movimiento')
   }
 }

@@ -20,8 +20,14 @@ interface UpdateRecordBody {
 export function useFinanceRecords() {
   const isSubmitting = ref(false)
   const error = ref<string | null>(null)
+  let lastCreateKey = ''
 
   async function createRecord(body: CreateRecordBody) {
+    // Prevenir doble submit con la misma data
+    const dedupeKey = `${body.unitId}:${body.type}:${body.category}:${body.amount}:${body.description}:${body.date}`
+    if (isSubmitting.value || dedupeKey === lastCreateKey) return
+    lastCreateKey = dedupeKey
+
     isSubmitting.value = true
     error.value = null
     try {
@@ -31,6 +37,7 @@ export function useFinanceRecords() {
       })
     }
     catch (err: unknown) {
+      lastCreateKey = '' // Permitir reintento si cambió algo
       const message = err instanceof Error ? err.message : 'Error al crear registro financiero'
       error.value = message
       throw err

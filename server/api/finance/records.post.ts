@@ -1,4 +1,5 @@
 import { z } from 'zod'
+import { and, eq, sql } from 'drizzle-orm'
 import { db } from '~~/server/db'
 import { financialRecords } from '~~/server/db/schema/financial'
 import type { FinancialRecord } from '~~/shared/types/financial'
@@ -19,6 +20,29 @@ export default defineEventHandler(async (event) => {
   const { unitId, type, amount, description, date, category } = await validateBody(event, createRecordSchema)
 
   const parsedDate = new Date(`${date}T12:00:00`)
+  const trimmedDescription = description.trim()
+
+  // Detectar duplicado: mismo tenant + unidad + tipo + categoría + monto + descripción + fecha
+  const [existing] = await db
+    .select()
+    .from(financialRecords)
+    .where(and(
+      eq(financialRecords.tenantId, session.tenantId),
+      eq(financialRecords.unitId, unitId),
+      eq(financialRecords.type, type),
+      eq(financialRecords.category, category),
+      eq(financialRecords.amount, String(amount)),
+      sql`lower(${financialRecords.description}) = lower(${trimmedDescription})`,
+      sql`${financialRecords.date}::date = ${parsedDate}::date`,
+    ))
+    .limit(1)
+
+  if (existing) {
+    throw createError({
+      statusCode: 409,
+      message: 'Ya existe un registro con los mismos datos para esta unidad y fecha',
+    })
+  }
 
   // Insertar registro
   const [row] = await db
@@ -28,7 +52,7 @@ export default defineEventHandler(async (event) => {
       type,
       category,
       amount: String(amount),
-      description: description.trim(),
+      description: trimmedDescription,
       date: parsedDate,
       createdById: session.user.id,
       tenantId: session.tenantId,
