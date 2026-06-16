@@ -83,6 +83,7 @@ const PAGE_MAP: Record<string, PageInfo> = {
   '/conserje/visitantes-frecuentes': { title: 'Visitantes Frecuentes', description: 'Directorio de visitantes recurrentes' },
   '/conserje/visitantes-frecuentes/nuevo': { title: 'Agregar Visitante', description: 'Registra un visitante frecuente', breadcrumbs: [{ label: 'Frecuentes', to: '/conserje/visitantes-frecuentes' }] },
   '/conserje/nueva-entrada': { title: 'Registrar Entrada', description: 'Ingresa un nuevo visitante', breadcrumbs: [{ label: 'Conserjería', to: '/conserje' }] },
+  '/conserje/registrar-acceso': { title: 'Registrar Acceso', description: 'Autoriza o deniega la entrada de un visitante', breadcrumbs: [{ label: 'Conserjería', to: '/conserje' }] },
   '/conserje/incidencias': { title: 'Incidencias', description: 'Reportes y problemas del condominio' },
 }
 

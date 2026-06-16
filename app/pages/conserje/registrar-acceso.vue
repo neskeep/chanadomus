@@ -4,16 +4,9 @@ import type { AccessResult } from '~~/shared/types/access'
 
 useHead({ title: 'Registrar Acceso' })
 
-interface Unit {
-  id: string
-  number: string
-  label: string | null
-}
-
 interface FormState {
   visitorName: string
   visitorDocument: string
-  unitId: string
   visitorType: 'invitado' | 'proveedor'
   vehiclePlate: string
 }
@@ -21,12 +14,11 @@ interface FormState {
 const form = reactive<FormState>({
   visitorName: '',
   visitorDocument: '',
-  unitId: '',
   visitorType: 'invitado',
   vehiclePlate: '',
 })
 
-const units = ref<Unit[]>([])
+const { profile, fetchProfile } = useProfile()
 const isSubmitting = ref(false)
 const error = ref<string | null>(null)
 const lastResult = ref<{
@@ -36,19 +28,15 @@ const lastResult = ref<{
   result: AccessResult
 } | null>(null)
 
+const unitLabel = computed(() => profile.value?.unitLabel || profile.value?.unitNumber || '')
+const unitId = computed(() => profile.value?.unitId || '')
+
 const isValid = computed(() => {
-  return form.visitorName.trim() !== '' && form.visitorDocument.trim() !== '' && form.unitId !== ''
+  return form.visitorName.trim() !== '' && form.visitorDocument.trim() !== '' && unitId.value !== ''
 })
 
-onMounted(async () => {
-  try {
-    const result = await $fetch('/api/units')
-    units.value = result.data
-  }
-  catch (err: unknown) {
-    const message = err instanceof Error ? err.message : 'Error al cargar las unidades'
-    error.value = message
-  }
+onMounted(() => {
+  fetchProfile()
 })
 
 async function submit(result: 'allowed' | 'denied') {
@@ -63,7 +51,7 @@ async function submit(result: 'allowed' | 'denied') {
       body: {
         visitorName: form.visitorName.trim(),
         visitorDocument: form.visitorDocument.trim() || undefined,
-        unitId: form.unitId,
+        unitId: unitId.value,
         visitorType: form.visitorType,
         vehiclePlate: form.vehiclePlate.trim() || undefined,
         result,
@@ -80,7 +68,6 @@ async function submit(result: 'allowed' | 'denied') {
     // Reset form for next entry
     form.visitorName = ''
     form.visitorDocument = ''
-    form.unitId = ''
     form.visitorType = 'invitado'
     form.vehiclePlate = ''
   }
@@ -124,15 +111,12 @@ async function submit(result: 'allowed' | 'denied') {
           />
         </div>
 
-        <!-- Unidad destino -->
+        <!-- Unidad destino (auto-asignada del perfil del conserje) -->
         <div class="space-y-1.5">
-          <Label>Unidad destino <span class="text-destructive">*</span></Label>
-          <UnitCombobox
-            v-model="form.unitId"
-            :units="units"
-            placeholder="Buscar rancho..."
-            required
-          />
+          <Label>Unidad destino</Label>
+          <div class="flex h-12 items-center rounded-md border bg-muted/50 px-3 text-base">
+            {{ unitLabel || 'Cargando...' }}
+          </div>
         </div>
 
         <!-- Tipo visitante (botones toggle) -->

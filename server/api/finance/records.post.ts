@@ -33,7 +33,7 @@ export default defineEventHandler(async (event) => {
       eq(financialRecords.category, category),
       eq(financialRecords.amount, String(amount)),
       sql`lower(${financialRecords.description}) = lower(${trimmedDescription})`,
-      sql`${financialRecords.date}::date = ${parsedDate}::date`,
+      sql`${financialRecords.date}::date = ${parsedDate.toISOString()}::date`,
     ))
     .limit(1)
 
