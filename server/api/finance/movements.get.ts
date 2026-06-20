@@ -17,8 +17,8 @@ export default defineEventHandler(async (event) => {
   const category = query.category === 'ordinaria' || query.category === 'extraordinaria' ? query.category : undefined
 
   const conditions = [eq(financialRecords.tenantId, session.tenantId)]
-  if (from) conditions.push(gte(financialRecords.date, new Date(from)))
-  if (to) conditions.push(lte(financialRecords.date, new Date(to)))
+  if (from) conditions.push(gte(financialRecords.date, parseFilterFrom(from)))
+  if (to) conditions.push(lte(financialRecords.date, parseFilterTo(to)))
   if (type) conditions.push(eq(financialRecords.type, type))
   if (category) conditions.push(eq(financialRecords.category, category))
 

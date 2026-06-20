@@ -22,10 +22,10 @@ export default defineEventHandler(async (event) => {
     eq(financialRecords.unitId, unitId),
   ]
   if (from) {
-    conditions.push(gte(financialRecords.date, new Date(from)))
+    conditions.push(gte(financialRecords.date, parseFilterFrom(from)))
   }
   if (to) {
-    conditions.push(lte(financialRecords.date, new Date(to)))
+    conditions.push(lte(financialRecords.date, parseFilterTo(to)))
   }
 
   const rows = await db

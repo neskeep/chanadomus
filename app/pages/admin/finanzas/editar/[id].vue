@@ -66,9 +66,9 @@ async function loadRecordData() {
     formAmount.value = res.data.amount
     formDescription.value = res.data.description
 
-    // Parse ISO date to CalendarDate
-    const d = new Date(res.data.date)
-    formDate.value = new CalendarDate(d.getFullYear(), d.getMonth() + 1, d.getDate())
+    // Parse ISO date to CalendarDate extrayendo componentes directamente (evita shift de timezone)
+    const [y, m, day] = res.data.date.split('T')[0].split('-').map(Number)
+    formDate.value = new CalendarDate(y, m, day)
   }
   catch (err: unknown) {
     loadError.value = err instanceof Error ? err.message : 'Error al cargar registro'

@@ -41,7 +41,15 @@ const RELATIVE_UNITS: Array<{ unit: Intl.RelativeTimeFormatUnit; ms: number }> =
 ]
 
 function toDate(value: string | Date): Date {
-  return typeof value === 'string' ? new Date(value) : value
+  if (value instanceof Date) return value
+  // Extraer componentes YYYY-MM-DD directamente para evitar shift de timezone
+  // new Date("2026-06-01T00:00:00.000Z") en UTC-4 → May 31 (bug)
+  // new Date(2026, 5, 1) → June 1 local (correcto)
+  const match = value.match(/^(\d{4})-(\d{2})-(\d{2})/)
+  if (match) {
+    return new Date(Number(match[1]), Number(match[2]) - 1, Number(match[3]))
+  }
+  return new Date(value)
 }
 
 function capitalizeFirst(str: string): string {

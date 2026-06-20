@@ -23,12 +23,10 @@ export default defineEventHandler(async (event) => {
     eq(financialRecords.tenantId, session.tenantId),
   ]
   if (from) {
-    conditions.push(gte(financialRecords.date, new Date(from)))
+    conditions.push(gte(financialRecords.date, parseFilterFrom(from)))
   }
   if (to) {
-    const toDate = new Date(to)
-    toDate.setHours(23, 59, 59, 999)
-    conditions.push(lte(financialRecords.date, toDate))
+    conditions.push(lte(financialRecords.date, parseFilterTo(to)))
   }
 
   // Query movimientos de la unidad

@@ -17,10 +17,10 @@ export default defineEventHandler(async (event) => {
     sql`${units.id} = ${financialRecords.unitId} AND ${financialRecords.tenantId} = ${units.tenantId}`,
   ]
   if (from) {
-    dateConditions.push(sql`${financialRecords.date} >= ${new Date(from)}`)
+    dateConditions.push(sql`${financialRecords.date} >= ${parseFilterFrom(from)}`)
   }
   if (to) {
-    dateConditions.push(sql`${financialRecords.date} <= ${new Date(to)}`)
+    dateConditions.push(sql`${financialRecords.date} <= ${parseFilterTo(to)}`)
   }
 
   const joinCondition = dateConditions.length === 1
@@ -65,8 +65,8 @@ export default defineEventHandler(async (event) => {
   const totalsConditions: ReturnType<typeof sql>[] = [
     eq(financialRecords.tenantId, session.tenantId),
   ]
-  if (from) totalsConditions.push(gte(financialRecords.date, new Date(from)))
-  if (to) totalsConditions.push(lte(financialRecords.date, new Date(to)))
+  if (from) totalsConditions.push(gte(financialRecords.date, parseFilterFrom(from)))
+  if (to) totalsConditions.push(lte(financialRecords.date, parseFilterTo(to)))
 
   const [totals] = await db
     .select({
