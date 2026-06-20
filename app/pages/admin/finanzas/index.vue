@@ -3,14 +3,20 @@ import {
   Wallet,
   Plus,
   Upload,
+  Download,
   FileText,
   CalendarIcon,
   ArrowDownRight,
   ArrowUpRight,
   AlertTriangle,
   Home,
+  Trash2,
+  X,
+  Layers,
 } from 'lucide-vue-next'
+import { CalendarDate, getLocalTimeZone, today } from '@internationalized/date'
 import type { DateValue } from 'reka-ui'
+import { toast } from 'vue-sonner'
 
 useHead({ title: 'Panel Financiero' })
 
@@ -150,6 +156,130 @@ function formatBalance(balance: string): string {
   return `${prefix}${formatCurrency(Math.abs(num))}`
 }
 
+// --- Date presets ---
+function getLastDayOfMonth(year: number, month: number): number {
+  return new Date(year, month, 0).getDate()
+}
+
+const datePresets = computed(() => {
+  const t = today(getLocalTimeZone())
+  const quarter = Math.floor((t.month - 1) / 3)
+  const quarterStart = quarter * 3 + 1
+  return [
+    {
+      label: 'Este mes',
+      from: new CalendarDate(t.year, t.month, 1),
+      to: new CalendarDate(t.year, t.month, getLastDayOfMonth(t.year, t.month)),
+    },
+    {
+      label: 'Mes pasado',
+      from: t.month === 1
+        ? new CalendarDate(t.year - 1, 12, 1)
+        : new CalendarDate(t.year, t.month - 1, 1),
+      to: t.month === 1
+        ? new CalendarDate(t.year - 1, 12, 31)
+        : new CalendarDate(t.year, t.month - 1, getLastDayOfMonth(t.year, t.month - 1)),
+    },
+    {
+      label: 'Trimestre',
+      from: new CalendarDate(t.year, quarterStart, 1),
+      to: t,
+    },
+    {
+      label: 'Este año',
+      from: new CalendarDate(t.year, 1, 1),
+      to: t,
+    },
+  ]
+})
+
+function applyPreset(preset: { from: DateValue; to: DateValue }) {
+  filterFrom.value = preset.from
+  filterTo.value = preset.to
+}
+
+function isActivePreset(preset: { from: DateValue; to: DateValue }): boolean {
+  if (!filterFrom.value || !filterTo.value) return false
+  return filterFrom.value.year === preset.from.year
+    && filterFrom.value.month === preset.from.month
+    && filterFrom.value.day === preset.from.day
+    && filterTo.value.year === preset.to.year
+    && filterTo.value.month === preset.to.month
+    && filterTo.value.day === preset.to.day
+}
+
+// --- CSV export ---
+function handleExport() {
+  const params = new URLSearchParams()
+  const from = dateValueToISO(filterFrom.value)
+  const to = dateValueToISO(filterTo.value)
+  if (from) params.set('from', from)
+  if (to) params.set('to', to)
+  if (filterType.value) params.set('type', filterType.value)
+  if (filterCategory.value) params.set('category', filterCategory.value)
+  window.open(`/api/finance/export?${params.toString()}`, '_blank')
+}
+
+// --- Bulk selection ---
+const selectedIds = ref<Set<string>>(new Set())
+const { isSubmitting: bulkSubmitting, bulkUpdate, bulkDelete } = useFinanceBulk()
+
+const isAllPageSelected = computed(() =>
+  movements.value.length > 0 && movements.value.every(m => selectedIds.value.has(m.id)),
+)
+
+function toggleSelectAll() {
+  if (isAllPageSelected.value) {
+    movements.value.forEach(m => selectedIds.value.delete(m.id))
+  }
+  else {
+    movements.value.forEach(m => selectedIds.value.add(m.id))
+  }
+}
+
+function toggleSelect(id: string) {
+  if (selectedIds.value.has(id)) selectedIds.value.delete(id)
+  else selectedIds.value.add(id)
+}
+
+function clearSelection() {
+  selectedIds.value = new Set()
+}
+
+watch([currentPage, filterType, filterCategory, filterFrom, filterTo], () => {
+  clearSelection()
+})
+
+const bulkDatePickerOpen = ref(false)
+
+async function handleBulkDateChange(v: DateValue | undefined) {
+  if (!v) return
+  bulkDatePickerOpen.value = false
+  try {
+    const dateStr = dateValueToISO(v)!
+    await bulkUpdate([...selectedIds.value], { date: dateStr })
+    toast.success(`Fecha actualizada en ${selectedIds.value.size} registros`)
+    clearSelection()
+    loadMovements()
+  }
+  catch {
+    toast.error('Error al actualizar fecha')
+  }
+}
+
+async function handleBulkDelete() {
+  try {
+    const result = await bulkDelete([...selectedIds.value])
+    toast.success(`${result.deleted} registros eliminados`)
+    clearSelection()
+    loadMovements()
+    fetchSummary({ from: dateValueToISO(filterFrom.value), to: dateValueToISO(filterTo.value) })
+  }
+  catch {
+    toast.error('Error al eliminar registros')
+  }
+}
+
 // --- Init ---
 onMounted(() => {
   fetchSummary()
@@ -165,6 +295,22 @@ onMounted(() => {
       <TopbarFilters :active="hasActiveFilters" @clear="clearAllFilters">
         <TopbarFilterGroup v-model="filterType" label="Tipo" :options="typeOptions" />
         <TopbarFilterGroup v-model="filterCategory" label="Categoría" :options="categoryOptions" />
+        <div>
+          <p class="mb-1.5 text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
+            Periodo rápido
+          </p>
+          <div class="flex flex-wrap gap-1">
+            <button
+              v-for="preset in datePresets"
+              :key="preset.label"
+              class="rounded-md px-2 py-1 text-xs font-medium transition-colors"
+              :class="isActivePreset(preset) ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground hover:text-foreground'"
+              @click="applyPreset(preset)"
+            >
+              {{ preset.label }}
+            </button>
+          </div>
+        </div>
         <div>
           <p class="mb-1.5 text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
             Rango de fechas
@@ -211,10 +357,20 @@ onMounted(() => {
           </div>
         </div>
       </TopbarFilters>
+      <Button variant="outline" size="sm" @click="handleExport">
+        <Download class="mr-1.5 size-4" />
+        Exportar
+      </Button>
       <Button variant="outline" size="sm" as-child>
         <NuxtLink to="/admin/finanzas/subir-informe">
           <Upload class="mr-1.5 size-4" />
-          Subir informe
+          Informe
+        </NuxtLink>
+      </Button>
+      <Button variant="outline" size="sm" as-child>
+        <NuxtLink to="/admin/finanzas/generar-cuotas">
+          <Layers class="mr-1.5 size-4" />
+          Generar cuotas
         </NuxtLink>
       </Button>
       <Button size="sm" as-child>
@@ -340,6 +496,9 @@ onMounted(() => {
               <Table>
                 <TableHeader>
                   <TableRow>
+                    <TableHead class="w-10" @click.stop>
+                      <Checkbox :checked="isAllPageSelected" @update:checked="toggleSelectAll" />
+                    </TableHead>
                     <TableHead>Fecha</TableHead>
                     <TableHead>Unidad</TableHead>
                     <TableHead>Descripción</TableHead>
@@ -355,6 +514,9 @@ onMounted(() => {
                     class="cursor-pointer transition-colors hover:bg-muted/50"
                     @click="router.push(`/admin/finanzas/${mov.unitId}`)"
                   >
+                    <TableCell class="w-10" @click.stop>
+                      <Checkbox :checked="selectedIds.has(mov.id)" @update:checked="toggleSelect(mov.id)" />
+                    </TableCell>
                     <TableCell class="tabular-nums text-muted-foreground">
                       {{ formatDate(mov.date) }}
                     </TableCell>
@@ -431,6 +593,55 @@ onMounted(() => {
             </div>
 
             <ListPagination v-model:current-page="currentPage" :total-pages="totalPages" class="mt-3" />
+
+            <!-- Bulk action bar -->
+            <div
+              v-if="selectedIds.size > 0"
+              class="fixed inset-x-0 bottom-0 z-40 border-t bg-background/95 px-4 py-3 shadow-lg backdrop-blur supports-[backdrop-filter]:bg-background/80"
+            >
+              <div class="mx-auto flex max-w-screen-xl items-center justify-between gap-3">
+                <span class="text-sm font-medium">{{ selectedIds.size }} seleccionados</span>
+                <div class="flex items-center gap-2">
+                  <Popover v-model:open="bulkDatePickerOpen">
+                    <PopoverTrigger as-child>
+                      <Button variant="outline" size="sm" :disabled="bulkSubmitting">
+                        <CalendarIcon class="mr-1.5 size-4" />
+                        Cambiar fecha
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent class="w-auto p-0" align="end" side="top">
+                      <Calendar locale="es" @update:model-value="handleBulkDateChange" />
+                    </PopoverContent>
+                  </Popover>
+
+                  <AlertDialog>
+                    <AlertDialogTrigger as-child>
+                      <Button variant="destructive" size="sm" :disabled="bulkSubmitting">
+                        <Trash2 class="mr-1.5 size-4" />
+                        Eliminar
+                      </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>Eliminar {{ selectedIds.size }} registros?</AlertDialogTitle>
+                        <AlertDialogDescription>Esta acción no se puede deshacer.</AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                        <AlertDialogAction variant="destructive" @click="handleBulkDelete">
+                          Eliminar
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
+
+                  <Button variant="ghost" size="sm" @click="clearSelection">
+                    <X class="mr-1.5 size-4" />
+                    Cancelar
+                  </Button>
+                </div>
+              </div>
+            </div>
           </template>
         </template>
 

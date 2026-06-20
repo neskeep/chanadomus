@@ -49,3 +49,27 @@ export interface FinancialReport {
   uploadedById: string
   createdAt: string
 }
+
+export interface BulkCreateBody {
+  unitIds: string[]
+  type: RecordType
+  category: RecordCategory
+  amount: string
+  description: string
+  date: string
+  skipDuplicates?: boolean
+}
+
+export interface BulkCreateResult {
+  created: number
+  skipped: number
+  skippedUnits: string[]
+}
+
+export interface BulkUpdateResult {
+  updated: number
+}
+
+export interface BulkDeleteResult {
+  deleted: number
+}
