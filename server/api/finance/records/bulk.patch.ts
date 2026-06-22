@@ -4,7 +4,7 @@ import { db } from '~~/server/db'
 import { financialRecords } from '~~/server/db/schema/financial'
 
 const bulkUpdateSchema = z.object({
-  ids: z.array(z.string().uuid()).min(1, 'Debe seleccionar al menos un registro').max(500),
+  ids: z.array(z.string().min(1)).min(1, 'Debe seleccionar al menos un registro').max(500),
   updates: z.object({
     date: z.string().refine(v => !isNaN(new Date(v).getTime()), 'date invalida').optional(),
     type: z.enum(['cargo', 'abono']).optional(),

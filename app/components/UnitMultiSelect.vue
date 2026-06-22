@@ -79,19 +79,18 @@ const groupedOptions = computed<UnitGroup[]>(() => {
 
 const hasResults = computed(() => groupedOptions.value.some(g => g.units.length > 0))
 
+const selectedSet = computed(() => new Set(props.modelValue))
+
 const allSelected = computed(() =>
-  props.units.length > 0 && props.modelValue.length === props.units.length,
+  props.units.length > 0 && selectedSet.value.size === props.units.length,
 )
 
 const selectionLabel = computed(() => {
-  if (props.modelValue.length === 0) return 'Ninguna unidad seleccionada'
-  if (props.modelValue.length === props.units.length) return `Todas las unidades (${props.units.length})`
-  return `${props.modelValue.length} de ${props.units.length} unidades`
+  const count = selectedSet.value.size
+  if (count === 0) return 'Ninguna unidad seleccionada'
+  if (count === props.units.length) return `Todas las unidades (${props.units.length})`
+  return `${count} de ${props.units.length} unidades`
 })
-
-function isSelected(id: string): boolean {
-  return props.modelValue.includes(id)
-}
 
 function toggle(id: string) {
   const next = isSelected(id)
@@ -160,17 +159,19 @@ function toggleAll() {
             >
               {{ group.label }}
             </div>
-            <label
+            <div
               v-for="unit in group.units"
               :key="unit.id"
               class="flex cursor-pointer items-center gap-2 rounded-xl px-2.5 py-2 text-sm transition-colors hover:bg-accent"
+              @click="toggle(unit.id)"
             >
               <Checkbox
-                :checked="isSelected(unit.id)"
-                @update:checked="toggle(unit.id)"
+                :checked="selectedSet.has(unit.id)"
+                @click.stop
+                @update:checked="() => toggle(unit.id)"
               />
               <span>{{ unit.label ?? unit.number }}</span>
-            </label>
+            </div>
           </div>
         </template>
         <p v-else class="py-4 text-center text-sm text-muted-foreground">

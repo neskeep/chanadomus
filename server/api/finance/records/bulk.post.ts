@@ -5,7 +5,7 @@ import { financialRecords } from '~~/server/db/schema/financial'
 import { units } from '~~/server/db/schema/unit'
 
 const bulkCreateSchema = z.object({
-  unitIds: z.array(z.string().uuid()).min(1, 'Debe seleccionar al menos una unidad'),
+  unitIds: z.array(z.string().min(1)).min(1, 'Debe seleccionar al menos una unidad'),
   type: z.enum(['cargo', 'abono'], { message: 'type debe ser "cargo" o "abono"' }),
   category: z.enum(['ordinaria', 'extraordinaria'], { message: 'category invalida' }),
   amount: z.coerce.number().positive('amount debe ser mayor a 0'),

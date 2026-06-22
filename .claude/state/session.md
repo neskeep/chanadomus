@@ -1,50 +1,56 @@
 # Estado de Sesion — ChanaDomus
 
 ## Ultima Sesion
-- **Fecha**: 2026-06-07
-- **Sesion #**: 66
-- **Branch**: `dev`
-- **Commit**: `c3ff504`
+- **Fecha**: 2026-06-19
+- **Sesion #**: 68
+- **Branch**: `main`
+- **Commit**: `a7b49b7`
 - **Estado**: Completada
 
-## Completado Sesion 66
+## Completado Sesion 68
 
-### UX Finanzas — Informes como tab
-- Layout 2 columnas eliminado, "Informes" agregado como 3er tab junto a Movimientos y Saldos por unidad
-- Tablas usan ancho completo para mejor legibilidad
+### Fix critico de fechas financieras (P0)
+- Bug: timestamps en UTC midnight se mostraban como dia anterior en Venezuela (UTC-4)
+- Creado `server/utils/finance-date.ts` — utilidad centralizada (parseFinanceDate, parseFilterFrom/To)
+- Corregidos 6 endpoints server: records.post, records/[id].patch, movements, summary, unit-account, my-account
+- Corregido `useFormatDate.ts` — toDate() extrae YYYY-MM-DD sin pasar por Date constructor
+- Corregido `editar/[id].vue` — parsing de fecha sin timezone shift
+- **Migracion produccion ejecutada**: 731 de 983 registros normalizados a noon
+- Backup creado en `/tmp/chanadomus-backups/backup-pre-date-fix-20260619-194452.sql`
 
-### CI/CD — Deploy trigger corregido
-- Workflow cambiado de `branches: [dev]` a `branches: [main]`
-- Flujo correcto: dev → merge a main → deploy automatico
-- Webhook Coolify funciona pero requiere redeploy manual (pendiente investigar)
+### Generacion masiva de cuotas
+- Nueva pagina `/admin/finanzas/generar-cuotas` — 1 formulario crea registros para todas las unidades
+- Componente `UnitMultiSelect.vue` — multi-select con busqueda, agrupacion R-/P-, select/deselect all
+- API `POST /api/finance/records/bulk` con dedup batch y skipDuplicates
 
-### Conserje — Fix QR y visibilidad en staff
-- Insertado staff record para conserje demo (local + produccion)
-- Endpoint `/api/my-unit/service-staff` ahora incluye conserjes de tabla `staff`
-- Seed actualizado para crear staff record del conserje automaticamente
+### Bulk select + acciones en tabla
+- Checkboxes en tabla de movimientos (desktop) con select-all por pagina
+- Barra flotante con "Cambiar fecha" (calendar picker) y "Eliminar" (con confirmacion)
+- APIs: `PATCH /api/finance/records/bulk`, `POST /api/finance/records/bulk-delete`
+- Composable `useFinanceBulk.ts` — bulkCreate, bulkUpdate, bulkDelete
 
-### Imagenes — Compresion client-side + HEIC
-- Composable `useImageCompress`: todas las fotos se comprimen a WebP (max 1920px, q0.8)
-- Soporte HEIC via `heic2any` (import dinamico para evitar SSR error)
-- Aplicado en: incidencias (3 roles), avatares (perfil + admin personal)
-- Server limit subido a 10MB como safety net
+### Export CSV
+- API `GET /api/finance/export` — CSV con BOM UTF-8 para Excel, limit 10K rows
+- Boton "Exportar" en topbar de finanzas
 
-### Cartelera — Filtro de expiracion
-- `GET /api/announcements` filtra items expirados para usuarios no-admin
-- Admin/conserje siguen viendo todo para gestion
+### Date presets
+- Botones rapidos en filtros: "Este mes", "Mes pasado", "Trimestre", "Este año"
 
-### Usuarios demo en produccion
-- Creados/actualizados 4 usuarios demo en unidad `DEMO - Unidad Demo`
-- admin@, propietario@, conserje@, vigilante@ @chanadomus.com
-- Password: `Yolo2026!`
+## Deploy
+- 2 commits pusheados a main: `fde41a0` (fix fechas) + `a7b49b7` (bulk features)
+- **VERIFICAR**: deploy completo en Coolify y que las features funcionan correctamente
+
+## Pendiente proximo sesion
+- Verificar visualmente las 4 features nuevas en produccion con Playwright
+- El usuario quiere aclarar el nombre correcto del contenedor Docker en produccion (pregunto "chanadomus" pero el container actual es `ac0ps2fczh5cjspgcxj7w0ux` para PG y `jmz7axznjir3tr1841kalft0-*` para la app)
+- Evaluar si las bulk operations necesitan ajustes post-feedback de Jordi
 
 ## Issues abiertos
-- Webhook Coolify no redespliega automaticamente (requiere manual)
-- Tests API no integrados en CI
+- Tests `unit/` no corren en CI (zod import falla con frozen-lockfile)
 - `pnpm db:migrate` falla en DB local limpia — usar `npx drizzle-kit push --force`
 
 ## DB local
-- Docker `chanadomuscom-db-1` con datos de seed
+- Docker `chanadomus-db-1` con datos de seed
 - Usuarios seed con password `Yolo2026!`:
   - admin@chanadomus.com (admin)
   - propietario@chanadomus.com (propietario, R-001)

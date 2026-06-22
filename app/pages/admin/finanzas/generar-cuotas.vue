@@ -159,7 +159,7 @@ onMounted(() => {
             </div>
           </div>
 
-          <!-- Amount + Description -->
+          <!-- Amount + Date -->
           <div class="grid gap-4 sm:grid-cols-2">
             <div class="space-y-1.5">
               <Label for="bulk-amount">Monto ($) <span class="text-destructive">*</span></Label>
@@ -176,37 +176,37 @@ onMounted(() => {
               <p class="text-xs text-muted-foreground">Monto por unidad, sin puntos de miles</p>
             </div>
             <div class="space-y-1.5">
-              <Label for="bulk-description">Descripción <span class="text-destructive">*</span></Label>
-              <Input
-                id="bulk-description"
-                v-model="formDescription"
-                type="text"
-                placeholder="Ej: Cuota de condominio junio 2026"
-                class="h-12 text-base"
-                maxlength="200"
-              />
-              <p class="text-xs text-muted-foreground">{{ formDescription.length }}/200</p>
+              <Label>Fecha <span class="text-destructive">*</span></Label>
+              <Popover v-model:open="datePickerOpen">
+                <PopoverTrigger as-child>
+                  <Button variant="outline" class="h-12 w-full justify-start rounded-lg text-base font-normal">
+                    <CalendarIcon class="mr-2 size-4 shrink-0 text-muted-foreground" />
+                    <span class="truncate">{{ formatPickerDate(formDate) }}</span>
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent class="w-auto p-0" align="start">
+                  <Calendar
+                    :model-value="formDate"
+                    locale="es"
+                    @update:model-value="(v: DateValue | undefined) => { if (v) { formDate = v; datePickerOpen = false } }"
+                  />
+                </PopoverContent>
+              </Popover>
             </div>
           </div>
 
-          <!-- Date picker -->
+          <!-- Description -->
           <div class="space-y-1.5">
-            <Label>Fecha <span class="text-destructive">*</span></Label>
-            <Popover v-model:open="datePickerOpen">
-              <PopoverTrigger as-child>
-                <Button variant="outline" class="h-12 w-full justify-start rounded-lg text-base font-normal sm:w-64">
-                  <CalendarIcon class="mr-2 size-4 shrink-0 text-muted-foreground" />
-                  <span class="truncate">{{ formatPickerDate(formDate) }}</span>
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent class="w-auto p-0" align="start">
-                <Calendar
-                  :model-value="formDate"
-                  locale="es"
-                  @update:model-value="(v: DateValue | undefined) => { if (v) { formDate = v; datePickerOpen = false } }"
-                />
-              </PopoverContent>
-            </Popover>
+            <Label for="bulk-description">Descripción <span class="text-destructive">*</span></Label>
+            <Input
+              id="bulk-description"
+              v-model="formDescription"
+              type="text"
+              placeholder="Ej: Cuota de condominio junio 2026"
+              class="h-12 text-base"
+              maxlength="200"
+            />
+            <p class="text-xs text-muted-foreground">{{ formDescription.length }}/200</p>
           </div>
 
           <!-- Unit multi-select -->

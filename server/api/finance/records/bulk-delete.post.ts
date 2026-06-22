@@ -4,7 +4,7 @@ import { db } from '~~/server/db'
 import { financialRecords } from '~~/server/db/schema/financial'
 
 const bulkDeleteSchema = z.object({
-  ids: z.array(z.string().uuid()).min(1, 'Debe seleccionar al menos un registro').max(500),
+  ids: z.array(z.string().min(1)).min(1, 'Debe seleccionar al menos un registro').max(500),
 })
 
 export default defineEventHandler(async (event) => {

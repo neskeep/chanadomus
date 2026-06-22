@@ -221,29 +221,33 @@ function handleExport() {
 }
 
 // --- Bulk selection ---
-const selectedIds = ref<Set<string>>(new Set())
+const selectedIds = ref<string[]>([])
 const { isSubmitting: bulkSubmitting, bulkUpdate, bulkDelete } = useFinanceBulk()
 
 const isAllPageSelected = computed(() =>
-  movements.value.length > 0 && movements.value.every(m => selectedIds.value.has(m.id)),
+  movements.value.length > 0 && movements.value.every(m => selectedIds.value.includes(m.id)),
 )
 
 function toggleSelectAll() {
   if (isAllPageSelected.value) {
-    movements.value.forEach(m => selectedIds.value.delete(m.id))
+    const pageIds = new Set(movements.value.map(m => m.id))
+    selectedIds.value = selectedIds.value.filter(id => !pageIds.has(id))
   }
   else {
-    movements.value.forEach(m => selectedIds.value.add(m.id))
+    const existing = new Set(selectedIds.value)
+    movements.value.forEach((m) => { if (!existing.has(m.id)) selectedIds.value.push(m.id) })
+    selectedIds.value = [...selectedIds.value]
   }
 }
 
 function toggleSelect(id: string) {
-  if (selectedIds.value.has(id)) selectedIds.value.delete(id)
-  else selectedIds.value.add(id)
+  const idx = selectedIds.value.indexOf(id)
+  if (idx >= 0) selectedIds.value.splice(idx, 1)
+  else selectedIds.value.push(id)
 }
 
 function clearSelection() {
-  selectedIds.value = new Set()
+  selectedIds.value = []
 }
 
 watch([currentPage, filterType, filterCategory, filterFrom, filterTo], () => {
@@ -257,8 +261,8 @@ async function handleBulkDateChange(v: DateValue | undefined) {
   bulkDatePickerOpen.value = false
   try {
     const dateStr = dateValueToISO(v)!
-    await bulkUpdate([...selectedIds.value], { date: dateStr })
-    toast.success(`Fecha actualizada en ${selectedIds.value.size} registros`)
+    await bulkUpdate(selectedIds.value, { date: dateStr })
+    toast.success(`Fecha actualizada en ${selectedIds.value.length} registros`)
     clearSelection()
     loadMovements()
   }
@@ -269,7 +273,7 @@ async function handleBulkDateChange(v: DateValue | undefined) {
 
 async function handleBulkDelete() {
   try {
-    const result = await bulkDelete([...selectedIds.value])
+    const result = await bulkDelete(selectedIds.value)
     toast.success(`${result.deleted} registros eliminados`)
     clearSelection()
     loadMovements()
@@ -515,7 +519,7 @@ onMounted(() => {
                     @click="router.push(`/admin/finanzas/${mov.unitId}`)"
                   >
                     <TableCell class="w-10" @click.stop>
-                      <Checkbox :checked="selectedIds.has(mov.id)" @update:checked="toggleSelect(mov.id)" />
+                      <Checkbox :checked="selectedIds.includes(mov.id)" @update:checked="toggleSelect(mov.id)" />
                     </TableCell>
                     <TableCell class="tabular-nums text-muted-foreground">
                       {{ formatDate(mov.date) }}
@@ -596,11 +600,11 @@ onMounted(() => {
 
             <!-- Bulk action bar -->
             <div
-              v-if="selectedIds.size > 0"
+              v-if="selectedIds.length > 0"
               class="fixed inset-x-0 bottom-0 z-40 border-t bg-background/95 px-4 py-3 shadow-lg backdrop-blur supports-[backdrop-filter]:bg-background/80"
             >
               <div class="mx-auto flex max-w-screen-xl items-center justify-between gap-3">
-                <span class="text-sm font-medium">{{ selectedIds.size }} seleccionados</span>
+                <span class="text-sm font-medium">{{ selectedIds.length }} seleccionados</span>
                 <div class="flex items-center gap-2">
                   <Popover v-model:open="bulkDatePickerOpen">
                     <PopoverTrigger as-child>
@@ -623,7 +627,7 @@ onMounted(() => {
                     </AlertDialogTrigger>
                     <AlertDialogContent>
                       <AlertDialogHeader>
-                        <AlertDialogTitle>Eliminar {{ selectedIds.size }} registros?</AlertDialogTitle>
+                        <AlertDialogTitle>Eliminar {{ selectedIds.length }} registros?</AlertDialogTitle>
                         <AlertDialogDescription>Esta acción no se puede deshacer.</AlertDialogDescription>
                       </AlertDialogHeader>
                       <AlertDialogFooter>
