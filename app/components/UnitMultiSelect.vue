@@ -167,7 +167,7 @@ function toggleAll() {
             >
               <Checkbox
                 :checked="selectedSet.has(unit.id)"
-                class="size-5 rounded-md border-muted-foreground/40 data-[state=unchecked]:border"
+                class="size-5 rounded-md border-muted-foreground/40 data-[state=unchecked]:border data-[state=unchecked]:bg-transparent"
                 @click.stop
                 @update:checked="() => toggle(unit.id)"
               />
