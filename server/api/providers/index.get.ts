@@ -143,5 +143,31 @@ export default defineEventHandler(async (event) => {
     }
   })
 
-  return { data, meta: { total, page, limit } }
+  // Global status counts (unaffected by filters/pagination)
+  const statusConditions = [eq(providers.tenantId, session.tenantId)]
+  if (!isPrivileged) {
+    statusConditions.push(eq(providers.status, 'active'))
+  }
+  const statusWhere = and(...statusConditions)
+
+  const [activeRow] = await db
+    .select({ total: count() })
+    .from(providers)
+    .where(and(statusWhere, eq(providers.status, 'active')))
+
+  const [pendingRow] = isPrivileged
+    ? await db
+        .select({ total: count() })
+        .from(providers)
+        .where(and(eq(providers.tenantId, session.tenantId), eq(providers.status, 'pending')))
+    : [{ total: 0 }]
+
+  return {
+    data,
+    meta: { total, page, limit },
+    counts: {
+      active: activeRow?.total ?? 0,
+      pending: pendingRow?.total ?? 0,
+    },
+  }
 })

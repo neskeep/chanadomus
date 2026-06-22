@@ -13,6 +13,11 @@ interface ProvidersMeta {
   limit: number
 }
 
+interface ProvidersCounts {
+  active: number
+  pending: number
+}
+
 interface FetchProvidersParams {
   page?: number
   limit?: number
@@ -32,6 +37,7 @@ interface SuggestProviderPayload {
 export function useProviders() {
   const providers = ref<Provider[]>([])
   const meta = ref<ProvidersMeta>({ total: 0, page: 1, limit: 20 })
+  const counts = ref<ProvidersCounts>({ active: 0, pending: 0 })
   const isLoading = ref(false)
   const isSubmitting = ref(false)
   const error = ref<string | null>(null)
@@ -48,12 +54,13 @@ export function useProviders() {
       if (params.search) query.search = params.search
       if (params.status) query.status = params.status
 
-      const res = await $fetch<{ data: Provider[]; meta: ProvidersMeta }>(
+      const res = await $fetch<{ data: Provider[]; meta: ProvidersMeta; counts: ProvidersCounts }>(
         '/api/providers',
         { params: query },
       )
       providers.value = res.data
       meta.value = res.meta
+      counts.value = res.counts
     }
     catch (err: unknown) {
       const message = err instanceof Error ? err.message : 'Error al cargar proveedores'
@@ -184,6 +191,7 @@ export function useProviders() {
   return {
     providers,
     meta,
+    counts,
     isLoading,
     isSubmitting,
     error,

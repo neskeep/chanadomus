@@ -28,7 +28,7 @@ const emit = defineEmits<{
       :side-offset="8"
       class="w-56 p-0"
     >
-      <div class="space-y-3 p-2.5">
+      <div class="max-h-[min(60vh,400px)] space-y-3 overflow-y-auto p-2.5">
         <slot />
       </div>
       <button

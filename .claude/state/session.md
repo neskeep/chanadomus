@@ -1,53 +1,49 @@
 # Estado de Sesion — ChanaDomus
 
 ## Ultima Sesion
-- **Fecha**: 2026-06-19
-- **Sesion #**: 68
+- **Fecha**: 2026-06-22
+- **Sesion #**: 69
 - **Branch**: `main`
-- **Commit**: `a7b49b7`
-- **Estado**: Completada
+- **Commit**: `b326eb3` (pusheado, deployed)
+- **Estado**: Incompleta — 1 fix pendiente de commit+push
 
-## Completado Sesion 68
+## Completado Sesion 69
 
-### Fix critico de fechas financieras (P0)
-- Bug: timestamps en UTC midnight se mostraban como dia anterior en Venezuela (UTC-4)
-- Creado `server/utils/finance-date.ts` — utilidad centralizada (parseFinanceDate, parseFilterFrom/To)
-- Corregidos 6 endpoints server: records.post, records/[id].patch, movements, summary, unit-account, my-account
-- Corregido `useFormatDate.ts` — toDate() extrae YYYY-MM-DD sin pasar por Date constructor
-- Corregido `editar/[id].vue` — parsing de fecha sin timezone shift
-- **Migracion produccion ejecutada**: 731 de 983 registros normalizados a noon
-- Backup creado en `/tmp/chanadomus-backups/backup-pre-date-fix-20260619-194452.sql`
+### Verificacion visual en produccion (Playwright)
+- Login y navegacion a /admin/finanzas OK
+- 4 features verificadas: date presets, generar cuotas, export CSV, bulk checkboxes
+- Todas funcionando correctamente en produccion
 
-### Generacion masiva de cuotas
-- Nueva pagina `/admin/finanzas/generar-cuotas` — 1 formulario crea registros para todas las unidades
-- Componente `UnitMultiSelect.vue` — multi-select con busqueda, agrupacion R-/P-, select/deselect all
-- API `POST /api/finance/records/bulk` con dedup batch y skipDuplicates
+### Fixes de 4 issues reportados por Jordi
+1. **Bulk POST 400**: Zod 4 `z.string().uuid()` rechaza UUIDs no-v4 (seeds locales) → cambiado a `z.string().min(1)` en 3 endpoints bulk
+2. **UnitMultiSelect checkboxes no marcan**: `<label>` wrapping causaba conflicto con `<button>` de Reka UI → cambiado a `<div>` con `@click.stop`, computed `Set` para lookups
+3. **Layout formulario generar-cuotas**: Monto+Fecha en fila (grid-cols-2), Descripcion full-width abajo
+4. **Bulk select en tabla no reactivo**: `ref<Set>` no es reactivo en Vue 3 → reemplazado con `ref<string[]>([])` usando `.includes()/.splice()/.push()/.length`
 
-### Bulk select + acciones en tabla
-- Checkboxes en tabla de movimientos (desktop) con select-all por pagina
-- Barra flotante con "Cambiar fecha" (calendar picker) y "Eliminar" (con confirmacion)
-- APIs: `PATCH /api/finance/records/bulk`, `POST /api/finance/records/bulk-delete`
-- Composable `useFinanceBulk.ts` — bulkCreate, bulkUpdate, bulkDelete
+### Fix adicional: columna cedula en DB local
+- `ALTER TABLE "user" ADD COLUMN cedula TEXT` — faltaba en DB local, causaba error de login
 
-### Export CSV
-- API `GET /api/finance/export` — CSV con BOM UTF-8 para Excel, limit 10K rows
-- Boton "Exportar" en topbar de finanzas
+### Contenedor Docker local corregido
+- Nombre correcto: `chanadomus-db-1` (no `chanadomuscom-db-1`)
+- Actualizado en session state y memoria
 
-### Date presets
-- Botones rapidos en filtros: "Este mes", "Mes pasado", "Trimestre", "Este año"
+## PENDIENTE — NO COMMITEADO NI PUSHEADO
+- **Bulk action bar invisible**: La barra flotante de acciones bulk (`fixed bottom-0`) no se ve porque el `SidebarProvider` tiene `overflow-hidden` que rompe `position: fixed`
+- **Fix aplicado pero NO commiteado**: `<Teleport to="body">` + `z-50` en `app/pages/admin/finanzas/index.vue`
+- **Accion requerida**: `git add app/pages/admin/finanzas/index.vue && git commit && git push`
 
-## Deploy
-- 2 commits pusheados a main: `fde41a0` (fix fechas) + `a7b49b7` (bulk features)
-- **VERIFICAR**: deploy completo en Coolify y que las features funcionan correctamente
-
-## Pendiente proximo sesion
-- Verificar visualmente las 4 features nuevas en produccion con Playwright
-- El usuario quiere aclarar el nombre correcto del contenedor Docker en produccion (pregunto "chanadomus" pero el container actual es `ac0ps2fczh5cjspgcxj7w0ux` para PG y `jmz7axznjir3tr1841kalft0-*` para la app)
-- Evaluar si las bulk operations necesitan ajustes post-feedback de Jordi
+## Archivos modificados (commiteados en b326eb3)
+- `server/api/finance/records/bulk.post.ts` — UUID validation
+- `server/api/finance/records/bulk-delete.post.ts` — UUID validation
+- `server/api/finance/records/bulk.patch.ts` — UUID validation
+- `app/components/UnitMultiSelect.vue` — checkbox visual + Set computed
+- `app/pages/admin/finanzas/generar-cuotas.vue` — layout redistribuido
+- `app/pages/admin/finanzas/index.vue` — Set→Array reactivity + Teleport (Teleport pendiente)
 
 ## Issues abiertos
 - Tests `unit/` no corren en CI (zod import falla con frozen-lockfile)
 - `pnpm db:migrate` falla en DB local limpia — usar `npx drizzle-kit push --force`
+- DB local puede necesitar `ALTER TABLE "user" ADD COLUMN cedula TEXT` si no se corrió drizzle push
 
 ## DB local
 - Docker `chanadomus-db-1` con datos de seed

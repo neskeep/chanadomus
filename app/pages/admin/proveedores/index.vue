@@ -19,6 +19,7 @@ useHead({ title: 'Proveedores y servicios' })
 
 const {
   providers,
+  counts,
   isLoading,
   error,
   totalPages,
@@ -70,9 +71,9 @@ const STATUS_CONFIG: Record<ProviderStatus, { label: string; class: string }> = 
   pending: { label: PROVIDER_STATUS_LABELS.pending, class: PROVIDER_STATUS_COLORS.pending },
 }
 
-// Stats
-const totalActive = computed(() => providers.value.filter(p => p.status === 'active').length)
-const totalPending = computed(() => providers.value.filter(p => p.status === 'pending').length)
+// Stats (global counts from API, not page-scoped)
+const totalActive = computed(() => counts.value.active)
+const totalPending = computed(() => counts.value.pending)
 
 // Client-side search filter
 const filteredProviders = computed(() => {
