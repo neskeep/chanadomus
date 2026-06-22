@@ -59,7 +59,9 @@ const filteredUsers = computed(() => {
     const q = searchQuery.value.trim().toLowerCase()
     list = list.filter(u =>
       u.name.toLowerCase().includes(q)
-      || u.email.toLowerCase().includes(q),
+      || u.email.toLowerCase().includes(q)
+      || u.unitNumber?.toLowerCase().includes(q)
+      || u.unitLabel?.toLowerCase().includes(q),
     )
   }
   return [...list].sort((a, b) => {

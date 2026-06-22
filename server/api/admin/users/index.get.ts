@@ -25,7 +25,7 @@ export default defineEventHandler(async (event) => {
 
   if (search?.trim()) {
     const term = `%${search.trim()}%`
-    conditions.push(or(ilike(user.name, term), ilike(user.email, term))!)
+    conditions.push(or(ilike(user.name, term), ilike(user.email, term), ilike(units.number, term), ilike(units.label, term))!)
   }
 
   const rows = await db
