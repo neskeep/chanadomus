@@ -93,7 +93,7 @@ const selectionLabel = computed(() => {
 })
 
 function toggle(id: string) {
-  const next = isSelected(id)
+  const next = selectedSet.value.has(id)
     ? props.modelValue.filter(v => v !== id)
     : [...props.modelValue, id]
   emit('update:modelValue', next)
