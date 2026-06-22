@@ -22,7 +22,7 @@ export function useFinanceBulk() {
     }
   }
 
-  async function bulkUpdate(ids: string[], updates: { date?: string; type?: RecordType; category?: RecordCategory }): Promise<BulkUpdateResult> {
+  async function bulkUpdate(ids: string[], updates: { date?: string; type?: RecordType; category?: RecordCategory; amount?: number }): Promise<BulkUpdateResult> {
     isSubmitting.value = true
     error.value = null
     try {

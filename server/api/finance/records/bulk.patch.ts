@@ -9,6 +9,7 @@ const bulkUpdateSchema = z.object({
     date: z.string().refine(v => !isNaN(new Date(v).getTime()), 'date invalida').optional(),
     type: z.enum(['cargo', 'abono']).optional(),
     category: z.enum(['ordinaria', 'extraordinaria']).optional(),
+    amount: z.number().positive('El monto debe ser positivo').optional(),
   }).refine(data => Object.keys(data).length > 0, 'No se proporcionaron campos para actualizar'),
 })
 
@@ -35,6 +36,7 @@ export default defineEventHandler(async (event) => {
   if (updates.date) setValues.date = parseFinanceDate(updates.date)
   if (updates.type) setValues.type = updates.type
   if (updates.category) setValues.category = updates.category
+  if (updates.amount !== undefined) setValues.amount = String(updates.amount)
 
   await db
     .update(financialRecords)

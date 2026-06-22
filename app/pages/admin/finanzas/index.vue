@@ -13,6 +13,9 @@ import {
   Trash2,
   X,
   Layers,
+  DollarSign,
+  RefreshCw,
+  Tag,
 } from 'lucide-vue-next'
 import { CalendarDate, getLocalTimeZone, today } from '@internationalized/date'
 import type { DateValue } from 'reka-ui'
@@ -235,15 +238,18 @@ function toggleSelectAll() {
   }
   else {
     const existing = new Set(selectedIds.value)
-    movements.value.forEach((m) => { if (!existing.has(m.id)) selectedIds.value.push(m.id) })
-    selectedIds.value = [...selectedIds.value]
+    const newIds = movements.value.filter(m => !existing.has(m.id)).map(m => m.id)
+    selectedIds.value = [...selectedIds.value, ...newIds]
   }
 }
 
 function toggleSelect(id: string) {
-  const idx = selectedIds.value.indexOf(id)
-  if (idx >= 0) selectedIds.value.splice(idx, 1)
-  else selectedIds.value.push(id)
+  if (selectedIds.value.includes(id)) {
+    selectedIds.value = selectedIds.value.filter(v => v !== id)
+  }
+  else {
+    selectedIds.value = [...selectedIds.value, id]
+  }
 }
 
 function clearSelection() {
@@ -255,6 +261,8 @@ watch([currentPage, filterType, filterCategory, filterFrom, filterTo], () => {
 })
 
 const bulkDatePickerOpen = ref(false)
+const bulkAmountInput = ref('')
+const bulkAmountPopoverOpen = ref(false)
 
 async function handleBulkDateChange(v: DateValue | undefined) {
   if (!v) return
@@ -268,6 +276,51 @@ async function handleBulkDateChange(v: DateValue | undefined) {
   }
   catch {
     toast.error('Error al actualizar fecha')
+  }
+}
+
+async function handleBulkTypeChange(type: 'cargo' | 'abono') {
+  try {
+    await bulkUpdate(selectedIds.value, { type })
+    toast.success(`Tipo cambiado a "${type === 'cargo' ? 'Cargo' : 'Abono'}" en ${selectedIds.value.length} registros`)
+    clearSelection()
+    loadMovements()
+    fetchSummary({ from: dateValueToISO(filterFrom.value), to: dateValueToISO(filterTo.value) })
+  }
+  catch {
+    toast.error('Error al cambiar tipo')
+  }
+}
+
+async function handleBulkCategoryChange(category: 'ordinaria' | 'extraordinaria') {
+  try {
+    await bulkUpdate(selectedIds.value, { category })
+    toast.success(`Categoría cambiada a "${category === 'ordinaria' ? 'Ordinaria' : 'Extraordinaria'}" en ${selectedIds.value.length} registros`)
+    clearSelection()
+    loadMovements()
+  }
+  catch {
+    toast.error('Error al cambiar categoría')
+  }
+}
+
+async function handleBulkAmountChange() {
+  const amount = parseFloat(bulkAmountInput.value)
+  if (isNaN(amount) || amount <= 0) {
+    toast.error('Ingresa un monto válido mayor a 0')
+    return
+  }
+  bulkAmountPopoverOpen.value = false
+  try {
+    await bulkUpdate(selectedIds.value, { amount })
+    toast.success(`Monto actualizado a ${formatCurrency(amount)} en ${selectedIds.value.length} registros`)
+    bulkAmountInput.value = ''
+    clearSelection()
+    loadMovements()
+    fetchSummary({ from: dateValueToISO(filterFrom.value), to: dateValueToISO(filterTo.value) })
+  }
+  catch {
+    toast.error('Error al cambiar monto')
   }
 }
 
@@ -501,7 +554,7 @@ onMounted(() => {
                 <TableHeader>
                   <TableRow>
                     <TableHead class="w-10" @click.stop>
-                      <Checkbox :checked="isAllPageSelected" @update:checked="toggleSelectAll" />
+                      <Checkbox :model-value="isAllPageSelected" @update:model-value="toggleSelectAll" />
                     </TableHead>
                     <TableHead>Fecha</TableHead>
                     <TableHead>Unidad</TableHead>
@@ -519,7 +572,7 @@ onMounted(() => {
                     @click="router.push(`/admin/finanzas/${mov.unitId}`)"
                   >
                     <TableCell class="w-10" @click.stop>
-                      <Checkbox :checked="selectedIds.includes(mov.id)" @update:checked="toggleSelect(mov.id)" />
+                      <Checkbox :model-value="selectedIds.includes(mov.id)" @update:model-value="toggleSelect(mov.id)" />
                     </TableCell>
                     <TableCell class="tabular-nums text-muted-foreground">
                       {{ formatDate(mov.date) }}
@@ -598,54 +651,136 @@ onMounted(() => {
 
             <ListPagination v-model:current-page="currentPage" :total-pages="totalPages" class="mt-3" />
 
-            <!-- Bulk action bar -->
-            <div
-              v-if="selectedIds.length > 0"
-              class="fixed inset-x-0 bottom-0 z-40 border-t bg-background/95 px-4 py-3 shadow-lg backdrop-blur supports-[backdrop-filter]:bg-background/80"
-            >
-              <div class="mx-auto flex max-w-screen-xl items-center justify-between gap-3">
-                <span class="text-sm font-medium">{{ selectedIds.length }} seleccionados</span>
-                <div class="flex items-center gap-2">
-                  <Popover v-model:open="bulkDatePickerOpen">
-                    <PopoverTrigger as-child>
-                      <Button variant="outline" size="sm" :disabled="bulkSubmitting">
-                        <CalendarIcon class="mr-1.5 size-4" />
-                        Cambiar fecha
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent class="w-auto p-0" align="end" side="top">
-                      <Calendar locale="es" @update:model-value="handleBulkDateChange" />
-                    </PopoverContent>
-                  </Popover>
+            <!-- Bulk action bar (teleported to body to escape overflow-hidden ancestors) -->
+            <Teleport to="body">
+              <div
+                v-if="selectedIds.length > 0"
+                class="fixed inset-x-0 bottom-0 z-50 border-t bg-background/95 px-4 py-3 shadow-lg backdrop-blur supports-[backdrop-filter]:bg-background/80"
+              >
+                <div class="mx-auto flex max-w-screen-xl items-center justify-between gap-3">
+                  <span class="text-sm font-medium">{{ selectedIds.length }} seleccionados</span>
+                  <div class="flex flex-wrap items-center gap-2">
+                    <!-- Cambiar tipo -->
+                    <Popover>
+                      <PopoverTrigger as-child>
+                        <Button variant="outline" size="sm" :disabled="bulkSubmitting">
+                          <RefreshCw class="mr-1.5 size-4" />
+                          Tipo
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent class="w-40 p-1" align="end" side="top">
+                        <button
+                          class="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-sm hover:bg-accent"
+                          @click="handleBulkTypeChange('cargo')"
+                        >
+                          <ArrowDownRight class="size-4 text-destructive" />
+                          Cargo
+                        </button>
+                        <button
+                          class="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-sm hover:bg-accent"
+                          @click="handleBulkTypeChange('abono')"
+                        >
+                          <ArrowUpRight class="size-4 text-primary" />
+                          Abono
+                        </button>
+                      </PopoverContent>
+                    </Popover>
 
-                  <AlertDialog>
-                    <AlertDialogTrigger as-child>
-                      <Button variant="destructive" size="sm" :disabled="bulkSubmitting">
-                        <Trash2 class="mr-1.5 size-4" />
-                        Eliminar
-                      </Button>
-                    </AlertDialogTrigger>
-                    <AlertDialogContent>
-                      <AlertDialogHeader>
-                        <AlertDialogTitle>Eliminar {{ selectedIds.length }} registros?</AlertDialogTitle>
-                        <AlertDialogDescription>Esta acción no se puede deshacer.</AlertDialogDescription>
-                      </AlertDialogHeader>
-                      <AlertDialogFooter>
-                        <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                        <AlertDialogAction variant="destructive" @click="handleBulkDelete">
+                    <!-- Cambiar categoría -->
+                    <Popover>
+                      <PopoverTrigger as-child>
+                        <Button variant="outline" size="sm" :disabled="bulkSubmitting">
+                          <Tag class="mr-1.5 size-4" />
+                          Categoría
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent class="w-44 p-1" align="end" side="top">
+                        <button
+                          class="flex w-full items-center rounded-md px-2 py-1.5 text-sm hover:bg-accent"
+                          @click="handleBulkCategoryChange('ordinaria')"
+                        >
+                          Ordinaria
+                        </button>
+                        <button
+                          class="flex w-full items-center rounded-md px-2 py-1.5 text-sm hover:bg-accent"
+                          @click="handleBulkCategoryChange('extraordinaria')"
+                        >
+                          Extraordinaria
+                        </button>
+                      </PopoverContent>
+                    </Popover>
+
+                    <!-- Cambiar monto -->
+                    <Popover v-model:open="bulkAmountPopoverOpen">
+                      <PopoverTrigger as-child>
+                        <Button variant="outline" size="sm" :disabled="bulkSubmitting">
+                          <DollarSign class="mr-1.5 size-4" />
+                          Monto
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent class="w-52 p-3" align="end" side="top">
+                        <p class="mb-2 text-xs font-medium text-muted-foreground">Nuevo monto para los {{ selectedIds.length }} registros</p>
+                        <div class="flex gap-2">
+                          <Input
+                            v-model="bulkAmountInput"
+                            type="number"
+                            step="0.01"
+                            min="0"
+                            placeholder="0.00"
+                            class="h-8 text-sm"
+                            @keydown.enter="handleBulkAmountChange"
+                          />
+                          <Button size="sm" class="h-8 shrink-0" :disabled="bulkSubmitting" @click="handleBulkAmountChange">
+                            Aplicar
+                          </Button>
+                        </div>
+                      </PopoverContent>
+                    </Popover>
+
+                    <!-- Cambiar fecha -->
+                    <Popover v-model:open="bulkDatePickerOpen">
+                      <PopoverTrigger as-child>
+                        <Button variant="outline" size="sm" :disabled="bulkSubmitting">
+                          <CalendarIcon class="mr-1.5 size-4" />
+                          Fecha
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent class="w-auto p-0" align="end" side="top">
+                        <Calendar locale="es" @update:model-value="handleBulkDateChange" />
+                      </PopoverContent>
+                    </Popover>
+
+                    <!-- Eliminar -->
+                    <AlertDialog>
+                      <AlertDialogTrigger as-child>
+                        <Button variant="destructive" size="sm" :disabled="bulkSubmitting">
+                          <Trash2 class="mr-1.5 size-4" />
                           Eliminar
-                        </AlertDialogAction>
-                      </AlertDialogFooter>
-                    </AlertDialogContent>
-                  </AlertDialog>
+                        </Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>Eliminar {{ selectedIds.length }} registros?</AlertDialogTitle>
+                          <AlertDialogDescription>Esta acción no se puede deshacer.</AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                          <AlertDialogAction variant="destructive" @click="handleBulkDelete">
+                            Eliminar
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
 
-                  <Button variant="ghost" size="sm" @click="clearSelection">
-                    <X class="mr-1.5 size-4" />
-                    Cancelar
-                  </Button>
+                    <!-- Cancelar selección -->
+                    <Button variant="ghost" size="sm" @click="clearSelection">
+                      <X class="mr-1.5 size-4" />
+                      Cancelar
+                    </Button>
+                  </div>
                 </div>
               </div>
-            </div>
+            </Teleport>
           </template>
         </template>
 
