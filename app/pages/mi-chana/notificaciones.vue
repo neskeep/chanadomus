@@ -99,9 +99,9 @@ function handleToggle(category: PushCategory, enabled: boolean) {
           </div>
           <Switch
             :id="`push-${cat.key}`"
-            :checked="preferences[cat.key]"
+            :model-value="preferences[cat.key]"
             :disabled="isSaving"
-            @update:checked="(val: boolean) => handleToggle(cat.key, val)"
+            @update:model-value="(val: boolean) => handleToggle(cat.key, val)"
           />
         </div>
       </template>

@@ -275,7 +275,7 @@ const { formatDateTime } = useFormatDate()
           </p>
 
           <div v-if="!frequentVisitorId" class="flex items-center gap-2">
-            <Checkbox id="save-frequent" :checked="saveAsFrequent" @click="saveAsFrequent = !saveAsFrequent" />
+            <Checkbox id="save-frequent" :model-value="saveAsFrequent" @update:model-value="saveAsFrequent = !saveAsFrequent" />
             <Label for="save-frequent" class="text-sm font-normal text-muted-foreground">Guardar como visitante frecuente</Label>
           </div>
         </div>

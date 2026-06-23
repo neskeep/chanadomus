@@ -483,8 +483,8 @@ onMounted(() => {
           <div class="flex items-center gap-3">
             <Switch
               id="meet-quorum"
-              :checked="formMinutesQuorum"
-              @update:checked="formMinutesQuorum = $event"
+              :model-value="formMinutesQuorum"
+              @update:model-value="formMinutesQuorum = $event"
             />
             <Label for="meet-quorum" class="cursor-pointer text-base">Se alcanzó quórum</Label>
           </div>
