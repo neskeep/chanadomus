@@ -5,7 +5,7 @@ import { toast } from 'vue-sonner'
 definePageMeta({ layout: 'default' })
 useHead({ title: 'Alertas de Pánico' })
 
-const { alerts, activeAlert, isConnected, hasActiveAlert, dismissAlert, resolveAlert, loadInitialAlerts } = usePanicStream()
+const { alerts, activeAlert, isConnected, isPolling, hasActiveAlert, dismissAlert, resolveAlert, loadInitialAlerts } = usePanicStream()
 
 const isLoading = ref(true)
 const resolveDialogOpen = ref(false)
@@ -156,10 +156,10 @@ onMounted(async () => {
     <div class="flex items-center justify-end gap-2">
       <span
         class="inline-block size-2 rounded-lg"
-        :class="isConnected ? 'bg-primary' : 'bg-destructive'"
+        :class="isConnected ? 'bg-primary' : isPolling ? 'bg-amber-500' : 'bg-destructive'"
       />
       <span class="text-[11px] text-muted-foreground">
-        {{ isConnected ? 'Conectado' : 'Desconectado' }}
+        {{ isConnected ? 'Conectado' : isPolling ? 'Polling' : 'Desconectado' }}
       </span>
     </div>
 

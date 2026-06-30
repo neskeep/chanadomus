@@ -7,16 +7,23 @@ export interface PanicAlertLog extends WsPanicAlert {
 }
 
 const MAX_ALERTS = 50
+const POLL_INTERVAL = 3000
+const WS_FALLBACK_DELAY = 10000
 
 // Module-level shared state (singleton across all components)
 const alerts = ref<PanicAlertLog[]>([])
 const activeAlert = ref<WsPanicAlert | null>(null)
 const isConnected = ref(false)
+const isPolling = ref(false)
 const _initialized = ref(false)
 
 // Persistent alarm state
 let alarmCtx: AudioContext | null = null
 let alarmInterval: ReturnType<typeof setInterval> | null = null
+
+// Polling state
+let pollTimer: ReturnType<typeof setInterval> | null = null
+let pollDelayTimer: ReturnType<typeof setTimeout> | null = null
 
 function startAlarm() {
   if (typeof window === 'undefined') return
@@ -61,9 +68,78 @@ function stopAlarm() {
   }
 }
 
+// --- Polling fallback ---
+
+async function poll() {
+  try {
+    const res = await $fetch<{ data: WsPanicAlert[] }>('/api/panic/active')
+    const activeIds = new Set(res.data.map(a => a.id))
+
+    // Detect new alerts not yet in our list
+    for (const alert of res.data) {
+      if (!alerts.value.some(a => a.id === alert.id)) {
+        const logEntry: PanicAlertLog = {
+          ...alert,
+          resolvedAt: null,
+          resolvedNote: null,
+          resolverName: null,
+        }
+        alerts.value = [logEntry, ...alerts.value].slice(0, MAX_ALERTS)
+      }
+      // Trigger alarm if we don't have an active alert
+      if (!activeAlert.value) {
+        activeAlert.value = alert
+        startAlarm()
+      }
+    }
+
+    // Detect dismissed: our active alert is no longer in the active list
+    if (activeAlert.value && !activeIds.has(activeAlert.value.id)) {
+      const dismissedId = activeAlert.value.id
+      const idx = alerts.value.findIndex(a => a.id === dismissedId)
+      if (idx !== -1) {
+        const existing = alerts.value[idx]
+        if (existing && !existing.resolvedAt) {
+          alerts.value[idx] = {
+            ...existing,
+            resolvedAt: new Date().toISOString(),
+            resolvedNote: 'Atendida',
+            resolverName: null,
+          }
+        }
+      }
+      activeAlert.value = null
+      stopAlarm()
+    }
+  }
+  catch {
+    // Silent — polling is best-effort fallback
+  }
+}
+
+function startPolling() {
+  if (pollTimer) return
+  isPolling.value = true
+  poll()
+  pollTimer = setInterval(poll, POLL_INTERVAL)
+}
+
+function stopPolling() {
+  if (pollTimer) {
+    clearInterval(pollTimer)
+    pollTimer = null
+  }
+  if (pollDelayTimer) {
+    clearTimeout(pollDelayTimer)
+    pollDelayTimer = null
+  }
+  isPolling.value = false
+}
+
+// --- WebSocket + fallback init ---
+
 function initWs() {
   if (_initialized.value) return
-
   _initialized.value = true
 
   const wsProtocol = window.location.protocol === 'https:' ? 'wss' : 'ws'
@@ -84,13 +160,30 @@ function initWs() {
 
   watch(status, (newStatus) => {
     isConnected.value = newStatus === 'OPEN'
+
+    if (newStatus === 'OPEN') {
+      // WS connected — stop polling if active
+      stopPolling()
+    }
+    else if (newStatus === 'CLOSED') {
+      // WS lost — start polling after brief delay
+      if (pollDelayTimer) clearTimeout(pollDelayTimer)
+      pollDelayTimer = setTimeout(() => {
+        if (!isConnected.value) startPolling()
+      }, 5000)
+    }
   })
+
+  // If WS doesn't connect within 10s, start polling as fallback
+  pollDelayTimer = setTimeout(() => {
+    if (!isConnected.value) startPolling()
+  }, WS_FALLBACK_DELAY)
 
   watch(data, (raw) => {
     if (!raw) return
 
     try {
-      const message = JSON.parse(raw as string) as { type: string; data: WsPanicAlert & { id: string } }
+      const message = JSON.parse(raw as string) as { type: string, data: WsPanicAlert & { id: string } }
       if (message.type === 'panic-alert' && message.data) {
         const logEntry: PanicAlertLog = {
           ...message.data,
@@ -98,7 +191,10 @@ function initWs() {
           resolvedNote: null,
           resolverName: null,
         }
-        alerts.value = [logEntry, ...alerts.value].slice(0, MAX_ALERTS)
+        // Avoid duplicates (polling may have already added it)
+        if (!alerts.value.some(a => a.id === message.data.id)) {
+          alerts.value = [logEntry, ...alerts.value].slice(0, MAX_ALERTS)
+        }
         activeAlert.value = message.data
         startAlarm()
       }
@@ -197,6 +293,7 @@ export function usePanicStream() {
     alerts: readonly(alerts),
     activeAlert: readonly(activeAlert),
     isConnected: readonly(isConnected),
+    isPolling: readonly(isPolling),
     hasActiveAlert,
     dismissAlert,
     resolveAlert,
