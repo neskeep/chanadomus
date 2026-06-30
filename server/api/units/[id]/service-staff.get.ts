@@ -46,7 +46,7 @@ export default defineEventHandler(async (event) => {
         eq(unitServiceStaff.isActive, true),
       ),
     )
-    .orderBy(asc(unitServiceStaff.name))
+    .orderBy(asc(serviceStaffRoles.displayOrder), asc(serviceStaffRoles.name), asc(unitServiceStaff.name))
 
   // Conserjes assigned to this unit (from staff table)
   const conserjeRows = await db

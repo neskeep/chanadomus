@@ -45,7 +45,7 @@ export default defineEventHandler(async (event) => {
     .leftJoin(units, eq(units.id, staff.unitId))
     .leftJoin(serviceStaffRoles, eq(serviceStaffRoles.id, staff.roleId))
     .where(and(...conditions))
-    .orderBy(asc(staff.name))
+    .orderBy(asc(serviceStaffRoles.displayOrder), asc(serviceStaffRoles.name), asc(staff.name))
 
   return { data: rows }
 })
