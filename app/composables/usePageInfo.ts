@@ -72,6 +72,7 @@ const PAGE_MAP: Record<string, PageInfo> = {
   '/vigilancia/incidencias': { title: 'Incidencias', description: 'Reportes y problemas del condominio' },
   '/vigilancia/escanear': { title: 'Escanear QR', description: 'Verifica el código del visitante' },
   '/vigilancia/accesos': { title: 'Registro de Accesos', description: 'Historial de entradas y salidas' },
+  '/vigilancia/registrar-acceso': { title: 'Registrar Acceso', description: 'Autoriza o deniega la entrada de un visitante', breadcrumbs: [{ label: 'Vigilancia', to: '/vigilancia' }] },
   '/vigilancia/alertas': { title: 'Alertas de Pánico', description: 'Historial de emergencias', breadcrumbs: [{ label: 'Vigilancia', to: '/vigilancia' }] },
   '/vigilancia/residentes': { title: 'Directorio de Residentes', description: 'Consulta de propietarios' },
 

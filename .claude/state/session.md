@@ -1,49 +1,78 @@
 # Estado de Sesion — ChanaDomus
 
 ## Ultima Sesion
-- **Fecha**: 2026-06-22
-- **Sesion #**: 69
+- **Fecha**: 2026-06-30
+- **Sesion #**: 70
 - **Branch**: `main`
-- **Commit**: `b326eb3` (pusheado, deployed)
-- **Estado**: Incompleta — 1 fix pendiente de commit+push
+- **Commit**: `a8053c0` (ultimo commit pusheado)
+- **Estado**: Incompleta — cambios sin commit (3 fixes + 1 archivo nuevo)
 
-## Completado Sesion 69
+## Completado Sesion 70
 
-### Verificacion visual en produccion (Playwright)
-- Login y navegacion a /admin/finanzas OK
-- 4 features verificadas: date presets, generar cuotas, export CSV, bulk checkboxes
-- Todas funcionando correctamente en produccion
+### Reporte de incidencias Jun 29 — Diagnostico y fixes parciales
+Se analizaron 6 incidencias reportadas por el cliente. Se implementaron fixes para 2 de ellas y se diagnosticaron las 6.
 
-### Fixes de 4 issues reportados por Jordi
-1. **Bulk POST 400**: Zod 4 `z.string().uuid()` rechaza UUIDs no-v4 (seeds locales) → cambiado a `z.string().min(1)` en 3 endpoints bulk
-2. **UnitMultiSelect checkboxes no marcan**: `<label>` wrapping causaba conflicto con `<button>` de Reka UI → cambiado a `<div>` con `@click.stop`, computed `Set` para lookups
-3. **Layout formulario generar-cuotas**: Monto+Fecha en fila (grid-cols-2), Descripcion full-width abajo
-4. **Bulk select en tabla no reactivo**: `ref<Set>` no es reactivo en Vue 3 → reemplazado con `ref<string[]>([])` usando `.includes()/.splice()/.push()/.length`
+### Fix #3: Saldos a favor muestran "Estas al dia" (RESUELTO)
+- **Archivo**: `app/pages/propietario/index.vue`
+- **Cambio**: Agregado tercer estado en hero financiero para saldo a favor (myBalance < 0)
+- Card primary (teal) con "Saldo a favor" + monto con Math.abs()
+- 3 estados: Deuda (amber) → Credito (primary) → Al dia (emerald)
+- Typecheck OK
 
-### Fix adicional: columna cedula en DB local
-- `ALTER TABLE "user" ADD COLUMN cedula TEXT` — faltaba en DB local, causaba error de login
+### Fix #1B: Mis Visitas no muestra registros manuales (RESUELTO)
+- **Archivo creado**: `server/api/my-unit/access-history.get.ts`
+  - Endpoint GET para propietario/admin/conserje
+  - Consulta access_logs por unitId (ultimos 30 dias, max 30 registros)
+  - JOIN con qr_codes para cubrir manuales y QR
+- **Archivo modificado**: `app/pages/propietario/mis-visitas.vue`
+  - Nueva seccion "Accesos registrados a tu vivienda" debajo de QR codes
+  - Muestra tipo entrada (QR/Manual/Dispositivo), nombre, cedula, fecha, estado
+- Typecheck OK
 
-### Contenedor Docker local corregido
-- Nombre correcto: `chanadomus-db-1` (no `chanadomuscom-db-1`)
-- Actualizado en session state y memoria
+### Fix adicional: Breadcrumb registrar-acceso vigilancia
+- **Archivo**: `app/composables/usePageInfo.ts`
+- Agregada entrada `/vigilancia/registrar-acceso` en PAGE_MAP (faltaba, mostraba default)
+
+### Diagnostico #1A: Registro manual se procesa como salida
+- **NO reproducible desde codigo**: manual.post.ts siempre crea con exitAt=null, no llama checkOpenEntry()
+- Pendiente: Pedir mas detalle al cliente sobre como reproducir
+
+### Diagnostico #2: Alarma de panico inconsistente en Honor Play 10
+- Problema de compatibilidad de dispositivo, no de codigo
+- WebSocket/Web Audio API pueden no funcionar en navegador nativo Honor
+- Mitigacion posible: polling fallback cuando WS no conecta
+- Recomendacion: Usar Chrome en dispositivos Honor
+
+### Diagnostico #4: Filtro categorias omite proveedores
+- Endpoint /api/my-unit/service-roles filtra appliesToStaff=true, excluyendo proveedores
+- Necesita clarificacion: que pantalla exacta del propietario tiene este filtro
+
+### Diagnostico #5: PWA no instala en Honor Play 10
+- Problema de dispositivo, no de codigo. PWA config correcta.
+- Recomendacion: Usar Chrome, agregar banner manual de instalacion
+
+### Diagnostico #6: Ordenamiento jerarquico en listados
+- Feature request. Algunos listados ya tienen displayOrder configurable.
+- Implementar agrupacion visual por categoria
 
 ## PENDIENTE — NO COMMITEADO NI PUSHEADO
-- **Bulk action bar invisible**: La barra flotante de acciones bulk (`fixed bottom-0`) no se ve porque el `SidebarProvider` tiene `overflow-hidden` que rompe `position: fixed`
-- **Fix aplicado pero NO commiteado**: `<Teleport to="body">` + `z-50` en `app/pages/admin/finanzas/index.vue`
-- **Accion requerida**: `git add app/pages/admin/finanzas/index.vue && git commit && git push`
+- `app/pages/propietario/index.vue` — tercer estado saldo a favor
+- `server/api/my-unit/access-history.get.ts` — nuevo endpoint (archivo nuevo)
+- `app/pages/propietario/mis-visitas.vue` — seccion accesos registrados
+- `app/composables/usePageInfo.ts` — breadcrumb vigilancia/registrar-acceso
+- **Accion requerida**: `git add` de los 4 archivos + commit + push
 
-## Archivos modificados (commiteados en b326eb3)
-- `server/api/finance/records/bulk.post.ts` — UUID validation
-- `server/api/finance/records/bulk-delete.post.ts` — UUID validation
-- `server/api/finance/records/bulk.patch.ts` — UUID validation
-- `app/components/UnitMultiSelect.vue` — checkbox visual + Set computed
-- `app/pages/admin/finanzas/generar-cuotas.vue` — layout redistribuido
-- `app/pages/admin/finanzas/index.vue` — Set→Array reactivity + Teleport (Teleport pendiente)
+## Incidencias pendientes (de 6 total)
+- #1A: Registro como salida — necesita mas info del cliente
+- #2: Panico en Honor Play — mitigacion opcional (polling fallback)
+- #4: Filtro categorias — fix pendiente
+- #5: PWA Honor Play — recomendacion operativa
+- #6: Orden listados — feature request pendiente
 
-## Issues abiertos
+## Issues abiertos (preexistentes)
 - Tests `unit/` no corren en CI (zod import falla con frozen-lockfile)
 - `pnpm db:migrate` falla en DB local limpia — usar `npx drizzle-kit push --force`
-- DB local puede necesitar `ALTER TABLE "user" ADD COLUMN cedula TEXT` si no se corrió drizzle push
+- Teleport fix de bulk action bar en finanzas (sesion 69, no commiteado)
 
 ## DB local
 - Docker `chanadomus-db-1` con datos de seed

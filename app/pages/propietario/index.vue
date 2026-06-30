@@ -63,6 +63,28 @@ const quickActions = [
         </div>
       </template>
 
+      <template v-else-if="(stats?.myBalance ?? 0) < 0">
+        <div class="rounded-lg bg-primary/5 p-4 ring-1 ring-primary/20 dark:bg-primary/10 dark:ring-primary/30">
+          <div class="flex items-center gap-4">
+            <div class="flex size-10 shrink-0 items-center justify-center rounded-lg bg-primary/10 dark:bg-primary/20">
+              <CircleCheck class="size-5 text-primary" />
+            </div>
+            <div class="min-w-0 flex-1">
+              <p class="text-sm text-muted-foreground">Saldo a favor</p>
+              <p class="text-2xl font-bold tabular-nums tracking-tight text-primary">
+                {{ formatCurrency(Math.abs(stats?.myBalance ?? 0)) }}
+              </p>
+            </div>
+          </div>
+          <NuxtLink
+            to="/propietario/estado-cuenta"
+            class="mt-3 inline-block text-sm text-primary hover:underline"
+          >
+            Ver estado de cuenta &rarr;
+          </NuxtLink>
+        </div>
+      </template>
+
       <template v-else>
         <div class="rounded-lg bg-emerald-50 p-4 ring-1 ring-emerald-200 dark:bg-emerald-950/20 dark:ring-emerald-800">
           <div class="flex items-center gap-4">

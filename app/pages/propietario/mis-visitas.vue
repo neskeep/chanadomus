@@ -1,6 +1,7 @@
 <script setup lang="ts">
-import { Share2, Plus, ChevronDown, ChevronUp, User, Loader2 } from 'lucide-vue-next'
+import { Share2, Plus, ChevronDown, ChevronUp, User, Loader2, QrCode, UserPlus, Wifi } from 'lucide-vue-next'
 import type { QrStatus } from '~~/shared/types/qr'
+import type { AccessEvent } from '~~/shared/types/access'
 import QRCode from 'qrcode'
 
 useHead({ title: 'Mis Visitas' })
@@ -8,6 +9,30 @@ useHead({ title: 'Mis Visitas' })
 const { target, isMounted } = useTopbarPortal()
 const { myCodes, fetchMyCodes, isLoading, error } = useQr()
 const { formatDateTime } = useFormatDate()
+
+// --- Access history for this unit ---
+const accessHistory = ref<AccessEvent[]>([])
+const isLoadingHistory = ref(false)
+
+async function fetchAccessHistory() {
+  isLoadingHistory.value = true
+  try {
+    const result = await $fetch<{ data: AccessEvent[] }>('/api/my-unit/access-history')
+    accessHistory.value = result.data
+  }
+  catch {
+    // Silent — supplementary data
+  }
+  finally {
+    isLoadingHistory.value = false
+  }
+}
+
+const ENTRY_TYPE_LABEL: Record<string, { label: string; icon: typeof QrCode }> = {
+  qr: { label: 'QR', icon: QrCode },
+  manual: { label: 'Manual', icon: UserPlus },
+  webhook: { label: 'Dispositivo', icon: Wifi },
+}
 
 // --- QR codes state ---
 const activeFilter = ref<QrStatus | ''>('')
@@ -23,6 +48,7 @@ const filterOptions: Array<{ value: QrStatus; label: string }> = [
 
 onMounted(() => {
   fetchMyCodes('all')
+  fetchAccessHistory()
 })
 
 watch(activeFilter, (status) => {
@@ -196,6 +222,51 @@ const statusConfig: Record<QrStatus, { label: string; variant: 'default' | 'seco
           </div>
         </CardContent>
       </Card>
+    </div>
+
+    <!-- Access history for this unit -->
+    <div class="mt-6">
+      <h2 class="mb-3 text-sm font-semibold text-muted-foreground">Accesos registrados a tu vivienda</h2>
+
+      <ListSkeleton v-if="isLoadingHistory" :count="3" />
+
+      <p
+        v-else-if="accessHistory.length === 0"
+        class="py-4 text-center text-sm text-muted-foreground"
+      >
+        Sin registros de acceso en los últimos 30 días
+      </p>
+
+      <div v-else class="space-y-2">
+        <Card v-for="entry in accessHistory" :key="entry.id">
+          <CardContent class="px-3 py-2.5">
+            <div class="flex items-center gap-1.5">
+              <p class="min-w-0 flex-1 truncate text-sm font-semibold">
+                {{ entry.visitorName || 'Visitante' }}
+              </p>
+              <Badge variant="secondary" class="shrink-0 gap-1 text-[11px]">
+                <component :is="ENTRY_TYPE_LABEL[entry.entryType]?.icon ?? QrCode" class="size-3" />
+                {{ ENTRY_TYPE_LABEL[entry.entryType]?.label ?? entry.entryType }}
+              </Badge>
+            </div>
+            <div class="mt-0.5 flex items-center gap-x-1 text-[11px] text-muted-foreground">
+              <template v-if="entry.visitorDocument">
+                <span class="truncate">{{ entry.visitorDocument }}</span>
+                <span class="opacity-30">&middot;</span>
+              </template>
+              <span class="shrink-0 tabular-nums">{{ formatDateTime(entry.createdAt) }}</span>
+              <template v-if="entry.exitAt">
+                <span class="opacity-30">&rarr;</span>
+                <span class="shrink-0 tabular-nums">{{ formatDateTime(entry.exitAt) }}</span>
+              </template>
+              <template v-else>
+                <span class="opacity-30">&middot;</span>
+                <span class="text-primary">En sitio</span>
+              </template>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
     </div>
   </div>
 </template>
