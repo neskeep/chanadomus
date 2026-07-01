@@ -2,7 +2,7 @@ import { db } from '~~/server/db'
 import { providers, providerReviews } from '~~/server/db/schema/provider'
 import { user } from '~~/server/db/schema/auth'
 import { serviceStaffRoles } from '~~/server/db/schema/service-staff-role'
-import { eq, and, asc, desc, count, ilike, avg, inArray } from 'drizzle-orm'
+import { eq, and, asc, count, ilike, avg, inArray } from 'drizzle-orm'
 import type { Provider, ProviderCategory, ProviderStatus } from '~~/shared/types/provider'
 
 const VALID_CATEGORIES: ProviderCategory[] = [
@@ -90,7 +90,7 @@ export default defineEventHandler(async (event) => {
     .leftJoin(user, eq(providers.createdById, user.id))
     .leftJoin(serviceStaffRoles, eq(providers.serviceRoleId, serviceStaffRoles.id))
     .where(whereClause)
-    .orderBy(desc(providers.updatedAt), asc(providers.name))
+    .orderBy(asc(serviceStaffRoles.displayOrder), asc(serviceStaffRoles.name), asc(providers.name))
     .limit(limit)
     .offset(offset)
 
