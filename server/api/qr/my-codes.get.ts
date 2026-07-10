@@ -1,7 +1,7 @@
 import { db } from '~~/server/db'
 import { qrCodes } from '~~/server/db/schema/access'
 import { units } from '~~/server/db/schema/unit'
-import { eq, and, desc } from 'drizzle-orm'
+import { eq, and, desc, gte, gt, isNull, or } from 'drizzle-orm'
 import type { QrCodeRecord, QrStatus } from '~~/shared/types/qr'
 
 function computeStatus(expiresAt: Date, usedAt: Date | null): QrStatus {
@@ -28,6 +28,10 @@ export default defineEventHandler(async (event) => {
   }
   const unitFilter = eq(qrCodes.unitId, userUnitId)
 
+  // Mostrar codigos de los ultimos 30 dias + cualquier codigo activo (sin expirar, sin usar)
+  const thirtyDaysAgo = new Date()
+  thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30)
+
   const rows = await db
     .select({
       id: qrCodes.id,
@@ -44,8 +48,16 @@ export default defineEventHandler(async (event) => {
     })
     .from(qrCodes)
     .innerJoin(units, eq(units.id, qrCodes.unitId))
-    .where(and(unitFilter, eq(qrCodes.tenantId, tenantId)))
+    .where(and(
+      unitFilter,
+      eq(qrCodes.tenantId, tenantId),
+      or(
+        gte(qrCodes.createdAt, thirtyDaysAgo),
+        and(gt(qrCodes.expiresAt, new Date()), isNull(qrCodes.usedAt)),
+      ),
+    ))
     .orderBy(desc(qrCodes.createdAt))
+    .limit(50)
 
   const records: QrCodeRecord[] = rows.map((row) => {
     const status = computeStatus(row.expiresAt, row.usedAt)

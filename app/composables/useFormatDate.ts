@@ -40,15 +40,21 @@ const RELATIVE_UNITS: Array<{ unit: Intl.RelativeTimeFormatUnit; ms: number }> =
   { unit: 'minute', ms: 60 * 1000 },
 ]
 
+// Para formatDate/formatMonthYear: extrae YYYY-MM-DD del string para evitar shift de día UTC→local
+// new Date("2026-06-01T00:00:00Z") en UTC-4 → May 31 (bug)
+// new Date(2026, 5, 1) → June 1 local (correcto)
 function toDate(value: string | Date): Date {
   if (value instanceof Date) return value
-  // Extraer componentes YYYY-MM-DD directamente para evitar shift de timezone
-  // new Date("2026-06-01T00:00:00.000Z") en UTC-4 → May 31 (bug)
-  // new Date(2026, 5, 1) → June 1 local (correcto)
   const match = value.match(/^(\d{4})-(\d{2})-(\d{2})/)
   if (match) {
     return new Date(Number(match[1]), Number(match[2]) - 1, Number(match[3]))
   }
+  return new Date(value)
+}
+
+// Para formatDateTime/formatTime/formatRelativeTime: parseo nativo que preserva hora y timezone
+function toDateTime(value: string | Date): Date {
+  if (value instanceof Date) return value
   return new Date(value)
 }
 
@@ -62,15 +68,15 @@ export function useFormatDate() {
   }
 
   const formatDateTime = (date: string | Date): string => {
-    return dateTimeFormatter.format(toDate(date))
+    return dateTimeFormatter.format(toDateTime(date))
   }
 
   const formatTime = (date: string | Date): string => {
-    return timeFormatter.format(toDate(date))
+    return timeFormatter.format(toDateTime(date))
   }
 
   const formatRelativeTime = (date: string | Date): string => {
-    const diff = toDate(date).getTime() - Date.now()
+    const diff = toDateTime(date).getTime() - Date.now()
 
     for (const { unit, ms } of RELATIVE_UNITS) {
       const value = Math.round(diff / ms)
