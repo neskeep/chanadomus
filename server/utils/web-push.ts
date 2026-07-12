@@ -42,6 +42,8 @@ const CATEGORY_TO_PREF_COLUMN: Record<string, PushCategory> = {
   poll: 'votacion',
   poll_published: 'votacion',
   poll_closed: 'votacion',
+  soporte: 'soporte',
+  soporte_update: 'soporte',
 }
 
 /**
@@ -67,6 +69,7 @@ async function filterByPreferences(
       panico: pushPreferences.panico,
       finanzas: pushPreferences.finanzas,
       chat: pushPreferences.chat,
+      soporte: pushPreferences.soporte,
     })
     .from(pushPreferences)
     .where(inArray(pushPreferences.userId, userIds))

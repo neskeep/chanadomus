@@ -3,7 +3,7 @@ import { pushPreferences } from '~~/server/db/schema/push-preferences'
 import { eq, and } from 'drizzle-orm'
 import type { PushCategory, PushPreferences } from '~~/shared/types/push-preferences'
 
-const VALID_CATEGORIES: PushCategory[] = ['acceso', 'anuncio', 'incidencia', 'votacion', 'panico', 'finanzas', 'chat']
+const VALID_CATEGORIES: PushCategory[] = ['acceso', 'anuncio', 'incidencia', 'votacion', 'panico', 'finanzas', 'chat', 'soporte']
 
 export default defineEventHandler(async (event) => {
   const session = await requireTenant(event)
@@ -61,6 +61,7 @@ export default defineEventHandler(async (event) => {
       panico: updated.panico,
       finanzas: updated.finanzas,
       chat: updated.chat,
+      soporte: updated.soporte,
     }
 
     return { data: prefs }
@@ -88,6 +89,7 @@ export default defineEventHandler(async (event) => {
     panico: created.panico,
     finanzas: created.finanzas,
     chat: created.chat,
+    soporte: created.soporte,
   }
 
   return { data: prefs }

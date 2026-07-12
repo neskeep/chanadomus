@@ -1,0 +1,1 @@
+ALTER TABLE "push_preferences" ADD COLUMN "soporte" boolean DEFAULT true NOT NULL;

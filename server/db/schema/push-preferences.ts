@@ -14,6 +14,7 @@ export const pushPreferences = pgTable('push_preferences', {
   panico: boolean('panico').notNull().default(true),
   finanzas: boolean('finanzas').notNull().default(true),
   chat: boolean('chat').notNull().default(true),
+  soporte: boolean('soporte').notNull().default(true),
   createdAt: timestamp('created_at').notNull().defaultNow(),
   updatedAt: timestamp('updated_at').notNull().defaultNow(),
 }, (table) => [

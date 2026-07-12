@@ -24,6 +24,7 @@ export default defineEventHandler(async (event) => {
       panico: existing.panico,
       finanzas: existing.finanzas,
       chat: existing.chat,
+      soporte: existing.soporte,
     }
     return { data: prefs }
   }
@@ -49,6 +50,7 @@ export default defineEventHandler(async (event) => {
     panico: created.panico,
     finanzas: created.finanzas,
     chat: created.chat,
+    soporte: created.soporte,
   }
 
   return { data: prefs }
