@@ -36,6 +36,9 @@ const PAGE_MAP: Record<string, PageInfo> = {
   '/admin/roles-servicio/crear': { title: 'Nuevo Rol', description: 'Agrega un rol al catálogo', breadcrumbs: [{ label: 'Roles de Servicio', to: '/admin/roles-servicio' }] },
   '/admin/pases-vehiculares': { title: 'Pases Vehiculares', description: 'Control de pases QR para vehículos' },
   '/admin/pases-vehiculares/nuevo': { title: 'Nuevo Pase Vehicular', description: 'Asigna un pase QR a un vehículo registrado', breadcrumbs: [{ label: 'Pases Vehiculares', to: '/admin/pases-vehiculares' }] },
+  '/admin/soporte': { title: 'Soporte', description: 'Gestión de tickets de soporte técnico' },
+  '/admin/changelog': { title: 'Changelog', description: 'Historial de versiones y cambios' },
+  '/admin/changelog/crear': { title: 'Nueva Entrada', description: 'Publica una nueva versión en el changelog', breadcrumbs: [{ label: 'Changelog', to: '/admin/changelog' }] },
   '/admin/documentacion': { title: 'Documentación', description: 'Manual de uso de ChanaDomus' },
 
   // Propietario
@@ -63,6 +66,9 @@ const PAGE_MAP: Record<string, PageInfo> = {
   '/mi-chana/proveedores/sugerir': { title: 'Sugerir Proveedor', description: 'Recomienda un proveedor de confianza', breadcrumbs: [{ label: 'Proveedores y servicios', to: '/mi-chana/proveedores' }] },
   '/mi-chana/proveedores/crear': { title: 'Nuevo Proveedor', description: 'Registra un nuevo proveedor', breadcrumbs: [{ label: 'Proveedores y servicios', to: '/mi-chana/proveedores' }] },
   '/mi-chana/reuniones': { title: 'Reuniones', description: 'Próximas asambleas y juntas' },
+  '/mi-chana/soporte': { title: 'Soporte', description: 'Reporta problemas o sugerencias' },
+  '/mi-chana/soporte/nuevo': { title: 'Nuevo Ticket', description: 'Describe el problema o sugerencia', breadcrumbs: [{ label: 'Soporte', to: '/mi-chana/soporte' }] },
+  '/mi-chana/changelog': { title: 'Changelog', description: 'Novedades y mejoras de la plataforma' },
   '/mi-chana/notificaciones': { title: 'Notificaciones', description: 'Tus alertas recientes' },
   '/mi-chana/perfil': { title: 'Mi Perfil', description: 'Tu informacion personal' },
 
@@ -108,6 +114,9 @@ const DYNAMIC_ROUTES: Array<{ prefix: string; info: PageInfo }> = [
   { prefix: '/propietario/mi-unidad/editar-miembro/', info: { title: 'Editar Integrante', description: 'Actualiza información del miembro', breadcrumbs: [{ label: 'Mi Unidad', to: '/propietario/mi-unidad' }] } },
   { prefix: '/propietario/mi-unidad/editar-vehiculo/', info: { title: 'Editar Vehículo', description: 'Actualiza información del vehículo', breadcrumbs: [{ label: 'Mi Unidad', to: '/propietario/mi-unidad' }] } },
   { prefix: '/propietario/mi-unidad/editar-personal/', info: { title: 'Editar Personal', description: 'Actualiza información del personal de servicio', breadcrumbs: [{ label: 'Mi Unidad', to: '/propietario/mi-unidad' }] } },
+  { prefix: '/admin/soporte/', info: { title: 'Detalle de Ticket', description: 'Información y estado del ticket', breadcrumbs: [{ label: 'Soporte', to: '/admin/soporte' }] } },
+  { prefix: '/admin/changelog/', info: { title: 'Editar Changelog', description: 'Modificar entrada del changelog', breadcrumbs: [{ label: 'Changelog', to: '/admin/changelog' }] } },
+  { prefix: '/mi-chana/soporte/', info: { title: 'Detalle de Ticket', description: 'Estado de tu ticket', breadcrumbs: [{ label: 'Soporte', to: '/mi-chana/soporte' }] } },
   { prefix: '/acceso/', info: { title: 'Acceso de Visitante', description: 'Información de tu invitación' } },
   { prefix: '/invitacion/', info: { title: 'Registro por Invitación', description: 'Crea tu cuenta en ChanaDomus' } },
 ]

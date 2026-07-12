@@ -4,6 +4,7 @@ import {
   MessageCircle, Megaphone, Vote, Wrench, Calendar,
   ScanLine, ClipboardList, QrCode, FileText, CreditCard, Car,
   UserCog, ShieldAlert, BookOpen, UserPlus, History,
+  LifeBuoy, ScrollText,
 } from 'lucide-vue-next'
 import { ROLE_REDIRECTS } from '~~/shared/types/auth'
 
@@ -58,6 +59,13 @@ export function useNavigation() {
             ],
           },
           {
+            label: 'Soporte',
+            items: [
+              { label: 'Tickets', icon: LifeBuoy, to: '/admin/soporte' },
+              { label: 'Changelog', icon: ScrollText, to: '/admin/changelog' },
+            ],
+          },
+          {
             label: 'Referencia',
             items: [
               { label: 'Documentación', icon: FileText, to: '/admin/documentacion' },
@@ -94,6 +102,8 @@ export function useNavigation() {
               { label: 'Votaciones', icon: Vote, to: '/mi-chana/votaciones' },
               { label: 'Proveedores y servicios', icon: Wrench, to: '/mi-chana/proveedores' },
               { label: 'Reuniones', icon: Calendar, to: '/mi-chana/reuniones' },
+              { label: 'Soporte', icon: LifeBuoy, to: '/mi-chana/soporte' },
+              { label: 'Changelog', icon: ScrollText, to: '/mi-chana/changelog' },
             ],
           },
         ]
@@ -121,6 +131,8 @@ export function useNavigation() {
               { label: 'Normativas', icon: BookOpen, to: '/mi-chana/normativas' },
               { label: 'Proveedores y servicios', icon: Wrench, to: '/mi-chana/proveedores' },
               { label: 'Reuniones', icon: Calendar, to: '/mi-chana/reuniones' },
+              { label: 'Soporte', icon: LifeBuoy, to: '/mi-chana/soporte' },
+              { label: 'Changelog', icon: ScrollText, to: '/mi-chana/changelog' },
             ],
           },
         ]
@@ -150,6 +162,8 @@ export function useNavigation() {
               { label: 'Normativas', icon: BookOpen, to: '/mi-chana/normativas' },
               { label: 'Proveedores y servicios', icon: Wrench, to: '/mi-chana/proveedores' },
               { label: 'Reuniones', icon: Calendar, to: '/mi-chana/reuniones' },
+              { label: 'Soporte', icon: LifeBuoy, to: '/mi-chana/soporte' },
+              { label: 'Changelog', icon: ScrollText, to: '/mi-chana/changelog' },
             ],
           },
         ]

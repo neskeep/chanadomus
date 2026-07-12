@@ -1,10 +1,12 @@
 import type { AnnouncementCategory, AnnouncementStatus } from '~~/shared/types/announcement'
 import type { ChatRoomType } from '~~/shared/types/chat'
+import type { ChangelogItemType } from '~~/shared/types/changelog'
 import type { IncidentPriority, IncidentStatus } from '~~/shared/types/incident'
 import type { MeetingStatus, MeetingType } from '~~/shared/types/meeting'
 import type { PollStatus } from '~~/shared/types/poll'
 import type { ProviderCategory, ProviderStatus } from '~~/shared/types/provider'
 import type { AccessDirection, ValidationStatus } from '~~/shared/types/qr'
+import type { SupportTicketPriority, SupportTicketStatus, SupportTicketType } from '~~/shared/types/support'
 
 // ─── Incident ────────────────────────────────────────────
 export const INCIDENT_STATUS_COLORS: Record<IncidentStatus, string> = {
@@ -164,6 +166,64 @@ export const CHAT_CHANNEL_COLORS: Record<ChatRoomType, { iconBg: string; iconCol
   incidencias: { iconBg: 'bg-red-100', iconColor: 'text-red-700' },
   propietarios: { iconBg: 'bg-teal-100', iconColor: 'text-teal-700' },
   direct: { iconBg: 'bg-violet-100', iconColor: 'text-violet-700' },
+}
+
+// ─── Support Ticket ─────────────────────────────────────
+export const SUPPORT_STATUS_COLORS: Record<SupportTicketStatus, string> = {
+  nuevo: 'bg-blue-100 text-blue-800',
+  en_revision: 'bg-amber-100 text-amber-800',
+  en_desarrollo: 'bg-purple-100 text-purple-800',
+  resuelto: 'bg-emerald-100 text-emerald-800',
+  cerrado: 'bg-zinc-100 text-zinc-600',
+}
+
+export const SUPPORT_STATUS_LABELS: Record<SupportTicketStatus, string> = {
+  nuevo: 'Nuevo',
+  en_revision: 'En revisión',
+  en_desarrollo: 'En desarrollo',
+  resuelto: 'Resuelto',
+  cerrado: 'Cerrado',
+}
+
+export const SUPPORT_PRIORITY_COLORS: Record<SupportTicketPriority, string> = {
+  baja: 'bg-zinc-100 text-zinc-600',
+  media: 'bg-amber-100 text-amber-700',
+  alta: 'bg-red-100 text-red-700',
+  critica: 'bg-red-200 text-red-900',
+}
+
+export const SUPPORT_PRIORITY_LABELS: Record<SupportTicketPriority, string> = {
+  baja: 'Baja',
+  media: 'Media',
+  alta: 'Alta',
+  critica: 'Crítica',
+}
+
+export const SUPPORT_TYPE_COLORS: Record<SupportTicketType, string> = {
+  bug: 'bg-red-100 text-red-700',
+  sugerencia: 'bg-blue-100 text-blue-700',
+  pregunta: 'bg-cyan-100 text-cyan-700',
+}
+
+export const SUPPORT_TYPE_LABELS: Record<SupportTicketType, string> = {
+  bug: 'Bug',
+  sugerencia: 'Sugerencia',
+  pregunta: 'Pregunta',
+}
+
+// ─── Changelog ──────────────────────────────────────────
+export const CHANGELOG_TYPE_COLORS: Record<ChangelogItemType, string> = {
+  added: 'bg-emerald-100 text-emerald-700',
+  fixed: 'bg-blue-100 text-blue-700',
+  changed: 'bg-amber-100 text-amber-700',
+  removed: 'bg-red-100 text-red-700',
+}
+
+export const CHANGELOG_TYPE_LABELS: Record<ChangelogItemType, string> = {
+  added: 'Añadido',
+  fixed: 'Corregido',
+  changed: 'Cambiado',
+  removed: 'Eliminado',
 }
 
 // ─── Dashboard Icon Backgrounds ──────────────────────────
