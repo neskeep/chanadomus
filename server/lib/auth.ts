@@ -41,6 +41,11 @@ export const auth = betterAuth({
         required: false,
         input: false,
       },
+      isSuperAdmin: {
+        type: 'boolean',
+        required: false,
+        input: false,
+      },
     },
   },
 

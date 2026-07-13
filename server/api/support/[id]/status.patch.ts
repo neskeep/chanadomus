@@ -15,7 +15,7 @@ const statusLabels: Record<SupportTicketStatus, string> = {
 
 export default defineEventHandler(async (event) => {
   const session = await requireTenant(event)
-  await requireRole(event, ['admin'])
+  await requireSuperAdmin(event)
 
   const id = getRouterParam(event, 'id')
   if (!id) {

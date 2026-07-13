@@ -23,6 +23,7 @@ export const user = pgTable('user', {
   unitId: uuid('unit_id').references(() => units.id), // nullable — no todos los roles tienen unidad
   phone: text('phone'),
   cedula: text('cedula'), // nullable — usuarios existentes no tienen este dato aún
+  isSuperAdmin: boolean('is_super_admin').default(false),
 }, (table) => [
   index('user_tenant_idx').on(table.tenantId),
   index('user_email_idx').on(table.email),

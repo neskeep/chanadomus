@@ -20,7 +20,7 @@ interface NavGroup {
 }
 
 export function useNavigation() {
-  const { role } = useAuth()
+  const { role, isSuperAdmin } = useAuth()
 
   const roleHome = computed(() => role.value ? ROLE_REDIRECTS[role.value] : '/')
 
@@ -58,13 +58,13 @@ export function useNavigation() {
               { label: 'Reuniones', icon: Calendar, to: '/admin/reuniones' },
             ],
           },
-          {
+          ...(isSuperAdmin.value ? [{
             label: 'Soporte',
             items: [
               { label: 'Tickets', icon: LifeBuoy, to: '/admin/soporte' },
               { label: 'Changelog', icon: ScrollText, to: '/admin/changelog' },
             ],
-          },
+          }] : []),
           {
             label: 'Referencia',
             items: [
@@ -102,8 +102,6 @@ export function useNavigation() {
               { label: 'Votaciones', icon: Vote, to: '/mi-chana/votaciones' },
               { label: 'Proveedores y servicios', icon: Wrench, to: '/mi-chana/proveedores' },
               { label: 'Reuniones', icon: Calendar, to: '/mi-chana/reuniones' },
-              { label: 'Soporte', icon: LifeBuoy, to: '/mi-chana/soporte' },
-              { label: 'Changelog', icon: ScrollText, to: '/mi-chana/changelog' },
             ],
           },
         ]
@@ -131,8 +129,6 @@ export function useNavigation() {
               { label: 'Normativas', icon: BookOpen, to: '/mi-chana/normativas' },
               { label: 'Proveedores y servicios', icon: Wrench, to: '/mi-chana/proveedores' },
               { label: 'Reuniones', icon: Calendar, to: '/mi-chana/reuniones' },
-              { label: 'Soporte', icon: LifeBuoy, to: '/mi-chana/soporte' },
-              { label: 'Changelog', icon: ScrollText, to: '/mi-chana/changelog' },
             ],
           },
         ]
@@ -162,8 +158,6 @@ export function useNavigation() {
               { label: 'Normativas', icon: BookOpen, to: '/mi-chana/normativas' },
               { label: 'Proveedores y servicios', icon: Wrench, to: '/mi-chana/proveedores' },
               { label: 'Reuniones', icon: Calendar, to: '/mi-chana/reuniones' },
-              { label: 'Soporte', icon: LifeBuoy, to: '/mi-chana/soporte' },
-              { label: 'Changelog', icon: ScrollText, to: '/mi-chana/changelog' },
             ],
           },
         ]

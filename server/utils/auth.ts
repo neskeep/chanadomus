@@ -31,3 +31,12 @@ export async function requireTenant(event: H3Event) {
   }
   return { ...session, tenantId }
 }
+
+export async function requireSuperAdmin(event: H3Event) {
+  const session = await requireTenant(event)
+  const isSuperAdmin = (session.user as Record<string, unknown>).isSuperAdmin as boolean | undefined
+  if (!isSuperAdmin) {
+    throw createError({ statusCode: 403, message: 'Acceso restringido a super administrador' })
+  }
+  return session
+}

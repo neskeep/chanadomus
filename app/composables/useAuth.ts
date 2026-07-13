@@ -9,6 +9,7 @@ export function useAuth() {
   const user = computed(() => session.value?.data?.user ?? null)
   const isAuthenticated = computed(() => !!session.value?.data?.user)
   const role = computed(() => (user.value?.role as UserRole) ?? null)
+  const isSuperAdmin = computed(() => (user.value as Record<string, unknown> | null)?.isSuperAdmin === true)
   const isLoading = computed(() => session.value?.isPending ?? false)
 
   async function signIn(email: string, password: string) {
@@ -33,6 +34,7 @@ export function useAuth() {
     isAuthenticated,
     isLoading,
     role,
+    isSuperAdmin,
     signIn,
     signOut,
   }

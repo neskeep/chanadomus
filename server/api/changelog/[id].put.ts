@@ -7,7 +7,7 @@ import type { ChangelogEntry, ChangelogItem } from '~~/shared/types/changelog'
 
 export default defineEventHandler(async (event) => {
   const session = await requireTenant(event)
-  await requireRole(event, ['admin'])
+  await requireSuperAdmin(event)
 
   const id = getRouterParam(event, 'id')
   if (!id) {
