@@ -6,6 +6,7 @@ import { readMultipartFormData } from 'h3'
 import { mkdir, writeFile } from 'fs/promises'
 import { join } from 'path'
 import { sendPushToRole } from '~~/server/utils/web-push'
+import { sendSupportTicketEmail } from '~~/server/utils/email'
 import type { SupportTicket, SupportTicketType, SupportTicketPriority } from '~~/shared/types/support'
 import { SUPPORT_TICKET_TYPES, SUPPORT_TICKET_PRIORITIES } from '~~/shared/types/support'
 
@@ -87,9 +88,9 @@ export default defineEventHandler(async (event) => {
     }
   }
 
-  // Get user name for push notification
+  // Get user data for push notification and email
   const [userData] = await db
-    .select({ name: user.name })
+    .select({ name: user.name, email: user.email })
     .from(user)
     .where(eq(user.id, session.user.id))
 
@@ -137,16 +138,25 @@ export default defineEventHandler(async (event) => {
     )
   }
 
-  // Send push to admins
+  // Send push to admins + email to superadmin
   const userName = userData?.name ?? 'Un usuario'
-  await sendPushToRole(session.tenantId, 'admin', {
-    title: 'Nuevo ticket de soporte',
-    body: `${userName} reporto: ${title}`,
-    url: '/admin/soporte',
-    category: 'soporte',
-  }).catch(() => {
-    // Push failure should not block the response
-  })
+  const userEmail = userData?.email ?? ''
+  await Promise.all([
+    sendPushToRole(session.tenantId, 'admin', {
+      title: 'Nuevo ticket de soporte',
+      body: `${userName} reporto: ${title}`,
+      url: '/admin/soporte',
+      category: 'soporte',
+    }).catch(() => {}),
+    sendSupportTicketEmail({
+      title,
+      type: type as string,
+      priority: priority as string,
+      description,
+      reporterName: userName,
+      reporterEmail: userEmail,
+    }).catch(() => {}),
+  ])
 
   const ticket: SupportTicket = {
     id: row.id,
