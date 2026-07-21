@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { Loader2, Share2, Plus, QrCode, Users, CalendarDays } from 'lucide-vue-next'
+import { Loader2, Share2, Plus, QrCode, Users, CalendarDays, CalendarIcon } from 'lucide-vue-next'
+import type { DateValue } from 'reka-ui'
 import { toast } from 'vue-sonner'
 import type { VisitorType } from '~~/shared/types/qr'
 import QRCode from 'qrcode'
@@ -23,7 +24,8 @@ const saveAsFrequent = ref(false)
 // Duration & expiry
 type Duration = '1d' | '2d' | '3d' | '7d' | '14d' | '30d' | 'custom'
 const duration = ref<Duration>('1d')
-const customDate = ref('')
+const customDateValue = shallowRef<DateValue | undefined>(undefined)
+const customDatePickerOpen = ref(false)
 
 const durationOptions: { value: Duration; label: string }[] = [
   { value: '1d', label: '24 horas' },
@@ -39,11 +41,17 @@ const durationDays: Record<Exclude<Duration, 'custom'>, number> = {
   '1d': 1, '2d': 2, '3d': 3, '7d': 7, '14d': 14, '30d': 30,
 }
 
+function formatPickerDate(d: DateValue): string {
+  const date = new Date(d.year, d.month - 1, d.day)
+  return date.toLocaleDateString('es-VE', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' })
+}
+
 const expiresAtISO = computed(() => {
   if (duration.value === 'custom') {
-    if (!customDate.value) return ''
-    const d = new Date(customDate.value + 'T23:59:59')
-    return d.toISOString()
+    if (!customDateValue.value) return ''
+    const d = customDateValue.value
+    const date = new Date(d.year, d.month - 1, d.day, 23, 59, 59)
+    return date.toISOString()
   }
   const expires = new Date()
   expires.setDate(expires.getDate() + durationDays[duration.value])
@@ -51,12 +59,6 @@ const expiresAtISO = computed(() => {
 })
 
 const isMultiUse = computed(() => duration.value !== '1d')
-
-const tomorrowDate = computed(() => {
-  const d = new Date()
-  d.setDate(d.getDate() + 1)
-  return d.toISOString().split('T')[0]
-})
 
 // Result state
 const generatedToken = ref<string | null>(null)
@@ -96,7 +98,7 @@ const isFormValid = computed(() => {
   const baseValid = visitorName.value.trim() !== ''
     && visitorDocument.value.trim() !== ''
     && !!unitId.value
-  if (duration.value === 'custom') return baseValid && !!customDate.value
+  if (duration.value === 'custom') return baseValid && !!customDateValue.value
   return baseValid
 })
 
@@ -202,7 +204,8 @@ function handleReset() {
   visitorDocument.value = ''
   visitorType.value = 'invitado'
   duration.value = '1d'
-  customDate.value = ''
+  customDateValue.value = undefined
+  customDatePickerOpen.value = false
   frequentVisitorId.value = null
   saveAsFrequent.value = false
   showFrequentPicker.value = false
@@ -331,14 +334,22 @@ function handleReset() {
 
             <!-- Custom date picker -->
             <div v-if="duration === 'custom'" class="space-y-1.5">
-              <Label for="custom-date">Válido hasta</Label>
-              <Input
-                id="custom-date"
-                v-model="customDate"
-                type="date"
-                :min="tomorrowDate"
-                class="h-12 text-base"
-              />
+              <Label>Válido hasta</Label>
+              <Popover v-model:open="customDatePickerOpen">
+                <PopoverTrigger as-child>
+                  <Button variant="outline" class="h-12 w-full justify-start rounded-lg text-base font-normal">
+                    <CalendarIcon class="mr-2 size-4 shrink-0 text-muted-foreground" />
+                    <span class="truncate">{{ customDateValue ? formatPickerDate(customDateValue) : 'Seleccionar fecha' }}</span>
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent class="w-auto p-0" align="start">
+                  <Calendar
+                    :model-value="customDateValue"
+                    locale="es"
+                    @update:model-value="(v: DateValue | undefined) => { if (v) { customDateValue = v; customDatePickerOpen = false } }"
+                  />
+                </PopoverContent>
+              </Popover>
             </div>
 
             <p class="text-sm text-muted-foreground">
