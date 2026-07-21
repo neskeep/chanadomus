@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Loader2, Share2, Plus, QrCode, Users } from 'lucide-vue-next'
+import { Loader2, Share2, Plus, QrCode, Users, CalendarDays } from 'lucide-vue-next'
 import { toast } from 'vue-sonner'
 import type { VisitorType } from '~~/shared/types/qr'
 import QRCode from 'qrcode'
@@ -20,11 +20,42 @@ const frequentVisitorId = ref<string | null>(null)
 const showFrequentPicker = ref(false)
 const saveAsFrequent = ref(false)
 
-// Computed ISO string for submission — fixed 24h from now
+// Duration & expiry
+type Duration = '1d' | '2d' | '3d' | '7d' | '14d' | '30d' | 'custom'
+const duration = ref<Duration>('1d')
+const customDate = ref('')
+
+const durationOptions: { value: Duration; label: string }[] = [
+  { value: '1d', label: '24 horas' },
+  { value: '2d', label: '2 días' },
+  { value: '3d', label: '3 días' },
+  { value: '7d', label: '1 semana' },
+  { value: '14d', label: '2 semanas' },
+  { value: '30d', label: '1 mes' },
+  { value: 'custom', label: 'Fecha personalizada' },
+]
+
+const durationDays: Record<Exclude<Duration, 'custom'>, number> = {
+  '1d': 1, '2d': 2, '3d': 3, '7d': 7, '14d': 14, '30d': 30,
+}
+
 const expiresAtISO = computed(() => {
+  if (duration.value === 'custom') {
+    if (!customDate.value) return ''
+    const d = new Date(customDate.value + 'T23:59:59')
+    return d.toISOString()
+  }
   const expires = new Date()
-  expires.setHours(expires.getHours() + 24)
+  expires.setDate(expires.getDate() + durationDays[duration.value])
   return expires.toISOString()
+})
+
+const isMultiUse = computed(() => duration.value !== '1d')
+
+const tomorrowDate = computed(() => {
+  const d = new Date()
+  d.setDate(d.getDate() + 1)
+  return d.toISOString().split('T')[0]
 })
 
 // Result state
@@ -62,9 +93,11 @@ function selectFrequent(visitor: { id: string; visitorName: string; visitorDocum
 }
 
 const isFormValid = computed(() => {
-  return visitorName.value.trim() !== ''
+  const baseValid = visitorName.value.trim() !== ''
     && visitorDocument.value.trim() !== ''
     && !!unitId.value
+  if (duration.value === 'custom') return baseValid && !!customDate.value
+  return baseValid
 })
 
 async function handleGenerate() {
@@ -79,6 +112,7 @@ async function handleGenerate() {
       visitorType: visitorType.value,
       unitId: unitId.value,
       expiresAt: expiresAtISO.value,
+      multiUse: isMultiUse.value || undefined,
       frequentVisitorId: frequentVisitorId.value || undefined,
     })
 
@@ -167,6 +201,8 @@ function handleReset() {
   visitorName.value = ''
   visitorDocument.value = ''
   visitorType.value = 'invitado'
+  duration.value = '1d'
+  customDate.value = ''
   frequentVisitorId.value = null
   saveAsFrequent.value = false
   showFrequentPicker.value = false
@@ -274,10 +310,42 @@ function handleReset() {
             </div>
           </div>
 
-          <!-- Validity info + save as frequent -->
+          <!-- Duration selector -->
           <div class="space-y-3">
+            <div class="space-y-1.5">
+              <Label for="duration">
+                <CalendarDays class="inline size-3.5" />
+                Duración del pase
+              </Label>
+              <Select v-model="duration">
+                <SelectTrigger id="duration" size="lg" class="w-full text-base">
+                  <SelectValue placeholder="Seleccionar duración" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem v-for="opt in durationOptions" :key="opt.value" :value="opt.value">
+                    {{ opt.label }}
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <!-- Custom date picker -->
+            <div v-if="duration === 'custom'" class="space-y-1.5">
+              <Label for="custom-date">Válido hasta</Label>
+              <Input
+                id="custom-date"
+                v-model="customDate"
+                type="date"
+                :min="tomorrowDate"
+                class="h-12 text-base"
+              />
+            </div>
+
             <p class="text-sm text-muted-foreground">
-              El pase será válido por 24 horas a partir de su creación.
+              {{ isMultiUse
+                ? 'El pase permitirá múltiples entradas y salidas durante el período seleccionado.'
+                : 'El pase es de un solo uso y expira en 24 horas.'
+              }}
             </p>
 
             <div v-if="!frequentVisitorId" class="flex items-center gap-2">

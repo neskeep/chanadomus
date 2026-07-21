@@ -69,6 +69,7 @@ export default defineEventHandler(async (event) => {
       unitId: body.unitId,
       tenantId,
       expiresAt: expiresAtDate,
+      multiUse: body.multiUse === true,
     })
     .returning({
       id: qrCodes.id,

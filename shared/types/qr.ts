@@ -24,6 +24,7 @@ export interface GenerateQrInput {
   visitorType: VisitorType
   unitId: string
   expiresAt: string
+  multiUse?: boolean
   frequentVisitorId?: string
 }
 

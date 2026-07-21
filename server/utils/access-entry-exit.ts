@@ -3,7 +3,7 @@ import { db } from '~~/server/db'
 import { accessLogs } from '~~/server/db/schema/access'
 import { broadcastAccessMessage } from '~~/server/utils/ws-access'
 
-const OPEN_ENTRY_WINDOW_MS = 24 * 60 * 60 * 1000 // 24 hours
+const OPEN_ENTRY_WINDOW_MS = 30 * 24 * 60 * 60 * 1000 // 30 days — supports multi-day visitor stays
 
 export interface HasOpenEntryResult {
   exists: boolean

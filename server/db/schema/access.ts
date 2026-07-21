@@ -23,6 +23,7 @@ export const qrCodes = pgTable('qr_codes', {
   tenantId: uuid('tenant_id').notNull().references(() => tenants.id),
   expiresAt: timestamp('expires_at').notNull(),
   usedAt: timestamp('used_at'), // null = no usado
+  multiUse: boolean('multi_use').notNull().default(false), // true = permite múltiples entradas hasta expiresAt
   createdAt: timestamp('created_at').notNull().defaultNow(),
 }, (table) => [
   index('qr_token_idx').on(table.token),

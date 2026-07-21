@@ -56,6 +56,7 @@ export default defineEventHandler(async (event) => {
       unitId: qrCodes.unitId,
       expiresAt: qrCodes.expiresAt,
       usedAt: qrCodes.usedAt,
+      multiUse: qrCodes.multiUse,
       unitNumber: units.number,
       unitLabel: units.label,
     })
@@ -173,8 +174,10 @@ export default defineEventHandler(async (event) => {
   }
 
   if (direction === 'entry') {
-    // Entry — marcar QR como usado y registrar acceso
-    await db.update(qrCodes).set({ usedAt: now }).where(eq(qrCodes.id, record.id))
+    // Entry — marcar QR como usado solo si es single-use
+    if (!record.multiUse) {
+      await db.update(qrCodes).set({ usedAt: now }).where(eq(qrCodes.id, record.id))
+    }
 
     await logAccess({
       tenantId, entryType: 'qr', result: 'allowed', qrCodeId: record.id,
@@ -197,7 +200,26 @@ export default defineEventHandler(async (event) => {
     return { data: result }
   }
 
-  // direction === 'exit' on unused QR — no entry to close, log exit-only
+  // direction === 'exit' — try to close an open entry (multi-use or unused QR)
+  if (record.multiUse) {
+    const openEntry = await checkOpenEntry(token, tenantId)
+
+    if (openEntry.action === 'exit') {
+      const result: ValidationResult = {
+        status: 'valid',
+        direction: 'exit',
+        accessLogId: openEntry.logId,
+        visitorName: record.visitorName,
+        visitorDocument: record.visitorDocument,
+        visitorType: record.visitorType,
+        unitNumber: record.unitNumber,
+        unitLabel: record.unitLabel,
+      }
+      return { data: result }
+    }
+  }
+
+  // Fallback: no open entry to close — log exit-only
   await logAccess({
     tenantId, entryType: 'qr', result: 'allowed', qrCodeId: record.id,
     authorizedBy: session.user.id, visitorName: record.visitorName,
