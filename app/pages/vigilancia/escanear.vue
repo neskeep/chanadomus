@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { SwitchCamera, CheckCircle2, XCircle, AlertTriangle, Camera, User, Home, Clock, RotateCcw, Car, HardHat, LogIn, LogOut } from 'lucide-vue-next'
+import { SwitchCamera, CheckCircle2, XCircle, AlertTriangle, Camera, User, Home, Clock, RotateCcw, Car, HardHat, LogIn, LogOut, Loader2 } from 'lucide-vue-next'
 import type { ValidationStatus } from '~~/shared/types/qr'
 import { VALIDATION_STATUS_COLORS, VALIDATION_STATUS_LABELS, ACCESS_DIRECTION_COLORS, ACCESS_DIRECTION_LABELS } from '~/composables/useColorMap'
 
@@ -20,10 +20,42 @@ const {
   resetToSelection,
 } = useQrScanner()
 
+const { units: unitList, fetchUnits } = useUnits()
+const selectedUnitId = ref('')
+const isAssigningUnit = ref(false)
+
+async function handleAssignUnit() {
+  if (!selectedUnitId.value || !scanResult.value?.vehiclePassId) return
+  isAssigningUnit.value = true
+  try {
+    await $fetch(`/api/vehicle-passes/${scanResult.value.vehiclePassId}/assign-unit`, {
+      method: 'POST',
+      body: {
+        unitId: selectedUnitId.value,
+        occupantCount: scanResult.value.occupantLimit ?? undefined,
+      },
+    })
+    const unit = unitList.value.find(u => u.id === selectedUnitId.value)
+    if (scanResult.value) {
+      scanResult.value.requiresUnit = false
+      scanResult.value.unitNumber = unit?.number ?? null
+      scanResult.value.unitLabel = unit?.label ?? null
+    }
+  } catch {
+    // Error handled by UI
+  } finally {
+    isAssigningUnit.value = false
+  }
+}
+
 function selectDirection(direction: 'entry' | 'exit') {
   selectedDirection.value = direction
   startScanning()
 }
+
+onMounted(() => {
+  fetchUnits()
+})
 
 onUnmounted(() => {
   stopScanning()
@@ -220,11 +252,11 @@ const resolvedConfig = computed(() => {
             v-if="scanResult.isVehiclePass"
             class="mt-6 w-full max-w-xs space-y-3 rounded-lg bg-white/10 p-4 backdrop-blur-sm"
           >
-            <div class="flex items-center gap-3">
+            <div v-if="scanResult.vehiclePlate" class="flex items-center gap-3">
               <Car class="size-4 shrink-0 text-white/50" />
               <span class="font-mono text-base font-bold tracking-wider text-white">{{ scanResult.vehiclePlate }}</span>
             </div>
-            <div class="flex items-center gap-3">
+            <div v-if="scanResult.vehicleBrand" class="flex items-center gap-3">
               <span class="text-sm text-white/80">{{ scanResult.vehicleBrand }} {{ scanResult.vehicleModel }} · {{ scanResult.vehicleColor }}</span>
             </div>
             <div v-if="scanResult.unitNumber" class="flex items-center gap-3">
@@ -233,9 +265,35 @@ const resolvedConfig = computed(() => {
                 {{ scanResult.unitLabel || scanResult.unitNumber }}
               </span>
             </div>
+
+            <!-- Unit assignment required -->
+            <div v-if="scanResult.requiresUnit" class="space-y-2 rounded-lg bg-amber-500/20 p-3">
+              <p class="text-xs font-medium text-amber-200">Asignar unidad de destino</p>
+              <Select v-model="selectedUnitId">
+                <SelectTrigger class="h-8 border-white/20 bg-white/10 text-xs text-white">
+                  <Home class="mr-1.5 size-3 shrink-0 text-white/50" />
+                  <SelectValue placeholder="Seleccionar unidad" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem v-for="u in unitList" :key="u.id" :value="u.id">
+                    {{ u.label || u.number }}
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+              <Button
+                size="sm"
+                class="w-full"
+                :disabled="!selectedUnitId || isAssigningUnit"
+                @click="handleAssignUnit"
+              >
+                <Loader2 v-if="isAssigningUnit" class="mr-1.5 size-3 animate-spin" />
+                Confirmar acceso
+              </Button>
+            </div>
+
             <div class="flex items-center gap-3">
               <Badge variant="secondary" class="text-xs">
-                {{ scanResult.passType === 'resident' ? 'Residente' : 'Invitado' }}
+                {{ scanResult.passType === 'resident' ? 'Residente' : scanResult.passType === 'temporary' ? 'Temporal' : 'Invitado' }}
               </Badge>
               <span v-if="scanResult.occupantLimit" class="text-xs text-white/60">
                 Max. {{ scanResult.occupantLimit }} ocupantes

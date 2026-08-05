@@ -6,14 +6,21 @@ import type { PushCategory } from '~~/shared/types/push-preferences'
 useHead({ title: 'Notificaciones' })
 
 const { preferences, isLoading, isSaving, error, fetchPreferences, toggleCategory } = usePushPreferences()
-const { isSupported, permission, isSubscribed, subscribe, checkSubscription } = usePushNotifications()
+const { isSupported, permission, isSubscribed, subscribe, unsubscribe, checkSubscription } = usePushNotifications()
 
 const isSubscribing = ref(false)
+const isUnsubscribing = ref(false)
 
 async function handleSubscribe() {
   isSubscribing.value = true
   await subscribe()
   isSubscribing.value = false
+}
+
+async function handleUnsubscribe() {
+  isUnsubscribing.value = true
+  await unsubscribe()
+  isUnsubscribing.value = false
 }
 
 onMounted(async () => {
@@ -62,6 +69,16 @@ function handleToggle(category: PushCategory, enabled: boolean) {
         >
           <Loader2 v-if="isSubscribing" class="mr-2 size-4 animate-spin" />
           Activar
+        </Button>
+        <Button
+          v-else-if="isSupported && isSubscribed"
+          size="sm"
+          variant="outline"
+          :disabled="isUnsubscribing"
+          @click="handleUnsubscribe"
+        >
+          <Loader2 v-if="isUnsubscribing" class="mr-2 size-4 animate-spin" />
+          Desactivar
         </Button>
       </div>
     </Card>

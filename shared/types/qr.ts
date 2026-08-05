@@ -72,4 +72,8 @@ export interface ValidationResult {
   memberName?: string
   /** Household member relationship */
   memberRelationship?: string
+  /** When true, the guard must assign a unit before confirming the access */
+  requiresUnit?: boolean
+  /** Vehicle pass ID (needed for unit assignment) */
+  vehiclePassId?: string
 }

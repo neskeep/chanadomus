@@ -93,6 +93,39 @@ export function usePushNotifications() {
     }
   }
 
+  /**
+   * Desuscribe al usuario de push notifications (browser + servidor).
+   */
+  async function unsubscribe() {
+    if (!isSupported.value) return false
+
+    isLoading.value = true
+    error.value = null
+
+    try {
+      const registration = await navigator.serviceWorker.ready
+      const subscription = await registration.pushManager.getSubscription()
+
+      if (subscription) {
+        // Eliminar del servidor
+        await $fetch('/api/push/unsubscribe', {
+          method: 'POST',
+          body: { endpoint: subscription.endpoint },
+        })
+        // Eliminar del browser
+        await subscription.unsubscribe()
+      }
+
+      isSubscribed.value = false
+      return true
+    } catch (e: unknown) {
+      error.value = e instanceof Error ? e.message : 'Error al desactivar notificaciones'
+      return false
+    } finally {
+      isLoading.value = false
+    }
+  }
+
   return {
     isSupported,
     permission,
@@ -100,6 +133,7 @@ export function usePushNotifications() {
     isLoading,
     error,
     subscribe,
+    unsubscribe,
     checkSubscription,
   }
 }

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Shield, QrCode, UserPlus, Wifi, CalendarIcon, RotateCcw, FileDown } from 'lucide-vue-next'
+import { Shield, QrCode, UserPlus, Wifi, CalendarIcon, RotateCcw, FileDown, Home } from 'lucide-vue-next'
 import type { DateValue } from 'reka-ui'
 import type { AccessResult, EntryType } from '~~/shared/types/access'
 
@@ -18,6 +18,7 @@ const {
   applyFilters,
   resetFilters,
 } = useAccessHistory()
+const { units: unitList, fetchUnits } = useUnits()
 
 // --- Result & entry type configs ---
 
@@ -50,6 +51,7 @@ const entryTypeOptions = [
 
 const filterResult = ref('')
 const filterEntryType = ref('')
+const filterUnitId = ref('')
 const filterFrom = shallowRef<DateValue | undefined>()
 const filterTo = shallowRef<DateValue | undefined>()
 const fromPickerOpen = ref(false)
@@ -59,8 +61,13 @@ const searchInput = ref('')
 const hasActiveFilters = computed(() =>
   filterResult.value !== ''
   || filterEntryType.value !== ''
+  || filterUnitId.value !== ''
   || filterFrom.value !== undefined
   || filterTo.value !== undefined,
+)
+
+const unitOptions = computed(() =>
+  unitList.value.map(u => ({ value: u.id, label: u.label || u.number })),
 )
 
 // --- Date helpers ---
@@ -106,9 +113,10 @@ function formatDateShort(dateStr: string): string {
 
 // --- Sync filters to composable ---
 
-watch([filterResult, filterEntryType], () => {
+watch([filterResult, filterEntryType, filterUnitId], () => {
   filters.value.result = (filterResult.value as AccessResult | '') || ''
   filters.value.entryType = (filterEntryType.value as EntryType | '') || ''
+  filters.value.unitId = filterUnitId.value
   applyFilters()
 })
 
@@ -133,6 +141,7 @@ watch(searchInput, (val) => {
 function clearAllFilters() {
   filterResult.value = ''
   filterEntryType.value = ''
+  filterUnitId.value = ''
   filterFrom.value = undefined
   filterTo.value = undefined
   searchInput.value = ''
@@ -176,6 +185,7 @@ async function generatePdf() {
 
 onMounted(() => {
   fetchHistory()
+  fetchUnits()
 })
 </script>
 
@@ -187,6 +197,23 @@ onMounted(() => {
         <TopbarFilters :active="hasActiveFilters" @clear="clearAllFilters">
           <TopbarFilterGroup v-model="filterResult" label="Resultado" :options="resultOptions" />
           <TopbarFilterGroup v-model="filterEntryType" label="Tipo de entrada" :options="entryTypeOptions" />
+          <div>
+            <p class="mb-1.5 text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
+              Destino
+            </p>
+            <Select v-model="filterUnitId">
+              <SelectTrigger class="h-7 text-xs">
+                <Home class="mr-1.5 size-3 shrink-0 text-muted-foreground" />
+                <SelectValue placeholder="Todas las unidades" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="">Todas las unidades</SelectItem>
+                <SelectItem v-for="u in unitOptions" :key="u.value" :value="u.value">
+                  {{ u.label }}
+                </SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
           <div>
             <p class="mb-1.5 text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
               Rango de fechas
@@ -253,6 +280,23 @@ onMounted(() => {
         <TopbarFilters :active="hasActiveFilters" @clear="clearAllFilters">
           <TopbarFilterGroup v-model="filterResult" label="Resultado" :options="resultOptions" />
           <TopbarFilterGroup v-model="filterEntryType" label="Tipo de entrada" :options="entryTypeOptions" />
+          <div>
+            <p class="mb-1.5 text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
+              Destino
+            </p>
+            <Select v-model="filterUnitId">
+              <SelectTrigger class="h-7 text-xs">
+                <Home class="mr-1.5 size-3 shrink-0 text-muted-foreground" />
+                <SelectValue placeholder="Todas las unidades" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="">Todas las unidades</SelectItem>
+                <SelectItem v-for="u in unitOptions" :key="u.value" :value="u.value">
+                  {{ u.label }}
+                </SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
           <div>
             <p class="mb-1.5 text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
               Rango de fechas

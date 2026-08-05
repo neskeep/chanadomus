@@ -118,6 +118,28 @@ export async function sendPushToUser(userId: string, payload: PushPayload) {
 }
 
 /**
+ * Envia push notification a usuarios especificos, con filtrado por preferencias.
+ * Useful for chat: send to room members who are offline.
+ */
+export async function sendPushToUsers(
+  userIds: string[],
+  payload: PushPayload,
+  category?: PushCategory,
+) {
+  if (userIds.length === 0) return { sent: 0, failed: 0, total: 0 }
+
+  let subs = await db.select().from(pushSubscriptions)
+    .where(inArray(pushSubscriptions.userId, userIds))
+
+  const resolvedCategory = category ?? resolveCategoryFromPayload(payload)
+  if (resolvedCategory) {
+    subs = await filterByPreferences(subs, resolvedCategory)
+  }
+
+  return sendPushToSubscriptions(subs, payload)
+}
+
+/**
  * Envia push notification a todos los suscriptores de un tenant
  */
 export async function sendPushToAll(tenantId: string, payload: PushPayload, category?: PushCategory) {

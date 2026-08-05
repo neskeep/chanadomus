@@ -52,7 +52,7 @@ function monthLabel(yyyymm: string): string {
 }
 
 function dayLabel(yyyymmdd: string): string {
-  return new Date(yyyymmdd).toLocaleDateString('es-VE', { weekday: 'short' })
+  return new Date(yyyymmdd + 'T00:00:00').toLocaleDateString('es-VE', { weekday: 'short' })
 }
 
 // --- Chart data ---

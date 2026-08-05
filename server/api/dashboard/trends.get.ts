@@ -63,7 +63,7 @@ export default defineEventHandler(async (event) => {
       try {
         const rows = await db
           .select({
-            day: dsql<string>`to_char(${accessLogs.createdAt}, 'YYYY-MM-DD')`,
+            day: dsql<string>`to_char(${accessLogs.createdAt} AT TIME ZONE 'America/Caracas', 'YYYY-MM-DD')`,
             count: dsql<number>`cast(count(*) as integer)`,
           })
           .from(accessLogs)
@@ -71,8 +71,8 @@ export default defineEventHandler(async (event) => {
             eq(accessLogs.tenantId, tenantId),
             gte(accessLogs.createdAt, sevenDaysAgo),
           ))
-          .groupBy(dsql`to_char(${accessLogs.createdAt}, 'YYYY-MM-DD')`)
-          .orderBy(dsql`to_char(${accessLogs.createdAt}, 'YYYY-MM-DD')`)
+          .groupBy(dsql`to_char(${accessLogs.createdAt} AT TIME ZONE 'America/Caracas', 'YYYY-MM-DD')`)
+          .orderBy(dsql`to_char(${accessLogs.createdAt} AT TIME ZONE 'America/Caracas', 'YYYY-MM-DD')`)
         return rows
       } catch {
         return []

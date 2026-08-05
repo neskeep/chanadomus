@@ -677,7 +677,30 @@ async function validateVehiclePass(
     }
   }
 
-  // direction === 'entry' — log access (multi-use, never mark as used)
+  // direction === 'entry'
+  const needsUnit = pass.passType === 'temporary' && !pass.unitNumber
+
+  if (needsUnit) {
+    // Don't log access yet — guard must assign a unit first
+    return {
+      status: 'valid',
+      direction: 'entry',
+      unitNumber: null,
+      unitLabel: null,
+      expiresAt: pass.expiresAt?.toISOString(),
+      isVehiclePass: true,
+      vehiclePlate: pass.plate,
+      vehicleBrand: pass.brand,
+      vehicleModel: pass.model,
+      vehicleColor: pass.color,
+      passType: pass.passType,
+      occupantLimit: pass.occupantLimit,
+      requiresUnit: true,
+      vehiclePassId: pass.id,
+    }
+  }
+
+  // Log access (multi-use, never mark as used)
   await logAccess({
     tenantId,
     entryType: 'qr',
