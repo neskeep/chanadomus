@@ -4,7 +4,7 @@ import {
   MessageCircle, Megaphone, Vote, Wrench, Calendar,
   ScanLine, ClipboardList, QrCode, FileText, CreditCard, Car,
   UserCog, ShieldAlert, BookOpen, UserPlus, History,
-  LifeBuoy, ScrollText,
+  LifeBuoy, ScrollText, Send,
 } from 'lucide-vue-next'
 import { ROLE_REDIRECTS } from '~~/shared/types/auth'
 
@@ -52,6 +52,7 @@ export function useNavigation() {
             label: 'Comunidad',
             items: [
               { label: 'Chat', icon: MessageCircle, to: '/mi-chana/chat' },
+              { label: 'Notificaciones', icon: Send, to: '/admin/notificaciones' },
               { label: 'Cartelera', icon: Megaphone, to: '/admin/cartelera' },
               { label: 'Normativas', icon: BookOpen, to: '/admin/normativas' },
               { label: 'Votaciones', icon: Vote, to: '/admin/votaciones' },

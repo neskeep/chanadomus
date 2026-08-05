@@ -28,6 +28,9 @@ useContentResize(contentRef)
         </div>
       </header>
 
+      <!-- Global announcement bar -->
+      <AnnouncementBar />
+
       <!-- Scrollable content -->
       <div ref="contentRef" class="relative flex-1 overflow-y-auto">
         <div class="px-4 py-6 lg:px-6">

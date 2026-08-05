@@ -29,6 +29,7 @@ import * as householdMemberPassSchema from './schema/household-member-pass'
 import * as regulationSchema from './schema/regulation'
 import * as invitationSchema from './schema/invitation'
 import * as supportSchema from './schema/support'
+import * as broadcastSchema from './schema/broadcast'
 
 const connectionString = process.env.DATABASE_URL!
 
@@ -65,5 +66,6 @@ export const db = drizzle(client, {
     ...regulationSchema,
     ...invitationSchema,
     ...supportSchema,
+    ...broadcastSchema,
   },
 })
