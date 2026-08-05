@@ -7,6 +7,21 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [1.5.1] - 2026-08-05
+
+### Fixed
+- Gráficas de accesos descuadradas por zona horaria — los datos ahora se calculan correctamente con horario de Venezuela
+- Pases vehiculares temporales sin unidad asignada — el vigilante ahora puede asignar la unidad de destino al momento de escanear el pase
+- Selector de fechas reemplazado por calendario visual (shadcn Calendar) en lugar del selector nativo del navegador
+
+### Added
+- Botón para desactivar notificaciones push desde Configuración > Notificaciones
+- Notificaciones push para mensajes de chat — los miembros que no estén conectados reciben una notificación en su celular
+- Buscador en el filtro de destino del historial de accesos — unidades organizadas por Ranchos y Parcelas para facilitar la selección
+- Duración de validez configurable para códigos QR, con soporte para pases de múltiples usos
+- Notificación por correo al administrador cuando se crea un nuevo ticket de soporte
+- Diseño mejorado del correo de notificación de tickets de soporte
+
 ## [0.16.1] - 2026-04-20
 
 ### Fixed
