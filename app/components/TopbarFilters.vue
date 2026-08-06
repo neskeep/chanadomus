@@ -27,6 +27,12 @@ const emit = defineEmits<{
       align="end"
       :side-offset="8"
       class="w-56 p-0"
+      @interact-outside="(e: Event) => {
+        const target = e.target as HTMLElement | null
+        if (target?.closest('[data-unit-search]') || target?.closest('[data-unit-combobox-dropdown]')) {
+          e.preventDefault()
+        }
+      }"
     >
       <div class="max-h-[min(60vh,400px)] space-y-3 overflow-y-auto p-2.5">
         <slot />

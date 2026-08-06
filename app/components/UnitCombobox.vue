@@ -153,6 +153,7 @@ function close() {
       <!-- Backdrop -->
       <div
         v-if="open"
+        data-unit-combobox-dropdown
         class="fixed inset-0 z-50"
         @click="close"
       />
@@ -160,6 +161,7 @@ function close() {
       <!-- Dropdown -->
       <div
         v-if="open"
+        data-unit-combobox-dropdown
         class="z-50 overflow-hidden rounded-2xl border bg-popover shadow-lg"
         :style="dropStyle"
       >
