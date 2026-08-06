@@ -7,6 +7,23 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [1.6.0] - 2026-08-06
+
+### Added
+- Módulo de Eventos completo — gestión de eventos sociales del condominio con flujo de aprobación
+- Creación de eventos por propietarios y conserjes (requiere aprobación del administrador)
+- Creación directa de eventos por administradores (sin aprobación)
+- Gestión de invitados: agregar individual, importación en lote (texto libre), eliminar
+- Vista de check-in/check-out para vigilancia con búsqueda en tiempo real y estadísticas
+- Registro automático de accesos de invitados en el historial de accesos existente
+- Notificaciones push al administrador cuando se crea un evento pendiente
+- Notificación push al creador cuando su evento es aprobado
+- Navegación "Eventos" en los 4 roles (admin, propietario, conserje, vigilancia)
+
+### Fixed
+- Propietario y conserje ahora solo pueden crear eventos para su propia unidad (validación server-side)
+- Corrección de validación de UUID al crear eventos sin unidad explícita
+
 ## [1.5.1] - 2026-08-05
 
 ### Fixed

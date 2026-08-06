@@ -4,7 +4,7 @@ import {
   MessageCircle, Megaphone, Vote, Wrench, Calendar,
   ScanLine, ClipboardList, QrCode, FileText, CreditCard, Car,
   UserCog, ShieldAlert, BookOpen, UserPlus, History,
-  LifeBuoy, ScrollText, Send,
+  LifeBuoy, ScrollText, Send, PartyPopper,
 } from 'lucide-vue-next'
 import { ROLE_REDIRECTS } from '~~/shared/types/auth'
 
@@ -57,6 +57,7 @@ export function useNavigation() {
               { label: 'Normativas', icon: BookOpen, to: '/admin/normativas' },
               { label: 'Votaciones', icon: Vote, to: '/admin/votaciones' },
               { label: 'Reuniones', icon: Calendar, to: '/admin/reuniones' },
+              { label: 'Eventos', icon: PartyPopper, to: '/admin/eventos' },
             ],
           },
           ...(isSuperAdmin.value ? [{
@@ -91,6 +92,7 @@ export function useNavigation() {
               { label: 'Mi QR', icon: ScanLine, to: '/propietario/mi-qr' },
               { label: 'Mis Visitas', icon: QrCode, to: '/propietario/mis-visitas' },
               { label: 'Frecuentes', icon: Users, to: '/propietario/visitantes-frecuentes' },
+              { label: 'Eventos', icon: PartyPopper, to: '/propietario/eventos' },
               { label: 'Incidencias', icon: AlertTriangle, to: '/propietario/incidencias' },
             ],
           },
@@ -117,6 +119,7 @@ export function useNavigation() {
               { label: 'Registrar Acceso', icon: UserPlus, to: '/vigilancia/registrar-acceso' },
               { label: 'Accesos', icon: ClipboardList, to: '/vigilancia/accesos' },
               { label: 'Historial', icon: History, to: '/accesos/historial' },
+              { label: 'Eventos', icon: PartyPopper, to: '/vigilancia/eventos' },
               { label: 'Alertas', icon: ShieldAlert, to: '/vigilancia/alertas' },
               { label: 'Incidencias', icon: AlertTriangle, to: '/vigilancia/incidencias' },
               { label: 'Residentes', icon: Shield, to: '/vigilancia/residentes' },
@@ -149,6 +152,7 @@ export function useNavigation() {
               { label: 'Mi QR', icon: ScanLine, to: '/conserje/mi-qr' },
               { label: 'Visitas', icon: QrCode, to: '/conserje/mis-visitas' },
               { label: 'Frecuentes', icon: Users, to: '/conserje/visitantes-frecuentes' },
+              { label: 'Eventos', icon: PartyPopper, to: '/conserje/eventos' },
             ],
           },
           {

@@ -1,6 +1,6 @@
 import type { AccessDirection } from './qr'
 
-export type EntryType = 'qr' | 'manual' | 'webhook'
+export type EntryType = 'qr' | 'manual' | 'webhook' | 'evento'
 export type AccessResult = 'allowed' | 'denied' | 'expired' | 'already_used'
 export type DeviceStatus = 'active' | 'inactive'
 export type ScanType = 'qr' | 'pin' | 'rfid'
@@ -26,6 +26,8 @@ export interface AccessEvent {
   staffPassId?: string | null
   occupantCount?: number | null
   vehiclePlate?: string | null
+  eventId?: string | null
+  eventTitle?: string | null
   /** Whether this event was an entry or exit scan */
   direction?: AccessDirection
 }

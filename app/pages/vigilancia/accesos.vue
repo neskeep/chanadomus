@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Shield, QrCode, UserPlus, Wifi, LogOut } from 'lucide-vue-next'
+import { Shield, QrCode, UserPlus, Wifi, LogOut, PartyPopper } from 'lucide-vue-next'
 import type { AccessResult, EntryType } from '~~/shared/types/access'
 
 useHead({ title: 'Registro de Accesos' })
@@ -53,6 +53,7 @@ const ENTRY_TYPE_CONFIG: Record<EntryType, { label: string; icon: typeof QrCode 
   qr: { label: 'QR', icon: QrCode },
   manual: { label: 'Manual', icon: UserPlus },
   webhook: { label: 'Dispositivo', icon: Wifi },
+  evento: { label: 'Evento', icon: PartyPopper },
 }
 
 const clientNow = ref<number>(0)

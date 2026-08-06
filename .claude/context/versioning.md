@@ -8,7 +8,7 @@ Formato: `MAJOR.MINOR.PATCH`
 - **MINOR** (0.1.0, 0.2.0): Nuevo modulo o feature completo (backward compatible)
 - **PATCH** (0.1.1, 0.1.2): Bug fixes, ajustes menores, hotfixes
 
-## Version actual: v1.5.0
+## Version actual: v1.6.0
 
 ## Historial de Versiones
 
@@ -49,6 +49,8 @@ Formato: `MAJOR.MINOR.PATCH`
 | v1.4.1 | PATCH | Correcciones de interfaz (checkboxes, providers) | 2026-06-22 |
 | v1.4.2 | PATCH | Hora accesos, QR vencidos, panic fallback | 2026-07-10 |
 | v1.5.0 | MINOR | Soporte tecnico y novedades | 2026-07-12 |
+| v1.5.1 | PATCH | Correcciones accesos, pases, calendario | 2026-08-05 |
+| v1.6.0 | MINOR | Módulo de Eventos | 2026-08-06 |
 
 ### Criterio para versionar
 

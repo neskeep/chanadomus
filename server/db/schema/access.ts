@@ -8,7 +8,7 @@ import { serviceStaffPasses } from './service-staff-pass'
 
 // Enums
 export const visitorTypeEnum = pgEnum('visitor_type', ['invitado', 'proveedor'])
-export const entryTypeEnum = pgEnum('entry_type', ['qr', 'manual', 'webhook'])
+export const entryTypeEnum = pgEnum('entry_type', ['qr', 'manual', 'webhook', 'evento'])
 export const accessResultEnum = pgEnum('access_result', ['allowed', 'denied', 'expired', 'already_used'])
 
 // QR Codes
@@ -49,6 +49,7 @@ export const accessLogs = pgTable('access_logs', {
   staffPassId: uuid('staff_pass_id').references(() => serviceStaffPasses.id), // pase de staff, nullable
   occupantCount: integer('occupant_count'), // cantidad de ocupantes, nullable
   passToken: text('pass_token'), // token escaneado — para matching entry/exit en cualquier tipo de QR
+  eventId: uuid('event_id'), // FK a events — se agrega en event.ts para evitar circular imports
   expiredOpen: boolean('expired_open').notNull().default(false), // flag para entries >24h sin salida (investigacion)
   exitAt: timestamp('exit_at'), // hora de salida del visitante, null = aun dentro
   createdAt: timestamp('created_at').notNull().defaultNow(),

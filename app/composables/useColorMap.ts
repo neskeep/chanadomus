@@ -1,3 +1,4 @@
+import type { EventStatus, GuestStatus } from '~~/shared/types/event'
 import type { AnnouncementCategory, AnnouncementStatus } from '~~/shared/types/announcement'
 import type { ChatRoomType } from '~~/shared/types/chat'
 import type { ChangelogItemType } from '~~/shared/types/changelog'
@@ -224,6 +225,33 @@ export const CHANGELOG_TYPE_LABELS: Record<ChangelogItemType, string> = {
   fixed: 'Corregido',
   changed: 'Cambiado',
   removed: 'Eliminado',
+}
+
+// ─── Events ────────────────────────────────────────────
+export const EVENT_STATUS_COLORS: Record<EventStatus, string> = {
+  pendiente: 'bg-amber-100 text-amber-800',
+  activo: 'bg-emerald-100 text-emerald-800',
+  completado: 'bg-zinc-100 text-zinc-600',
+  cancelado: 'bg-red-100 text-red-800',
+}
+
+export const EVENT_STATUS_LABELS: Record<EventStatus, string> = {
+  pendiente: 'Pendiente',
+  activo: 'Activo',
+  completado: 'Completado',
+  cancelado: 'Cancelado',
+}
+
+export const GUEST_STATUS_COLORS: Record<GuestStatus, string> = {
+  pendiente: 'bg-zinc-100 text-zinc-600',
+  dentro: 'bg-emerald-100 text-emerald-800',
+  salio: 'bg-blue-100 text-blue-800',
+}
+
+export const GUEST_STATUS_LABELS: Record<GuestStatus, string> = {
+  pendiente: 'Pendiente',
+  dentro: 'Dentro',
+  salio: 'Salió',
 }
 
 // ─── Dashboard Icon Backgrounds ──────────────────────────

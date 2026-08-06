@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Shield, QrCode, UserPlus, Wifi, CalendarIcon, RotateCcw, FileDown } from 'lucide-vue-next'
+import { Shield, QrCode, UserPlus, Wifi, CalendarIcon, RotateCcw, FileDown, PartyPopper } from 'lucide-vue-next'
 import type { DateValue } from 'reka-ui'
 import type { AccessResult, EntryType } from '~~/shared/types/access'
 
@@ -33,6 +33,7 @@ const ENTRY_TYPE_CONFIG: Record<EntryType, { label: string; icon: typeof QrCode 
   qr: { label: 'QR', icon: QrCode },
   manual: { label: 'Manual', icon: UserPlus },
   webhook: { label: 'Dispositivo', icon: Wifi },
+  evento: { label: 'Evento', icon: PartyPopper },
 }
 
 const resultOptions = [
