@@ -26,8 +26,8 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 403, message: 'Solo el creador o admin puede eliminar' })
   }
 
-  if (existing.status !== 'pendiente') {
-    throw createError({ statusCode: 400, message: 'Solo se pueden eliminar eventos pendientes' })
+  if (existing.status === 'completado') {
+    throw createError({ statusCode: 400, message: 'No se pueden eliminar eventos completados' })
   }
 
   await db.delete(events).where(eq(events.id, id))

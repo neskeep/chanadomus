@@ -37,7 +37,7 @@ onMounted(async () => {
       v-else-if="activeEvents.length === 0"
       :icon="PartyPopper"
       title="No hay eventos activos hoy"
-      description="Los eventos activos aparecerán aquí cuando inicien"
+      description="Los eventos aprobados del día aparecerán aquí"
     />
 
     <!-- Active event cards -->

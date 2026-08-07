@@ -10,6 +10,8 @@ export default defineEventHandler(async (event) => {
   await requireRole(event, ['admin', 'vigilancia', 'conserje'])
 
   const now = new Date()
+  const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate())
+  const endOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1)
 
   const guestCountSq = db
     .select({
@@ -49,8 +51,8 @@ export default defineEventHandler(async (event) => {
     .where(and(
       eq(events.tenantId, session.tenantId),
       eq(events.status, 'activo'),
-      lte(events.startsAt, now),
-      gte(events.endsAt, now),
+      lte(events.startsAt, endOfDay),
+      gte(events.endsAt, startOfDay),
     ))
     .orderBy(events.startsAt)
 

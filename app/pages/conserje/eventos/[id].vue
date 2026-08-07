@@ -10,6 +10,8 @@ import {
   Search,
   Car,
   IdCard,
+  Pencil,
+  Loader2,
 } from 'lucide-vue-next'
 import { toast } from 'vue-sonner'
 import type { EventDetail, EventStatus, GuestStatus, CreateGuest } from '~~/shared/types/event'
@@ -20,8 +22,10 @@ const id = route.params.id as string
 
 const {
   isLoading,
+  isSubmitting,
   error,
   fetchEvent,
+  updateEvent,
   deleteEvent,
 } = useEvents()
 
@@ -54,6 +58,46 @@ const deleteDialogOpen = ref(false)
 const newGuestName = ref('')
 const newGuestDocument = ref('')
 const newGuestPlate = ref('')
+
+const editingDates = ref(false)
+const editStartsAt = ref('')
+const editEndsAt = ref('')
+
+function toLocalDatetime(iso: string): string {
+  const d = new Date(iso)
+  const pad = (n: number) => String(n).padStart(2, '0')
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`
+}
+
+function startEditDates() {
+  if (!event.value) return
+  editStartsAt.value = toLocalDatetime(event.value.startsAt)
+  editEndsAt.value = toLocalDatetime(event.value.endsAt)
+  editingDates.value = true
+}
+
+const canSaveDates = computed(() =>
+  editStartsAt.value
+  && editEndsAt.value
+  && new Date(editEndsAt.value) > new Date(editStartsAt.value)
+  && !isSubmitting.value,
+)
+
+async function handleUpdateDates() {
+  if (!canSaveDates.value) return
+  try {
+    await updateEvent(id, {
+      startsAt: new Date(editStartsAt.value).toISOString(),
+      endsAt: new Date(editEndsAt.value).toISOString(),
+    })
+    event.value = await fetchEvent(id)
+    editingDates.value = false
+    toast.success('Fecha y hora actualizadas')
+  }
+  catch {
+    toast.error(error.value ?? 'Error al actualizar fecha y hora')
+  }
+}
 
 useHead({ title: computed(() => event.value?.title ?? 'Evento') })
 
@@ -200,7 +244,7 @@ async function handleRemoveGuest(guestId: string) {
       <!-- Info -->
       <Card>
         <CardContent class="p-5 md:p-8">
-          <div class="grid gap-4 sm:grid-cols-2">
+          <div v-if="!editingDates" class="grid gap-4 sm:grid-cols-2">
             <div class="flex items-center gap-2 text-sm">
               <Calendar class="size-4 shrink-0 text-muted-foreground" />
               <span class="text-muted-foreground">Inicio:</span>
@@ -220,6 +264,33 @@ async function handleRemoveGuest(guestId: string) {
               <FileText class="mt-0.5 size-4 shrink-0 text-muted-foreground" />
               <span class="text-muted-foreground">Notas:</span>
               <span class="font-medium">{{ event.notes }}</span>
+            </div>
+            <div v-if="['pendiente', 'activo'].includes(event.status)" class="sm:col-span-2">
+              <Button variant="outline" size="sm" @click="startEditDates">
+                <Pencil class="mr-1.5 size-3.5" />
+                Modificar fecha y hora
+              </Button>
+            </div>
+          </div>
+          <div v-else class="space-y-4">
+            <div class="grid gap-4 sm:grid-cols-2">
+              <div class="space-y-1.5">
+                <Label for="edit-starts-at">Inicio</Label>
+                <Input id="edit-starts-at" v-model="editStartsAt" type="datetime-local" class="h-10 text-base" />
+              </div>
+              <div class="space-y-1.5">
+                <Label for="edit-ends-at">Fin</Label>
+                <Input id="edit-ends-at" v-model="editEndsAt" type="datetime-local" class="h-10 text-base" />
+              </div>
+            </div>
+            <div class="flex justify-end gap-2">
+              <Button variant="ghost" size="sm" @click="editingDates = false">
+                Cancelar
+              </Button>
+              <Button size="sm" :disabled="!canSaveDates" @click="handleUpdateDates">
+                <Loader2 v-if="isSubmitting" class="mr-1.5 size-3.5 animate-spin" />
+                Guardar
+              </Button>
             </div>
           </div>
         </CardContent>
@@ -417,7 +488,7 @@ async function handleRemoveGuest(guestId: string) {
       </Card>
 
       <!-- Delete event -->
-      <div v-if="event.status === 'pendiente'" class="flex justify-end">
+      <div v-if="event.status !== 'completado'" class="flex justify-end">
         <Button
           variant="outline"
           class="text-destructive hover:text-destructive"
