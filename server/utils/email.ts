@@ -55,7 +55,7 @@ export async function sendSupportTicketEmail(ticket: {
 
   await resend.emails.send({
     from: 'ChanaDomus Soporte <soporte@zunamicorp.com>',
-    to: 'isenior@zunamicorp.com',
+    to: 'soporte@zunamicorp.com',
     subject: `${typeIcon} ${typeLabel}: ${ticket.title}`,
     html: `
 <!DOCTYPE html>
