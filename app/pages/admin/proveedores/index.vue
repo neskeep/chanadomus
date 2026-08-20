@@ -8,6 +8,7 @@ import {
   CheckCircle2,
 } from 'lucide-vue-next'
 import { toast } from 'vue-sonner'
+import { watchDebounced } from '@vueuse/core'
 import type {
   Provider,
   ProviderCategory,
@@ -75,34 +76,34 @@ const STATUS_CONFIG: Record<ProviderStatus, { label: string; class: string }> = 
 const totalActive = computed(() => counts.value.active)
 const totalPending = computed(() => counts.value.pending)
 
-// Client-side search filter
-const filteredProviders = computed(() => {
-  if (!searchQuery.value.trim()) return providers.value
-  const q = searchQuery.value.trim().toLowerCase()
-  return providers.value.filter(p =>
-    p.name.toLowerCase().includes(q)
-    || p.phone?.toLowerCase().includes(q)
-    || p.category.toLowerCase().includes(q),
-  )
-})
-
 // Pending suggestions
 const pendingSuggestions = computed(() =>
   providers.value.filter(p => p.status === 'pending'),
 )
 
 async function loadProviders() {
-  const params: { page?: number; serviceRoleId?: string; status?: ProviderStatus } = {
+  const params: { page?: number; serviceRoleId?: string; status?: ProviderStatus; search?: string } = {
     page: currentPage.value,
   }
   if (filterCategory.value) params.serviceRoleId = filterCategory.value
   if (filterStatus.value) params.status = filterStatus.value
+  if (searchQuery.value.trim()) params.search = searchQuery.value.trim()
   await fetchProviders(params)
 }
 
-watch([currentPage, filterCategory, filterStatus], () => {
+watch([filterCategory, filterStatus], () => {
+  currentPage.value = 1
   loadProviders()
 })
+
+watch(currentPage, () => {
+  loadProviders()
+})
+
+watchDebounced(searchQuery, () => {
+  currentPage.value = 1
+  loadProviders()
+}, { debounce: 300 })
 
 onMounted(() => {
   loadProviders()
@@ -269,7 +270,7 @@ function renderStars(rating: number | undefined): number[] {
 
     <!-- Empty state -->
     <EmptyState
-      v-else-if="filteredProviders.length === 0"
+      v-else-if="providers.length === 0"
       :icon="Wrench"
       title="No hay proveedores"
       :description="filterCategory || filterStatus ? 'Prueba cambiando los filtros' : 'Crea el primer proveedor del directorio'"
@@ -300,7 +301,7 @@ function renderStars(rating: number | undefined): number[] {
             </TableRow>
           </TableHeader>
           <TableBody>
-            <TableRow v-for="item in filteredProviders" :key="item.id">
+            <TableRow v-for="item in providers" :key="item.id">
               <TableCell>
                 <NuxtLink
                   :to="`/mi-chana/proveedores/${item.id}`"
@@ -379,7 +380,7 @@ function renderStars(rating: number | undefined): number[] {
 
       <!-- Mobile cards -->
       <div class="space-y-2 md:hidden">
-        <Card v-for="item in filteredProviders" :key="item.id">
+        <Card v-for="item in providers" :key="item.id">
           <CardContent class="px-3 py-2.5">
             <!-- Row 1: Name + stars + category badge -->
             <div class="flex items-center gap-2">

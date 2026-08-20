@@ -7,7 +7,7 @@ import { providers } from '~~/server/db/schema/provider'
 import { units } from '~~/server/db/schema/unit'
 import { accessLogs, qrCodes } from '~~/server/db/schema/access'
 import { panicEvents } from '~~/server/db/schema/panic'
-import { eq, and, count, gte, asc, inArray, isNull, gt, sql as dsql } from 'drizzle-orm'
+import { eq, and, count, gte, asc, inArray, isNull, gt, or, sql as dsql } from 'drizzle-orm'
 
 interface DashboardStats {
   openIncidents: number
@@ -43,7 +43,11 @@ export default defineEventHandler(async (event) => {
   const { tenantId } = session
   const userId = session.user.id
   const now = new Date()
-  const todayMidnight = new Date(now.getFullYear(), now.getMonth(), now.getDate())
+  // Calculate midnight in Venezuela time (UTC-4)
+  const veNow = new Date(now.toLocaleString('en-US', { timeZone: 'America/Caracas' }))
+  veNow.setHours(0, 0, 0, 0)
+  // Convert back to UTC: Venezuela is UTC-4, so add 4 hours
+  const todayMidnight = new Date(veNow.getTime() + 4 * 60 * 60 * 1000)
 
   const unitId = (session.user as Record<string, unknown>).unitId as string | undefined
 
@@ -202,7 +206,7 @@ export default defineEventHandler(async (event) => {
       return Number(rows[0]?.total ?? 0)
     }),
 
-    // todayEntryCount — access logs created today (entries)
+    // todayEntryCount — actual entries today (exclude exit-only orphan rows)
     safeCount(async () => {
       const [row] = await db
         .select({ total: count() })
@@ -210,6 +214,10 @@ export default defineEventHandler(async (event) => {
         .where(and(
           eq(accessLogs.tenantId, tenantId),
           gte(accessLogs.createdAt, todayMidnight),
+          or(
+            isNull(accessLogs.exitAt),
+            dsql`${accessLogs.exitAt} > ${accessLogs.createdAt} + interval '1 minute'`,
+          ),
         ))
       return row?.total ?? 0
     }),

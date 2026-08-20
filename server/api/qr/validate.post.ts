@@ -11,7 +11,7 @@ import { serviceStaffRoles } from '~~/server/db/schema/service-staff-role'
 import { staff } from '~~/server/db/schema/staff'
 import { householdMemberPasses } from '~~/server/db/schema/household-member-pass'
 import { householdMembers } from '~~/server/db/schema/household'
-import { eq, and } from 'drizzle-orm'
+import { eq, and, gte } from 'drizzle-orm'
 import type { ValidationResult } from '~~/shared/types/qr'
 import type { AccessEvent, AccessResult } from '~~/shared/types/access'
 import { broadcastAccessEvent } from '~~/server/utils/ws-access'
@@ -261,6 +261,25 @@ async function logAccess(params: {
 }) {
   const logDirection = params.direction ?? 'entry'
   const exitAt = logDirection === 'exit' ? new Date() : null
+
+  // Prevent duplicate exit-only rows: if this is an exit and a recent exit already exists for this token, skip insert
+  if (logDirection === 'exit' && params.passToken) {
+    const fiveMinAgo = new Date(Date.now() - 5 * 60 * 1000)
+    const [recentExit] = await db
+      .select({ id: accessLogs.id })
+      .from(accessLogs)
+      .where(
+        and(
+          eq(accessLogs.passToken, params.passToken),
+          eq(accessLogs.tenantId, params.tenantId),
+          gte(accessLogs.exitAt, fiveMinAgo),
+        ),
+      )
+      .limit(1)
+    if (recentExit) {
+      return { id: recentExit.id, createdAt: new Date() }
+    }
+  }
 
   const rows = await db
     .insert(accessLogs)

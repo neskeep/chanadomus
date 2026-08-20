@@ -18,7 +18,7 @@ interface ProvidersCounts {
   pending: number
 }
 
-interface FetchProvidersParams {
+export interface FetchProvidersParams {
   page?: number
   limit?: number
   category?: ProviderCategory

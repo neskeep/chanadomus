@@ -5,7 +5,9 @@ import {
   Wrench,
   Plus,
 } from 'lucide-vue-next'
+import { watchDebounced } from '@vueuse/core'
 import type { ProviderCategory } from '~~/shared/types/provider'
+import type { FetchProvidersParams } from '~/composables/useProviders'
 import { PROVIDER_CATEGORIES } from '~~/shared/types/provider'
 import { PROVIDER_CATEGORY_COLORS as CATEGORY_COLORS } from '~/composables/useColorMap'
 
@@ -45,29 +47,29 @@ const CATEGORY_LABELS: Record<ProviderCategory, string> = {
   otro: 'Otro',
 }
 
-// Client-side search filter
-const filteredProviders = computed(() => {
-  if (!searchQuery.value.trim()) return providers.value
-  const q = searchQuery.value.trim().toLowerCase()
-  return providers.value.filter(p =>
-    p.name.toLowerCase().includes(q)
-    || p.category.toLowerCase().includes(q)
-    || p.services?.some(s => s.toLowerCase().includes(q)),
-  )
-})
-
 async function loadProviders() {
-  const params: { page?: number; category?: ProviderCategory; status?: 'active' } = {
+  const params: FetchProvidersParams = {
     page: currentPage.value,
     status: 'active',
   }
   if (filterCategory.value) params.category = filterCategory.value
+  if (searchQuery.value.trim()) params.search = searchQuery.value.trim()
   await fetchProviders(params)
 }
 
-watch([currentPage, filterCategory], () => {
+watch(filterCategory, () => {
+  currentPage.value = 1
   loadProviders()
 })
+
+watch(currentPage, () => {
+  loadProviders()
+})
+
+watchDebounced(searchQuery, () => {
+  currentPage.value = 1
+  loadProviders()
+}, { debounce: 300 })
 
 onMounted(() => {
   loadProviders()
@@ -124,7 +126,7 @@ function renderStars(rating: number | undefined): number[] {
 
     <!-- Empty state -->
     <EmptyState
-      v-else-if="filteredProviders.length === 0"
+      v-else-if="providers.length === 0"
       :icon="Wrench"
       title="No hay proveedores"
       :description="filterCategory ? 'Prueba cambiando los filtros' : 'Los proveedores aparecerán aquí'"
@@ -151,7 +153,7 @@ function renderStars(rating: number | undefined): number[] {
           </TableHeader>
           <TableBody>
             <TableRow
-              v-for="provider in filteredProviders"
+              v-for="provider in providers"
               :key="provider.id"
               class="cursor-pointer"
               @click="navigateTo(`/mi-chana/proveedores/${provider.id}`)"
@@ -193,7 +195,7 @@ function renderStars(rating: number | undefined): number[] {
       <!-- Mobile cards -->
       <div class="space-y-2 md:hidden">
         <NuxtLink
-          v-for="provider in filteredProviders"
+          v-for="provider in providers"
           :key="provider.id"
           :to="`/mi-chana/proveedores/${provider.id}`"
           class="block"

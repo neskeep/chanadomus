@@ -1,4 +1,4 @@
-import { eq, and, gte, desc, sql, or } from 'drizzle-orm'
+import { eq, and, gte, desc, sql, or, isNotNull } from 'drizzle-orm'
 import { db } from '~~/server/db'
 import { accessLogs, qrCodes } from '~~/server/db/schema/access'
 import { units } from '~~/server/db/schema/unit'
@@ -16,6 +16,10 @@ export default defineEventHandler(async (event) => {
   // Last 30 days
   const since = new Date()
   since.setDate(since.getDate() - 30)
+
+  // Entries without exitAt older than 24h are considered abandoned
+  const last24h = new Date()
+  last24h.setHours(last24h.getHours() - 24)
 
   const rows = await db
     .select({
@@ -42,6 +46,11 @@ export default defineEventHandler(async (event) => {
         or(
           eq(accessLogs.unitId, unitId),
           eq(qrCodes.unitId, unitId),
+        ),
+        // Exclude abandoned entries (no exit, older than 24h)
+        or(
+          isNotNull(accessLogs.exitAt),
+          gte(accessLogs.createdAt, last24h),
         ),
       ),
     )
