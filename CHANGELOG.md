@@ -7,6 +7,16 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [1.6.1] - 2026-08-20
+
+### Fixed
+- Búsqueda de proveedores ahora funciona correctamente desde el servidor en todos los roles, incluyendo paginación
+- Los filtros de categoría y estado en proveedores ahora resetean la página al cambiar, evitando resultados vacíos
+- Los registros de acceso antiguos sin salida (más de 24h) ya no aparecen como "En sitio" en la vista del propietario
+- Se eliminaron registros de acceso duplicados generados al escanear salida múltiples veces
+- El conteo de entradas en el dashboard ahora excluye registros huérfanos de solo-salida
+- El cálculo de "hoy" en estadísticas del dashboard ahora usa zona horaria de Venezuela (UTC-4)
+
 ## [1.6.0] - 2026-08-06
 
 ### Added
