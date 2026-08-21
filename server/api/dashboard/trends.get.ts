@@ -32,11 +32,6 @@ export default defineEventHandler(async (event) => {
 
   const now = new Date()
   const sixMonthsAgo = new Date(now.getFullYear(), now.getMonth() - 5, 1)
-  // Calculate 7 days ago in Caracas timezone to align with GROUP BY
-  const caracasOffset = -4 * 60 * 60 * 1000 // UTC-4
-  const nowInCaracas = new Date(now.getTime() + caracasOffset)
-  const startOfTodayCaracas = new Date(Date.UTC(nowInCaracas.getUTCFullYear(), nowInCaracas.getUTCMonth(), nowInCaracas.getUTCDate()))
-  const sevenDaysAgo = new Date(startOfTodayCaracas.getTime() - 6 * 24 * 60 * 60 * 1000 - caracasOffset)
   // Use SQL string to avoid JS Date timezone offset with timestamp columns
   const currentMonthISO = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-01`
 
@@ -73,7 +68,8 @@ export default defineEventHandler(async (event) => {
           .from(accessLogs)
           .where(and(
             eq(accessLogs.tenantId, tenantId),
-            gte(accessLogs.createdAt, sevenDaysAgo),
+            dsql`(${accessLogs.createdAt} AT TIME ZONE 'America/Caracas')::date >= (CURRENT_DATE AT TIME ZONE 'America/Caracas' - INTERVAL '6 days')::date`,
+            dsql`(${accessLogs.createdAt} AT TIME ZONE 'America/Caracas')::date <= CURRENT_DATE AT TIME ZONE 'America/Caracas'`,
           ))
           .groupBy(dsql`to_char(${accessLogs.createdAt} AT TIME ZONE 'America/Caracas', 'YYYY-MM-DD')`)
           .orderBy(dsql`to_char(${accessLogs.createdAt} AT TIME ZONE 'America/Caracas', 'YYYY-MM-DD')`)
