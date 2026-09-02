@@ -64,7 +64,7 @@ const isLoadingMore = ref(false)
 const pendingImages = ref<File[]>([])
 const pendingPreviews = ref<string[]>([])
 
-// Group consecutive messages from the same sender
+// Group consecutive messages from the same sender, dentro de secciones por fecha
 interface MessageGroup {
   userId: string
   userName: string
@@ -73,15 +73,43 @@ interface MessageGroup {
   messages: ChatMessage[]
 }
 
-const messageGroups = computed((): MessageGroup[] => {
-  const groups: MessageGroup[] = []
+interface DaySection {
+  dateKey: string
+  dateLabel: string
+  groups: MessageGroup[]
+}
+
+function dayKey(d: Date): string {
+  return `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`
+}
+
+function formatDateLabel(dateStr: string): string {
+  const d = new Date(dateStr)
+  const now = new Date()
+  const yesterday = new Date(now)
+  yesterday.setDate(now.getDate() - 1)
+  const key = dayKey(d)
+  if (key === dayKey(now)) return 'Hoy'
+  if (key === dayKey(yesterday)) return 'Ayer'
+  const label = d.toLocaleDateString('es-VE', { weekday: 'long', day: 'numeric', month: 'long' })
+  return label.charAt(0).toUpperCase() + label.slice(1)
+}
+
+const daySections = computed((): DaySection[] => {
+  const sections: DaySection[] = []
   for (const msg of messages.value) {
+    const key = dayKey(new Date(msg.createdAt))
+    let section = sections[sections.length - 1]
+    if (!section || section.dateKey !== key) {
+      section = { dateKey: key, dateLabel: formatDateLabel(msg.createdAt), groups: [] }
+      sections.push(section)
+    }
     const isOwn = msg.userId === user.value?.id
-    const last = groups[groups.length - 1]
+    const last = section.groups[section.groups.length - 1]
     if (last && last.userId === msg.userId) {
       last.messages.push(msg)
     } else {
-      groups.push({
+      section.groups.push({
         userId: msg.userId,
         userName: msg.user?.name ?? 'Usuario',
         userImage: msg.user?.image ?? null,
@@ -90,7 +118,7 @@ const messageGroups = computed((): MessageGroup[] => {
       })
     }
   }
-  return groups
+  return sections
 })
 
 function getInitials(name: string): string {
@@ -300,9 +328,14 @@ defineExpose({ connected })
         <p class="text-xs text-muted-foreground">Se el primero en escribir</p>
       </div>
 
-      <!-- Message groups -->
+      <!-- Message groups por fecha -->
       <div v-else class="space-y-3">
-        <div v-for="(group, gi) in messageGroups" :key="gi">
+        <template v-for="section in daySections" :key="section.dateKey">
+          <!-- Separador de fecha (badge flotante estilo WhatsApp) -->
+          <div class="sticky top-0 z-10 flex justify-center py-1">
+            <span class="rounded-full bg-muted px-3 py-1 text-xs font-medium text-muted-foreground shadow-sm">{{ section.dateLabel }}</span>
+          </div>
+          <div v-for="(group, gi) in section.groups" :key="`${section.dateKey}-${gi}`">
           <!-- Own messages (right-aligned) -->
           <div v-if="group.isOwn" class="flex flex-col items-end gap-0.5">
             <div
@@ -404,6 +437,7 @@ defineExpose({ connected })
             </div>
           </div>
         </div>
+        </template>
       </div>
     </div>
 
