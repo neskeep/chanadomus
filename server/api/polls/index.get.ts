@@ -10,6 +10,9 @@ const VALID_STATUSES: PollStatus[] = ['draft', 'active', 'closed']
 export default defineEventHandler(async (event) => {
   const session = await requireTenant(event)
 
+  // Lazy expiration: cerrar polls vencidos antes de leer para consistencia
+  await expirePolls(session.tenantId)
+
   const query = getQuery(event)
   const status = query.status as string | undefined
   const page = Math.max(1, parseInt(query.page as string, 10) || 1)

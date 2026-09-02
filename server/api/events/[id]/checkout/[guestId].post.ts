@@ -30,8 +30,12 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 404, message: 'Evento no encontrado' })
   }
 
-  if (ev.status !== 'activo') {
-    throw createError({ statusCode: 400, message: 'El evento debe estar activo para check-out' })
+  // Se permite check-out en eventos 'activo' o 'completado' para registrar
+  // salidas tardias de invitados que quedaron 'dentro' cuando el evento vencio
+  // (lazy expiration lo transiciona a 'completado' al pasar endsAt). Solo se
+  // bloquea en 'cancelado' o 'pendiente'.
+  if (ev.status !== 'activo' && ev.status !== 'completado') {
+    throw createError({ statusCode: 400, message: 'El evento no admite check-out en su estado actual' })
   }
 
   // Verify guest

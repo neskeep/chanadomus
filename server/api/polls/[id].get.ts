@@ -8,6 +8,9 @@ import type { Poll, PollOption, PollVote } from '~~/shared/types/poll'
 export default defineEventHandler(async (event) => {
   const session = await requireTenant(event)
 
+  // Lazy expiration: cerrar polls vencidos antes de leer para consistencia
+  await expirePolls(session.tenantId)
+
   const id = getRouterParam(event, 'id')
   if (!id) {
     throw createError({ statusCode: 400, message: 'ID de votacion requerido' })

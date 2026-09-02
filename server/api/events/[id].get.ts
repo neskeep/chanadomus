@@ -10,6 +10,10 @@ const paramsSchema = z.object({ id: z.string().uuid() })
 
 export default defineEventHandler(async (event) => {
   const session = await requireTenant(event)
+
+  // Lazy expiration: completar eventos vencidos antes de leer para consistencia
+  await expireEvents(session.tenantId)
+
   const { id } = validateParams(event, paramsSchema)
   const role = session.user.role as string
 
