@@ -7,6 +7,14 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [1.7.0] - 2026-09-02
+
+### Added
+- Cancelación de pases de visita: propietarios y conserjes pueden anular un pase activo desde Mis Visitas; el pase cancelado deja de ser válido y es rechazado al escanearlo en la alcabala
+
+### Changed
+- Mis Visitas ahora muestra primero solo los pases activos; usados, expirados y cancelados quedan disponibles tras el filtro de estado (elimina el scroll infinito)
+
 ## [1.6.2] - 2026-09-02
 
 ### Fixed
