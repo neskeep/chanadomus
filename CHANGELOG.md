@@ -7,6 +7,13 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [1.6.2] - 2026-09-02
+
+### Fixed
+- Los eventos ahora pasan automáticamente a "Completado" al superar su fecha/hora de finalización, en administración y en el perfil de propietario
+- Las votaciones ahora se cierran automáticamente al pasar su fecha límite y dejan de mostrarse como activas
+- Las salidas tardías de invitados (después de finalizar el evento) ahora se registran correctamente en lugar de bloquearse
+
 ## [1.6.1] - 2026-08-20
 
 ### Fixed
