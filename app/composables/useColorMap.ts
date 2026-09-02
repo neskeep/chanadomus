@@ -128,6 +128,7 @@ export const VALIDATION_STATUS_COLORS: Record<ValidationStatus, { bg: string; ic
   already_used: { bg: 'bg-amber-500', icon: 'text-amber-500', accent: 'ring-amber-500/30' },
   already_inside: { bg: 'bg-amber-500', icon: 'text-amber-500', accent: 'ring-amber-500/30' },
   invalid: { bg: 'bg-red-500', icon: 'text-red-500', accent: 'ring-red-500/30' },
+  canceled: { bg: 'bg-red-500', icon: 'text-red-500', accent: 'ring-red-500/30' },
 }
 
 export const VALIDATION_STATUS_LABELS: Record<ValidationStatus, string> = {
@@ -136,6 +137,7 @@ export const VALIDATION_STATUS_LABELS: Record<ValidationStatus, string> = {
   already_used: 'Código ya utilizado',
   already_inside: 'Ya tiene entrada activa',
   invalid: 'Código inválido',
+  canceled: 'Pase cancelado',
 }
 
 // ─── Access Direction ───────────────────────────────────

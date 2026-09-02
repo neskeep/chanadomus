@@ -67,6 +67,7 @@ const statusConfig: Record<ValidationStatus, { label: string; bg: string; icon: 
   already_used: { label: VALIDATION_STATUS_LABELS.already_used, ...VALIDATION_STATUS_COLORS.already_used },
   already_inside: { label: VALIDATION_STATUS_LABELS.already_inside, ...VALIDATION_STATUS_COLORS.already_inside },
   invalid: { label: VALIDATION_STATUS_LABELS.invalid, ...VALIDATION_STATUS_COLORS.invalid },
+  canceled: { label: VALIDATION_STATUS_LABELS.canceled, ...VALIDATION_STATUS_COLORS.canceled },
 }
 
 /** Resolved config: uses direction-specific colors for valid scans with direction */

@@ -24,6 +24,8 @@ export const qrCodes = pgTable('qr_codes', {
   expiresAt: timestamp('expires_at').notNull(),
   usedAt: timestamp('used_at'), // null = no usado
   multiUse: boolean('multi_use').notNull().default(false), // true = permite múltiples entradas hasta expiresAt
+  canceledAt: timestamp('canceled_at'), // null = no cancelado; timestamp = anulado por el propietario/conserje/admin
+  canceledBy: text('canceled_by').references(() => user.id), // usuario que canceló el pase, nullable
   createdAt: timestamp('created_at').notNull().defaultNow(),
 }, (table) => [
   index('qr_token_idx').on(table.token),

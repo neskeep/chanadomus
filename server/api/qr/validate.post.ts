@@ -56,6 +56,7 @@ export default defineEventHandler(async (event) => {
       unitId: qrCodes.unitId,
       expiresAt: qrCodes.expiresAt,
       usedAt: qrCodes.usedAt,
+      canceledAt: qrCodes.canceledAt,
       multiUse: qrCodes.multiUse,
       unitNumber: units.number,
       unitLabel: units.label,
@@ -98,6 +99,26 @@ export default defineEventHandler(async (event) => {
   }
 
   const now = new Date()
+
+  // Pase cancelado — rechazo con precedencia sobre usado/expirado.
+  // El motivo "canceled" va en la respuesta y en notes; el enum result de la DB
+  // permanece intacto usando 'denied'.
+  if (record.canceledAt) {
+    await logAccess({
+      tenantId, entryType: 'qr', result: 'denied', qrCodeId: record.id,
+      authorizedBy: session.user.id, visitorName: record.visitorName,
+      visitorDocument: record.visitorDocument, unitId: record.unitId,
+      unitNumber: record.unitNumber, unitLabel: record.unitLabel,
+      passToken: token, notes: 'Pase cancelado',
+    })
+    const result: ValidationResult = {
+      status: 'canceled',
+      visitorName: record.visitorName,
+      unitNumber: record.unitNumber,
+      unitLabel: record.unitLabel,
+    }
+    return { data: result }
+  }
 
   // QR single-use: check if already used — but now allow exit scan
   if (record.usedAt) {
@@ -258,6 +279,7 @@ async function logAccess(params: {
   vehiclePlate?: string | null
   passToken?: string
   direction?: 'entry' | 'exit'
+  notes?: string | null
 }) {
   const logDirection = params.direction ?? 'entry'
   const exitAt = logDirection === 'exit' ? new Date() : null
@@ -296,6 +318,7 @@ async function logAccess(params: {
       staffPassId: params.staffPassId ?? null,
       occupantCount: params.occupantCount ?? null,
       passToken: params.passToken ?? null,
+      notes: params.notes ?? null,
       exitAt,
     })
     .returning({ id: accessLogs.id, createdAt: accessLogs.createdAt })
@@ -311,7 +334,7 @@ async function logAccess(params: {
     visitorDocument: params.visitorDocument ?? null,
     unitNumber: params.unitNumber ?? null,
     unitLabel: params.unitLabel ?? null,
-    notes: null,
+    notes: params.notes ?? null,
     exitAt: exitAt?.toISOString() ?? null,
     createdAt: log.createdAt.toISOString(),
     vehiclePassId: params.vehiclePassId ?? null,

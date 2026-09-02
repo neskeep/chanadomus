@@ -18,7 +18,7 @@ Actualizar este archivo cada vez que se ejecute `shadcn add`.
 | Sonner | 2026-04-19 | Toast notifications |
 | Dialog | 2026-04-19 | Modals, admin incidencias detalle |
 | Textarea | 2026-04-19 | Nueva incidencia form, admin status note |
-| AlertDialog | 2026-04-19 | Delete confirmations en unidades, personal |
+| AlertDialog | 2026-04-19 | Delete confirmations en unidades, personal; cancelar pase en VisitPassCard.vue |
 | RadioGroup | 2026-04-19 | Votaciones propietario (seleccionar opción) |
 | Progress | 2026-04-19 | Votaciones resultados (barras de progreso) |
 | Switch | 2026-04-19 | Preferencias de notificaciones push |

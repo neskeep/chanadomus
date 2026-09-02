@@ -11,7 +11,9 @@ export function useQr() {
   const units = ref<Unit[]>([])
   const isGenerating = ref(false)
   const isLoading = ref(false)
+  const isCanceling = ref(false)
   const error = ref<string | null>(null)
+  const currentFilter = ref<QrStatus | 'all'>('all')
 
   async function generateQr(input: GenerateQrInput) {
     isGenerating.value = true
@@ -37,6 +39,7 @@ export function useQr() {
   async function fetchMyCodes(status: QrStatus | 'all' = 'all') {
     isLoading.value = true
     error.value = null
+    currentFilter.value = status
 
     try {
       const result = await $fetch('/api/qr/my-codes', {
@@ -50,6 +53,28 @@ export function useQr() {
     }
     finally {
       isLoading.value = false
+    }
+  }
+
+  async function cancelQr(id: string) {
+    isCanceling.value = true
+    error.value = null
+
+    try {
+      const result = await $fetch(`/api/qr/${id}/cancel`, {
+        method: 'POST',
+      })
+      // Refresca la lista preservando el filtro activo del usuario
+      await fetchMyCodes(currentFilter.value)
+      return result.data
+    }
+    catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Error al cancelar el pase'
+      error.value = message
+      throw err
+    }
+    finally {
+      isCanceling.value = false
     }
   }
 
@@ -69,9 +94,12 @@ export function useQr() {
     units,
     isGenerating,
     isLoading,
+    isCanceling,
     error,
+    currentFilter,
     generateQr,
     fetchMyCodes,
+    cancelQr,
     fetchUnits,
   }
 }

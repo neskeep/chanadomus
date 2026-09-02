@@ -1,6 +1,6 @@
 export type VisitorType = 'invitado' | 'proveedor'
-export type QrStatus = 'active' | 'used' | 'expired'
-export type ValidationStatus = 'valid' | 'expired' | 'already_used' | 'already_inside' | 'invalid'
+export type QrStatus = 'active' | 'used' | 'expired' | 'canceled'
+export type ValidationStatus = 'valid' | 'expired' | 'already_used' | 'already_inside' | 'invalid' | 'canceled'
 export type AccessDirection = 'entry' | 'exit'
 
 export interface QrCodeRecord {
@@ -14,6 +14,7 @@ export interface QrCodeRecord {
   unitLabel: string | null
   expiresAt: string
   usedAt: string | null
+  canceledAt: string | null
   createdAt: string
   status: QrStatus
 }
