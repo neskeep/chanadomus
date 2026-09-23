@@ -7,6 +7,18 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [1.7.3] - 2026-09-23
+
+### Changed
+- Chat: se ocultan los canales General e Incidencias para todos los perfiles (los mensajes se conservan). La comunicación se concentra en Vigilancia
+- Cada mensaje de un canal de grupo notifica a todos los que tienen acceso a ese canal, salvo al autor y a quien lo está viendo en ese momento. Antes, con la app en segundo plano o la pantalla bloqueada, el aviso no llegaba
+- Cada chat tiene su propia notificación; un aviso nuevo ya no reemplaza al de otro chat
+
+### Fixed
+- Los avisos de chat solo llegan a quien tiene acceso al canal. Antes un mensaje de Administración o Propietarios se notificaba a vigilancia y conserjes
+- Las fotos enviadas por chat ahora también generan aviso
+- Marcar como leído valida el acceso a la sala
+
 ## [1.7.2] - 2026-09-23
 
 ### Fixed

@@ -8,6 +8,8 @@ import {
   getChatPeerInfo,
   insertAndBroadcastMessage,
   userCanAccessRoom,
+  touchChatPeer,
+  setChatPeerVisibility,
 } from '~~/server/utils/ws-chat'
 
 interface IncomingMessage {
@@ -15,10 +17,21 @@ interface IncomingMessage {
   content: string
 }
 
+interface IncomingPresence {
+  type: 'presence'
+  visible: boolean
+}
+
 function isValidIncomingMessage(data: unknown): data is IncomingMessage {
   if (typeof data !== 'object' || data === null) return false
   const obj = data as Record<string, unknown>
   return obj.type === 'message' && typeof obj.content === 'string'
+}
+
+function isValidIncomingPresence(data: unknown): data is IncomingPresence {
+  if (typeof data !== 'object' || data === null) return false
+  const obj = data as Record<string, unknown>
+  return obj.type === 'presence' && typeof obj.visible === 'boolean'
 }
 
 export default defineWebSocketHandler({
@@ -104,8 +117,9 @@ export default defineWebSocketHandler({
   async message(peer, message) {
     const text = message.text()
 
-    // Keepalive
+    // Keepalive (tambien sirve de latido de presencia)
     if (text === 'ping') {
+      touchChatPeer(peer)
       peer.send('pong')
       return
     }
@@ -118,6 +132,11 @@ export default defineWebSocketHandler({
 
     try {
       const parsed: unknown = JSON.parse(text)
+
+      if (isValidIncomingPresence(parsed)) {
+        setChatPeerVisibility(peer, parsed.visible)
+        return
+      }
 
       if (!isValidIncomingMessage(parsed)) {
         peer.send(JSON.stringify({ type: 'error', message: 'Invalid message format' }))
@@ -136,6 +155,7 @@ export default defineWebSocketHandler({
         return
       }
 
+      touchChatPeer(peer)
       await insertAndBroadcastMessage(info.roomId, info.userId, content)
     }
     catch {

@@ -5,7 +5,7 @@ import { db } from '~~/server/db'
 import { messages, chatAttachments } from '~~/server/db/schema/chat'
 import { user } from '~~/server/db/schema/auth'
 import { eq } from 'drizzle-orm'
-import { userCanAccessRoom, broadcastToRoom } from '~~/server/utils/ws-chat'
+import { userCanAccessRoom, broadcastToRoom, notifyChatMessage } from '~~/server/utils/ws-chat'
 import { processImageToWebP } from '~~/server/utils/image-processing'
 import type { ChatMessage, ChatAttachment } from '~~/shared/types/chat'
 
@@ -147,6 +147,11 @@ export default defineEventHandler(async (event) => {
 
   // Broadcast to all WS peers in the room
   broadcastToRoom(roomId, JSON.stringify({ type: 'message', data: chatMessage }))
+
+  // Push a quien tiene acceso y no esta viendo la sala (fire-and-forget)
+  notifyChatMessage(roomId, userData.id, userData.name, messageContent, attachmentData.length).catch((err: unknown) => {
+    console.error('[chat/upload] push error:', err)
+  })
 
   return { data: chatMessage }
 })

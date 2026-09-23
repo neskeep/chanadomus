@@ -1,4 +1,5 @@
 import type { Ref } from 'vue'
+import { toast } from 'vue-sonner'
 import type { ChatMessage } from '~~/shared/types/chat'
 
 interface WebSocketMessage {
@@ -13,6 +14,9 @@ const ACCEPTED_IMAGE_TYPES = [
 ]
 const MAX_IMAGE_SIZE = 10 * 1024 * 1024 // 10MB
 const MAX_IMAGES = 5
+/** Codigos de cierre del WS de chat que indican sesion invalida o sala sin acceso: no reintentar. */
+const NO_RETRY_CLOSE_CODES = [4001, 4003]
+const CHAT_LIST_PATH = '/mi-chana/chat'
 
 export function useChatRoom(roomId: Ref<string> | string) {
   const { updateRoomLastMessage, clearUnreadCount } = useChatRooms()
@@ -22,6 +26,7 @@ export function useChatRoom(roomId: Ref<string> | string) {
   const connected = ref(false)
   const error = ref<string | null>(null)
   const hasMore = ref(true)
+  const accessDenied = ref(false)
 
   let ws: WebSocket | null = null
   let reconnectTimeout: ReturnType<typeof setTimeout> | null = null
@@ -60,6 +65,11 @@ export function useChatRoom(roomId: Ref<string> | string) {
       return fetched.length
     }
     catch (err: unknown) {
+      const statusCode = (err as { statusCode?: number }).statusCode
+      if (statusCode === 403 || statusCode === 404) {
+        handleAccessDenied()
+        return 0
+      }
       const message = err instanceof Error ? err.message : 'Error al cargar mensajes'
       error.value = message
       return 0
@@ -96,6 +106,7 @@ export function useChatRoom(roomId: Ref<string> | string) {
     ws.onopen = () => {
       connected.value = true
       error.value = null
+      sendPresence()
     }
 
     ws.onmessage = (event: MessageEvent) => {
@@ -125,8 +136,9 @@ export function useChatRoom(roomId: Ref<string> | string) {
       }
     }
 
-    ws.onclose = () => {
+    ws.onclose = (event: CloseEvent) => {
       connected.value = false
+      if (NO_RETRY_CLOSE_CODES.includes(event.code)) return
       scheduleReconnect()
     }
 
@@ -220,6 +232,38 @@ export function useChatRoom(roomId: Ref<string> | string) {
     }
   }
 
+  // --- Presencia ---
+  // El servidor solo omite el push a quien tiene esta sala visible. Si la pestana
+  // pasa a segundo plano (otra app, pantalla bloqueada) se avisa para que llegue el push.
+
+  function sendPresence() {
+    if (import.meta.server) return
+    if (!ws || ws.readyState !== WebSocket.OPEN) return
+    ws.send(JSON.stringify({ type: 'presence', visible: document.visibilityState === 'visible' }))
+  }
+
+  function startPresence() {
+    if (import.meta.server) return
+    document.addEventListener('visibilitychange', sendPresence)
+  }
+
+  function stopPresence() {
+    if (import.meta.server) return
+    document.removeEventListener('visibilitychange', sendPresence)
+  }
+
+  // --- Acceso denegado (sala oculta, ajena o inexistente) ---
+
+  function handleAccessDenied() {
+    if (accessDenied.value) return
+    accessDenied.value = true
+    disconnect()
+    stopPing()
+    stopPresence()
+    toast.info('Este canal ya no está disponible')
+    navigateTo(CHAT_LIST_PATH, { replace: true })
+  }
+
   // --- Keepalive ---
 
   function startPing() {
@@ -256,6 +300,7 @@ export function useChatRoom(roomId: Ref<string> | string) {
     messages.value = []
     hasMore.value = true
     error.value = null
+    accessDenied.value = false
     const rid = unref(roomId)
     if (rid) {
       clearUnreadCount(rid)
@@ -263,13 +308,15 @@ export function useChatRoom(roomId: Ref<string> | string) {
     fetchHistory()
     connect()
     startPing()
+    startPresence()
     markAsRead()
   }
 
   function closeRoom() {
-    markAsRead()
+    if (!accessDenied.value) markAsRead()
     disconnect()
     stopPing()
+    stopPresence()
     messages.value = []
     hasMore.value = true
   }
@@ -294,6 +341,7 @@ export function useChatRoom(roomId: Ref<string> | string) {
     connected,
     error,
     hasMore,
+    accessDenied,
     fetchHistory,
     loadOlderMessages,
     connect,

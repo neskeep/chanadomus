@@ -19,12 +19,11 @@ async function seedChat() {
     process.exit(1)
   }
 
-  // Create the 6 predefined group rooms
+  // Predefined group rooms. 'general' e 'incidencias' se retiraron (ticket e8415ba2,
+  // ver HIDDEN_CHAT_ROOM_TYPES): no se vuelven a crear; las existentes quedan ocultas.
   const groupRooms = [
-    { name: 'General', type: 'general' as const },
     { name: 'Vigilancia', type: 'vigilancia' as const },
     { name: 'Conserjería', type: 'conserjeria' as const },
-    { name: 'Incidencias', type: 'incidencias' as const },
     { name: 'Propietarios', type: 'propietarios' as const },
     { name: 'Administracion', type: 'admin' as const },
   ]

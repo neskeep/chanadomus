@@ -19,6 +19,8 @@ export interface PushPayload {
   badge?: string
   url?: string // ruta a abrir al tocar la notificacion
   category?: string
+  /** Agrupa notificaciones en el SO: una nueva con el mismo tag reemplaza a la anterior. Por defecto, category. */
+  tag?: string
 }
 
 /**

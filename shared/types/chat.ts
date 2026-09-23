@@ -1,5 +1,13 @@
 export type ChatRoomType = 'general' | 'unit' | 'vigilancia' | 'admin' | 'conserjeria' | 'incidencias' | 'propietarios' | 'direct'
 
+/**
+ * Salas de grupo retiradas de la app (ticket e8415ba2): no se listan, no se pueden
+ * abrir, no suman no leidos y no generan push para ningun rol. Las filas y los
+ * mensajes se conservan en la DB.
+ */
+export const HIDDEN_CHAT_ROOM_TYPES = ['general', 'incidencias'] as const satisfies readonly ChatRoomType[]
+export type HiddenChatRoomType = (typeof HIDDEN_CHAT_ROOM_TYPES)[number]
+
 export interface ChatRoomLastMessage {
   content: string
   createdAt: string

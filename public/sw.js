@@ -116,7 +116,7 @@ self.addEventListener('push', (event) => {
       category: payload.category || 'general',
     },
     vibrate: [200, 100, 200],
-    tag: payload.category || 'chanadomus',
+    tag: payload.tag || payload.category || 'chanadomus',
     renotify: true,
   }
 

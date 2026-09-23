@@ -1,9 +1,10 @@
 import { db } from '~~/server/db'
 import { chatRooms, chatReadStatus, messages, chatRoomMembers } from '~~/server/db/schema/chat'
 import { user } from '~~/server/db/schema/auth'
-import { eq, and, or, ne, inArray, desc, gt, count, isNull, sql } from 'drizzle-orm'
+import { eq, and, or, ne, inArray, desc, gt, count, isNull } from 'drizzle-orm'
 import { requireTenant } from '~~/server/utils/auth'
 import type { ChatRoomType, ChatRoom, ChatRoomLastMessage, ChatRoomOtherUser } from '~~/shared/types/chat'
+import { getVisibleGroupRoomTypes } from '~~/shared/lib/chat-access'
 
 async function attachLastMessages(rooms: { id: string; name: string; type: string; unitId: string | null; tenantId: string; createdAt: Date }[], authUserId: string): Promise<ChatRoom[]> {
   if (rooms.length === 0) return []
@@ -84,43 +85,21 @@ export default defineEventHandler(async (event) => {
   const { user: authUser, tenantId } = await requireTenant(event)
   const role = authUser.role ?? 'propietario'
 
-  // --- Group rooms (role-based, excludes 'unit' and 'direct') ---
-  let groupRooms: typeof chatRooms.$inferSelect[]
+  // --- Group rooms (matriz rol -> sala centralizada; excluye ocultas, 'unit' y 'direct') ---
+  const visibleTypes = getVisibleGroupRoomTypes(role)
 
-  if (role === 'admin') {
-    // Admin sees all group rooms
-    groupRooms = await db
-      .select()
-      .from(chatRooms)
-      .where(
-        and(
-          eq(chatRooms.tenantId, tenantId),
-          sql`${chatRooms.type} NOT IN ('unit', 'direct')`,
-        ),
-      )
-  }
-  else {
-    const accessibleTypes: ChatRoomType[] = ['general', 'incidencias']
-
-    if (role === 'vigilancia' || role === 'conserje' || role === 'propietario') {
-      accessibleTypes.push('vigilancia', 'conserjeria')
-    }
-
-    if (role === 'propietario') {
-      accessibleTypes.push('admin', 'propietarios')
-    }
-
-    groupRooms = await db
-      .select()
-      .from(chatRooms)
-      .where(
-        and(
-          eq(chatRooms.tenantId, tenantId),
-          inArray(chatRooms.type, accessibleTypes),
-          sql`${chatRooms.unitId} IS NULL`,
-        ),
-      )
-  }
+  const groupRooms = visibleTypes.length > 0
+    ? await db
+        .select()
+        .from(chatRooms)
+        .where(
+          and(
+            eq(chatRooms.tenantId, tenantId),
+            inArray(chatRooms.type, visibleTypes),
+            isNull(chatRooms.unitId),
+          ),
+        )
+    : []
 
   // --- Direct rooms (via membership) ---
   const memberRows = await db
