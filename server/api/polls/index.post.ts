@@ -3,6 +3,7 @@ import { db } from '~~/server/db'
 import { polls, pollOptions } from '~~/server/db/schema/poll'
 import { sendPushToAll } from '~~/server/utils/web-push'
 import type { Poll, PollOption, PollStatus, PollType } from '~~/shared/types/poll'
+import { parsePollDeadline } from '~~/shared/lib/poll-deadline'
 
 const createPollSchema = z.object({
   title: z.string().min(1, 'El titulo es requerido').max(200, 'El titulo no puede exceder 200 caracteres'),
@@ -27,9 +28,13 @@ export default defineEventHandler(async (event) => {
   const type: PollType = body.type
   const status: PollStatus = body.status
 
+  // 'YYYY-MM-DD' = hasta el final de ese dia en la zona del condominio
   let deadline: Date | null = null
   if (body.deadline) {
-    deadline = new Date(body.deadline)
+    deadline = parsePollDeadline(body.deadline, getAppTimezone())
+    if (!deadline) {
+      throw createError({ statusCode: 400, message: 'Fecha limite invalida' })
+    }
   }
 
   const optionTexts = body.options.map((opt) => opt.trim())

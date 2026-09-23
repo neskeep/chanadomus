@@ -16,5 +16,10 @@ export function useLocalDate() {
     return addDaysToDateString(today(), -days)
   }
 
-  return { timeZone, today, daysAgo }
+  /** Fecha local (YYYY-MM-DD) de un instante ISO/Date, p. ej. la fecha límite de una votación. */
+  function dateOf(value: string | Date): string {
+    return zonedDateString(value instanceof Date ? value : new Date(value), timeZone)
+  }
+
+  return { timeZone, today, daysAgo, dateOf }
 }

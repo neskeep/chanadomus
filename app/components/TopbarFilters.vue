@@ -1,39 +1,58 @@
 <script setup lang="ts">
 import { SlidersHorizontal } from 'lucide-vue-next'
 
-withDefaults(defineProps<{
+const props = withDefaults(defineProps<{
   active?: boolean
+  /**
+   * Número de filtros aplicados. Si se omite, se asume 1 cuando `active` es true
+   * (correcto para pantallas con un solo filtro).
+   */
+  count?: number
   /** `wide` da más ancho al popover, p. ej. para filtros en modo lista con nombres largos. */
   size?: 'default' | 'wide'
 }>(), {
   active: false,
+  count: undefined,
   size: 'default',
 })
 
 const WIDTH_CLASSES = {
-  default: 'w-56',
-  wide: 'w-72',
+  default: 'w-64',
+  wide: 'w-80',
 } as const
 
 const emit = defineEmits<{
   clear: []
 }>()
+
+const activeCount = computed(() => props.count ?? (props.active ? 1 : 0))
+
+const triggerLabel = computed(() => {
+  const n = activeCount.value
+  if (n === 0) return 'Filtros'
+  return `Filtros, ${n} ${n === 1 ? 'activo' : 'activos'}`
+})
 </script>
 
 <template>
   <Popover>
     <PopoverTrigger as-child>
-      <button
-        type="button"
-        aria-label="Filtros"
-        class="relative flex size-8 shrink-0 items-center justify-center rounded-sm text-muted-foreground transition-colors hover:text-foreground"
+      <Button
+        variant="outline"
+        :aria-label="triggerLabel"
+        class="h-11 shrink-0 gap-2 px-4 text-base md:h-9 md:px-3 md:text-sm"
+        :class="activeCount > 0 && 'border-primary text-foreground'"
       >
-        <SlidersHorizontal class="size-3.5" />
-        <span
-          v-if="active"
-          class="absolute -right-0.5 -top-0.5 size-2 rounded-lg bg-primary"
-        />
-      </button>
+        <SlidersHorizontal class="size-5 md:size-4" />
+        <span>Filtros</span>
+        <Badge
+          v-if="activeCount > 0"
+          aria-hidden="true"
+          class="h-6 min-w-6 bg-foreground px-1.5 text-sm text-background tabular-nums md:h-5 md:min-w-5 md:text-xs"
+        >
+          {{ activeCount }}
+        </Badge>
+      </Button>
     </PopoverTrigger>
     <PopoverContent
       align="end"
@@ -47,16 +66,18 @@ const emit = defineEmits<{
         }
       }"
     >
-      <div class="max-h-[min(60vh,400px)] space-y-3 overflow-y-auto p-2.5">
+      <div class="max-h-[min(60vh,400px)] space-y-3 overflow-y-auto p-3">
         <slot />
       </div>
-      <button
-        v-if="active"
-        class="w-full border-t border-border px-2.5 py-2 text-center text-xs text-muted-foreground transition-colors hover:text-foreground"
-        @click="emit('clear')"
-      >
-        Limpiar filtros
-      </button>
+      <div v-if="activeCount > 0" class="border-t border-border p-1.5">
+        <Button
+          variant="ghost"
+          class="h-11 w-full text-sm text-muted-foreground md:h-9"
+          @click="emit('clear')"
+        >
+          Limpiar filtros
+        </Button>
+      </div>
     </PopoverContent>
   </Popover>
 </template>

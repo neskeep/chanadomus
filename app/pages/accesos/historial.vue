@@ -59,13 +59,14 @@ const fromPickerOpen = ref(false)
 const toPickerOpen = ref(false)
 const searchInput = ref('')
 
-const hasActiveFilters = computed(() =>
-  filterResult.value !== ''
-  || filterEntryType.value !== ''
-  || filterUnitId.value !== ''
-  || filterFrom.value !== undefined
-  || filterTo.value !== undefined,
-)
+const activeFilterCount = computed(() => countActiveFilters(
+  filterResult.value !== '',
+  filterEntryType.value !== '',
+  filterUnitId.value !== '',
+  filterFrom.value !== undefined,
+  filterTo.value !== undefined,
+))
+const hasActiveFilters = computed(() => activeFilterCount.value > 0)
 
 const sortedUnits = computed(() =>
   [...unitList.value].sort((a, b) => (a.label ?? a.number).localeCompare(b.label ?? b.number, 'es')),
@@ -83,33 +84,20 @@ function formatPickerDate(d: DateValue): string {
   return date.toLocaleDateString('es-VE', { day: 'numeric', month: 'short', year: 'numeric' })
 }
 
+// Fechas y horas de accesos en la zona del condominio (no la del navegador).
+const { formatInstant } = useFormatDate()
+const TIME_24H: Intl.DateTimeFormatOptions = { hour: '2-digit', minute: '2-digit', hour12: false }
+
 function formatDateTime(dateStr: string): string {
-  const d = new Date(dateStr)
-  return d.toLocaleDateString('es-VE', {
-    day: '2-digit',
-    month: '2-digit',
-    year: 'numeric',
-  }) + ' ' + d.toLocaleTimeString('es-VE', {
-    hour: '2-digit',
-    minute: '2-digit',
-    hour12: false,
-  })
+  return `${formatInstant(dateStr, { day: '2-digit', month: '2-digit', year: 'numeric' })} ${formatInstant(dateStr, TIME_24H)}`
 }
 
 function formatTime(dateStr: string): string {
-  return new Date(dateStr).toLocaleTimeString('es-VE', {
-    hour: '2-digit',
-    minute: '2-digit',
-    hour12: false,
-  })
+  return formatInstant(dateStr, TIME_24H)
 }
 
 function formatDateShort(dateStr: string): string {
-  return new Date(dateStr).toLocaleDateString('es-VE', {
-    day: 'numeric',
-    month: 'short',
-    year: 'numeric',
-  })
+  return formatInstant(dateStr, { day: 'numeric', month: 'short', year: 'numeric' })
 }
 
 // --- Sync filters to composable ---
@@ -160,7 +148,7 @@ async function generatePdf() {
   doc.setFontSize(14)
   doc.text('Historial de Accesos', 14, 15)
   doc.setFontSize(9)
-  doc.text(`Generado: ${new Date().toLocaleDateString('es-VE', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })}`, 14, 21)
+  doc.text(`Generado: ${formatInstant(new Date(), { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })}`, 14, 21)
   doc.text(`Periodo: ${filters.value.from} — ${filters.value.to}`, 14, 26)
 
   autoTable(doc, {
@@ -195,7 +183,7 @@ onMounted(() => {
     <!-- Desktop topbar: Search + Filters + PDF action -->
     <Teleport v-if="isMounted" :to="target" defer>
       <TopbarSearch v-model="searchInput" placeholder="Buscar por nombre o cedula...">
-        <TopbarFilters :active="hasActiveFilters" @clear="clearAllFilters">
+        <TopbarFilters :active="hasActiveFilters" :count="activeFilterCount" @clear="clearAllFilters">
           <TopbarFilterGroup v-model="filterResult" label="Resultado" :options="resultOptions" />
           <TopbarFilterGroup v-model="filterEntryType" label="Tipo de entrada" :options="entryTypeOptions" />
           <div>
@@ -272,7 +260,7 @@ onMounted(() => {
     <!-- Mobile search -->
     <div class="mb-4 md:hidden">
       <TopbarSearch v-model="searchInput" placeholder="Buscar por nombre o cedula...">
-        <TopbarFilters :active="hasActiveFilters" @clear="clearAllFilters">
+        <TopbarFilters :active="hasActiveFilters" :count="activeFilterCount" @clear="clearAllFilters">
           <TopbarFilterGroup v-model="filterResult" label="Resultado" :options="resultOptions" />
           <TopbarFilterGroup v-model="filterEntryType" label="Tipo de entrada" :options="entryTypeOptions" />
           <div>

@@ -47,6 +47,8 @@
     --color-input: var(--input);
     --color-border: var(--border);
     --color-destructive: var(--destructive);
+    --color-emergency: var(--emergency);
+    --color-emergency-foreground: var(--emergency-foreground);
     --color-accent-foreground: var(--accent-foreground);
     --color-accent: var(--accent);
     --color-muted-foreground: var(--muted-foreground);
@@ -94,6 +96,9 @@
 
     /* Destructive — Error red (#E53B3B) */
     --destructive: oklch(0.611 0.207 25.8);
+    /* Emergencia (botón de pánico): rojo más profundo para texto blanco AA (5,4:1) */
+    --emergency: oklch(0.550 0.207 25.8);
+    --emergency-foreground: oklch(1.000 0 0);
 
     /* Borders & Inputs — teal-tinted (#E0EDEC) */
     --border: oklch(0.936 0.014 191.7);

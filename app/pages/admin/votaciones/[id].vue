@@ -36,6 +36,9 @@ function formatPickerDate(d: DateValue): string {
   return date.toLocaleDateString('es-VE', { weekday: 'short', day: 'numeric', month: 'short' })
 }
 
+const { dateOf } = useLocalDate()
+
+// Recibe la fecha local (YYYY-MM-DD) de la fecha límite, no el ISO UTC
 function parseISODate(iso: string): CalendarDate {
   const [y, m, d] = iso.split('T')[0]!.split('-').map(Number)
   return new CalendarDate(y!, m!, d!)
@@ -51,7 +54,7 @@ async function loadPoll() {
     formTitle.value = poll.title
     formDescription.value = poll.description ?? ''
     formStatus.value = poll.status === 'closed' ? 'draft' : poll.status as 'draft' | 'active'
-    formDeadline.value = poll.deadline ? parseISODate(poll.deadline) : undefined
+    formDeadline.value = poll.deadline ? parseISODate(dateOf(poll.deadline)) : undefined
     formDisplayOrder.value = poll.displayOrder ?? 0
     loaded.value = true
   }

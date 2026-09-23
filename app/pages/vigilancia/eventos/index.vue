@@ -6,6 +6,7 @@ import {
   ArrowRight,
 } from 'lucide-vue-next'
 import type { EventSummary } from '~~/shared/types/event'
+import { eventGuardPhase } from '~~/shared/lib/event-window'
 
 useHead({ title: 'Eventos Activos' })
 
@@ -13,10 +14,20 @@ const { isLoading, error, fetchActiveEvents } = useEvents()
 const { formatDateTime } = useFormatDate()
 
 const activeEvents = ref<EventSummary[]>([])
+const loadedAt = ref<Date | null>(null)
+
+// Los eventos terminados siguen en la lista mientras queden invitados dentro
+// (o poco despues del fin): se marcan para que el guardia sepa que solo registra salidas.
+function finishedLabel(item: EventSummary): string | null {
+  if (!loadedAt.value || eventGuardPhase(item, loadedAt.value) !== 'finalizado') return null
+  if (item.guestsInside === 0) return 'Finalizado'
+  return item.guestsInside === 1 ? 'Finalizado, queda 1 dentro' : `Finalizado, quedan ${item.guestsInside} dentro`
+}
 
 onMounted(async () => {
   try {
     activeEvents.value = await fetchActiveEvents()
+    loadedAt.value = new Date()
   }
   catch {
     // error set by composable
@@ -37,7 +48,7 @@ onMounted(async () => {
       v-else-if="activeEvents.length === 0"
       :icon="PartyPopper"
       title="No hay eventos activos hoy"
-      description="Los eventos aprobados del día aparecerán aquí"
+      description="Aquí verás los eventos aprobados del día y los que terminaron con invitados dentro"
     />
 
     <!-- Active event cards -->
@@ -48,9 +59,14 @@ onMounted(async () => {
             <div class="flex items-start justify-between gap-3">
               <div class="min-w-0 flex-1">
                 <h3 class="text-lg font-bold">{{ item.title }}</h3>
-                <Badge variant="secondary" class="mt-1 font-semibold">
-                  {{ item.unitLabel || item.unitNumber }}
-                </Badge>
+                <div class="mt-1 flex flex-wrap items-center gap-1.5">
+                  <Badge variant="secondary" class="font-semibold">
+                    {{ item.unitLabel || item.unitNumber }}
+                  </Badge>
+                  <Badge v-if="finishedLabel(item)" variant="outline" class="font-semibold">
+                    {{ finishedLabel(item) }}
+                  </Badge>
+                </div>
               </div>
             </div>
 

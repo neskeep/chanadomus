@@ -75,7 +75,7 @@ onMounted(() => {
   <div>
     <!-- Topbar actions -->
     <Teleport v-if="isMounted" :to="target" defer>
-      <TopbarFilters :active="filterStatus !== '' || filterUnitId !== ''" @clear="filterStatus = ''; filterUnitId = ''">
+      <TopbarFilters :active="filterStatus !== '' || filterUnitId !== ''" :count="countActiveFilters(filterStatus !== '', filterUnitId !== '')" @clear="filterStatus = ''; filterUnitId = ''">
         <TopbarFilterGroup v-model="filterStatus" label="Estado" :options="statusOptions" />
         <div class="w-48">
           <UnitCombobox

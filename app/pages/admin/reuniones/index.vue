@@ -151,7 +151,7 @@ async function handleDelete() {
   <div>
     <!-- Topbar actions -->
     <Teleport v-if="isMounted" :to="target" defer>
-      <TopbarFilters :active="filterType !== '' || filterStatus !== ''" @clear="filterType = ''; filterStatus = ''">
+      <TopbarFilters :active="filterType !== '' || filterStatus !== ''" :count="countActiveFilters(filterType !== '', filterStatus !== '')" @clear="filterType = ''; filterStatus = ''">
         <TopbarFilterGroup v-model="filterType" label="Tipo" :options="typeOptions" />
         <TopbarFilterGroup v-model="filterStatus" label="Estado" :options="meetingStatusOptions" />
       </TopbarFilters>

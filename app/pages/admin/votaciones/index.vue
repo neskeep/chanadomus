@@ -19,6 +19,7 @@ import { POLL_STATUS_COLORS, POLL_STATUS_LABELS } from '~/composables/useColorMa
 useHead({ title: 'Gestion de Votaciones' })
 
 const { formatDate } = useFormatDate()
+const { dateOf } = useLocalDate()
 const { isReordering, isSaving, saveOrder } = useReorder()
 
 const {
@@ -270,7 +271,7 @@ function participationText(poll: Poll): string {
                   {{ participationText(poll) }}
                 </TableCell>
                 <TableCell class="text-muted-foreground">
-                  {{ poll.deadline ? formatDate(poll.deadline) : '—' }}
+                  {{ poll.deadline ? formatDate(dateOf(poll.deadline)) : '—' }}
                 </TableCell>
                 <TableCell class="text-muted-foreground">
                   {{ formatDate(poll.createdAt) }}
@@ -304,7 +305,7 @@ function participationText(poll: Poll): string {
                 {{ participationText(poll) }}
               </TableCell>
               <TableCell class="text-muted-foreground">
-                {{ poll.deadline ? formatDate(poll.deadline) : '—' }}
+                {{ poll.deadline ? formatDate(dateOf(poll.deadline)) : '—' }}
               </TableCell>
               <TableCell class="text-muted-foreground">
                 {{ formatDate(poll.createdAt) }}
@@ -411,7 +412,7 @@ function participationText(poll: Poll): string {
               <template v-if="poll.deadline">
                 <span class="opacity-30">&middot;</span>
                 <Calendar class="size-3 shrink-0" />
-                <span class="shrink-0">{{ formatDate(poll.deadline) }}</span>
+                <span class="shrink-0">{{ formatDate(dateOf(poll.deadline)) }}</span>
               </template>
 
               <!-- Inline actions -->

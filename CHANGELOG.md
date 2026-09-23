@@ -7,6 +7,24 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [1.8.1] - 2026-09-23
+
+### Fixed
+- Eventos: vigilancia sigue viendo un evento finalizado mientras queden invitados dentro (hasta 24 h después del fin) y puede registrar sus salidas. Antes desaparecía de su lista en cuanto pasaba a "Completado"
+- Eventos: registrar la salida de un invitado ya no puede marcar a otros por toques repetidos. La lista no se reordena bajo el dedo, cada botón se bloquea mientras guarda y hay "Deshacer" durante 2 minutos
+- Eventos: entrada tardía permitida hasta 2 h después del fin; check-in y check-out atómicos
+- Eventos: la lista de vigilancia calcula "hoy" en hora de Caracas
+- Votaciones: la fecha límite cierra a las 23:59 del día indicado (hora de Caracas). Antes cerraba a las 20:00 del día anterior
+- Votaciones: el contador "Votaciones activas" y el PDF del panel ya no cuentan votaciones vencidas
+- Los avisos emergentes (toasts) no se mostraban en ninguna pantalla: faltaba la hoja de estilos de la librería
+- Todas las horas se muestran en hora de Caracas, sin depender de la zona del teléfono
+- Cabecera sin desbordes entre 768 y 1024 px
+
+### Changed
+- Botón "Filtros" visible con texto y contador de filtros activos, separado del buscador
+- Botón "Pánico" rojo con texto; al mantenerlo aparece un aviso central con la instrucción y el progreso
+- Categorías de proveedores con estilo neutro basado en tokens
+
 ## [1.8.0] - 2026-09-23
 
 ### Added

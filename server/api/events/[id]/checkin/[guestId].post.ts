@@ -7,6 +7,7 @@ import { units } from '~~/server/db/schema/unit'
 import { broadcastAccessEvent } from '~~/server/utils/ws-access'
 import type { AccessEvent } from '~~/shared/types/access'
 import type { EventGuest } from '~~/shared/types/event'
+import { canCheckInEvent, EVENT_LATE_CHECKIN_GRACE_MS } from '~~/shared/lib/event-window'
 
 const paramsSchema = z.object({
   id: z.string().uuid(),
@@ -30,8 +31,16 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 404, message: 'Evento no encontrado' })
   }
 
-  if (ev.status !== 'activo') {
-    throw createError({ statusCode: 400, message: 'El evento debe estar activo para check-in' })
+  // Se admite check-in en 'activo' y, como entrada tardia, en 'completado' hasta
+  // EVENT_LATE_CHECKIN_GRACE_MS despues del fin (ver shared/lib/event-window.ts).
+  if (!canCheckInEvent(ev)) {
+    const graceHours = EVENT_LATE_CHECKIN_GRACE_MS / 3_600_000
+    throw createError({
+      statusCode: 400,
+      message: ev.status === 'activo' || ev.status === 'completado'
+        ? `El evento terminó hace más de ${graceHours} horas: ya no admite entradas`
+        : 'El evento no admite entradas en su estado actual',
+    })
   }
 
   // Verify guest
@@ -56,42 +65,46 @@ export default defineEventHandler(async (event) => {
     .where(eq(units.id, ev.unitId))
     .limit(1)
 
-  // Create access log
-  const [log] = await db
-    .insert(accessLogs)
-    .values({
-      entryType: 'evento',
-      result: 'allowed',
-      visitorName: guest.name,
-      visitorDocument: guest.document,
-      unitId: ev.unitId,
-      eventId: ev.id,
-      authorizedBy: session.user.id,
-      tenantId: session.tenantId,
-      notes: `Evento: ${ev.title}`,
-    })
-    .returning({ id: accessLogs.id, createdAt: accessLogs.createdAt })
-
-  if (!log) {
-    throw createError({ statusCode: 500, message: 'Error al crear log de acceso' })
-  }
-
-  // Update guest
+  // Access log + guest en una transaccion. El UPDATE condicionado a status='pendiente'
+  // evita dobles entradas si llegan dos peticiones seguidas (doble toque).
   const now = new Date()
-  const [updated] = await db
-    .update(eventGuests)
-    .set({
-      status: 'dentro',
-      checkedInAt: now,
-      checkedInBy: session.user.id,
-      accessLogId: log.id,
-    })
-    .where(eq(eventGuests.id, guestId))
-    .returning()
+  const { log, updated } = await db.transaction(async (tx) => {
+    const [log] = await tx
+      .insert(accessLogs)
+      .values({
+        entryType: 'evento',
+        result: 'allowed',
+        visitorName: guest.name,
+        visitorDocument: guest.document,
+        unitId: ev.unitId,
+        eventId: ev.id,
+        authorizedBy: session.user.id,
+        tenantId: session.tenantId,
+        notes: `Evento: ${ev.title}`,
+      })
+      .returning({ id: accessLogs.id, createdAt: accessLogs.createdAt })
 
-  if (!updated) {
-    throw createError({ statusCode: 500, message: 'Error al actualizar invitado' })
-  }
+    if (!log) {
+      throw createError({ statusCode: 500, message: 'Error al crear log de acceso' })
+    }
+
+    const [updated] = await tx
+      .update(eventGuests)
+      .set({
+        status: 'dentro',
+        checkedInAt: now,
+        checkedInBy: session.user.id,
+        accessLogId: log.id,
+      })
+      .where(and(eq(eventGuests.id, guestId), eq(eventGuests.status, 'pendiente')))
+      .returning()
+
+    if (!updated) {
+      throw createError({ statusCode: 409, message: 'El invitado ya hizo check-in' })
+    }
+
+    return { log, updated }
+  })
 
   // Broadcast access event
   const accessEvent: AccessEvent = {

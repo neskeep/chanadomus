@@ -103,7 +103,7 @@ const { formatDate } = useFormatDate()
     <!-- Topbar (desktop) -->
     <Teleport v-if="isMounted" :to="target" defer>
       <TopbarSearch v-model="searchQuery" placeholder="Buscar incidencia...">
-        <TopbarFilters :active="filterStatus !== '' || filterPriority !== ''" @clear="filterStatus = ''; filterPriority = ''">
+        <TopbarFilters :active="filterStatus !== '' || filterPriority !== ''" :count="countActiveFilters(filterStatus !== '', filterPriority !== '')" @clear="filterStatus = ''; filterPriority = ''">
           <TopbarFilterGroup v-model="filterStatus" label="Estado" :options="statusOptions" />
           <TopbarFilterGroup v-model="filterPriority" label="Prioridad" :options="priorityOptions" />
         </TopbarFilters>
@@ -128,7 +128,7 @@ const { formatDate } = useFormatDate()
     <!-- Mobile search -->
     <div class="mb-4 md:hidden">
       <TopbarSearch v-model="searchQuery" placeholder="Buscar incidencia...">
-        <TopbarFilters :active="filterStatus !== '' || filterPriority !== ''" @clear="filterStatus = ''; filterPriority = ''">
+        <TopbarFilters :active="filterStatus !== '' || filterPriority !== ''" :count="countActiveFilters(filterStatus !== '', filterPriority !== '')" @clear="filterStatus = ''; filterPriority = ''">
           <TopbarFilterGroup v-model="filterStatus" label="Estado" :options="statusOptions" />
           <TopbarFilterGroup v-model="filterPriority" label="Prioridad" :options="priorityOptions" />
         </TopbarFilters>

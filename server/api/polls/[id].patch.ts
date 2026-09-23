@@ -5,6 +5,7 @@ import { units } from '~~/server/db/schema/unit'
 import { eq, and, count } from 'drizzle-orm'
 import { sendPushToAll } from '~~/server/utils/web-push'
 import type { Poll, PollOption, PollStatus, PollType } from '~~/shared/types/poll'
+import { parsePollDeadline } from '~~/shared/lib/poll-deadline'
 
 const VALID_STATUSES: PollStatus[] = ['draft', 'active', 'closed']
 const VALID_TYPES: PollType[] = ['single', 'multiple']
@@ -79,8 +80,11 @@ export default defineEventHandler(async (event) => {
     if (body.deadline === null) {
       updateValues.deadline = null
     } else {
-      const deadlineDate = new Date(body.deadline as string)
-      if (isNaN(deadlineDate.getTime())) {
+      // 'YYYY-MM-DD' = hasta el final de ese dia en la zona del condominio
+      const deadlineDate = typeof body.deadline === 'string'
+        ? parsePollDeadline(body.deadline, getAppTimezone())
+        : null
+      if (!deadlineDate) {
         throw createError({ statusCode: 400, message: 'Fecha limite invalida' })
       }
       updateValues.deadline = deadlineDate

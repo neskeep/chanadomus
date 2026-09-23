@@ -101,9 +101,9 @@ const { formatDate } = useFormatDate()
     <ErrorAlert v-if="error" :message="error" class="mb-4" />
 
     <Teleport v-if="isMounted" :to="target" defer>
-      <div class="flex items-center gap-2">
+      <div class="flex flex-wrap items-center justify-end gap-2">
         <TopbarSearch v-model="searchQuery" placeholder="Buscar incidencia...">
-          <TopbarFilters :active="filterStatus !== '' || filterPriority !== ''" @clear="filterStatus = ''; filterPriority = ''">
+          <TopbarFilters :active="filterStatus !== '' || filterPriority !== ''" :count="countActiveFilters(filterStatus !== '', filterPriority !== '')" @clear="filterStatus = ''; filterPriority = ''">
             <TopbarFilterGroup v-model="filterStatus" label="Estado" :options="statusOptions" />
             <TopbarFilterGroup v-model="filterPriority" label="Prioridad" :options="priorityOptions" />
           </TopbarFilters>
@@ -125,7 +125,7 @@ const { formatDate } = useFormatDate()
     <!-- Mobile search -->
     <div class="mb-4 md:hidden">
       <TopbarSearch v-model="searchQuery" placeholder="Buscar incidencia...">
-        <TopbarFilters :active="filterStatus !== '' || filterPriority !== ''" @clear="filterStatus = ''; filterPriority = ''">
+        <TopbarFilters :active="filterStatus !== '' || filterPriority !== ''" :count="countActiveFilters(filterStatus !== '', filterPriority !== '')" @clear="filterStatus = ''; filterPriority = ''">
           <TopbarFilterGroup v-model="filterStatus" label="Estado" :options="statusOptions" />
           <TopbarFilterGroup v-model="filterPriority" label="Prioridad" :options="priorityOptions" />
         </TopbarFilters>

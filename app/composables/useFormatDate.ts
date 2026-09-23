@@ -1,30 +1,21 @@
+import { formatCalendarDateInZone, formatInstantInZone } from '~~/shared/lib/format-date'
+
 const LOCALE = 'es-VE'
 
-const dateFormatter = new Intl.DateTimeFormat(LOCALE, {
-  day: 'numeric',
-  month: 'short',
-  year: 'numeric',
-})
+const DATE_OPTIONS: Intl.DateTimeFormatOptions = { day: 'numeric', month: 'short', year: 'numeric' }
 
-const dateTimeFormatter = new Intl.DateTimeFormat(LOCALE, {
+const DATE_TIME_OPTIONS: Intl.DateTimeFormatOptions = {
   day: 'numeric',
   month: 'short',
   year: 'numeric',
   hour: 'numeric',
   minute: '2-digit',
   hour12: true,
-})
+}
 
-const timeFormatter = new Intl.DateTimeFormat(LOCALE, {
-  hour: 'numeric',
-  minute: '2-digit',
-  hour12: true,
-})
+const TIME_OPTIONS: Intl.DateTimeFormatOptions = { hour: 'numeric', minute: '2-digit', hour12: true }
 
-const monthYearFormatter = new Intl.DateTimeFormat(LOCALE, {
-  month: 'long',
-  year: 'numeric',
-})
+const MONTH_YEAR_OPTIONS: Intl.DateTimeFormatOptions = { month: 'long', year: 'numeric' }
 
 const relativeFormatter = new Intl.RelativeTimeFormat(LOCALE, {
   numeric: 'auto',
@@ -40,40 +31,56 @@ const RELATIVE_UNITS: Array<{ unit: Intl.RelativeTimeFormatUnit; ms: number }> =
   { unit: 'minute', ms: 60 * 1000 },
 ]
 
-// Para formatDate/formatMonthYear: extrae YYYY-MM-DD del string para evitar shift de día UTC→local
-// new Date("2026-06-01T00:00:00Z") en UTC-4 → May 31 (bug)
-// new Date(2026, 5, 1) → June 1 local (correcto)
-function toDate(value: string | Date): Date {
-  if (value instanceof Date) return value
-  const match = value.match(/^(\d{4})-(\d{2})-(\d{2})/)
-  if (match) {
-    return new Date(Number(match[1]), Number(match[2]) - 1, Number(match[3]))
-  }
-  return new Date(value)
+/**
+ * Un `Date` que llega a formatDate/formatMonthYear suele venir de un selector de calendario
+ * (medianoche local del navegador): se toma su día local como fecha de calendario.
+ */
+function toCalendarValue(value: string | Date): string {
+  if (typeof value === 'string') return value
+  const y = value.getFullYear()
+  const m = String(value.getMonth() + 1).padStart(2, '0')
+  const d = String(value.getDate()).padStart(2, '0')
+  return `${y}-${m}-${d}`
 }
 
-// Para formatDateTime/formatTime/formatRelativeTime: parseo nativo que preserva hora y timezone
 function toDateTime(value: string | Date): Date {
-  if (value instanceof Date) return value
-  return new Date(value)
+  return value instanceof Date ? value : new Date(value)
 }
 
 function capitalizeFirst(str: string): string {
   return str.charAt(0).toUpperCase() + str.slice(1)
 }
 
+/**
+ * Formateo de fechas de la app. Las horas se muestran siempre en la zona del condominio
+ * (runtimeConfig.public.appTimezone), no en la del navegador.
+ */
 export function useFormatDate() {
-  const formatDate = (date: string | Date): string => {
-    return dateFormatter.format(toDate(date))
-  }
+  const timeZone = useRuntimeConfig().public.appTimezone
 
-  const formatDateTime = (date: string | Date): string => {
-    return dateTimeFormatter.format(toDateTime(date))
-  }
+  /** Día de calendario. `YYYY-MM-DD` no se desplaza; un instante ISO se lleva al día del condominio. */
+  const formatDate = (date: string | Date): string =>
+    formatCalendarDateInZone(toCalendarValue(date), timeZone, DATE_OPTIONS, LOCALE)
 
-  const formatTime = (date: string | Date): string => {
-    return timeFormatter.format(toDateTime(date))
-  }
+  const formatDateTime = (date: string | Date): string =>
+    formatInstantInZone(toDateTime(date), timeZone, DATE_TIME_OPTIONS, LOCALE)
+
+  const formatTime = (date: string | Date): string =>
+    formatInstantInZone(toDateTime(date), timeZone, TIME_OPTIONS, LOCALE)
+
+  /** Instante con opciones Intl a medida, en la zona del condominio. */
+  const formatInstant = (
+    date: string | Date,
+    options: Intl.DateTimeFormatOptions,
+    locale: string = LOCALE,
+  ): string => formatInstantInZone(toDateTime(date), timeZone, options, locale)
+
+  /** Día de calendario con opciones Intl a medida (no se desplaza si es `YYYY-MM-DD`). */
+  const formatCalendarDate = (
+    date: string | Date,
+    options: Intl.DateTimeFormatOptions,
+    locale: string = LOCALE,
+  ): string => formatCalendarDateInZone(toCalendarValue(date), timeZone, options, locale)
 
   const formatRelativeTime = (date: string | Date): string => {
     const diff = toDateTime(date).getTime() - Date.now()
@@ -97,14 +104,16 @@ export function useFormatDate() {
     return `${prefix} ${formatted}`
   }
 
-  const formatMonthYear = (date: string | Date): string => {
-    return capitalizeFirst(monthYearFormatter.format(toDate(date)))
-  }
+  const formatMonthYear = (date: string | Date): string =>
+    capitalizeFirst(formatCalendarDateInZone(toCalendarValue(date), timeZone, MONTH_YEAR_OPTIONS, LOCALE))
 
   return {
+    timeZone,
     formatDate,
     formatDateTime,
     formatTime,
+    formatInstant,
+    formatCalendarDate,
     formatRelativeTime,
     formatCurrency,
     formatMonthYear,

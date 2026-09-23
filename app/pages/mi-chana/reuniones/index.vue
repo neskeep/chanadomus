@@ -18,19 +18,20 @@ const { meetings, isLoading, error, fetchMeetings } = useMeetings()
 
 // --- Formatters ---
 
+const { formatMonthYear, formatInstant } = useFormatDate()
+
 function formatDay(iso: string): string {
-  return new Date(iso).getDate().toString()
+  return formatInstant(iso, { day: 'numeric' })
 }
 
 function formatMonthShort(iso: string): string {
-  return new Date(iso).toLocaleDateString('es-VE', { month: 'short' })
+  return formatInstant(iso, { month: 'short' })
 }
 
 function formatTime(iso: string): string {
-  return new Date(iso).toLocaleTimeString('es-VE', { hour: '2-digit', minute: '2-digit' })
+  return formatInstant(iso, { hour: '2-digit', minute: '2-digit' })
 }
 
-const { formatMonthYear } = useFormatDate()
 
 function typeLabel(key: MeetingType): string {
   return MEETING_TYPES.find(t => t.key === key)?.label ?? key

@@ -85,6 +85,8 @@ function getInitials(name: string): string {
     .toUpperCase()
 }
 
+const { formatInstant } = useFormatDate()
+
 function formatLastMessageTime(dateStr: string): string {
   const date = new Date(dateStr)
   const now = new Date()
@@ -92,13 +94,13 @@ function formatLastMessageTime(dateStr: string): string {
   const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24))
 
   if (diffDays === 0) {
-    return date.toLocaleTimeString('es-VE', { hour: '2-digit', minute: '2-digit' })
+    return formatInstant(date, { hour: '2-digit', minute: '2-digit' })
   }
   if (diffDays === 1) return 'Ayer'
   if (diffDays < 7) {
-    return date.toLocaleDateString('es-VE', { weekday: 'short' })
+    return formatInstant(date, { weekday: 'short' })
   }
-  return date.toLocaleDateString('es-VE', { day: '2-digit', month: '2-digit' })
+  return formatInstant(date, { day: '2-digit', month: '2-digit' })
 }
 
 function truncateMessage(content: string, max = 40): string {

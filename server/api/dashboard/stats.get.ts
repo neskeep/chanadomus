@@ -48,6 +48,9 @@ export default defineEventHandler(async (event) => {
 
   const unitId = (session.user as Record<string, unknown>).unitId as string | undefined
 
+  // Lazy expiration: cerrar votaciones vencidas antes de contar "activas"
+  await expirePolls(tenantId)
+
   const [
     openIncidents,
     inProgressIncidents,

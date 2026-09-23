@@ -14,16 +14,16 @@ useContentResize(contentRef)
       <LayoutAppTopbar />
 
       <!-- Mobile header -->
-      <header class="shrink-0 z-40 flex h-12 items-center justify-between border-b bg-background/95 px-3 backdrop-blur md:hidden">
-        <AppIsotipo :height="24" />
-        <span class="text-sm font-semibold text-muted-foreground truncate">{{ usePageInfo().title }}</span>
-        <div class="flex items-center gap-1">
+      <header class="shrink-0 z-40 flex h-14 items-center gap-2 border-b bg-background/95 px-3 backdrop-blur md:hidden">
+        <AppIsotipo :height="24" class="shrink-0" />
+        <span class="min-w-0 flex-1 truncate text-sm font-semibold text-muted-foreground">{{ usePageInfo().title }}</span>
+        <div class="flex shrink-0 items-center gap-1">
           <div id="topbar-actions-mobile" class="flex items-center gap-1" />
-          <NuxtLink to="/mi-chana/notificaciones">
-            <Button variant="ghost" size="icon" class="size-9">
-              <Bell class="size-4" />
-            </Button>
-          </NuxtLink>
+          <Button variant="ghost" size="icon" class="size-11" as-child>
+            <NuxtLink to="/mi-chana/notificaciones" aria-label="Notificaciones">
+              <Bell class="size-5" />
+            </NuxtLink>
+          </Button>
           <PanicButton />
         </div>
       </header>

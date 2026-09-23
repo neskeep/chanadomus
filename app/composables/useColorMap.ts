@@ -5,7 +5,7 @@ import type { ChangelogItemType } from '~~/shared/types/changelog'
 import type { IncidentPriority, IncidentStatus } from '~~/shared/types/incident'
 import type { MeetingStatus, MeetingType } from '~~/shared/types/meeting'
 import type { PollStatus } from '~~/shared/types/poll'
-import type { ProviderCategory, ProviderStatus } from '~~/shared/types/provider'
+import type { ProviderStatus } from '~~/shared/types/provider'
 import type { AccessDirection, ValidationStatus } from '~~/shared/types/qr'
 import type { SupportTicketPriority, SupportTicketStatus, SupportTicketType } from '~~/shared/types/support'
 
@@ -68,18 +68,11 @@ export const ANNOUNCEMENT_STATUS_LABELS: Record<AnnouncementStatus, string> = {
 }
 
 // ─── Provider ────────────────────────────────────────────
-export const PROVIDER_CATEGORY_COLORS: Record<ProviderCategory, string> = {
-  plomeria: 'bg-blue-100 text-blue-700',
-  electricidad: 'bg-yellow-100 text-yellow-700',
-  jardineria: 'bg-green-100 text-green-700',
-  cerrajeria: 'bg-gray-100 text-gray-700',
-  limpieza: 'bg-cyan-100 text-cyan-700',
-  pintura: 'bg-purple-100 text-purple-700',
-  albanileria: 'bg-orange-100 text-orange-700',
-  seguridad: 'bg-red-100 text-red-700',
-  fumigacion: 'bg-emerald-100 text-emerald-700',
-  otro: 'bg-slate-100 text-slate-700',
-}
+/**
+ * Desde v1.7.1 la categoría visible es el rol de servicio (casi todo cae en 'otro'),
+ * así que un color por categoría ya no aporta información: estilo neutro por tokens.
+ */
+export const PROVIDER_CATEGORY_BADGE_CLASS = 'bg-muted text-foreground'
 
 export const PROVIDER_STATUS_COLORS: Record<ProviderStatus, string> = {
   active: 'bg-emerald-100 text-emerald-800',

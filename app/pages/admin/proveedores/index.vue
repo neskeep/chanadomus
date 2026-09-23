@@ -14,7 +14,7 @@ import type {
   ProviderStatus,
 } from '~~/shared/types/provider'
 import { getProviderCategoryLabel } from '~~/shared/types/provider'
-import { PROVIDER_CATEGORY_COLORS as CATEGORY_COLORS, PROVIDER_STATUS_COLORS, PROVIDER_STATUS_LABELS } from '~/composables/useColorMap'
+import { PROVIDER_CATEGORY_BADGE_CLASS, PROVIDER_STATUS_COLORS, PROVIDER_STATUS_LABELS } from '~/composables/useColorMap'
 
 useHead({ title: 'Proveedores y servicios' })
 
@@ -161,7 +161,7 @@ function renderStars(rating: number | undefined): number[] {
     <!-- Topbar actions -->
     <Teleport v-if="isMounted" :to="target" defer>
       <TopbarSearch v-model="searchQuery" placeholder="Buscar proveedor...">
-        <TopbarFilters :active="filterCategory !== '' || filterStatus !== ''" size="wide" @clear="filterCategory = ''; filterStatus = ''">
+        <TopbarFilters :active="filterCategory !== '' || filterStatus !== ''" :count="countActiveFilters(filterCategory !== '', filterStatus !== '')" size="wide" @clear="filterCategory = ''; filterStatus = ''">
           <TopbarFilterGroup v-model="filterCategory" label="Categoría" :options="providerCategoryOptions" variant="list" search-placeholder="Buscar categoría..." all-label="Todas las categorías" />
           <TopbarFilterGroup v-model="filterStatus" label="Estado" :options="providerStatusOptions" />
         </TopbarFilters>
@@ -186,7 +186,7 @@ function renderStars(rating: number | undefined): number[] {
     <!-- Mobile search -->
     <div class="mb-4 md:hidden">
       <TopbarSearch v-model="searchQuery" placeholder="Buscar proveedor...">
-        <TopbarFilters :active="filterCategory !== '' || filterStatus !== ''" size="wide" @clear="filterCategory = ''; filterStatus = ''">
+        <TopbarFilters :active="filterCategory !== '' || filterStatus !== ''" :count="countActiveFilters(filterCategory !== '', filterStatus !== '')" size="wide" @clear="filterCategory = ''; filterStatus = ''">
           <TopbarFilterGroup v-model="filterCategory" label="Categoría" :options="providerCategoryOptions" variant="list" search-placeholder="Buscar categoría..." all-label="Todas las categorías" />
           <TopbarFilterGroup v-model="filterStatus" label="Estado" :options="providerStatusOptions" />
         </TopbarFilters>
@@ -387,7 +387,7 @@ function renderStars(rating: number | undefined): number[] {
               </div>
               <span
                 class="ml-auto inline-flex shrink-0 rounded-lg px-1.5 py-0.5 text-[11px] font-medium"
-                :class="CATEGORY_COLORS[item.category]"
+                :class="PROVIDER_CATEGORY_BADGE_CLASS"
               >
                 {{ getProviderCategoryLabel(item) }}
               </span>

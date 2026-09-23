@@ -9,13 +9,20 @@ defineProps<{
 </script>
 
 <template>
-  <div class="flex h-8 items-center rounded-lg border bg-background">
-    <Search class="ml-2.5 size-3.5 shrink-0 text-muted-foreground" />
-    <input
-      v-model="model"
-      :placeholder="placeholder ?? 'Buscar...'"
-      class="w-full bg-transparent px-2 text-sm outline-none placeholder:text-muted-foreground md:w-[130px] lg:w-[180px]"
-    >
+  <!-- El slot (normalmente TopbarFilters) va FUERA del campo para que el botón de filtros se vea como un control propio. -->
+  <div class="flex w-full items-center gap-2 md:w-auto">
+    <InputGroup class="h-11 min-w-0 flex-1 md:h-9 md:w-36 md:flex-none lg:w-60">
+      <InputGroupAddon>
+        <Search class="size-5 md:size-4" />
+      </InputGroupAddon>
+      <InputGroupInput
+        v-model="model"
+        type="search"
+        :placeholder="placeholder ?? 'Buscar...'"
+        :aria-label="placeholder ?? 'Buscar'"
+        class="text-base md:text-sm"
+      />
+    </InputGroup>
     <slot />
   </div>
 </template>

@@ -24,6 +24,7 @@ const {
   fetchStaffAttendance,
 } = useMyUnit()
 
+const { formatInstant } = useFormatDate()
 const { downloadBadge, isGenerating: isDownloadingBadge } = useQrBadge()
 
 const formName = ref('')
@@ -60,11 +61,11 @@ function formatAttendanceDate(iso: string): string {
   if (diffMin < 1) return 'ahora'
   if (diffMin < 60) return `${diffMin}m`
   if (diffHrs < 24) return `${diffHrs}h`
-  return d.toLocaleDateString('es', { day: '2-digit', month: 'short', year: diffHrs > 8760 ? 'numeric' : undefined })
+  return formatInstant(d, { day: '2-digit', month: 'short', year: diffHrs > 8760 ? 'numeric' : undefined }, 'es')
 }
 
 function formatFullDate(iso: string): string {
-  return new Date(iso).toLocaleDateString('es', { weekday: 'short', day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })
+  return formatInstant(iso, { weekday: 'short', day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' }, 'es')
 }
 
 async function generateQrImage(token: string) {

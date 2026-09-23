@@ -8,9 +8,12 @@ import {
   Users,
   Car,
   IdCard,
+  Loader2,
+  Info,
 } from 'lucide-vue-next'
 import { toast } from 'vue-sonner'
-import type { EventDetail, GuestStatus } from '~~/shared/types/event'
+import type { EventDetail, EventGuest, GuestStatus } from '~~/shared/types/event'
+import { canCheckInEvent, eventGuardPhase, EVENT_LATE_CHECKIN_GRACE_MS } from '~~/shared/lib/event-window'
 
 const route = useRoute()
 const id = route.params.id as string
@@ -27,6 +30,9 @@ const {
   loadGuests,
   checkin,
   checkout,
+  undoCheckout,
+  isGuestBusy,
+  isRecentlyChanged,
 } = useEventCheckin(id)
 
 const event = ref<EventDetail | null>(null)
@@ -75,22 +81,61 @@ function formatTime(dateStr: string | null): string {
   })
 }
 
-async function handleCheckin(guestId: string) {
+// Fase del evento segun el reloj del cliente (null hasta montar, para no parpadear en SSR)
+const phase = computed(() => {
+  if (!event.value || !clientNow.value) return null
+  return eventGuardPhase(event.value, new Date(clientNow.value))
+})
+
+const checkinAllowed = computed(() => {
+  if (!event.value) return false
+  if (!clientNow.value) return true
+  return canCheckInEvent(event.value, new Date(clientNow.value))
+})
+
+const lateCheckinUntil = computed(() => {
+  if (!event.value) return ''
+  return formatTime(new Date(new Date(event.value.endsAt).getTime() + EVENT_LATE_CHECKIN_GRACE_MS).toISOString())
+})
+
+async function runAction(
+  action: () => Promise<EventGuest | null>,
+  fallbackError: string,
+  onDone: (guest: EventGuest) => void,
+) {
   try {
-    await checkin(guestId)
+    const updated = await action()
+    if (updated) onDone(updated)
   }
-  catch {
-    toast.error(error.value ?? 'Error al registrar entrada')
+  catch (err: unknown) {
+    toast.error(getApiErrorMessage(err, fallbackError))
+    // 409 = otro guardia ya lo registro: refrescar para no operar sobre datos viejos
+    if ((err as { statusCode?: number } | null)?.statusCode === 409) void loadGuests()
   }
 }
 
-async function handleCheckout(guestId: string) {
-  try {
-    await checkout(guestId)
-  }
-  catch {
-    toast.error(error.value ?? 'Error al registrar salida')
-  }
+function handleCheckin(guestId: string) {
+  return runAction(() => checkin(guestId), 'Error al registrar entrada', (g) => {
+    toast.success(`Entrada registrada: ${g.name}`)
+  })
+}
+
+function handleCheckout(guestId: string) {
+  return runAction(() => checkout(guestId), 'Error al registrar salida', (g) => {
+    toast.success(`Salida registrada: ${g.name}`, {
+      duration: 8000,
+      action: {
+        label: 'Deshacer',
+        onClick: () => { void handleUndoCheckout(g.id) },
+      },
+    })
+  })
+}
+
+function handleUndoCheckout(guestId: string) {
+  return runAction(() => undoCheckout(guestId), 'No se pudo deshacer la salida', (g) => {
+    toast.info(`Salida anulada: ${g.name} sigue dentro`)
+  })
 }
 
 const tabOptions: { value: GuestStatus | 'todos'; label: string }[] = [
@@ -141,6 +186,21 @@ const tabOptions: { value: GuestStatus | 'todos'; label: string }[] = [
           </div>
         </div>
       </div>
+
+      <!-- Evento finalizado: se siguen registrando salidas -->
+      <Card v-if="phase === 'finalizado'" class="border-primary/30 bg-primary/5" role="status">
+        <CardContent class="flex items-start gap-3 px-4 py-3">
+          <Info class="mt-0.5 size-4 shrink-0 text-primary" />
+          <div class="min-w-0">
+            <p class="text-sm font-semibold">
+              {{ stats.inside === 0 ? 'Evento finalizado' : stats.inside === 1 ? 'Evento finalizado, queda 1 invitado dentro' : `Evento finalizado, quedan ${stats.inside} invitados dentro` }}
+            </p>
+            <p class="text-xs text-muted-foreground">
+              {{ checkinAllowed ? `Puedes registrar salidas. Se admiten entradas tardías hasta las ${lateCheckinUntil}.` : 'Puedes registrar salidas. Ya no se admiten entradas.' }}
+            </p>
+          </div>
+        </CardContent>
+      </Card>
 
       <!-- Search -->
       <div class="relative">
@@ -207,16 +267,30 @@ const tabOptions: { value: GuestStatus | 'todos'; label: string }[] = [
               </div>
             </div>
 
-            <!-- Action based on status -->
-            <!-- Pendiente: Green "Entrada" button -->
-            <Button
-              v-if="guest.status === 'pendiente'"
-              class="shrink-0 bg-emerald-600 text-white hover:bg-emerald-700"
-              @click="handleCheckin(guest.id)"
+            <!-- Recien cambiado: confirmacion sin botones (evita que un segundo toque actue) -->
+            <div
+              v-if="isRecentlyChanged(guest.id)"
+              class="flex shrink-0 items-center gap-1.5 text-sm font-medium text-muted-foreground"
+              role="status"
             >
-              <LogIn class="mr-1.5 size-4" />
-              Entrada
-            </Button>
+              <CheckCircle2 class="size-4 text-primary" />
+              <span>{{ guest.status === 'salio' ? 'Salida registrada' : 'Entrada registrada' }}</span>
+            </div>
+
+            <!-- Pendiente: Green "Entrada" button -->
+            <template v-else-if="guest.status === 'pendiente'">
+              <Button
+                v-if="checkinAllowed"
+                class="shrink-0 bg-emerald-600 text-white hover:bg-emerald-700"
+                :disabled="isGuestBusy(guest.id)"
+                @click="handleCheckin(guest.id)"
+              >
+                <Loader2 v-if="isGuestBusy(guest.id)" class="mr-1.5 size-4 animate-spin" />
+                <LogIn v-else class="mr-1.5 size-4" />
+                Entrada
+              </Button>
+              <span v-else class="shrink-0 text-xs text-muted-foreground">Entrada cerrada</span>
+            </template>
 
             <!-- Dentro: Orange "Salida" button + time since -->
             <div v-else-if="guest.status === 'dentro'" class="flex shrink-0 items-center gap-2">
@@ -224,9 +298,11 @@ const tabOptions: { value: GuestStatus | 'todos'; label: string }[] = [
               <Button
                 variant="outline"
                 class="shrink-0 border-amber-300 text-amber-700 hover:bg-amber-50 hover:text-amber-800 dark:border-amber-700 dark:text-amber-400 dark:hover:bg-amber-900/20"
+                :disabled="isGuestBusy(guest.id)"
                 @click="handleCheckout(guest.id)"
               >
-                <LogOut class="mr-1.5 size-4" />
+                <Loader2 v-if="isGuestBusy(guest.id)" class="mr-1.5 size-4 animate-spin" />
+                <LogOut v-else class="mr-1.5 size-4" />
                 Salida
               </Button>
             </div>

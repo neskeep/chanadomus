@@ -5,6 +5,7 @@ import { toast } from 'vue-sonner'
 definePageMeta({ layout: 'default' })
 useHead({ title: 'Alertas de Pánico' })
 
+const { formatInstant } = useFormatDate()
 const { alerts, activeAlert, isConnected, isPolling, hasActiveAlert, dismissAlert, resolveAlert, loadInitialAlerts } = usePanicStream()
 
 const isLoading = ref(true)
@@ -25,17 +26,17 @@ function formatRelative(iso: string): string {
   if (diffHrs < 24) return `${diffHrs}h`
   if (diffDays < 7) return `${diffDays}d`
 
-  return d.toLocaleDateString('es', { day: '2-digit', month: 'short' })
+  return formatInstant(d, { day: '2-digit', month: 'short' }, 'es')
 }
 
 function formatFull(iso: string): string {
-  return new Date(iso).toLocaleDateString('es', {
+  return formatInstant(iso, {
     weekday: 'short',
     day: '2-digit',
     month: 'short',
     hour: '2-digit',
     minute: '2-digit',
-  })
+  }, 'es')
 }
 
 // Reactive elapsed time for active alert

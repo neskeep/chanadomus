@@ -13,6 +13,7 @@ import { POLL_STATUS_COLORS, POLL_STATUS_LABELS } from '~/composables/useColorMa
 useHead({ title: 'Votaciones' })
 
 const { formatDate } = useFormatDate()
+const { dateOf } = useLocalDate()
 const { polls, isLoading, isSubmitting, error, totalPages, fetchPolls, vote } = usePolls()
 
 const { target, isMounted } = useTopbarPortal()
@@ -165,7 +166,7 @@ function getParticipation(poll: Poll): string {
               </span>
               <span v-if="poll.deadline" class="inline-flex items-center gap-1">
                 <Clock class="size-3" />
-                {{ formatDate(poll.deadline) }}
+                {{ formatDate(dateOf(poll.deadline)) }}
               </span>
             </div>
 

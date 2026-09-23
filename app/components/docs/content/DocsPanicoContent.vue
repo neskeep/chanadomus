@@ -1,8 +1,8 @@
 <script setup lang="ts">
 const stepsActivar = [
-  'El botón de pánico está siempre visible en la barra lateral (desktop) o en la parte inferior de la pantalla (móvil)',
-  'Al presionarlo, se solicita confirmación para evitar activaciones accidentales',
-  'Una vez confirmado, la alerta se envía de forma inmediata',
+  'El botón rojo "Pánico" está siempre visible en la esquina superior derecha de la pantalla, en computadora y en celular',
+  'Mantenlo presionado durante 2 segundos: aparece un aviso con una barra que se llena. Si lo sueltas antes, no se envía nada',
+  'Al completarse la barra, la alerta se envía de forma inmediata',
   'La pantalla del personal de vigilancia y administradores mostrará la alerta con una señal sonora',
 ]
 
@@ -20,7 +20,7 @@ const stepsResolver = [
 
     <p class="mt-3 text-sm leading-relaxed text-muted-foreground">
       ChanaDomus incluye un botón de pánico accesible para todos los usuarios autenticados.
-      Al activarlo, se envia una alerta de emergencia en tiempo real al personal de vigilancia
+      Al activarlo, se envía una alerta de emergencia en tiempo real al personal de vigilancia
       y a los administradores.
     </p>
 

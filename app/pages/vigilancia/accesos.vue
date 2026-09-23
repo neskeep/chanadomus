@@ -81,12 +81,10 @@ function formatRelativeTime(dateStr: string): string {
   return `${diffHr}h`
 }
 
+const { formatInstant } = useFormatDate()
+
 function formatAbsoluteTime(dateStr: string): string {
-  return new Date(dateStr).toLocaleTimeString('es-VE', {
-    hour: '2-digit',
-    minute: '2-digit',
-    hour12: false,
-  })
+  return formatInstant(dateStr, { hour: '2-digit', minute: '2-digit', hour12: false })
 }
 
 function formatDuration(entryDate: string, exitDate: string): string {

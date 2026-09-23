@@ -8,7 +8,7 @@ import {
 import { watchDebounced } from '@vueuse/core'
 import type { FetchProvidersParams } from '~/composables/useProviders'
 import { getProviderCategoryLabel } from '~~/shared/types/provider'
-import { PROVIDER_CATEGORY_COLORS as CATEGORY_COLORS } from '~/composables/useColorMap'
+import { PROVIDER_CATEGORY_BADGE_CLASS } from '~/composables/useColorMap'
 
 useHead({ title: 'Proveedores y servicios' })
 
@@ -147,7 +147,7 @@ function renderStars(rating: number | undefined): number[] {
               <TableCell>
                 <span
                   class="inline-flex rounded-lg px-2 py-0.5 text-xs font-medium"
-                  :class="CATEGORY_COLORS[provider.category]"
+                  :class="PROVIDER_CATEGORY_BADGE_CLASS"
                 >
                   {{ getProviderCategoryLabel(provider) }}
                 </span>
@@ -192,7 +192,7 @@ function renderStars(rating: number | undefined): number[] {
                 <p class="min-w-0 flex-1 truncate text-sm font-semibold">{{ provider.name }}</p>
                 <span
                   class="inline-flex shrink-0 rounded-lg px-1.5 py-0.5 text-[11px] font-medium"
-                  :class="CATEGORY_COLORS[provider.category]"
+                  :class="PROVIDER_CATEGORY_BADGE_CLASS"
                 >
                   {{ getProviderCategoryLabel(provider) }}
                 </span>

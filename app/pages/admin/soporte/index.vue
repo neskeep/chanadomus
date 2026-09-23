@@ -126,7 +126,7 @@ const { formatDate } = useFormatDate()
 
     <Teleport v-if="isMounted" :to="target" defer>
       <TopbarSearch v-model="searchQuery" placeholder="Buscar ticket...">
-        <TopbarFilters :active="filterStatus !== '' || filterType !== '' || filterPriority !== ''" @clear="filterStatus = ''; filterType = ''; filterPriority = ''">
+        <TopbarFilters :active="filterStatus !== '' || filterType !== '' || filterPriority !== ''" :count="countActiveFilters(filterStatus !== '', filterType !== '', filterPriority !== '')" @clear="filterStatus = ''; filterType = ''; filterPriority = ''">
           <TopbarFilterGroup v-model="filterStatus" label="Estado" :options="statusOptions" />
           <TopbarFilterGroup v-model="filterType" label="Tipo" :options="typeOptions" />
           <TopbarFilterGroup v-model="filterPriority" label="Prioridad" :options="priorityOptions" />
@@ -137,7 +137,7 @@ const { formatDate } = useFormatDate()
     <!-- Mobile search -->
     <div class="mb-4 md:hidden">
       <TopbarSearch v-model="searchQuery" placeholder="Buscar ticket...">
-        <TopbarFilters :active="filterStatus !== '' || filterType !== '' || filterPriority !== ''" @clear="filterStatus = ''; filterType = ''; filterPriority = ''">
+        <TopbarFilters :active="filterStatus !== '' || filterType !== '' || filterPriority !== ''" :count="countActiveFilters(filterStatus !== '', filterType !== '', filterPriority !== '')" @clear="filterStatus = ''; filterType = ''; filterPriority = ''">
           <TopbarFilterGroup v-model="filterStatus" label="Estado" :options="statusOptions" />
           <TopbarFilterGroup v-model="filterType" label="Tipo" :options="typeOptions" />
           <TopbarFilterGroup v-model="filterPriority" label="Prioridad" :options="priorityOptions" />

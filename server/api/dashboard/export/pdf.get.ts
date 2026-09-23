@@ -32,6 +32,9 @@ export default defineEventHandler(async (event) => {
   const now = new Date()
   const timeZone = getAppTimezone()
 
+  // Lazy expiration: cerrar votaciones vencidas antes de contar "activas"
+  await expirePolls(tenantId)
+
   // --- Parallel queries ---
   const [financialData, openIncidents, statsData] = await Promise.all([
     // Financial summary per unit

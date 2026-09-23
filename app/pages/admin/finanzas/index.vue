@@ -55,9 +55,8 @@ const categoryOptions = [
 
 const filterCategory = ref<'ordinaria' | 'extraordinaria' | ''>('')
 
-const hasActiveFilters = computed(() =>
-  filterFrom.value !== undefined || filterTo.value !== undefined || filterType.value !== '' || filterCategory.value !== '',
-)
+const activeFilterCount = computed(() => countActiveFilters(filterFrom.value !== undefined, filterTo.value !== undefined, filterType.value !== '', filterCategory.value !== ''))
+const hasActiveFilters = computed(() => activeFilterCount.value > 0)
 
 function clearAllFilters() {
   filterFrom.value = undefined
@@ -349,7 +348,7 @@ onMounted(() => {
   <div>
     <!-- Topbar actions -->
     <Teleport v-if="isMounted" :to="target" defer>
-      <TopbarFilters :active="hasActiveFilters" @clear="clearAllFilters">
+      <TopbarFilters :active="hasActiveFilters" :count="activeFilterCount" @clear="clearAllFilters">
         <TopbarFilterGroup v-model="filterType" label="Tipo" :options="typeOptions" />
         <TopbarFilterGroup v-model="filterCategory" label="Categoría" :options="categoryOptions" />
         <div>

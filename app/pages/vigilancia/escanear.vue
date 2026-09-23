@@ -20,6 +20,7 @@ const {
   resetToSelection,
 } = useQrScanner()
 
+const { formatInstant } = useFormatDate()
 const { units: unitList, fetchUnits } = useUnits()
 const selectedUnitId = ref('')
 const isAssigningUnit = ref(false)
@@ -353,7 +354,7 @@ const resolvedConfig = computed(() => {
             <div v-if="scanResult.entryAt" class="flex items-center gap-3">
               <Clock class="size-4 shrink-0 text-white/50" />
               <span class="text-sm text-white/80">
-                Entrada: {{ new Date(scanResult.entryAt).toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' }) }}
+                Entrada: {{ formatInstant(scanResult.entryAt, { hour: '2-digit', minute: '2-digit' }, 'es-MX') }}
               </span>
             </div>
             <p class="text-xs text-white/50">

@@ -12,7 +12,7 @@ import { toast } from 'vue-sonner'
 import type { Provider, UpdateProvider } from '~~/shared/types/provider'
 import { getProviderCategoryLabel } from '~~/shared/types/provider'
 
-import { PROVIDER_CATEGORY_COLORS as CATEGORY_COLORS, PROVIDER_STATUS_COLORS, PROVIDER_STATUS_LABELS } from '~/composables/useColorMap'
+import { PROVIDER_CATEGORY_BADGE_CLASS, PROVIDER_STATUS_COLORS, PROVIDER_STATUS_LABELS } from '~/composables/useColorMap'
 
 definePageMeta({ layout: 'default' })
 
@@ -253,7 +253,7 @@ async function handleReview() {
           <div class="flex flex-wrap gap-2">
             <span
               class="inline-flex rounded-lg px-2 py-0.5 text-xs font-medium"
-              :class="CATEGORY_COLORS[provider.category]"
+              :class="PROVIDER_CATEGORY_BADGE_CLASS"
             >
               {{ getProviderCategoryLabel(provider) }}
             </span>

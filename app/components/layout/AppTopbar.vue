@@ -3,8 +3,9 @@ const pageInfo = usePageInfo()
 </script>
 
 <template>
-  <header class="hidden md:flex shrink-0 h-[68px] items-center border-b bg-background px-5 lg:px-6">
-    <div class="min-w-0 shrink-0">
+  <!-- min-h en vez de h fija: en tablet, si una pantalla trae muchas acciones, pasan a una segunda fila en lugar de salirse. -->
+  <header class="hidden md:flex shrink-0 min-h-[68px] items-center gap-4 border-b bg-background px-5 py-3 lg:px-6">
+    <div class="min-w-40 shrink">
       <!-- Breadcrumb mode -->
       <Breadcrumb v-if="pageInfo.breadcrumbs?.length">
         <BreadcrumbList>
@@ -28,7 +29,7 @@ const pageInfo = usePageInfo()
 
       <!-- Default title mode -->
       <template v-else>
-        <div class="flex flex-col">
+        <div class="flex min-w-0 flex-col">
           <h1 class="text-base font-semibold truncate leading-tight">{{ pageInfo.title }}</h1>
           <p v-if="pageInfo.description" class="text-xs text-muted-foreground truncate">{{ pageInfo.description }}</p>
         </div>
@@ -36,7 +37,7 @@ const pageInfo = usePageInfo()
     </div>
 
     <div class="ml-auto flex items-center gap-2">
-      <div id="topbar-actions" class="flex items-center gap-2" />
+      <div id="topbar-actions" class="flex flex-wrap items-center justify-end gap-2" />
       <PanicButton />
     </div>
   </header>

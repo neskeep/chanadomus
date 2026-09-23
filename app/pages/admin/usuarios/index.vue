@@ -161,7 +161,7 @@ onMounted(() => {
   <div>
     <Teleport v-if="isMounted" :to="target" defer>
       <TopbarSearch v-model="searchQuery" placeholder="Buscar usuarios...">
-        <TopbarFilters :active="selectedRole !== '' || sortBy !== 'role'" @clear="selectedRole = ''; sortBy = 'role'">
+        <TopbarFilters :active="selectedRole !== '' || sortBy !== 'role'" :count="countActiveFilters(selectedRole !== '', sortBy !== 'role')" @clear="selectedRole = ''; sortBy = 'role'">
           <TopbarFilterGroup v-model="selectedRole" label="Rol" :options="roleOptions" />
           <TopbarFilterGroup v-model="sortBy" label="Ordenar por" :options="sortOptions" />
         </TopbarFilters>
@@ -186,7 +186,7 @@ onMounted(() => {
     <!-- Mobile search -->
     <div class="mb-4 md:hidden">
       <TopbarSearch v-model="searchQuery" placeholder="Buscar usuarios...">
-        <TopbarFilters :active="selectedRole !== '' || sortBy !== 'role'" @clear="selectedRole = ''; sortBy = 'role'">
+        <TopbarFilters :active="selectedRole !== '' || sortBy !== 'role'" :count="countActiveFilters(selectedRole !== '', sortBy !== 'role')" @clear="selectedRole = ''; sortBy = 'role'">
           <TopbarFilterGroup v-model="selectedRole" label="Rol" :options="roleOptions" />
           <TopbarFilterGroup v-model="sortBy" label="Ordenar por" :options="sortOptions" />
         </TopbarFilters>

@@ -79,19 +79,19 @@ interface DaySection {
   groups: MessageGroup[]
 }
 
+// Días y horas en la zona del condominio, no en la del navegador.
+const { formatInstant } = useFormatDate()
+const { today, daysAgo, dateOf } = useLocalDate()
+
 function dayKey(d: Date): string {
-  return `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`
+  return dateOf(d)
 }
 
 function formatDateLabel(dateStr: string): string {
-  const d = new Date(dateStr)
-  const now = new Date()
-  const yesterday = new Date(now)
-  yesterday.setDate(now.getDate() - 1)
-  const key = dayKey(d)
-  if (key === dayKey(now)) return 'Hoy'
-  if (key === dayKey(yesterday)) return 'Ayer'
-  const label = d.toLocaleDateString('es-VE', { weekday: 'long', day: 'numeric', month: 'long' })
+  const key = dayKey(new Date(dateStr))
+  if (key === today()) return 'Hoy'
+  if (key === daysAgo(1)) return 'Ayer'
+  const label = formatInstant(dateStr, { weekday: 'long', day: 'numeric', month: 'long' })
   return label.charAt(0).toUpperCase() + label.slice(1)
 }
 
@@ -131,10 +131,7 @@ function getInitials(name: string): string {
 }
 
 function formatTime(dateStr: string): string {
-  return new Date(dateStr).toLocaleTimeString('es-VE', {
-    hour: '2-digit',
-    minute: '2-digit',
-  })
+  return formatInstant(dateStr, { hour: '2-digit', minute: '2-digit' })
 }
 
 function scrollToBottom() {

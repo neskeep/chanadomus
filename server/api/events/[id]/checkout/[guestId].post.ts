@@ -7,6 +7,7 @@ import { units } from '~~/server/db/schema/unit'
 import { broadcastAccessEvent } from '~~/server/utils/ws-access'
 import type { AccessEvent } from '~~/shared/types/access'
 import type { EventGuest } from '~~/shared/types/event'
+import { canCheckOutEvent } from '~~/shared/lib/event-window'
 
 const paramsSchema = z.object({
   id: z.string().uuid(),
@@ -34,7 +35,7 @@ export default defineEventHandler(async (event) => {
   // salidas tardias de invitados que quedaron 'dentro' cuando el evento vencio
   // (lazy expiration lo transiciona a 'completado' al pasar endsAt). Solo se
   // bloquea en 'cancelado' o 'pendiente'.
-  if (ev.status !== 'activo' && ev.status !== 'completado') {
+  if (!canCheckOutEvent(ev)) {
     throw createError({ statusCode: 400, message: 'El evento no admite check-out en su estado actual' })
   }
 
@@ -53,30 +54,33 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 400, message: 'El invitado no esta dentro del evento' })
   }
 
+  // UPDATE condicionado a status='dentro': si llegan dos peticiones seguidas para el
+  // mismo invitado, solo la primera registra la salida.
   const now = new Date()
+  const updated = await db.transaction(async (tx) => {
+    const [row] = await tx
+      .update(eventGuests)
+      .set({
+        status: 'salio',
+        checkedOutAt: now,
+        checkedOutBy: session.user.id,
+      })
+      .where(and(eq(eventGuests.id, guestId), eq(eventGuests.status, 'dentro')))
+      .returning()
 
-  // Update access log with exit time
-  if (guest.accessLogId) {
-    await db
-      .update(accessLogs)
-      .set({ exitAt: now })
-      .where(eq(accessLogs.id, guest.accessLogId))
-  }
+    if (!row) {
+      throw createError({ statusCode: 409, message: 'El invitado ya tiene la salida registrada' })
+    }
 
-  // Update guest
-  const [updated] = await db
-    .update(eventGuests)
-    .set({
-      status: 'salio',
-      checkedOutAt: now,
-      checkedOutBy: session.user.id,
-    })
-    .where(eq(eventGuests.id, guestId))
-    .returning()
+    if (guest.accessLogId) {
+      await tx
+        .update(accessLogs)
+        .set({ exitAt: now })
+        .where(eq(accessLogs.id, guest.accessLogId))
+    }
 
-  if (!updated) {
-    throw createError({ statusCode: 500, message: 'Error al actualizar invitado' })
-  }
+    return row
+  })
 
   // Get unit info for broadcast
   const [unit] = await db

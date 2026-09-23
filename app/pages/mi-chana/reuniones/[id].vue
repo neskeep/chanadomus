@@ -31,12 +31,14 @@ function statusLabel(key: MeetingStatus): string {
   return MEETING_STATUSES.find(s => s.key === key)?.label ?? key
 }
 
+const { formatInstant } = useFormatDate()
+
 function formatFullDate(iso: string): string {
-  return new Date(iso).toLocaleDateString('es-VE', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })
+  return formatInstant(iso, { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })
 }
 
 function formatTime(iso: string): string {
-  return new Date(iso).toLocaleTimeString('es-VE', { hour: '2-digit', minute: '2-digit' })
+  return formatInstant(iso, { hour: '2-digit', minute: '2-digit' })
 }
 
 const attendeesList = computed(() => {
