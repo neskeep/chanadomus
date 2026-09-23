@@ -11,9 +11,9 @@ import { toast } from 'vue-sonner'
 import { watchDebounced } from '@vueuse/core'
 import type {
   Provider,
-  ProviderCategory,
   ProviderStatus,
 } from '~~/shared/types/provider'
+import { getProviderCategoryLabel } from '~~/shared/types/provider'
 import { PROVIDER_CATEGORY_COLORS as CATEGORY_COLORS, PROVIDER_STATUS_COLORS, PROVIDER_STATUS_LABELS } from '~/composables/useColorMap'
 
 useHead({ title: 'Proveedores y servicios' })
@@ -52,19 +52,6 @@ const providerStatusOptions = [
 // Delete dialog
 const deleteId = ref<string | null>(null)
 const deleteDialogOpen = ref(false)
-
-const CATEGORY_LABELS: Record<ProviderCategory, string> = {
-  plomeria: 'Plomeria',
-  electricidad: 'Electricidad',
-  jardineria: 'Jardineria',
-  cerrajeria: 'Cerrajeria',
-  limpieza: 'Limpieza',
-  pintura: 'Pintura',
-  albanileria: 'Albanileria',
-  seguridad: 'Seguridad',
-  fumigacion: 'Fumigacion',
-  otro: 'Otro',
-}
 
 const STATUS_CONFIG: Record<ProviderStatus, { label: string; class: string }> = {
   active: { label: PROVIDER_STATUS_LABELS.active, class: PROVIDER_STATUS_COLORS.active },
@@ -228,7 +215,7 @@ function renderStars(rating: number | undefined): number[] {
                   <span
                     class="inline-flex shrink-0 rounded-lg bg-muted px-1.5 py-0.5 text-[11px] font-medium text-muted-foreground"
                   >
-                    {{ sug.serviceRoleName ?? CATEGORY_LABELS[sug.category] }}
+                    {{ getProviderCategoryLabel(sug) }}
                   </span>
                 </div>
                 <div class="mt-0.5 flex items-center gap-x-1 text-[11px] text-muted-foreground">
@@ -312,7 +299,7 @@ function renderStars(rating: number | undefined): number[] {
               </TableCell>
               <TableCell>
                 <span class="inline-flex rounded-lg bg-muted px-2 py-0.5 text-xs font-medium text-muted-foreground">
-                  {{ item.serviceRoleName ?? CATEGORY_LABELS[item.category] }}
+                  {{ getProviderCategoryLabel(item) }}
                 </span>
               </TableCell>
               <TableCell>
@@ -402,7 +389,7 @@ function renderStars(rating: number | undefined): number[] {
                 class="ml-auto inline-flex shrink-0 rounded-lg px-1.5 py-0.5 text-[11px] font-medium"
                 :class="CATEGORY_COLORS[item.category]"
               >
-                {{ item.serviceRoleName ?? CATEGORY_LABELS[item.category] }}
+                {{ getProviderCategoryLabel(item) }}
               </span>
             </div>
             <!-- Row 2: Status · Phone | Actions inline -->

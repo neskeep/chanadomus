@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import type { ServiceRole } from '~~/shared/types/service-role'
 import { Plus, Pencil, Trash2, Tag, Loader2 } from 'lucide-vue-next'
 import { toast } from 'vue-sonner'
 
@@ -6,19 +7,6 @@ definePageMeta({ layout: 'default' })
 useHead({ title: 'Roles de Servicio' })
 
 const { target, isMounted } = useTopbarPortal()
-
-// --- Types ---
-interface ServiceRole {
-  id: string
-  name: string
-  description: string | null
-  appliesToStaff: boolean
-  appliesToProviders: boolean
-  isActive: boolean
-  displayOrder: number
-  tenantId: string
-  createdAt: string
-}
 
 // --- State ---
 const roles = ref<ServiceRole[]>([])

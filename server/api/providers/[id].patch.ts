@@ -1,12 +1,7 @@
 import { db } from '~~/server/db'
 import { providers } from '~~/server/db/schema/provider'
 import { eq, and } from 'drizzle-orm'
-import type { Provider, ProviderCategory, ProviderStatus, UpdateProvider } from '~~/shared/types/provider'
-
-const VALID_CATEGORIES: ProviderCategory[] = [
-  'plomeria', 'electricidad', 'jardineria', 'cerrajeria', 'limpieza',
-  'pintura', 'albanileria', 'seguridad', 'fumigacion', 'otro',
-]
+import { isProviderCategory, type Provider, type ProviderStatus, type UpdateProvider } from '~~/shared/types/provider'
 const VALID_STATUSES: ProviderStatus[] = ['active', 'inactive', 'pending']
 
 export default defineEventHandler(async (event) => {
@@ -29,7 +24,7 @@ export default defineEventHandler(async (event) => {
       throw createError({ statusCode: 400, message: 'El nombre no puede exceder 200 caracteres' })
     }
   }
-  if (body.category !== undefined && !VALID_CATEGORIES.includes(body.category)) {
+  if (body.category !== undefined && !isProviderCategory(body.category)) {
     throw createError({ statusCode: 400, message: 'Categoria invalida' })
   }
   if (body.status !== undefined && !VALID_STATUSES.includes(body.status)) {
@@ -41,12 +36,20 @@ export default defineEventHandler(async (event) => {
 
   // Check provider exists and belongs to tenant
   const [existing] = await db
-    .select({ id: providers.id })
+    .select({ id: providers.id, serviceRoleId: providers.serviceRoleId })
     .from(providers)
     .where(and(eq(providers.id, id), eq(providers.tenantId, session.tenantId)))
 
   if (!existing) {
     throw createError({ statusCode: 404, message: 'Proveedor no encontrado' })
+  }
+
+  // La categoría debe ser del tenant. Si cambia, además activa y de proveedores
+  // (conservar un rol que se desactivó después no debe bloquear la edición).
+  if (body.serviceRoleId) {
+    await assertProviderServiceRole(session.tenantId, body.serviceRoleId, {
+      requireProviderActive: body.serviceRoleId !== existing.serviceRoleId,
+    })
   }
 
   // Build update values

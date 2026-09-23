@@ -4,6 +4,7 @@ import type {
   ProviderReview,
   CreateProvider,
   UpdateProvider,
+  SuggestProvider,
   CreateReview,
 } from '~~/shared/types/provider'
 
@@ -25,13 +26,6 @@ export interface FetchProvidersParams {
   serviceRoleId?: string
   search?: string
   status?: Provider['status']
-}
-
-interface SuggestProviderPayload {
-  name: string
-  category: ProviderCategory
-  phone?: string
-  notes?: string
 }
 
 export function useProviders() {
@@ -157,7 +151,7 @@ export function useProviders() {
       return res.data
     }
     catch (err: unknown) {
-      const message = err instanceof Error ? err.message : 'Error al enviar resena'
+      const message = err instanceof Error ? err.message : 'Error al enviar reseña'
       error.value = message
       throw err
     }
@@ -166,7 +160,7 @@ export function useProviders() {
     }
   }
 
-  async function suggestProvider(data: SuggestProviderPayload): Promise<Provider> {
+  async function suggestProvider(data: SuggestProvider): Promise<Provider> {
     isSubmitting.value = true
     error.value = null
     try {

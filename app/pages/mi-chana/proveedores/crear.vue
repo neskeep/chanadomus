@@ -1,14 +1,14 @@
 <script setup lang="ts">
 import { Loader2 } from 'lucide-vue-next'
 import { toast } from 'vue-sonner'
-import type { ProviderCategory, CreateProvider } from '~~/shared/types/provider'
-import { PROVIDER_CATEGORIES } from '~~/shared/types/provider'
+import type { CreateProvider } from '~~/shared/types/provider'
 
 useHead({ title: 'Nuevo Proveedor' })
 
 const router = useRouter()
 const { role } = useAuth()
 const { isSubmitting, error, createProvider } = useProviders()
+const { categories, fetchCategories } = useProviderCategories()
 
 // Only conserje can access this page (admin uses /admin/proveedores/crear)
 if (role.value !== 'conserje' && role.value !== 'admin') {
@@ -17,15 +17,21 @@ if (role.value !== 'conserje' && role.value !== 'admin') {
 
 const formName = ref('')
 const formPhone = ref('')
-const formCategory = ref<ProviderCategory>('otro')
+const formServiceRoleId = ref('')
 const formAddress = ref('')
 const formSchedule = ref('')
 const formServices = ref('')
 const formCosts = ref('')
 const formNotes = ref('')
 
+onMounted(() => {
+  fetchCategories()
+})
+
 const canSubmit = computed(() =>
-  formName.value.trim().length > 0 && !isSubmitting.value,
+  formName.value.trim().length > 0
+  && formServiceRoleId.value
+  && !isSubmitting.value,
 )
 
 async function handleSubmit() {
@@ -38,7 +44,8 @@ async function handleSubmit() {
     const data: CreateProvider = {
       name: formName.value.trim(),
       phone: formPhone.value.trim() || undefined,
-      category: formCategory.value,
+      category: 'otro',
+      serviceRoleId: formServiceRoleId.value,
       address: formAddress.value.trim() || undefined,
       schedule: formSchedule.value.trim() || undefined,
       services,
@@ -86,17 +93,13 @@ async function handleSubmit() {
               />
             </div>
             <div class="space-y-1.5">
-              <Label for="prov-category">Categoría</Label>
-              <Select v-model="formCategory">
-                <SelectTrigger id="prov-category" size="lg" class="text-base">
-                  <SelectValue placeholder="Seleccionar categoría" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem v-for="cat in PROVIDER_CATEGORIES" :key="cat.key" :value="cat.key">
-                    {{ cat.label }}
-                  </SelectItem>
-                </SelectContent>
-              </Select>
+              <Label>Categoría <span class="text-destructive">*</span></Label>
+              <ServiceRoleCombobox
+                v-model="formServiceRoleId"
+                :roles="categories"
+                :creatable="false"
+                required
+              />
             </div>
           </div>
 

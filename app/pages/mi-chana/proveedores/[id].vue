@@ -9,8 +9,8 @@ import {
   Loader2,
 } from 'lucide-vue-next'
 import { toast } from 'vue-sonner'
-import type { Provider, ProviderCategory, UpdateProvider } from '~~/shared/types/provider'
-import { PROVIDER_CATEGORIES } from '~~/shared/types/provider'
+import type { Provider, UpdateProvider } from '~~/shared/types/provider'
+import { getProviderCategoryLabel } from '~~/shared/types/provider'
 
 import { PROVIDER_CATEGORY_COLORS as CATEGORY_COLORS, PROVIDER_STATUS_COLORS, PROVIDER_STATUS_LABELS } from '~/composables/useColorMap'
 
@@ -51,7 +51,7 @@ const providerId = computed(() => route.params.id as string)
 const editOpen = ref(false)
 const editName = ref('')
 const editPhone = ref('')
-const editCategory = ref<ProviderCategory>('otro')
+const editServiceRoleId = ref('')
 const editAddress = ref('')
 const editSchedule = ref('')
 const editServices = ref('')
@@ -67,18 +67,19 @@ const reviewRating = ref(0)
 const reviewHover = ref(0)
 const reviewComment = ref('')
 
-const CATEGORY_LABELS: Record<ProviderCategory, string> = {
-  plomeria: 'Plomeria',
-  electricidad: 'Electricidad',
-  jardineria: 'Jardineria',
-  cerrajeria: 'Cerrajeria',
-  limpieza: 'Limpieza',
-  pintura: 'Pintura',
-  albanileria: 'Albanileria',
-  seguridad: 'Seguridad',
-  fumigacion: 'Fumigacion',
-  otro: 'Otro',
-}
+// Category options for the edit dialog (service roles catalog). Keeps the
+// provider's current role selectable even if it was deactivated later.
+const { categories, fetchCategories } = useProviderCategories()
+const editCategoryOptions = computed(() => {
+  const current = provider.value
+  if (!current?.serviceRoleId || categories.value.some(c => c.id === current.serviceRoleId)) {
+    return categories.value
+  }
+  return [
+    ...categories.value,
+    { id: current.serviceRoleId, name: current.serviceRoleName ?? 'Categoría actual', displayOrder: 0 },
+  ]
+})
 
 const STATUS_LABELS: Record<string, { label: string; class: string }> = {
   active: { label: PROVIDER_STATUS_LABELS.active, class: PROVIDER_STATUS_COLORS.active },
@@ -111,7 +112,8 @@ function openEditDialog() {
   if (!provider.value) return
   editName.value = provider.value.name
   editPhone.value = provider.value.phone ?? ''
-  editCategory.value = provider.value.category
+  editServiceRoleId.value = provider.value.serviceRoleId ?? ''
+  if (categories.value.length === 0) fetchCategories()
   editAddress.value = provider.value.address ?? ''
   editSchedule.value = provider.value.schedule ?? ''
   editServices.value = provider.value.services?.join('\n') ?? ''
@@ -130,7 +132,8 @@ async function handleEdit() {
     const data: UpdateProvider = {
       name: editName.value.trim(),
       phone: editPhone.value.trim() || null,
-      category: editCategory.value,
+      serviceRoleId: editServiceRoleId.value || null,
+      ...(editServiceRoleId.value ? { category: 'otro' as const } : {}),
       address: editAddress.value.trim() || null,
       schedule: editSchedule.value.trim() || null,
       services: editServices.value.trim()
@@ -252,7 +255,7 @@ async function handleReview() {
               class="inline-flex rounded-lg px-2 py-0.5 text-xs font-medium"
               :class="CATEGORY_COLORS[provider.category]"
             >
-              {{ provider.serviceRoleName ?? CATEGORY_LABELS[provider.category] }}
+              {{ getProviderCategoryLabel(provider) }}
             </span>
             <span
               class="inline-flex rounded-lg px-2 py-0.5 text-xs font-medium"
@@ -386,27 +389,27 @@ async function handleReview() {
           </div>
 
           <div class="space-y-2">
-            <Label for="edit-phone">Telefono</Label>
+            <Label for="edit-phone">Teléfono</Label>
             <Input id="edit-phone" v-model="editPhone" placeholder="0412-1234567" />
           </div>
 
           <div class="space-y-2">
-            <Label for="edit-category">Categoria</Label>
-            <Select v-model="editCategory">
-              <SelectTrigger id="edit-category">
-                <SelectValue placeholder="Seleccionar categoria" />
+            <Label for="edit-category">Categoría</Label>
+            <Select v-model="editServiceRoleId">
+              <SelectTrigger id="edit-category" class="w-full">
+                <SelectValue placeholder="Seleccionar categoría" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem v-for="cat in PROVIDER_CATEGORIES" :key="cat.key" :value="cat.key">
-                  {{ cat.label }}
+                <SelectItem v-for="cat in editCategoryOptions" :key="cat.id" :value="cat.id">
+                  {{ cat.name }}
                 </SelectItem>
               </SelectContent>
             </Select>
           </div>
 
           <div class="space-y-2">
-            <Label for="edit-address">Direccion</Label>
-            <Input id="edit-address" v-model="editAddress" placeholder="Direccion del proveedor" />
+            <Label for="edit-address">Dirección</Label>
+            <Input id="edit-address" v-model="editAddress" placeholder="Dirección del proveedor" />
           </div>
 
           <div class="space-y-2">
@@ -415,18 +418,18 @@ async function handleReview() {
           </div>
 
           <div class="space-y-2">
-            <Label for="edit-services">Servicios (uno por linea)</Label>
+            <Label for="edit-services">Servicios (uno por línea)</Label>
             <Textarea
               id="edit-services"
               v-model="editServices"
-              placeholder="Reparacion de tuberias&#10;Destape de drenajes"
+              placeholder="Reparación de tuberías&#10;Destape de drenajes"
               rows="3"
             />
           </div>
 
           <div class="space-y-2">
             <Label for="edit-costs">Costos</Label>
-            <Textarea id="edit-costs" v-model="editCosts" placeholder="Descripcion de costos..." rows="2" />
+            <Textarea id="edit-costs" v-model="editCosts" placeholder="Descripción de costos..." rows="2" />
           </div>
 
           <div class="space-y-2">

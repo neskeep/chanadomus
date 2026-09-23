@@ -12,11 +12,14 @@ const props = withDefaults(defineProps<{
   placeholder?: string
   required?: boolean
   disabled?: boolean
+  /** Permite crear categorías inline (requiere rol admin). */
+  creatable?: boolean
 }>(), {
   modelValue: undefined,
   placeholder: 'Seleccionar categoría',
   required: false,
   disabled: false,
+  creatable: true,
 })
 
 const emit = defineEmits<{
@@ -76,7 +79,7 @@ const selectedLabel = computed(() => {
 
 // Check if search term already exists
 const canCreate = computed(() => {
-  if (!search.value.trim()) return false
+  if (!props.creatable || !search.value.trim()) return false
   const q = search.value.trim().toLowerCase()
   return !props.roles.some(r => r.name.toLowerCase() === q)
 })
@@ -149,7 +152,7 @@ async function handleCreate() {
           <input
             v-model="search"
             data-role-search
-            placeholder="Buscar o crear categoría..."
+            :placeholder="creatable ? 'Buscar o crear categoría...' : 'Buscar categoría...'"
             class="w-full bg-transparent text-sm outline-none placeholder:text-muted-foreground"
             @keydown.escape="close"
             @keydown.enter="canCreate ? handleCreate() : undefined"

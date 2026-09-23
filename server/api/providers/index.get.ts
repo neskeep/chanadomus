@@ -2,13 +2,9 @@ import { db } from '~~/server/db'
 import { providers, providerReviews } from '~~/server/db/schema/provider'
 import { user } from '~~/server/db/schema/auth'
 import { serviceStaffRoles } from '~~/server/db/schema/service-staff-role'
-import { eq, and, asc, count, ilike, avg, inArray } from 'drizzle-orm'
-import type { Provider, ProviderCategory, ProviderStatus } from '~~/shared/types/provider'
+import { eq, and, or, asc, count, ilike, avg, inArray, sql } from 'drizzle-orm'
+import { isProviderCategory, type Provider, type ProviderStatus } from '~~/shared/types/provider'
 
-const VALID_CATEGORIES: ProviderCategory[] = [
-  'plomeria', 'electricidad', 'jardineria', 'cerrajeria', 'limpieza',
-  'pintura', 'albanileria', 'seguridad', 'fumigacion', 'otro',
-]
 const VALID_STATUSES: ProviderStatus[] = ['active', 'inactive', 'pending']
 
 export default defineEventHandler(async (event) => {
@@ -24,8 +20,11 @@ export default defineEventHandler(async (event) => {
   const offset = (page - 1) * limit
 
   // Validate filters
-  if (category && !VALID_CATEGORIES.includes(category as ProviderCategory)) {
-    throw createError({ statusCode: 400, message: 'Categoria invalida' })
+  if (category && !isProviderCategory(category)) {
+    throw createError({ statusCode: 400, message: 'Categoría inválida' })
+  }
+  if (serviceRoleId && !isUuid(serviceRoleId)) {
+    throw createError({ statusCode: 400, message: 'Categoría inválida' })
   }
   if (status && !VALID_STATUSES.includes(status as ProviderStatus)) {
     throw createError({ statusCode: 400, message: 'Estado invalido' })
@@ -46,20 +45,30 @@ export default defineEventHandler(async (event) => {
 
   if (serviceRoleId) {
     conditions.push(eq(providers.serviceRoleId, serviceRoleId))
-  } else if (category) {
-    conditions.push(eq(providers.category, category as ProviderCategory))
+  } else if (category && isProviderCategory(category)) {
+    conditions.push(eq(providers.category, category))
   }
 
-  if (search && search.trim()) {
-    conditions.push(ilike(providers.name, `%${search.trim()}%`))
+  // Search by provider name, category (service role) name, or any listed service.
+  // Escape LIKE wildcards so the term is matched literally.
+  const term = search?.trim()
+  if (term) {
+    const pattern = `%${term.replace(/[\\%_]/g, '\\$&')}%`
+    const searchCondition = or(
+      ilike(providers.name, pattern),
+      ilike(serviceStaffRoles.name, pattern),
+      sql`array_to_string(${providers.services}, ' ') ilike ${pattern}`,
+    )
+    if (searchCondition) conditions.push(searchCondition)
   }
 
   const whereClause = and(...conditions)
 
-  // Get total count
+  // Get total count (same join as the page query, since search can match the role name)
   const [totalRow] = await db
     .select({ total: count() })
     .from(providers)
+    .leftJoin(serviceStaffRoles, eq(providers.serviceRoleId, serviceStaffRoles.id))
     .where(whereClause)
 
   const total = totalRow?.total ?? 0

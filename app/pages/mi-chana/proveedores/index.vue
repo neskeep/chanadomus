@@ -6,9 +6,8 @@ import {
   Plus,
 } from 'lucide-vue-next'
 import { watchDebounced } from '@vueuse/core'
-import type { ProviderCategory } from '~~/shared/types/provider'
 import type { FetchProvidersParams } from '~/composables/useProviders'
-import { PROVIDER_CATEGORIES } from '~~/shared/types/provider'
+import { getProviderCategoryLabel } from '~~/shared/types/provider'
 import { PROVIDER_CATEGORY_COLORS as CATEGORY_COLORS } from '~/composables/useColorMap'
 
 useHead({ title: 'Proveedores y servicios' })
@@ -28,31 +27,16 @@ const canCreate = computed(() => role.value === 'admin' || role.value === 'conse
 // Filters & pagination
 const currentPage = ref(1)
 const searchQuery = ref('')
-const filterCategory = ref<ProviderCategory | ''>('')
-
-const categoryOptions = computed(() => [
-  ...PROVIDER_CATEGORIES.map(c => ({ value: c.key as ProviderCategory | '', label: c.label })),
-])
-
-const CATEGORY_LABELS: Record<ProviderCategory, string> = {
-  plomeria: 'Plomeria',
-  electricidad: 'Electricidad',
-  jardineria: 'Jardineria',
-  cerrajeria: 'Cerrajeria',
-  limpieza: 'Limpieza',
-  pintura: 'Pintura',
-  albanileria: 'Albanileria',
-  seguridad: 'Seguridad',
-  fumigacion: 'Fumigacion',
-  otro: 'Otro',
-}
+// Category filter uses the service roles catalog (same as admin), sent as serviceRoleId
+const filterCategory = ref('')
+const { categoryOptions, fetchCategories } = useProviderCategories()
 
 async function loadProviders() {
   const params: FetchProvidersParams = {
     page: currentPage.value,
     status: 'active',
   }
-  if (filterCategory.value) params.category = filterCategory.value
+  if (filterCategory.value) params.serviceRoleId = filterCategory.value
   if (searchQuery.value.trim()) params.search = searchQuery.value.trim()
   await fetchProviders(params)
 }
@@ -73,6 +57,7 @@ watchDebounced(searchQuery, () => {
 
 onMounted(() => {
   loadProviders()
+  fetchCategories()
 })
 
 function renderStars(rating: number | undefined): number[] {
@@ -86,7 +71,7 @@ function renderStars(rating: number | undefined): number[] {
     <Teleport v-if="isMounted" :to="target" defer>
       <TopbarSearch v-model="searchQuery" placeholder="Buscar proveedor...">
         <TopbarFilters :active="filterCategory !== ''" @clear="filterCategory = ''">
-          <TopbarFilterGroup v-model="filterCategory" label="Categoria" :options="categoryOptions" />
+          <TopbarFilterGroup v-model="filterCategory" label="Categoría" :options="categoryOptions" />
         </TopbarFilters>
       </TopbarSearch>
       <Button v-if="role === 'propietario'" size="sm" variant="outline" @click="navigateTo('/mi-chana/proveedores/sugerir')">
@@ -113,7 +98,7 @@ function renderStars(rating: number | undefined): number[] {
     <div class="mb-4 md:hidden">
       <TopbarSearch v-model="searchQuery" placeholder="Buscar proveedor...">
         <TopbarFilters :active="filterCategory !== ''" @clear="filterCategory = ''">
-          <TopbarFilterGroup v-model="filterCategory" label="Categoria" :options="categoryOptions" />
+          <TopbarFilterGroup v-model="filterCategory" label="Categoría" :options="categoryOptions" />
         </TopbarFilters>
       </TopbarSearch>
     </div>
@@ -129,7 +114,7 @@ function renderStars(rating: number | undefined): number[] {
       v-else-if="providers.length === 0"
       :icon="Wrench"
       title="No hay proveedores"
-      :description="filterCategory ? 'Prueba cambiando los filtros' : 'Los proveedores aparecerán aquí'"
+      :description="filterCategory || searchQuery ? 'Prueba con otra búsqueda o cambia los filtros' : 'Los proveedores aparecerán aquí'"
     >
       <template v-if="role === 'propietario'" #action>
         <Button size="sm" variant="outline" @click="navigateTo('/mi-chana/proveedores/sugerir')">
@@ -145,9 +130,9 @@ function renderStars(rating: number | undefined): number[] {
           <TableHeader>
             <TableRow>
               <TableHead>Nombre</TableHead>
-              <TableHead>Categoria</TableHead>
+              <TableHead>Categoría</TableHead>
               <TableHead>Rating</TableHead>
-              <TableHead>Telefono</TableHead>
+              <TableHead>Teléfono</TableHead>
               <TableHead>Servicios</TableHead>
             </TableRow>
           </TableHeader>
@@ -164,7 +149,7 @@ function renderStars(rating: number | undefined): number[] {
                   class="inline-flex rounded-lg px-2 py-0.5 text-xs font-medium"
                   :class="CATEGORY_COLORS[provider.category]"
                 >
-                  {{ provider.serviceRoleName ?? CATEGORY_LABELS[provider.category] }}
+                  {{ getProviderCategoryLabel(provider) }}
                 </span>
               </TableCell>
               <TableCell>
@@ -209,7 +194,7 @@ function renderStars(rating: number | undefined): number[] {
                   class="inline-flex shrink-0 rounded-lg px-1.5 py-0.5 text-[11px] font-medium"
                   :class="CATEGORY_COLORS[provider.category]"
                 >
-                  {{ provider.serviceRoleName ?? CATEGORY_LABELS[provider.category] }}
+                  {{ getProviderCategoryLabel(provider) }}
                 </span>
               </div>
               <!-- Row 2: Rating · Phone · Services -->

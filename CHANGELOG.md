@@ -7,6 +7,13 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [1.7.1] - 2026-09-23
+
+### Fixed
+- Proveedores: propietarios y conserjes ahora ven las mismas categorías que administración (roles de servicio) en el filtro del listado, en "Sugerir proveedor" y en el alta y edición de proveedores. Antes veían 10 categorías genéricas y el filtro no devolvía resultados
+- La búsqueda de proveedores ahora encuentra también por categoría y por los servicios que ofrece cada proveedor, no solo por nombre
+- Nuevo endpoint de solo lectura `GET /api/providers/categories` para que cualquier rol cargue las categorías
+
 ## [1.7.0] - 2026-09-02
 
 ### Added

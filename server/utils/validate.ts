@@ -54,6 +54,13 @@ export function validateParams<T>(event: H3Event, schema: ZodType<T>): T {
   return result.data
 }
 
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+
+/** True si el valor es un UUID con formato válido (evita errores 500 de Postgres). */
+export function isUuid(value: unknown): value is string {
+  return typeof value === 'string' && UUID_RE.test(value)
+}
+
 function formatZodError(error: ZodError): string {
   return error.issues
     .map((issue) => `${issue.path.join('.')}: ${issue.message}`)

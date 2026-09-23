@@ -1,7 +1,7 @@
 import { z } from 'zod'
 import { db } from '~~/server/db'
 import { providers } from '~~/server/db/schema/provider'
-import type { Provider } from '~~/shared/types/provider'
+import { PROVIDER_CATEGORY_KEYS, type Provider } from '~~/shared/types/provider'
 
 const createProviderSchema = z.object({
   name: z.string().min(1, 'El nombre es requerido').max(200, 'El nombre no puede exceder 200 caracteres'),
@@ -12,7 +12,7 @@ const createProviderSchema = z.object({
   services: z.array(z.string()).optional().nullable(),
   costs: z.string().optional().nullable(),
   notes: z.string().optional().nullable(),
-  category: z.enum(['plomeria', 'electricidad', 'jardineria', 'cerrajeria', 'limpieza', 'pintura', 'albanileria', 'seguridad', 'fumigacion', 'otro']).optional(),
+  category: z.enum(PROVIDER_CATEGORY_KEYS).optional(),
   serviceRoleId: z.string().optional().nullable(),
 }).refine((data) => {
   if (!data.serviceRoleId && !data.category) return false
@@ -25,6 +25,10 @@ export default defineEventHandler(async (event) => {
 
   const body = await validateBody(event, createProviderSchema)
 
+  if (body.serviceRoleId) {
+    await assertProviderServiceRole(session.tenantId, body.serviceRoleId)
+  }
+
   const rows = await db
     .insert(providers)
     .values({
@@ -36,7 +40,7 @@ export default defineEventHandler(async (event) => {
       services: body.services ?? null,
       costs: body.costs?.trim() || null,
       notes: body.notes?.trim() || null,
-      category: body.category ?? 'otro',
+      category: body.serviceRoleId ? 'otro' : (body.category ?? 'otro'),
       serviceRoleId: body.serviceRoleId ?? null,
       status: 'active',
       createdById: session.user.id,
