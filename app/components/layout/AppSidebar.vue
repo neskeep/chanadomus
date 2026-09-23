@@ -7,6 +7,7 @@ const { role } = useAuth()
 const route = useRoute()
 const { groups } = useNavigation()
 const { hasActiveAlert } = usePanicStream()
+const { badgeCount: eventAlertCount } = useEventAlerts()
 
 const roleHome = computed(() => role.value ? ROLE_REDIRECTS[role.value] : '/')
 
@@ -52,6 +53,12 @@ watch(() => route.path, () => {
                     class="ml-auto h-5 min-w-5 animate-pulse px-1.5 text-[10px] font-bold"
                   >
                     !
+                  </Badge>
+                  <Badge
+                    v-if="(item.to === '/admin/eventos' || item.to === '/vigilancia/eventos') && eventAlertCount > 0"
+                    class="ml-auto h-5 min-w-5 px-1.5 text-[10px] font-bold tabular-nums"
+                  >
+                    {{ eventAlertCount }}
                   </Badge>
                 </NuxtLink>
               </SidebarMenuButton>

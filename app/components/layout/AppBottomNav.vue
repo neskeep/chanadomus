@@ -6,6 +6,7 @@ const { mobileItems, groups } = useNavigation()
 const { user, role, signOut } = useAuth()
 const route = useRoute()
 const { hasActiveAlert } = usePanicStream()
+const { badgeCount: eventAlertCount } = useEventAlerts()
 
 const moreOpen = ref(false)
 
@@ -67,6 +68,10 @@ watch(() => route.path, () => {
           <span class="absolute inline-flex size-full animate-ping rounded-full bg-destructive opacity-75" />
           <span class="relative inline-flex size-3 rounded-full bg-destructive" />
         </span>
+        <span
+          v-else-if="eventAlertCount > 0"
+          class="absolute -right-1.5 -top-1.5 inline-flex size-2.5 rounded-full bg-primary"
+        />
       </span>
       <span class="text-[11px] font-medium">Más</span>
     </button>
@@ -122,6 +127,12 @@ watch(() => route.path, () => {
                   class="ml-auto h-5 min-w-5 animate-pulse px-1.5 text-[10px] font-bold"
                 >
                   !
+                </Badge>
+                <Badge
+                  v-if="(item.to === '/admin/eventos' || item.to === '/vigilancia/eventos') && eventAlertCount > 0"
+                  class="ml-auto h-5 min-w-5 px-1.5 text-[10px] font-bold tabular-nums"
+                >
+                  {{ eventAlertCount }}
                 </Badge>
               </NuxtLink>
             </div>

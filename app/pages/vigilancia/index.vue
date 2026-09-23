@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { AlertTriangle, ClipboardList, DoorOpen, LogIn, LogOut, QrCode, Shield, ShieldAlert, UserPlus, Users } from 'lucide-vue-next'
+import { AlertTriangle, ClipboardList, DoorOpen, LogIn, LogOut, PartyPopper, QrCode, Shield, ShieldAlert, UserPlus, Users, X } from 'lucide-vue-next'
 import { buttonVariants } from '~/components/ui/button'
 import { ICON_BG } from '~/composables/useColorMap'
 
@@ -8,6 +8,10 @@ useHead({ title: 'Panel Vigilancia' })
 const { stats, isLoading } = useDashboard()
 const { events, isConnected, loadInitialEvents } = useAccessStream()
 const { hasActiveAlert, activeAlert, loadInitialAlerts } = usePanicStream()
+const { todayCount: eventsTodayCount } = useEventAlerts()
+
+const eventBannerDismissed = ref(false)
+const showEventBanner = computed(() => eventsTodayCount.value > 0 && !eventBannerDismissed.value)
 
 const quickActions = [
   { label: 'Registrar', icon: DoorOpen, to: '/vigilancia/registrar-acceso' },
@@ -52,6 +56,30 @@ onMounted(() => {
         </CardContent>
       </Card>
     </NuxtLink>
+
+    <!-- 0b. Aviso de eventos hoy (suave, descartable) -->
+    <Card v-if="showEventBanner" class="border-primary/30 bg-primary/5">
+      <CardContent class="flex items-center gap-3 px-4 py-3">
+        <div class="flex size-9 shrink-0 items-center justify-center rounded-full bg-primary/10">
+          <PartyPopper class="size-4 text-primary" />
+        </div>
+        <NuxtLink to="/vigilancia/eventos" class="min-w-0 flex-1">
+          <p class="text-sm font-semibold">
+            {{ eventsTodayCount === 1 ? 'Hay un evento programado hoy' : `Hay ${eventsTodayCount} eventos programados hoy` }}
+          </p>
+          <p class="text-xs text-muted-foreground">Toca para ver los detalles</p>
+        </NuxtLink>
+        <Button
+          variant="ghost"
+          size="icon"
+          class="size-8 shrink-0 text-muted-foreground"
+          aria-label="Descartar aviso"
+          @click="eventBannerDismissed = true"
+        >
+          <X class="size-4" />
+        </Button>
+      </CardContent>
+    </Card>
 
     <!-- 1. Hero: Accesos Hoy -->
     <Card class="p-6">

@@ -7,6 +7,15 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [1.9.0] - 2026-09-23
+
+### Added
+- Alerta al crear un evento: administración recibe un aviso visual y sonoro (suave y descartable) cuando un propietario o conserje crea un evento pendiente de aprobación, y un contador en el menú Eventos
+- Vigilancia recibe un aviso el día del evento (push una sola vez y banner en su inicio con los eventos de hoy)
+
+### Database
+- Migración 0059: columna `events.notified_vigilance_at` (nullable, aditiva)
+
 ## [1.8.1] - 2026-09-23
 
 ### Fixed

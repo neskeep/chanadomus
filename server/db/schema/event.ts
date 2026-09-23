@@ -24,6 +24,7 @@ export const events = pgTable('events', {
   guestLimit: integer('guest_limit'), // nullable = sin limite
   notes: text('notes'), // notas internas para vigilancia
   approvedAt: timestamp('approved_at'),
+  notifiedVigilanceAt: timestamp('notified_vigilance_at'), // aviso "el dia del evento" enviado a vigilancia (una sola vez)
   createdAt: timestamp('created_at').notNull().defaultNow(),
   updatedAt: timestamp('updated_at').notNull().defaultNow(),
 }, (table) => [

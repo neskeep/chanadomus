@@ -21,6 +21,10 @@ export default defineEventHandler(async (event) => {
   // con admin/propietario (el evento sigue visible aqui mientras aplique la ventana).
   await expireEvents(session.tenantId)
 
+  // Aviso "el dia del evento" a vigilancia: notifica una sola vez los eventos que
+  // empiezan hoy antes de devolver la lista (patron lazy, sin cron).
+  await notifyVigilanceTodayEvents(session.tenantId)
+
   const now = new Date()
   const today = localTodayRangeUtc(now)
 
