@@ -1,8 +1,10 @@
-import { eq, and, gte, desc, sql, or, isNotNull } from 'drizzle-orm'
+import { eq, and, gte, desc, sql, or } from 'drizzle-orm'
 import { db } from '~~/server/db'
 import { accessLogs, qrCodes } from '~~/server/db/schema/access'
 import { units } from '~~/server/db/schema/unit'
 import type { AccessEvent } from '~~/shared/types/access'
+import { countedEntryCondition, openEntryStillValidCondition } from '~~/server/utils/access-entry-exit'
+import { OWNER_VIEW_OPEN_ENTRY_MAX_AGE_MS } from '~~/server/utils/access-scan-rules'
 
 export default defineEventHandler(async (event) => {
   const session = await requireRole(event, ['propietario', 'admin', 'conserje'])
@@ -14,12 +16,9 @@ export default defineEventHandler(async (event) => {
   }
 
   // Last 30 days
-  const since = new Date()
+  const now = new Date()
+  const since = new Date(now)
   since.setDate(since.getDate() - 30)
-
-  // Entries without exitAt older than 24h are considered abandoned
-  const last24h = new Date()
-  last24h.setHours(last24h.getHours() - 24)
 
   const rows = await db
     .select({
@@ -41,17 +40,17 @@ export default defineEventHandler(async (event) => {
     .where(
       and(
         eq(accessLogs.tenantId, tenantId),
-        eq(accessLogs.result, 'allowed'),
+        // Solo entradas reales: excluye resultados no permitidos y filas "solo salida"
+        // (salida registrada sin entrada abierta). Filtro de lectura: los datos siguen en la DB.
+        countedEntryCondition(),
         gte(accessLogs.createdAt, since),
         or(
           eq(accessLogs.unitId, unitId),
           eq(qrCodes.unitId, unitId),
         ),
-        // Exclude abandoned entries (no exit, older than 24h)
-        or(
-          isNotNull(accessLogs.exitAt),
-          gte(accessLogs.createdAt, last24h),
-        ),
+        // Entradas sin salida: solo las de las últimas 24 h y no marcadas expired_open.
+        // El escáner usa una ventana mayor (OPEN_ENTRY_WINDOW_MS) para bloquear re-entradas.
+        openEntryStillValidCondition(now, OWNER_VIEW_OPEN_ENTRY_MAX_AGE_MS),
       ),
     )
     .orderBy(desc(accessLogs.createdAt))

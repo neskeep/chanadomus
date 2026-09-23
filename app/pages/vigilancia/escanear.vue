@@ -68,6 +68,7 @@ const statusConfig: Record<ValidationStatus, { label: string; bg: string; icon: 
   already_inside: { label: VALIDATION_STATUS_LABELS.already_inside, ...VALIDATION_STATUS_COLORS.already_inside },
   invalid: { label: VALIDATION_STATUS_LABELS.invalid, ...VALIDATION_STATUS_COLORS.invalid },
   canceled: { label: VALIDATION_STATUS_LABELS.canceled, ...VALIDATION_STATUS_COLORS.canceled },
+  duplicate: { label: VALIDATION_STATUS_LABELS.duplicate, ...VALIDATION_STATUS_COLORS.duplicate },
 }
 
 /** Resolved config: uses direction-specific colors for valid scans with direction */
@@ -206,7 +207,7 @@ const resolvedConfig = computed(() => {
               class="size-12"
             />
             <AlertTriangle
-              v-else-if="scanResult.status === 'expired' || scanResult.status === 'already_used' || scanResult.status === 'already_inside'"
+              v-else-if="scanResult.status === 'expired' || scanResult.status === 'already_used' || scanResult.status === 'already_inside' || scanResult.status === 'duplicate'"
               :class="resolvedConfig.icon"
               class="size-12"
             />
@@ -357,6 +358,22 @@ const resolvedConfig = computed(() => {
             </div>
             <p class="text-xs text-white/50">
               Debe registrar salida antes de una nueva entrada.
+            </p>
+          </div>
+
+          <!-- Duplicate scan details -->
+          <div
+            v-if="scanResult.status === 'duplicate'"
+            class="mt-6 w-full max-w-xs space-y-3 rounded-lg bg-white/10 p-4 backdrop-blur-sm"
+          >
+            <p v-if="scanResult.message" class="text-sm font-medium text-white">
+              {{ scanResult.message }}.
+            </p>
+            <p class="text-xs text-white/50">
+              No se creó un registro nuevo.
+              <template v-if="scanResult.retryAfterSeconds">
+                Si la persona de verdad volvió a pasar, espera {{ scanResult.retryAfterSeconds }} s y escanea otra vez.
+              </template>
             </p>
           </div>
 

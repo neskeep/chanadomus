@@ -1,5 +1,6 @@
 import { eq, and } from 'drizzle-orm'
 import { db } from '~~/server/db'
+import { findDuplicateScan, withScanLock } from '~~/server/utils/access-entry-exit'
 import { vehiclePasses } from '~~/server/db/schema/vehicle-pass'
 import { units } from '~~/server/db/schema/unit'
 import { accessLogs } from '~~/server/db/schema/access'
@@ -31,7 +32,7 @@ export default defineEventHandler(async (event) => {
 
   // Verify pass exists and belongs to tenant
   const [pass] = await db
-    .select({ id: vehiclePasses.id, description: vehiclePasses.description })
+    .select({ id: vehiclePasses.id, description: vehiclePasses.description, token: vehiclePasses.token })
     .from(vehiclePasses)
     .where(and(
       eq(vehiclePasses.id, passId),
@@ -43,23 +44,39 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 404, message: 'Pase no encontrado' })
   }
 
-  // Assign unit to the pass
-  await db.update(vehiclePasses)
-    .set({ unitId: body.unitId })
-    .where(eq(vehiclePasses.id, passId))
+  // Mismo lock y ventana anti doble escaneo que /api/qr/validate: la entrada se
+  // registra con el token del pase para que el escaneo de salida la encuentre.
+  return withScanLock(session.tenantId, pass.token, async (ctx) => {
+    const duplicate = await findDuplicateScan(ctx, session.tenantId, pass.token)
+    if (duplicate) {
+      return {
+        data: {
+          assigned: false,
+          duplicate: true,
+          message: duplicate.message,
+          unitNumber: duplicate.unitNumber,
+          unitLabel: duplicate.unitLabel,
+        },
+      }
+    }
 
-  // Log the access entry
-  await db.insert(accessLogs).values({
-    entryType: 'qr',
-    result: 'allowed',
-    authorizedBy: session.user.id,
-    visitorName: pass.description ?? 'Pase temporal',
-    unitId: body.unitId,
-    tenantId: session.tenantId,
-    vehiclePassId: passId,
-    occupantCount: body.occupantCount ?? null,
-    passToken: body.passToken ?? null,
+    await ctx.tx.update(vehiclePasses)
+      .set({ unitId: body.unitId })
+      .where(eq(vehiclePasses.id, passId))
+
+    await ctx.tx.insert(accessLogs).values({
+      entryType: 'qr',
+      result: 'allowed',
+      authorizedBy: session.user.id,
+      visitorName: pass.description ?? 'Pase temporal',
+      unitId: body.unitId,
+      tenantId: session.tenantId,
+      vehiclePassId: passId,
+      occupantCount: body.occupantCount ?? null,
+      passToken: pass.token,
+      createdAt: ctx.now,
+    })
+
+    return { data: { assigned: true, unitNumber: unit.number, unitLabel: unit.label } }
   })
-
-  return { data: { assigned: true, unitNumber: unit.number, unitLabel: unit.label } }
 })

@@ -6,7 +6,7 @@ import { qrCodes, accessLogs } from '~~/server/db/schema/access'
 import { units } from '~~/server/db/schema/unit'
 import type { WebhookScanPayload, AccessEvent, AccessResult } from '~~/shared/types/access'
 import { broadcastAccessEvent } from '~~/server/utils/ws-access'
-import { checkOpenEntry } from '~~/server/utils/access-entry-exit'
+import { checkOpenEntry, findDuplicateScan, withScanLock, type ScanContext } from '~~/server/utils/access-entry-exit'
 
 export default defineEventHandler(async (event) => {
   // 1. Read and validate device key
@@ -82,11 +82,34 @@ export default defineEventHandler(async (event) => {
     return { data: accessEvent }
   }
 
-  // QR scan flow
+  // QR scan flow — serializado por (tenant, token) para que un doble escaneo del
+  // lector no cree dos filas ni convierta la entrada recién hecha en salida.
   const token = body.value.trim()
+  return withScanLock(device.tenantId, token, ctx => processQrScan(ctx, token, device))
+})
+
+async function processQrScan(
+  ctx: ScanContext,
+  token: string,
+  device: { id: string; tenantId: string },
+) {
+  const duplicate = await findDuplicateScan(ctx, device.tenantId, token)
+  if (duplicate) {
+    return {
+      data: {
+        status: 'duplicate' as const,
+        message: duplicate.message,
+        accessLogId: duplicate.accessLogId,
+        direction: duplicate.direction,
+        lastActionAt: duplicate.lastActionAt,
+        secondsAgo: duplicate.secondsAgo,
+        retryAfterSeconds: duplicate.retryAfterSeconds,
+      },
+    }
+  }
 
   // Look up QR code with unit join
-  const [qrRecord] = await db
+  const [qrRecord] = await ctx.tx
     .select({
       id: qrCodes.id,
       visitorName: qrCodes.visitorName,
@@ -99,10 +122,10 @@ export default defineEventHandler(async (event) => {
     })
     .from(qrCodes)
     .innerJoin(units, eq(units.id, qrCodes.unitId))
-    .where(eq(qrCodes.token, token))
+    .where(and(eq(qrCodes.token, token), eq(qrCodes.tenantId, device.tenantId)))
     .limit(1)
 
-  const now = new Date()
+  const now = ctx.now
   let result: AccessResult
   let qrCodeId: string | null = null
   let direction: 'entry' | 'exit' = 'entry'
@@ -112,9 +135,9 @@ export default defineEventHandler(async (event) => {
     result = 'denied'
   } else if (qrRecord.usedAt) {
     // Already used — check for open entry (exit scan)
-    const openEntry = await checkOpenEntry(token, device.tenantId)
+    const openEntry = await checkOpenEntry(token, device.tenantId, ctx)
     if (openEntry.action === 'exit') {
-      // Exit was already handled by checkOpenEntry (exitAt set, WS broadcast done)
+      // Exit was already handled by checkOpenEntry (exitAt set, WS broadcast after commit)
       return {
         data: {
           id: openEntry.logId,
@@ -141,14 +164,14 @@ export default defineEventHandler(async (event) => {
     result = 'allowed'
     qrCodeId = qrRecord.id
     direction = 'entry'
-    await db
+    await ctx.tx
       .update(qrCodes)
       .set({ usedAt: now })
       .where(eq(qrCodes.id, qrRecord.id))
   }
 
   // Create access log
-  const qrLogs = await db
+  const qrLogs = await ctx.tx
     .insert(accessLogs)
     .values({
       qrCodeId: qrCodeId,
@@ -160,6 +183,7 @@ export default defineEventHandler(async (event) => {
       visitorDocument: qrRecord?.visitorDocument ?? null,
       unitId: qrRecord?.unitId ?? null,
       passToken: token,
+      createdAt: now,
     })
     .returning({ id: accessLogs.id, createdAt: accessLogs.createdAt })
 
@@ -179,6 +203,6 @@ export default defineEventHandler(async (event) => {
     direction,
   }
 
-  broadcastAccessEvent(accessEvent)
+  ctx.afterCommit.push(() => broadcastAccessEvent(accessEvent))
   return { data: accessEvent }
-})
+}

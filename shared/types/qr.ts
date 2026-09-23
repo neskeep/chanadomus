@@ -1,6 +1,6 @@
 export type VisitorType = 'invitado' | 'proveedor'
 export type QrStatus = 'active' | 'used' | 'expired' | 'canceled'
-export type ValidationStatus = 'valid' | 'expired' | 'already_used' | 'already_inside' | 'invalid' | 'canceled'
+export type ValidationStatus = 'valid' | 'expired' | 'already_used' | 'already_inside' | 'invalid' | 'canceled' | 'duplicate'
 export type AccessDirection = 'entry' | 'exit'
 
 export interface QrCodeRecord {
@@ -77,4 +77,15 @@ export interface ValidationResult {
   requiresUnit?: boolean
   /** Vehicle pass ID (needed for unit assignment) */
   vehiclePassId?: string
+  /**
+   * status 'duplicate': the same pass already had an allowed entry/exit a few
+   * seconds ago. Nothing was recorded; `direction` and `accessLogId` point to that
+   * previous action.
+   */
+  lastActionAt?: string
+  secondsAgo?: number
+  /** Seconds until a new scan of this pass will be accepted */
+  retryAfterSeconds?: number
+  /** Ready-to-show message for the guard, e.g. "Entrada ya registrada hace 12 s" */
+  message?: string
 }

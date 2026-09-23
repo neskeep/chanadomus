@@ -7,6 +7,17 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [1.7.4] - 2026-09-23
+
+### Fixed
+- Accesos: un segundo escaneo del mismo pase dentro de 90 segundos ya no crea otra entrada ni otra salida. El guardia ve "Escaneo repetido" con el tiempo transcurrido. Cubre también dos escaneos simultáneos (bloqueo por pase en la base de datos)
+- Aplica a QR de visita, pases de residente, miembros del hogar, personal, pases vehiculares y webhook de lectores
+- La vista del propietario ya no muestra registros de "solo salida"; las entradas sin salida desaparecen a las 24 h
+- Pases vehiculares temporales: la entrada ahora guarda el token del pase, así su salida se registra sobre la misma fila
+
+### Changed
+- El historial de admin y vigilancia indica si un registro es de "solo salida" (`kind`)
+
 ## [1.7.3] - 2026-09-23
 
 ### Changed

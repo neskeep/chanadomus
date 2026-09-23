@@ -3,6 +3,7 @@ import { db } from '~~/server/db'
 import { accessLogs, qrCodes } from '~~/server/db/schema/access'
 import { units } from '~~/server/db/schema/unit'
 import type { AccessEvent } from '~~/shared/types/access'
+import { accessLogKind } from '~~/server/utils/access-scan-rules'
 import { isDateString } from '~~/shared/lib/zoned-date'
 
 export default defineEventHandler(async (event) => {
@@ -61,6 +62,8 @@ export default defineEventHandler(async (event) => {
     notes: row.notes,
     exitAt: row.exitAt?.toISOString() ?? null,
     createdAt: row.createdAt.toISOString(),
+    // Staff ve todas las filas; `kind` marca las de "solo salida" para distinguirlas
+    kind: row.result === 'allowed' ? accessLogKind(row.createdAt, row.exitAt) : undefined,
   }))
 
   return { data }

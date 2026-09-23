@@ -1,5 +1,7 @@
 import type { AccessDirection } from './qr'
 
+export type AccessLogKind = 'entry' | 'exit_only'
+
 export type EntryType = 'qr' | 'manual' | 'webhook' | 'evento'
 export type AccessResult = 'allowed' | 'denied' | 'expired' | 'already_used'
 export type DeviceStatus = 'active' | 'inactive'
@@ -30,4 +32,9 @@ export interface AccessEvent {
   eventTitle?: string | null
   /** Whether this event was an entry or exit scan */
   direction?: AccessDirection
+  /**
+   * 'exit_only' = exit registered without an open entry (exit_at ≈ created_at).
+   * Only set by history endpoints for staff views.
+   */
+  kind?: AccessLogKind
 }

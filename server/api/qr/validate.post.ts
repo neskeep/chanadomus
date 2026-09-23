@@ -1,4 +1,3 @@
-import { db } from '~~/server/db'
 import { qrCodes, accessLogs } from '~~/server/db/schema/access'
 import { units } from '~~/server/db/schema/unit'
 import { residentPasses } from '~~/server/db/schema/resident-pass'
@@ -15,7 +14,14 @@ import { eq, and, gte } from 'drizzle-orm'
 import type { ValidationResult } from '~~/shared/types/qr'
 import type { AccessEvent, AccessResult } from '~~/shared/types/access'
 import { broadcastAccessEvent } from '~~/server/utils/ws-access'
-import { checkOpenEntry, hasOpenEntry } from '~~/server/utils/access-entry-exit'
+import {
+  checkOpenEntry,
+  findDuplicateScan,
+  hasOpenEntry,
+  withScanLock,
+  type DuplicateScan,
+  type ScanContext,
+} from '~~/server/utils/access-entry-exit'
 
 export default defineEventHandler(async (event) => {
   const session = await requireTenant(event)
@@ -34,9 +40,38 @@ export default defineEventHandler(async (event) => {
   const token = body.token.trim()
   const direction = body.direction
 
+  // Todo el escaneo corre serializado por (tenant, token): dos requests simultáneos
+  // del mismo pase no pueden crear dos filas.
+  return withScanLock(tenantId, token, ctx => processScan(ctx, {
+    token,
+    direction,
+    tenantId,
+    authorizedBy: session.user.id,
+    occupantCount: body.occupantCount,
+  }))
+})
+
+async function processScan(
+  ctx: ScanContext,
+  params: {
+    token: string
+    direction: 'entry' | 'exit'
+    tenantId: string
+    authorizedBy: string
+    occupantCount?: number
+  },
+): Promise<{ data: ValidationResult }> {
+  const { token, direction, tenantId, authorizedBy } = params
+
+  // Anti doble escaneo: misma credencial con entrada/salida hace < SCAN_DEDUPE_WINDOW_MS
+  const duplicate = await findDuplicateScan(ctx, tenantId, token)
+  if (duplicate) {
+    return { data: toDuplicateResult(duplicate) }
+  }
+
   // Prevent duplicate consecutive entries — if there's an open entry, block re-entry
   if (direction === 'entry') {
-    const openEntry = await hasOpenEntry(token, tenantId)
+    const openEntry = await hasOpenEntry(token, tenantId, ctx)
     if (openEntry.exists) {
       const result: ValidationResult = {
         status: 'already_inside',
@@ -47,7 +82,7 @@ export default defineEventHandler(async (event) => {
   }
 
   // Buscar QR por token con join a units
-  const [record] = await db
+  const [record] = await ctx.tx
     .select({
       id: qrCodes.id,
       visitorName: qrCodes.visitorName,
@@ -68,45 +103,45 @@ export default defineEventHandler(async (event) => {
 
   // Token no encontrado in QR codes — check other pass types
   if (!record) {
-    const residentPassResult = await validateResidentPass(token, tenantId, session.user.id, direction)
+    const residentPassResult = await validateResidentPass(ctx, token, tenantId, authorizedBy, direction)
     if (residentPassResult) {
       return { data: residentPassResult }
     }
 
-    const memberPassResult = await validateMemberPass(token, tenantId, session.user.id, direction)
+    const memberPassResult = await validateMemberPass(ctx, token, tenantId, authorizedBy, direction)
     if (memberPassResult) {
       return { data: memberPassResult }
     }
 
-    const vehiclePassResult = await validateVehiclePass(token, tenantId, session.user.id, direction, body.occupantCount)
+    const vehiclePassResult = await validateVehiclePass(ctx, token, tenantId, authorizedBy, direction, params.occupantCount)
     if (vehiclePassResult) {
       return { data: vehiclePassResult }
     }
 
-    const staffPassResult = await validateStaffPass(token, tenantId, session.user.id, direction)
+    const staffPassResult = await validateStaffPass(ctx, token, tenantId, authorizedBy, direction)
     if (staffPassResult) {
       return { data: staffPassResult }
     }
 
-    const condoStaffResult = await validateCondoStaffPass(token, tenantId, session.user.id, direction)
+    const condoStaffResult = await validateCondoStaffPass(ctx, token, tenantId, authorizedBy, direction)
     if (condoStaffResult) {
       return { data: condoStaffResult }
     }
 
-    await logAccess({ tenantId, entryType: 'qr', result: 'denied', authorizedBy: session.user.id, passToken: token })
+    await logAccess(ctx, { tenantId, entryType: 'qr', result: 'denied', authorizedBy: authorizedBy, passToken: token })
     const result: ValidationResult = { status: 'invalid' }
     return { data: result }
   }
 
-  const now = new Date()
+  const now = ctx.now
 
   // Pase cancelado — rechazo con precedencia sobre usado/expirado.
   // El motivo "canceled" va en la respuesta y en notes; el enum result de la DB
   // permanece intacto usando 'denied'.
   if (record.canceledAt) {
-    await logAccess({
+    await logAccess(ctx, {
       tenantId, entryType: 'qr', result: 'denied', qrCodeId: record.id,
-      authorizedBy: session.user.id, visitorName: record.visitorName,
+      authorizedBy: authorizedBy, visitorName: record.visitorName,
       visitorDocument: record.visitorDocument, unitId: record.unitId,
       unitNumber: record.unitNumber, unitLabel: record.unitLabel,
       passToken: token, notes: 'Pase cancelado',
@@ -124,7 +159,7 @@ export default defineEventHandler(async (event) => {
   if (record.usedAt) {
     if (direction === 'exit') {
       // Try to close an open entry
-      const openEntry = await checkOpenEntry(token, tenantId)
+      const openEntry = await checkOpenEntry(token, tenantId, ctx)
 
       if (openEntry.action === 'exit') {
         const result: ValidationResult = {
@@ -141,9 +176,9 @@ export default defineEventHandler(async (event) => {
       }
 
       // No open entry — still log exit (guard saw them leave)
-      await logAccess({
+      await logAccess(ctx, {
         tenantId, entryType: 'qr', result: 'allowed', qrCodeId: record.id,
-        authorizedBy: session.user.id, visitorName: record.visitorName,
+        authorizedBy: authorizedBy, visitorName: record.visitorName,
         visitorDocument: record.visitorDocument, unitId: record.unitId,
         unitNumber: record.unitNumber, unitLabel: record.unitLabel,
         passToken: token, direction: 'exit',
@@ -161,9 +196,9 @@ export default defineEventHandler(async (event) => {
     }
 
     // direction === 'entry' but QR already used — report as already_used
-    await logAccess({
+    await logAccess(ctx, {
       tenantId, entryType: 'qr', result: 'already_used', qrCodeId: record.id,
-      authorizedBy: session.user.id, visitorName: record.visitorName,
+      authorizedBy: authorizedBy, visitorName: record.visitorName,
       visitorDocument: record.visitorDocument, unitId: record.unitId,
       unitNumber: record.unitNumber, unitLabel: record.unitLabel,
       passToken: token,
@@ -179,9 +214,9 @@ export default defineEventHandler(async (event) => {
 
   // Expirado
   if (record.expiresAt <= now) {
-    await logAccess({
+    await logAccess(ctx, {
       tenantId, entryType: 'qr', result: 'expired', qrCodeId: record.id,
-      authorizedBy: session.user.id, visitorName: record.visitorName,
+      authorizedBy: authorizedBy, visitorName: record.visitorName,
       visitorDocument: record.visitorDocument, unitId: record.unitId,
       unitNumber: record.unitNumber, unitLabel: record.unitLabel,
       passToken: token,
@@ -197,12 +232,12 @@ export default defineEventHandler(async (event) => {
   if (direction === 'entry') {
     // Entry — marcar QR como usado solo si es single-use
     if (!record.multiUse) {
-      await db.update(qrCodes).set({ usedAt: now }).where(eq(qrCodes.id, record.id))
+      await ctx.tx.update(qrCodes).set({ usedAt: now }).where(eq(qrCodes.id, record.id))
     }
 
-    await logAccess({
+    await logAccess(ctx, {
       tenantId, entryType: 'qr', result: 'allowed', qrCodeId: record.id,
-      authorizedBy: session.user.id, visitorName: record.visitorName,
+      authorizedBy: authorizedBy, visitorName: record.visitorName,
       visitorDocument: record.visitorDocument, unitId: record.unitId,
       unitNumber: record.unitNumber, unitLabel: record.unitLabel,
       passToken: token,
@@ -223,7 +258,7 @@ export default defineEventHandler(async (event) => {
 
   // direction === 'exit' — try to close an open entry (multi-use or unused QR)
   if (record.multiUse) {
-    const openEntry = await checkOpenEntry(token, tenantId)
+    const openEntry = await checkOpenEntry(token, tenantId, ctx)
 
     if (openEntry.action === 'exit') {
       const result: ValidationResult = {
@@ -241,9 +276,9 @@ export default defineEventHandler(async (event) => {
   }
 
   // Fallback: no open entry to close — log exit-only
-  await logAccess({
+  await logAccess(ctx, {
     tenantId, entryType: 'qr', result: 'allowed', qrCodeId: record.id,
-    authorizedBy: session.user.id, visitorName: record.visitorName,
+    authorizedBy: authorizedBy, visitorName: record.visitorName,
     visitorDocument: record.visitorDocument, unitId: record.unitId,
     unitNumber: record.unitNumber, unitLabel: record.unitLabel,
     passToken: token, direction: 'exit',
@@ -259,10 +294,26 @@ export default defineEventHandler(async (event) => {
     unitLabel: record.unitLabel,
   }
   return { data: result }
-})
+}
+
+/** Respuesta para un escaneo repetido: no se registró nada nuevo. */
+function toDuplicateResult(duplicate: DuplicateScan): ValidationResult {
+  return {
+    status: 'duplicate',
+    direction: duplicate.direction,
+    accessLogId: duplicate.accessLogId,
+    visitorName: duplicate.visitorName ?? undefined,
+    unitNumber: duplicate.unitNumber,
+    unitLabel: duplicate.unitLabel,
+    lastActionAt: duplicate.lastActionAt,
+    secondsAgo: duplicate.secondsAgo,
+    retryAfterSeconds: duplicate.retryAfterSeconds,
+    message: duplicate.message,
+  }
+}
 
 /** Helper to insert access log + broadcast event */
-async function logAccess(params: {
+async function logAccess(ctx: ScanContext, params: {
   tenantId: string
   entryType: 'qr' | 'manual' | 'webhook'
   result: AccessResult
@@ -282,12 +333,16 @@ async function logAccess(params: {
   notes?: string | null
 }) {
   const logDirection = params.direction ?? 'entry'
-  const exitAt = logDirection === 'exit' ? new Date() : null
+  const createdAt = ctx.now
+  // Fila "solo salida" (salida sin entrada abierta): exit_at = created_at exacto.
+  // countedEntryCondition() la excluye de conteos y de la vista del propietario.
+  const exitAt = logDirection === 'exit' ? createdAt : null
 
-  // Prevent duplicate exit-only rows: if this is an exit and a recent exit already exists for this token, skip insert
+  // Legacy guard (4882b0e): no dos filas solo-salida del mismo token en 5 min.
+  // Ahora corre dentro del lock, así que es atómico; findDuplicateScan cubre los primeros 90 s.
   if (logDirection === 'exit' && params.passToken) {
-    const fiveMinAgo = new Date(Date.now() - 5 * 60 * 1000)
-    const [recentExit] = await db
+    const fiveMinAgo = new Date(createdAt.getTime() - 5 * 60 * 1000)
+    const [recentExit] = await ctx.tx
       .select({ id: accessLogs.id })
       .from(accessLogs)
       .where(
@@ -303,7 +358,7 @@ async function logAccess(params: {
     }
   }
 
-  const rows = await db
+  const rows = await ctx.tx
     .insert(accessLogs)
     .values({
       entryType: params.entryType,
@@ -320,6 +375,7 @@ async function logAccess(params: {
       passToken: params.passToken ?? null,
       notes: params.notes ?? null,
       exitAt,
+      createdAt,
     })
     .returning({ id: accessLogs.id, createdAt: accessLogs.createdAt })
 
@@ -344,17 +400,18 @@ async function logAccess(params: {
     direction: logDirection,
   }
 
-  broadcastAccessEvent(accessEvent)
+  ctx.afterCommit.push(() => broadcastAccessEvent(accessEvent))
 }
 
 /** Check if token matches an active, non-expired resident pass */
 async function validateResidentPass(
+  ctx: ScanContext,
   token: string,
   tenantId: string,
   authorizedBy: string,
   direction: 'entry' | 'exit',
 ): Promise<ValidationResult | null> {
-  const [pass] = await db
+  const [pass] = await ctx.tx
     .select({
       id: residentPasses.id,
       userId: residentPasses.userId,
@@ -378,11 +435,11 @@ async function validateResidentPass(
 
   if (!pass) return null
 
-  const now = new Date()
+  const now = ctx.now
 
   // Expired resident pass
   if (pass.expiresAt <= now) {
-    await logAccess({
+    await logAccess(ctx, {
       tenantId,
       entryType: 'qr',
       result: 'expired',
@@ -404,7 +461,7 @@ async function validateResidentPass(
 
   if (direction === 'exit') {
     // Try to close an open entry
-    const openEntry = await checkOpenEntry(token, tenantId)
+    const openEntry = await checkOpenEntry(token, tenantId, ctx)
 
     if (openEntry.action === 'exit') {
       return {
@@ -419,7 +476,7 @@ async function validateResidentPass(
     }
 
     // No open entry — still log exit (guard saw them leave)
-    await logAccess({
+    await logAccess(ctx, {
       tenantId,
       entryType: 'qr',
       result: 'allowed',
@@ -443,7 +500,7 @@ async function validateResidentPass(
   }
 
   // direction === 'entry' — log access (multi-use, never mark as used)
-  await logAccess({
+  await logAccess(ctx, {
     tenantId,
     entryType: 'qr',
     result: 'allowed',
@@ -468,12 +525,13 @@ async function validateResidentPass(
 
 /** Check if token matches an active household member pass */
 async function validateMemberPass(
+  ctx: ScanContext,
   token: string,
   tenantId: string,
   authorizedBy: string,
   direction: 'entry' | 'exit',
 ): Promise<ValidationResult | null> {
-  const [pass] = await db
+  const [pass] = await ctx.tx
     .select({
       id: householdMemberPasses.id,
       memberId: householdMemberPasses.memberId,
@@ -501,11 +559,11 @@ async function validateMemberPass(
   // Inactive pass
   if (!pass.isActive) return null
 
-  const now = new Date()
+  const now = ctx.now
 
   // Expired member pass
   if (pass.expiresAt && pass.expiresAt <= now) {
-    await logAccess({
+    await logAccess(ctx, {
       tenantId,
       entryType: 'qr',
       result: 'expired',
@@ -528,7 +586,7 @@ async function validateMemberPass(
 
   if (direction === 'exit') {
     // Try to close an open entry
-    const openEntry = await checkOpenEntry(token, tenantId)
+    const openEntry = await checkOpenEntry(token, tenantId, ctx)
 
     if (openEntry.action === 'exit') {
       return {
@@ -544,7 +602,7 @@ async function validateMemberPass(
     }
 
     // No open entry — still log exit (guard saw them leave)
-    await logAccess({
+    await logAccess(ctx, {
       tenantId,
       entryType: 'qr',
       result: 'allowed',
@@ -569,7 +627,7 @@ async function validateMemberPass(
   }
 
   // direction === 'entry' — log access (multi-use, never mark as used)
-  await logAccess({
+  await logAccess(ctx, {
     tenantId,
     entryType: 'qr',
     result: 'allowed',
@@ -595,6 +653,7 @@ async function validateMemberPass(
 
 /** Check if token matches an active vehicle pass */
 async function validateVehiclePass(
+  ctx: ScanContext,
   token: string,
   tenantId: string,
   authorizedBy: string,
@@ -603,7 +662,7 @@ async function validateVehiclePass(
 ): Promise<ValidationResult | null> {
   const { sql } = await import('drizzle-orm')
 
-  const [pass] = await db
+  const [pass] = await ctx.tx
     .select({
       id: vehiclePasses.id,
       vehicleId: vehiclePasses.vehicleId,
@@ -635,13 +694,13 @@ async function validateVehiclePass(
   // Inactive pass
   if (!pass.isActive) return null
 
-  const now = new Date()
+  const now = ctx.now
 
   const visitorName = pass.plate ? `Vehiculo ${pass.plate}` : (pass.description ?? 'Pase temporal')
 
   // Expired vehicle pass
   if (pass.expiresAt && pass.expiresAt <= now) {
-    await logAccess({
+    await logAccess(ctx, {
       tenantId,
       entryType: 'qr',
       result: 'expired',
@@ -669,7 +728,7 @@ async function validateVehiclePass(
 
   if (direction === 'exit') {
     // Try to close an open entry
-    const openEntry = await checkOpenEntry(token, tenantId)
+    const openEntry = await checkOpenEntry(token, tenantId, ctx)
 
     if (openEntry.action === 'exit') {
       return {
@@ -689,7 +748,7 @@ async function validateVehiclePass(
     }
 
     // No open entry — still log exit (guard saw them leave)
-    await logAccess({
+    await logAccess(ctx, {
       tenantId,
       entryType: 'qr',
       result: 'allowed',
@@ -743,7 +802,7 @@ async function validateVehiclePass(
   }
 
   // Log access (multi-use, never mark as used)
-  await logAccess({
+  await logAccess(ctx, {
     tenantId,
     entryType: 'qr',
     result: 'allowed',
@@ -775,12 +834,13 @@ async function validateVehiclePass(
 
 /** Check if token matches an active service staff pass */
 async function validateStaffPass(
+  ctx: ScanContext,
   token: string,
   tenantId: string,
   authorizedBy: string,
   direction: 'entry' | 'exit',
 ): Promise<ValidationResult | null> {
-  const [pass] = await db
+  const [pass] = await ctx.tx
     .select({
       id: serviceStaffPasses.id,
       staffId: serviceStaffPasses.staffId,
@@ -809,11 +869,11 @@ async function validateStaffPass(
   // Inactive pass
   if (!pass.isActive) return null
 
-  const now = new Date()
+  const now = ctx.now
 
   // Expired staff pass
   if (pass.expiresAt && pass.expiresAt <= now) {
-    await logAccess({
+    await logAccess(ctx, {
       tenantId,
       entryType: 'qr',
       result: 'expired',
@@ -837,7 +897,7 @@ async function validateStaffPass(
 
   if (direction === 'exit') {
     // Try to close an open entry
-    const openEntry = await checkOpenEntry(token, tenantId)
+    const openEntry = await checkOpenEntry(token, tenantId, ctx)
 
     if (openEntry.action === 'exit') {
       return {
@@ -853,7 +913,7 @@ async function validateStaffPass(
     }
 
     // No open entry — still log exit (guard saw them leave)
-    await logAccess({
+    await logAccess(ctx, {
       tenantId,
       entryType: 'qr',
       result: 'allowed',
@@ -879,7 +939,7 @@ async function validateStaffPass(
   }
 
   // direction === 'entry' — log access (multi-use, never mark as used)
-  await logAccess({
+  await logAccess(ctx, {
     tenantId,
     entryType: 'qr',
     result: 'allowed',
@@ -906,12 +966,13 @@ async function validateStaffPass(
 
 /** Check if token matches an active condo staff member (personal del condominio) */
 async function validateCondoStaffPass(
+  ctx: ScanContext,
   token: string,
   tenantId: string,
   authorizedBy: string,
   direction: 'entry' | 'exit',
 ): Promise<ValidationResult | null> {
-  const [member] = await db
+  const [member] = await ctx.tx
     .select({
       id: staff.id,
       name: staff.name,
@@ -931,7 +992,7 @@ async function validateCondoStaffPass(
 
   if (direction === 'exit') {
     // Try to close an open entry
-    const openEntry = await checkOpenEntry(token, tenantId)
+    const openEntry = await checkOpenEntry(token, tenantId, ctx)
 
     if (openEntry.action === 'exit') {
       return {
@@ -945,7 +1006,7 @@ async function validateCondoStaffPass(
     }
 
     // No open entry — still log exit (guard saw them leave)
-    await logAccess({
+    await logAccess(ctx, {
       tenantId,
       entryType: 'qr',
       result: 'allowed',
@@ -965,7 +1026,7 @@ async function validateCondoStaffPass(
   }
 
   // direction === 'entry' — log access (multi-use, never expires)
-  await logAccess({
+  await logAccess(ctx, {
     tenantId,
     entryType: 'qr',
     result: 'allowed',
