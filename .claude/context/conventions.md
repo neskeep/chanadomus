@@ -61,6 +61,15 @@ Formato estandarizado para todas las API routes:
 - Composables para logica de estado compleja
 - Pinia solo si se justifica la necesidad (no por defecto)
 
+## Fechas y hora (tenant timezone)
+- `shared/lib/zoned-date.ts` — utilidades puras de fecha/hora por zona horaria del tenant (`zonedDateString`, `addDaysToDateString`, `isDateString`, `zonedDayStart`, `diffDateStrings`). Sin dependencias de servidor, usable en client y server.
+- `server/utils/tenant-time.ts` — envoltorio de servidor sobre `zoned-date` (`localDateOf`, `localToday`) para comparar fechas SQL en hora de Caracas sin depender de la zona del dispositivo.
+- `app/composables/useLocalDate.ts` — equivalente client-side para mostrar fechas en la zona del tenant.
+- Regla: cualquier logica que compare "hoy" o vigencia de fechas (eventos, votaciones, pases) debe usar estos helpers, nunca `new Date()` crudo ni la zona del navegador/servidor.
+
+## Acceso a chat (matriz de roles)
+- `shared/lib/chat-access.ts` — unica fuente de verdad para que roles ven que salas de chat (`canAccessChatRoom`, `getVisibleGroupRoomTypes`, `computeChatPushRecipients`). Usado por server (`ws-chat.ts`, `api/chat/rooms.get.ts`) y debe reusarse si se agrega una sala nueva, no duplicar la matriz.
+
 ## Git
 - Commits en ingles, formato: `type: description`
 - Types: feat, fix, chore, refactor, docs, style, test

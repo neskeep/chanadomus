@@ -8,7 +8,7 @@ Formato: `MAJOR.MINOR.PATCH`
 - **MINOR** (0.1.0, 0.2.0): Nuevo modulo o feature completo (backward compatible)
 - **PATCH** (0.1.1, 0.1.2): Bug fixes, ajustes menores, hotfixes
 
-## Version actual: v1.6.0
+## Version actual: v1.9.0
 
 ## Historial de Versiones
 
@@ -51,6 +51,14 @@ Formato: `MAJOR.MINOR.PATCH`
 | v1.5.0 | MINOR | Soporte tecnico y novedades | 2026-07-12 |
 | v1.5.1 | PATCH | Correcciones accesos, pases, calendario | 2026-08-05 |
 | v1.6.0 | MINOR | Módulo de Eventos | 2026-08-06 |
+| v1.6.2 | PATCH | Auto-expiración perezosa de eventos y votaciones vencidas | 2026-09-03 |
+| v1.7.0 | MINOR | Filtros y cancelación de pases en Mis Visitas | 2026-09-03 |
+| v1.7.1 | PATCH | Categorías de proveedores unificadas para todos los roles | 2026-09-23 |
+| v1.7.2 | PATCH | Panel y accesos en hora de Caracas + filtro de categorías con buscador | 2026-09-23 |
+| v1.7.3 | PATCH | Chat concentrado en Vigilancia y avisos corregidos | 2026-09-23 |
+| v1.7.4 | PATCH | Anti doble escaneo en accesos y vista del propietario | 2026-09-23 |
+| v1.8.0 | MINOR | Editar pases e historial por rango en Mis Visitas + alcance de notificaciones | 2026-09-23 |
+| v1.8.1 | PATCH | Eventos, votaciones y botones de filtro/pánico | 2026-09-23 |
 
 ### Criterio para versionar
 

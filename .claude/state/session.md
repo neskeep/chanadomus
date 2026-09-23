@@ -1,55 +1,86 @@
 # Estado de Sesion — ChanaDomus
 
+> **Actualización 2026-09-23 (cierre sesión 81):** v1.9.0 (#9a7ea3ea alertas de eventos) PUBLICADA y verificada en prod. Backup manual verificado vía API de Coolify antes de migrar (config de backups diarios creada: `ghti5s9fulmuwa0tpzd22o1x`); migración 0059 aplicada en el arranque. El webhook de GitHub Actions no disparó el deploy: se lanzó con `GET /api/v1/deploy?uuid=...`. Los 10 tickets de la auditoría están en estado "resuelto". Accesos de Coolify: ver `~/.claude/CLAUDE.md` y memoria `reference_accesos.md`.
+
 ## Ultima Sesion
-- **Fecha**: 2026-09-02
-- **Sesion #**: 78
-- **Version**: v1.6.2 (desplegada en prod, tag creado)
-- **Branch**: `main`
-- **Estado**: COMPLETADA — Tickets de soporte de prod (Eventos + Votaciones) resueltos, desplegados y cerrados
+- **Fecha**: 2026-09-23
+- **Sesion #**: 81
+- **Version**: v1.8.1 en prod (verificada). **Feature #9a7ea3ea CODIGO COMPLETO (sin commit, sin deploy)** → sera v1.9.0.
+- **Branch**: `fix/eventos-votaciones-botones`
+- **Estado**: 5 tickets reabiertos y publicados (v1.7.1 a v1.8.1), todos resueltos y verificados en prod. Pendiente: CIERRE de #9a7ea3ea (deploy + release v1.9.0). Detenido a proposito ANTES de tocar prod, esperando confirmacion de backup manual.
 
-## Objetivo de la sesion
-Validar, desplegar y cerrar los tickets de soporte de prod de Eventos+Votaciones iniciados en sesion 77 (RC-1/RC-2), y diagnosticar RC-3 (check-out masivo).
+## Objetivo de la sesion 81
+Auditoria de 10 tickets de soporte + documento del cliente "Correcciones Chana 20 agosto" (puntos 1,2,3,4,6). Reabrir y corregir 5 tickets marcados resueltos que seguian fallando, publicar y verificar en produccion.
 
-## Completado Sesion 78
-### Deploy y cierre de tickets (v1.6.2)
-- Commit `9165470`: `fix: auto-expire overdue events and polls via lazy expiration` (7 archivos, additive).
-- Commit `66d99b8`: CHANGELOG [1.6.2]. Tag `v1.6.2` anotado + push a origin.
-- Deploy Coolify OK (~2.7 min). Validado en prod: evento "Cena Rancho Paraguachi Republic" -> `completado`; 3 votaciones vencidas (15/06) -> `closed` con closedAt.
-- 4 tickets cerrados como `resuelto` v1.6.2 via `PATCH /api/support/{id}/status` (con nota al cliente + push al reportero):
-  - #6c7c4c8e (eventos vencidos) — RC-1
-  - #015d0634 (votaciones vencidas) — RC-2
-  - #0b8f2a84 (salidas no registradas) — RC-3
-  - #ea2a0d07 ("marca a todos") — RC-3
+## Completado Sesion 81 (2026-09-23)
+Publicado y verificado en produccion:
+- **v1.7.1** — Categorias de proveedores unificadas para todos los roles (#d8f9d63c)
+- **v1.7.2** — Panel y accesos en hora de Caracas (helpers `tenant-time`/`zoned-date`) + filtro de categorias con buscador + busqueda sin acentos (#75463812)
+- **v1.7.3** — Chat: salas General e Incidencias ocultas, matriz unica de acceso `shared/lib/chat-access.ts`, push por acceso (#e8415ba2)
+- **v1.7.4** — Anti doble escaneo en accesos (90 s, `pg_advisory_xact_lock`) (#65f5a8b7)
+- **v1.8.0** — Editar pases de visita + historial por rango + alcance de notificaciones en admin (#168fe738)
+- **v1.8.1** — Eventos: ventana de vigilancia 24 h / entrada tardia 2 h / deshacer salida; votaciones cierran al fin del dia local; botones Filtros y Panico con texto; fechas con `appTimezone`; `vue-sonner/style.css` faltante (#0b8f2a84 #ea2a0d07 #015d0634, cubre tambien #6c7c4c8e)
 
-### Validacion RC-1 / RC-2 / RC-3
-- Migracion `events`/`event_guests` aplicada en DB local (SQL directo, migracion 0057). Seed evento vencido + invitados.
-- RC-1 validado por HTTP y navegador: GET events transiciona `activo`->`completado`. Check-out en evento `completado` registra salida (guard ampliado OK).
-- RC-3 reproducido en Playwright con escenario exacto del cliente (evento fin 23:00, salidas post-medianoche, 4 invitados dentro): **check-out es granular**, un click marca SOLO 1 invitado. "Marca a todos" NO reproduce en codigo actual. Sintoma real = bloqueo de salidas tardias (ya corregido por guard ampliado).
+Todos estos tickets quedaron en estado "resuelto" en produccion, con nota interna y changelog in-app.
 
-## Archivos del fix (ya commiteados/desplegados)
-- NUEVO: `server/utils/expire-events.ts`, `server/utils/expire-polls.ts`
-- MOD: `server/api/events/index.get.ts`, `server/api/events/[id].get.ts`, `server/api/events/[id]/checkout/[guestId].post.ts`, `server/api/polls/index.get.ts`, `server/api/polls/[id].get.ts`
-- MOD: `CHANGELOG.md`
+## Dato de produccion (informativo)
+Solo 23 de 204 usuarios (11,3 %) tienen notificaciones push activas; 3 de 74 propietarios. Recomendado un aviso general pidiendo activarlas.
 
-## Issues Abiertos / Deuda tecnica (no bloqueante)
-- **Anti-patron `.sort()`** en `app/composables/useEventCheckin.ts:41`: muta `guests.value` in-place dentro de un computed. No causa bug reportado; fix de 1 linea (`[...list].sort()` o `list.toSorted()`). Dejado fuera del commit por acuerdo (higiene, no bug).
-- **Check-IN exige `status='activo'`**: un evento recien auto-completado no admite llegadas tardias (el check-out si). Evaluar si vigilancia necesita check-in post-endsAt.
-- **DB local**: quedaron migradas las tablas `events`/`event_guests` (0057). Seed de prueba eliminado. Nota: faltan otras tablas locales (`broadcasts`) — genera errores de consola en `/api/push/broadcast/latest`, ruido del entorno, no del modulo eventos.
+## Deuda tecnica anotada (no bloqueante)
+- `text-destructive-foreground` no existe como token (39 usos en el codigo)
+- Colores genericos restantes en `useColorMap` (incidencias, cartelera, reuniones, votaciones) y botones Entrada/Salida de eventos (emerald/amber)
+- Campos de fecha editables de eventos/reuniones usan hora del navegador, no `appTimezone`
+- Filtros no visibles en movil en finanzas/reuniones/eventos/estado de cuenta
+- `vue-tsc` no instalado (sin typecheck automatizado)
+- Eventos antiguos "Desayuno" (20/09, 36 invitados sin salida) quedan como "dentro" — dato historico, no se toco
+- Roles de proveedor duplicados ("Gas Recarga"/"Recarga Gas", "Repuestos Motos"/"Venta Repuesto Moto") pendientes de confirmar con el cliente
 
-## Tickets de prod restantes (no tocados esta sesion)
-- #d8f9d63c Proveedores: busquedas filtradas incompletas (en_desarrollo)
-- #168fe738 Mis visitas: presentacion no optima, pide filtro (en_revision)
-- #e8415ba2 Chats: unificar en chat de vigilancia + alertas (en_revision)
-- #9a7ea3ea Eventos: alerta visual/sonora al crear evento (nuevo)
+## Objetivo pendiente: #9a7ea3ea
+Alerta visual+sonora al crear evento (admin) y aviso a vigilancia el dia del evento.
+
+## Decisiones de producto (con el usuario, via AskUserQuestion)
+1. **Aviso suave descartable** (chime corto de 1 nota + toast/banner), NO alarma persistente tipo panico.
+2. Alerta a admin **solo para eventos pendientes** (los que crea propietario/conserje; los del admin nacen 'activo').
+3. Aviso a vigilancia **el dia del evento** = lazy al abrir la app ese dia (sin cron). Columna nueva `notifiedVigilanceAt`.
+
+## Completado Sesion 80 (#9a7ea3ea) — CODIGO COMPLETO, build OK, SIN commit
+### Backend
+- MOD `server/db/schema/event.ts`: + columna `notifiedVigilanceAt timestamp` (nullable).
+- NUEVO `server/db/migrations/0059_last_wallflower.sql` (solo `ALTER TABLE events ADD COLUMN notified_vigilance_at timestamp;`) + meta 0059. Additive puro. Aplicada en LOCAL por ALTER directo (drizzle __migrations local desincronizada — igual que 0058).
+- NUEVO `server/utils/notify-vigilance-events.ts`: `notifyVigilanceTodayEvents(tenantId)` — eventos activos que empiezan HOY (fecha Caracas nativa en SQL, verificada empiricamente: `(starts_at AT TIME ZONE 'UTC' AT TIME ZONE 'America/Caracas')::date = (now() AT TIME ZONE 'America/Caracas')::date`), notifica una sola vez, race-safe con `UPDATE ... WHERE notified_vigilance_at IS NULL ... RETURNING`, luego `sendPushToRole(vigilancia,...,'anuncio')`.
+- MOD `server/api/events/active.get.ts`: llama `notifyVigilanceTodayEvents(session.tenantId)` al inicio (patron lazy como expireEvents).
+- NUEVO `server/api/events/pending-count.get.ts` (solo admin): `{ count }` de eventos `pendiente`.
+
+### Frontend
+- NUEVO `app/composables/useAlertSound.ts`: `playChime()` (2 notas sine ascendentes, volumen bajo, one-shot). Best-effort (autoplay puede requerir gesto; lo visual siempre cubre).
+- NUEVO `app/composables/useEventAlerts.ts`: singleton, polling 45s + refresco en visibilitychange. admin→`/api/events/pending-count` (chime+toast al aumentar, baseline -1 evita chime en 1a carga); vigilancia→`/api/events/active` (chime+toast en ids nuevos, seed inicial sin chime). Expone `pendingCount`, `todayCount`, `badgeCount`.
+- MOD `app/components/layout/AppSidebar.vue` + `AppBottomNav.vue`: badge con `eventAlertCount` en item Eventos (`/admin/eventos` y `/vigilancia/eventos`); punto primary en boton "Mas".
+- MOD `app/pages/vigilancia/index.vue`: banner suave descartable "N eventos hoy" (usa `todayCount`), link a `/vigilancia/eventos`.
+
+## Issues Abiertos / Deuda
+- **CIERRE NO EJECUTADO** (task #5): falta commit+push, backup prod, deploy, migrate:prod 0059, test E2E prod, ticket resuelto, changelog, tag v1.9.0, broadcast, Jordi.
+- **/polish final de UI NO ejecutado** (opcional antes de commit).
+- Verificacion E2E LOCAL no ejecutada (build OK; SQL del util validado directo en DB). Recomendable smoke test antes de prod.
+- DB local: drizzle `db:migrate` falla por __migrations desincronizada; usar ALTER directo en local, `db:migrate:prod` en prod (sincronizado).
+
+## CHECKLIST DE CIERRE (aplicar; regla: BACKUP prod ANTES de migrar)
+1. commit y push.
+2. **BACKUP DB prod** (no negociable) → deploy Coolify + `db:migrate:prod` (0059).
+3. Test en PRODUCCION que quede resuelto (admin: crear evento como propietario → badge+chime+toast en admin; vigilancia: evento de hoy → push + banner + badge).
+4. Ticket #9a7ea3ea → `resuelto` + nota interna. Changelog in-app (`/admin/changelog`).
+5. Broadcast push (`POST /api/push/broadcast`).
+6. Redactar mensaje para **Jordi** (sugerencia nueva: que hizo + como probar).
 
 ## Siguiente paso (accionable)
-1. Opcional: aplicar fix del anti-patron `.sort()` en `useEventCheckin.ts:41` (commit aparte de higiene).
-2. Atacar siguiente ticket de prod (sugerido: #9a7ea3ea alerta al crear evento, o #168fe738 filtro Mis visitas).
-3. Monitorear si el cliente reporta reaparicion de "marca a todos" (#ea2a0d07).
+1. (Opcional) `/polish` UI + smoke test local de los 2 endpoints nuevos.
+2. Ejecutar CHECKLIST DE CIERRE completo para #9a7ea3ea → release **v1.9.0**.
+3. Enviar a **Jordi** mensaje pendiente de #168fe738 (v1.7.0) si aun no se envio.
+4. (Futuro) #e8415ba2 chats unificacion: requiere sesion de definicion de producto.
 
 ## Entorno
-- Docker `chanadomuscom-db-1` (postgres healthy). `docker` NO esta en PATH → usar `export PATH="/usr/local/bin:$PATH"` antes.
-- Dev server: `pnpm dev` (log `/tmp/chana-dev.log`). Puerto 3000.
-- Playwright: si "Browser is already in use", matar Chrome huerfano con `user-data-dir=.playwright-profile` (NO el Chrome personal) y limpiar SingletonLock.
-- Acceso prod (consultar/cerrar tickets): memoria `reference_prod-access.md`. Login `isenior@zunamicorp.com`/`Yolo2026!`.
+- Docker `chanadomuscom-db-1` (postgres). `docker` NO en PATH → `export PATH="/usr/local/bin:$PATH"`.
+- DB local: user/db `chanadomus`/`chanadomus`. Migrar en local por ALTER directo si `db:migrate` falla.
+- `pnpm dev` en :3000 (log `/tmp/chana-dev.log`). `pnpm build` verificado exit 0.
+- Acceso prod: memoria `reference_prod-access.md`. API autenticada con cookie admin en `/tmp/chana-cookies.txt`. Login prod `isenior@zunamicorp.com`/`Yolo2026!`.
+- Ticket soporte via API prod: `GET/PATCH https://chanadomus.com/api/support/{id}`. #9a7ea3ea id completo: `9a7ea3ea-4fe7-4426-8999-2298a2bc69bc`.
 - Usuarios dev (pass `Yolo2026!`): admin@, propietario@, vigilante@, conserje@chanadomus.com.

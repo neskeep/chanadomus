@@ -26,6 +26,10 @@
 | Componentes instalados | `.claude/state/installed-components.md` |
 | Changelog | `CHANGELOG.md` |
 
+## Accesos a produccion
+
+Hay acceso completo a produccion: API de Coolify (token root: backups de DB, apps, deploys) y la app como admin. Credenciales en `~/.claude/CLAUDE.md` (seccion "Accesos de produccion") y en la memoria `reference_accesos.md`. NUNCA escribirlas en este repo. Revisarlas SIEMPRE antes de decir "no tengo acceso".
+
 ## Reglas de Workflow (No Negociables)
 
 1. **SIEMPRE usar agentes** — Delegar a subagentes especializados (nuxt-ui, nuxt-logic, project-orchestrator, etc.). Nunca implementar directamente sin agentes.
