@@ -57,7 +57,11 @@ export default defineEventHandler(async (event) => {
   const updateData: Record<string, unknown> = { updatedAt: new Date() }
   if (body.title !== undefined) updateData.title = body.title.trim()
   if (body.description !== undefined) updateData.description = body.description?.trim() || null
-  if (startsAt) updateData.startsAt = startsAt
+  if (startsAt) {
+    updateData.startsAt = startsAt
+    // Si cambia la fecha, vigilancia debe ser avisada de nuevo en la fecha nueva
+    if (startsAt.getTime() !== existing.startsAt.getTime()) updateData.notifiedVigilanceAt = null
+  }
   if (endsAt) updateData.endsAt = endsAt
   if (body.guestLimit !== undefined) updateData.guestLimit = body.guestLimit
   if (body.notes !== undefined) updateData.notes = body.notes?.trim() || null

@@ -20,7 +20,7 @@ const todayCount = ref(0) // vigilancia: eventos de hoy
 const _initialized = ref(false)
 
 let pollTimer: ReturnType<typeof setInterval> | null = null
-let _role: string | null = null
+const _role = ref<'admin' | 'vigilancia' | null>(null) // reactivo: badgeCount depende de el
 let _prevPending = -1 // -1 = sin baseline aun (evita chime en la primera carga)
 let _vigilanceSeeded = false
 const _seenTodayIds = new Set<string>()
@@ -31,7 +31,7 @@ async function pollAdmin() {
     if (_prevPending !== -1 && count > _prevPending) {
       useAlertSound().playChime()
       toast.info('Nuevo evento por validar', {
-        description: 'Un residente solicito aprobacion de un evento.',
+        description: 'Hay un evento nuevo pendiente de aprobación.',
       })
     }
     _prevPending = count
@@ -67,8 +67,8 @@ async function pollVigilance() {
 }
 
 function pollOnce() {
-  if (_role === 'admin') void pollAdmin()
-  else if (_role === 'vigilancia') void pollVigilance()
+  if (_role.value === 'admin') void pollAdmin()
+  else if (_role.value === 'vigilancia') void pollVigilance()
 }
 
 function startPolling() {
@@ -87,7 +87,7 @@ export function useEventAlerts() {
     const { role } = useAuth()
     const begin = (r: string | null | undefined) => {
       if (r === 'admin' || r === 'vigilancia') {
-        _role = r
+        _role.value = r
         _initialized.value = true
         startPolling()
       }
@@ -105,7 +105,7 @@ export function useEventAlerts() {
     }
   }
 
-  const badgeCount = computed(() => (_role === 'admin' ? pendingCount.value : todayCount.value))
+  const badgeCount = computed(() => (_role.value === 'admin' ? pendingCount.value : todayCount.value))
 
   return { pendingCount, todayCount, badgeCount }
 }

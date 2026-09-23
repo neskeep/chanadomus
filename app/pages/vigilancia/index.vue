@@ -11,6 +11,17 @@ const { hasActiveAlert, activeAlert, loadInitialAlerts } = usePanicStream()
 const { todayCount: eventsTodayCount } = useEventAlerts()
 
 const eventBannerDismissed = ref(false)
+// El descarte del aviso se recuerda solo durante el dia local (clave con la fecha)
+function eventBannerKey() {
+  const d = new Date()
+  const ymd = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+  return `chanadomus:event-banner-dismissed:${ymd}`
+}
+function dismissEventBanner() {
+  eventBannerDismissed.value = true
+  try { localStorage.setItem(eventBannerKey(), '1') }
+  catch { /* almacenamiento no disponible: el descarte dura solo esta vista */ }
+}
 const showEventBanner = computed(() => eventsTodayCount.value > 0 && !eventBannerDismissed.value)
 
 const quickActions = [
@@ -30,6 +41,8 @@ function timeAgo(dateStr: string): string {
 }
 
 onMounted(() => {
+  try { eventBannerDismissed.value = localStorage.getItem(eventBannerKey()) === '1' }
+  catch { /* sin almacenamiento: se muestra el aviso */ }
   loadInitialEvents()
   loadInitialAlerts()
 })
@@ -47,7 +60,7 @@ onMounted(() => {
           <div class="min-w-0 flex-1">
             <p class="text-sm font-bold text-destructive">ALERTA DE PÁNICO</p>
             <p class="truncate text-xs text-destructive/80">
-              {{ activeAlert?.userName }} — {{ activeAlert?.unitLabel || activeAlert?.unitNumber }}
+              {{ activeAlert?.userName }} · {{ activeAlert?.unitLabel || activeAlert?.unitNumber }}
             </p>
           </div>
           <Badge variant="destructive" class="shrink-0 animate-bounce">
@@ -74,7 +87,7 @@ onMounted(() => {
           size="icon"
           class="size-8 shrink-0 text-muted-foreground"
           aria-label="Descartar aviso"
-          @click="eventBannerDismissed = true"
+          @click="dismissEventBanner"
         >
           <X class="size-4" />
         </Button>
