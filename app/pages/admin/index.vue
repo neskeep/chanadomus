@@ -1,13 +1,13 @@
 <script setup lang="ts">
 import {
   AlertTriangle,
+  BellRing,
   Calendar,
   ChevronRight,
   ClipboardCheck,
   Download,
   FileText,
   Home,
-  Info,
   Megaphone,
   Percent,
   Store,
@@ -37,6 +37,9 @@ useHead({ title: 'Panel Administrador' })
 const { target, isMounted } = useTopbarPortal()
 const { stats, trends, isLoading, exportCsv, exportPdf } = useDashboard()
 const { formatCurrency, formatDateTime } = useFormatDate()
+const { stats: pushStats, statsError: pushStatsError, fetchStats: fetchPushStats } = usePushStats()
+
+onMounted(fetchPushStats)
 
 const collectionRate = computed(() => trends.value?.financialKpis?.collectionRate ?? 0)
 
@@ -149,8 +152,8 @@ const groupedChartOpts = {
       </Button>
     </TopbarMobileAction>
 
-    <!-- Financial hero: 3 stat cards + collection rate with progress -->
-    <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+    <!-- KPIs: 3 financieros + cobranza + alcance de notificaciones -->
+    <div class="grid grid-cols-2 gap-4 lg:grid-cols-4 xl:grid-cols-5">
       <StatCard
         label="Cobrado este mes"
         :value="trends?.financialKpis ? formatCurrency(trends.financialKpis.totalAbonos) : '—'"
@@ -175,38 +178,29 @@ const groupedChartOpts = {
         tooltip="Unidades con pagos pendientes respecto al total"
         :is-loading="isLoading"
       />
-      <!-- Collection rate: custom card with Progress bar -->
-      <Card class="p-3 sm:p-4">
-        <div class="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
-          <div class="flex size-7 shrink-0 items-center justify-center rounded-lg sm:order-2 sm:size-10" :class="ICON_BG.teal">
-            <Percent class="size-3.5 sm:size-5" />
-          </div>
-          <div class="flex min-w-0 flex-col gap-0.5 sm:order-1 sm:gap-1">
-            <template v-if="isLoading">
-              <Skeleton class="h-4 w-12 sm:h-5 sm:w-16" />
-              <Skeleton class="h-6 w-10 sm:h-8 sm:w-24" />
-            </template>
-            <template v-else>
-              <div class="flex items-center gap-1">
-                <p class="text-[11px] leading-tight text-muted-foreground sm:text-sm">Cobranza</p>
-                <TooltipProvider :delay-duration="200">
-                  <Tooltip>
-                    <TooltipTrigger as-child>
-                      <Info class="size-3 shrink-0 cursor-help text-muted-foreground/50 transition-colors hover:text-muted-foreground" />
-                    </TooltipTrigger>
-                    <TooltipContent side="top" class="max-w-56 text-xs">
-                      Porcentaje de cobranza del mes actual: abonos recibidos vs cargos emitidos
-                    </TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
-              </div>
-              <p class="text-lg font-bold tabular-nums tracking-tight sm:text-2xl">{{ collectionRate.toFixed(1) }}%</p>
-            </template>
-          </div>
-        </div>
-        <Progress v-if="!isLoading" :model-value="collectionRate" class="mt-3 h-1.5" />
-        <Skeleton v-else class="mt-3 h-1.5 w-full rounded-lg" />
-      </Card>
+      <ProgressStatCard
+        label="Cobranza"
+        :value="`${collectionRate.toFixed(1)}%`"
+        :progress="collectionRate"
+        :icon="Percent"
+        :icon-bg-class="ICON_BG.teal"
+        tooltip="Porcentaje de cobranza del mes actual: abonos recibidos vs cargos emitidos"
+        :is-loading="isLoading"
+      />
+      <!-- Alcance de notificaciones push: a lo ancho bajo lg, quinta columna desde xl -->
+      <ProgressStatCard
+        class="col-span-2 lg:col-span-4 xl:col-span-1"
+        label="Notificaciones activas"
+        :value="pushStats ? `${pushStats.summary.percentage.toFixed(1)}%` : '—'"
+        :progress="pushStats?.summary.percentage ?? 0"
+        :icon="BellRing"
+        :icon-bg-class="ICON_BG.orange"
+        tooltip="Usuarios que activaron los avisos en al menos un dispositivo. Sin ellos no reciben avisos del chat ni de accesos."
+        :caption="pushStats ? `${pushStats.summary.usersWithPush} de ${pushStats.summary.totalUsers} usuarios` : undefined"
+        to="/admin/notificaciones?tab=alcance"
+        link-label="Ver quién no tiene los avisos activos"
+        :is-loading="!pushStats && !pushStatsError"
+      />
     </div>
 
     <!-- Attention required — hide when nothing pending -->

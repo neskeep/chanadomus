@@ -17,7 +17,7 @@ vi.stubGlobal('getRouterParams', mockGetRouterParams)
 vi.stubGlobal('createError', mockCreateError)
 
 // Import after mocking globals
-const { validateBody, validateQuery, validateParams } = await import(
+const { validateBody, validateQuery, validateParams, parseOrThrow, zodIssueMessages } = await import(
   '~~/server/utils/validate'
 )
 
@@ -125,5 +125,34 @@ describe('error message format', () => {
     expect(call.message).toContain('name')
     expect(call.message).toContain('amount')
     expect(call.message).toContain('; ')
+  })
+})
+
+describe('parseOrThrow', () => {
+  const schema = z.object({
+    name: z.string().min(1, 'El nombre es requerido'),
+    doc: z.string().min(1, 'La cédula es requerida'),
+  })
+
+  it('devuelve los datos válidos', () => {
+    expect(parseOrThrow(schema, { name: 'Ana', doc: 'V1' })).toEqual({ name: 'Ana', doc: 'V1' })
+  })
+
+  it('lanza 400 con los mensajes sin prefijo de campo', () => {
+    try {
+      parseOrThrow(schema, { name: '', doc: '' })
+      expect.unreachable()
+    }
+    catch (err) {
+      const e = err as Error & { statusCode: number }
+      expect(e.statusCode).toBe(400)
+      expect(e.message).toBe('El nombre es requerido; La cédula es requerida')
+    }
+  })
+
+  it('zodIssueMessages elimina mensajes repetidos', () => {
+    const r = z.object({ a: z.string().min(1, 'X'), b: z.string().min(1, 'X') }).safeParse({ a: '', b: '' })
+    expect(r.success).toBe(false)
+    if (!r.success) expect(zodIssueMessages(r.error)).toBe('X')
   })
 })

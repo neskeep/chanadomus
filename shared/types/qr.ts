@@ -19,6 +19,34 @@ export interface QrCodeRecord {
   status: QrStatus
 }
 
+/** Filtro de GET /api/qr/my-codes. Semántica de cada estado en shared/lib/qr-pass.ts */
+export type QrStatusFilter = QrStatus | 'all'
+
+/**
+ * Pase tal como lo devuelven my-codes, GET/PATCH /api/qr/[id] y cancel.
+ * `canEdit` y `canCancel` se calculan en el servidor: la UI no debe duplicar reglas.
+ */
+export interface QrPassItem extends QrCodeRecord {
+  multiUse: boolean
+  /** Tuvo al menos un acceso permitido (entrada o salida) */
+  hasAccess: boolean
+  /** Último acceso permitido registrado con el pase, ISO o null */
+  lastAccessAt: string | null
+  /** Vence hoy (día local del condominio). Útil para agrupar "Hoy" en Activos */
+  expiresToday: boolean
+  canEdit: boolean
+  canCancel: boolean
+}
+
+/** Body de PATCH /api/qr/[id]: al menos un campo. El token (QR) no cambia. */
+export interface UpdateQrInput {
+  visitorName?: string
+  visitorDocument?: string
+  /** ISO 8601, debe ser futura */
+  expiresAt?: string
+  multiUse?: boolean
+}
+
 export interface GenerateQrInput {
   visitorName: string
   visitorDocument?: string

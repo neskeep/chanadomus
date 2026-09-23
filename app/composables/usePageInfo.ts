@@ -13,6 +13,7 @@ const PAGE_MAP: Record<string, PageInfo> = {
   // Admin
   '/admin': { title: 'Panel de Administración', description: 'Resumen general del condominio' },
   '/admin/finanzas': { title: 'Finanzas', description: 'Cobros, pagos y reportes financieros' },
+  '/admin/notificaciones': { title: 'Notificaciones', description: 'Envío de avisos y alcance entre los usuarios' },
   '/admin/finanzas/registrar': { title: 'Registrar Movimiento', description: 'Agrega un cargo o abono a una unidad', breadcrumbs: [{ label: 'Finanzas', to: '/admin/finanzas' }] },
   '/admin/finanzas/subir-informe': { title: 'Subir Informe', description: 'Sube un informe financiero en formato PDF', breadcrumbs: [{ label: 'Finanzas', to: '/admin/finanzas' }] },
   '/admin/incidencias': { title: 'Incidencias', description: 'Gestión de reportes y problemas' },
@@ -111,6 +112,8 @@ const DYNAMIC_ROUTES: Array<{ prefix: string; info: PageInfo }> = [
   { prefix: '/vigilancia/incidencias/', info: { title: 'Detalle de Incidencia', description: 'Información y estado del reporte', breadcrumbs: [{ label: 'Incidencias', to: '/vigilancia/incidencias' }] } },
   { prefix: '/conserje/incidencias/', info: { title: 'Detalle de Incidencia', description: 'Información y estado del reporte', breadcrumbs: [{ label: 'Incidencias', to: '/conserje/incidencias' }] } },
   { prefix: '/vigilancia/residentes/', info: { title: 'Ficha del Residente', description: 'Datos y vehículos', breadcrumbs: [{ label: 'Directorio', to: '/vigilancia/residentes' }] } },
+  { prefix: '/propietario/mis-visitas/', info: { title: 'Editar visita', description: 'Corrige los datos del pase', breadcrumbs: [{ label: 'Mis Visitas', to: '/propietario/mis-visitas' }] } },
+  { prefix: '/conserje/mis-visitas/', info: { title: 'Editar visita', description: 'Corrige los datos del pase', breadcrumbs: [{ label: 'Mis Visitas', to: '/conserje/mis-visitas' }] } },
   { prefix: '/propietario/mi-unidad/editar-miembro/', info: { title: 'Editar Integrante', description: 'Actualiza información del miembro', breadcrumbs: [{ label: 'Mi Unidad', to: '/propietario/mi-unidad' }] } },
   { prefix: '/propietario/mi-unidad/editar-vehiculo/', info: { title: 'Editar Vehículo', description: 'Actualiza información del vehículo', breadcrumbs: [{ label: 'Mi Unidad', to: '/propietario/mi-unidad' }] } },
   { prefix: '/propietario/mi-unidad/editar-personal/', info: { title: 'Editar Personal', description: 'Actualiza información del personal de servicio', breadcrumbs: [{ label: 'Mi Unidad', to: '/propietario/mi-unidad' }] } },

@@ -15,3 +15,13 @@ export function getApiErrorMessage(err: unknown, fallback: string): string {
   }
   return fallback
 }
+
+/** Código HTTP de un error de $fetch, o undefined si no vino del servidor. */
+export function getApiErrorStatus(err: unknown): number | undefined {
+  if (err && typeof err === 'object') {
+    const { statusCode, status } = err as { statusCode?: unknown; status?: unknown }
+    if (typeof statusCode === 'number') return statusCode
+    if (typeof status === 'number') return status
+  }
+  return undefined
+}

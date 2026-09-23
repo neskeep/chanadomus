@@ -4,6 +4,7 @@ import { db } from '../db'
 import { pushSubscriptions } from '../db/schema/push'
 import { pushPreferences } from '../db/schema/push-preferences'
 import type { PushCategory } from '~~/shared/types/push-preferences'
+import { isExpiredSubscriptionStatus } from '~~/shared/lib/push-stats'
 
 // Configure VAPID
 const VAPID_PUBLIC_KEY = process.env.VAPID_PUBLIC_KEY!
@@ -181,9 +182,12 @@ async function sendPushToSubscriptions(
         )
         return { id: sub.id, success: true }
       } catch (error: unknown) {
-        // 410 Gone = subscription expired, limpiar
-        if (error instanceof webpush.WebPushError && error.statusCode === 410) {
-          await db.delete(pushSubscriptions).where(eq(pushSubscriptions.id, sub.id))
+        // 404 Not Found / 410 Gone: el servicio de push ya no reconoce el endpoint
+        // (permiso revocado, app desinstalada, suscripción caducada). Se borran
+        // todas las filas con ese endpoint: si el mismo navegador quedó registrado
+        // con otro usuario (sesión cambiada en el mismo equipo) también está muerta.
+        if (error instanceof webpush.WebPushError && isExpiredSubscriptionStatus(error.statusCode)) {
+          await removeExpiredSubscription(sub.endpoint)
         }
         return { id: sub.id, success: false, error }
       }
@@ -194,6 +198,16 @@ async function sendPushToSubscriptions(
   const failed = results.length - sent
 
   return { sent, failed, total: results.length }
+}
+
+/** Borra una suscripción caducada por endpoint. Un fallo aquí no debe tumbar el envío. */
+async function removeExpiredSubscription(endpoint: string) {
+  try {
+    await db.delete(pushSubscriptions).where(eq(pushSubscriptions.endpoint, endpoint))
+  }
+  catch (error) {
+    console.error('[web-push] No se pudo borrar la suscripción caducada:', error)
+  }
 }
 
 /** Expone la clave publica para el cliente */

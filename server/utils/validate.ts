@@ -54,6 +54,26 @@ export function validateParams<T>(event: H3Event, schema: ZodType<T>): T {
   return result.data
 }
 
+/**
+ * Valida `data` y lanza 400 con los mensajes de los issues, sin prefijo de campo.
+ * Pensado para schemas con mensajes ya redactados para el usuario (shared/lib).
+ */
+export function parseOrThrow<T>(schema: ZodType<T>, data: unknown): T {
+  const result = schema.safeParse(data)
+  if (!result.success) {
+    throw createError({
+      statusCode: 400,
+      message: zodIssueMessages(result.error),
+    })
+  }
+  return result.data
+}
+
+/** Mensajes de un ZodError unidos por "; " (sin rutas, sin duplicados). */
+export function zodIssueMessages(error: ZodError): string {
+  return [...new Set(error.issues.map(issue => issue.message))].join('; ')
+}
+
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 
 /** True si el valor es un UUID con formato válido (evita errores 500 de Postgres). */

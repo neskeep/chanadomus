@@ -13,12 +13,12 @@ Actualizar este archivo cada vez que se ejecute `shadcn add`.
 | Badge | 2026-04-19 | mis-visitas.vue, acceso/[token].vue |
 | Separator | 2026-04-19 | nueva-visita.vue, acceso/[token].vue |
 | Table | 2026-04-19 | Admin finanzas resumen |
-| Tabs | 2026-04-19 | Admin finanzas navegacion |
+| Tabs | 2026-04-19 | Admin finanzas navegacion; estados de pase en visit/PassList.vue y rango en unit/AccessHistory.vue |
 | Skeleton | 2026-04-19 | Loading states |
 | Sonner | 2026-04-19 | Toast notifications |
 | Dialog | 2026-04-19 | Modals, admin incidencias detalle |
 | Textarea | 2026-04-19 | Nueva incidencia form, admin status note |
-| AlertDialog | 2026-04-19 | Delete confirmations en unidades, personal; cancelar pase en VisitPassCard.vue |
+| AlertDialog | 2026-04-19 | Delete confirmations en unidades, personal; cancelar pase en visit/CancelDialog.vue (PassCard y PassEditor) |
 | RadioGroup | 2026-04-19 | Votaciones propietario (seleccionar opción) |
 | Progress | 2026-04-19 | Votaciones resultados (barras de progreso) |
 | Switch | 2026-04-19 | Preferencias de notificaciones push |

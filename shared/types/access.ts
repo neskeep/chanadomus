@@ -7,6 +7,21 @@ export type AccessResult = 'allowed' | 'denied' | 'expired' | 'already_used'
 export type DeviceStatus = 'active' | 'inactive'
 export type ScanType = 'qr' | 'pin' | 'rfid'
 
+/** Rango de GET /api/my-unit/access-history, en días locales del condominio */
+export type UnitAccessRange = 'today' | '7d' | '30d'
+
+export interface UnitAccessHistoryMeta {
+  total: number
+  page: number
+  limit: number
+  hasMore: boolean
+  range: UnitAccessRange
+  /** Primer día local incluido (YYYY-MM-DD) */
+  from: string
+  /** Último día local incluido (YYYY-MM-DD), hoy */
+  to: string
+}
+
 export interface WebhookScanPayload {
   type: ScanType
   value: string // token QR, PIN, o RFID tag

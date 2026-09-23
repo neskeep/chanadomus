@@ -3,37 +3,19 @@ import { qrCodes } from '~~/server/db/schema/access'
 import { frequentVisitors } from '~~/server/db/schema/frequent-visitor'
 import { units } from '~~/server/db/schema/unit'
 import { eq, and, sql } from 'drizzle-orm'
-import type { GenerateQrInput } from '~~/shared/types/qr'
+import { qrExpiresAtError, qrGenerateSchema } from '~~/shared/lib/qr-pass'
 
 export default defineEventHandler(async (event) => {
   const { tenantId, user } = await requireTenant(event)
   const session = await requireRole(event, ['propietario', 'admin', 'conserje'])
 
-  const body = await readBody<GenerateQrInput>(event)
-
-  // Validar campos requeridos
-  if (!body.visitorName?.trim()) {
-    throw createError({ statusCode: 400, message: 'visitorName es requerido' })
-  }
-  if (!body.visitorType || !['invitado', 'proveedor'].includes(body.visitorType)) {
-    throw createError({ statusCode: 400, message: 'visitorType debe ser "invitado" o "proveedor"' })
-  }
-  if (!body.visitorDocument?.trim()) {
-    throw createError({ statusCode: 400, message: 'La cédula del visitante es requerida' })
-  }
-  if (!body.unitId?.trim()) {
-    throw createError({ statusCode: 400, message: 'unitId es requerido' })
-  }
-  if (!body.expiresAt?.trim()) {
-    throw createError({ statusCode: 400, message: 'expiresAt es requerido' })
-  }
+  // Mismas reglas que PATCH /api/qr/[id] (shared/lib/qr-pass.ts)
+  const body = parseOrThrow(qrGenerateSchema, await readBody(event))
 
   const expiresAtDate = new Date(body.expiresAt)
-  if (isNaN(expiresAtDate.getTime())) {
-    throw createError({ statusCode: 400, message: 'expiresAt debe ser una fecha ISO valida' })
-  }
-  if (expiresAtDate <= new Date()) {
-    throw createError({ statusCode: 400, message: 'expiresAt debe ser una fecha futura' })
+  const expiresAtError = qrExpiresAtError(expiresAtDate)
+  if (expiresAtError) {
+    throw createError({ statusCode: 400, message: expiresAtError })
   }
 
   // Verificar que la unidad existe y pertenece al tenant
@@ -63,8 +45,8 @@ export default defineEventHandler(async (event) => {
     .values({
       token,
       ownerId: user.id,
-      visitorName: body.visitorName.trim(),
-      visitorDocument: body.visitorDocument?.trim() || null,
+      visitorName: body.visitorName,
+      visitorDocument: body.visitorDocument,
       visitorType: body.visitorType,
       unitId: body.unitId,
       tenantId,

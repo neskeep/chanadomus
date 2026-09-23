@@ -7,6 +7,22 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [1.8.0] - 2026-09-23
+
+### Added
+- Mis Visitas: editar un pase (nombre, cédula y vigencia) mientras no se haya usado, en página completa. El QR ya compartido sigue sirviendo
+- Historial "Accesos registrados a tu vivienda" con rangos Hoy / Últimos 7 días / Últimos 30 días y "Cargar más". El conserje también lo tiene
+- Panel de admin: tarjeta "Notificaciones activas" y pestaña "Alcance" en Notificaciones, con resumen por rol y lista de usuarios sin avisos
+
+### Changed
+- Mis Visitas muestra primero los pases que vencen hoy; filtro de estado en pestañas visibles (Activos, Usados, Expirados, Cancelados) y "Cargar más"
+- Los pases de varias entradas que ya se usaron aparecen como "Usado" y no como "Expirado"
+- Formulario de nueva visita unificado para propietario y conserje
+
+### Fixed
+- El filtro de estado de Mis Visitas se aplica antes de paginar; ya no se pierden pases antiguos
+- Las suscripciones push caducadas (404 y 410) se eliminan; antes solo se eliminaban con 410
+
 ## [1.7.4] - 2026-09-23
 
 ### Fixed
