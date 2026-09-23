@@ -69,6 +69,13 @@ export interface CreateGuest {
   vehiclePlate?: string
 }
 
+/** Respuesta de POST /api/events/:id/checkout/all */
+export interface BulkCheckoutResult {
+  /** Invitados cuya salida se registro */
+  closed: number
+  checkedOutAt: string
+}
+
 export interface BulkImportResult {
   added: number
   duplicates: number

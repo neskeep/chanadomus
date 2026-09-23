@@ -2,9 +2,9 @@ import { z } from 'zod'
 import { eq, and } from 'drizzle-orm'
 import { db } from '~~/server/db'
 import { events, eventGuests } from '~~/server/db/schema/event'
-import { accessLogs } from '~~/server/db/schema/access'
 import { units } from '~~/server/db/schema/unit'
 import { broadcastAccessEvent } from '~~/server/utils/ws-access'
+import { markGuestsExited } from '~~/server/utils/event-checkout'
 import type { AccessEvent } from '~~/shared/types/access'
 import type { EventGuest } from '~~/shared/types/event'
 import { canCheckOutEvent } from '~~/shared/lib/event-window'
@@ -43,7 +43,7 @@ export default defineEventHandler(async (event) => {
   const [guest] = await db
     .select()
     .from(eventGuests)
-    .where(and(eq(eventGuests.id, guestId), eq(eventGuests.eventId, id)))
+    .where(and(eq(eventGuests.id, guestId), eq(eventGuests.eventId, id), eq(eventGuests.tenantId, session.tenantId)))
     .limit(1)
 
   if (!guest) {
@@ -54,29 +54,19 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 400, message: 'El invitado no esta dentro del evento' })
   }
 
-  // UPDATE condicionado a status='dentro': si llegan dos peticiones seguidas para el
-  // mismo invitado, solo la primera registra la salida.
+  // UPDATE condicionado a status='dentro' (markGuestsExited): si llegan dos peticiones
+  // seguidas para el mismo invitado, solo la primera registra la salida.
   const now = new Date()
   const updated = await db.transaction(async (tx) => {
-    const [row] = await tx
-      .update(eventGuests)
-      .set({
-        status: 'salio',
-        checkedOutAt: now,
-        checkedOutBy: session.user.id,
-      })
-      .where(and(eq(eventGuests.id, guestId), eq(eventGuests.status, 'dentro')))
-      .returning()
+    const [row] = await markGuestsExited(tx, {
+      tenantId: session.tenantId,
+      guestIds: [guestId],
+      at: now,
+      checkedOutBy: session.user.id,
+    })
 
     if (!row) {
       throw createError({ statusCode: 409, message: 'El invitado ya tiene la salida registrada' })
-    }
-
-    if (guest.accessLogId) {
-      await tx
-        .update(accessLogs)
-        .set({ exitAt: now })
-        .where(eq(accessLogs.id, guest.accessLogId))
     }
 
     return row

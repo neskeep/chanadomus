@@ -28,6 +28,16 @@ export function useStaff() {
   const isSubmitting = ref(false)
   const error = ref<string | null>(null)
 
+  /**
+   * Roles para filtrar el listado: los activos y los inactivos que aún usa algún
+   * miembro cargado. Así un rol fusionado o desactivado desaparece del filtro sin
+   * esconder a quien todavía lo tiene asignado.
+   */
+  const filterableRoles = computed(() => {
+    const usedRoleIds = new Set(staffList.value.map(s => s.roleId).filter(Boolean))
+    return roleOptions.value.filter(r => r.isActive || usedRoleIds.has(r.id))
+  })
+
   async function fetchRoles() {
     try {
       const res = await $fetch<{ data: ServiceStaffRole[] }>('/api/admin/service-roles', {
@@ -209,6 +219,7 @@ export function useStaff() {
   return {
     staffList,
     roleOptions,
+    filterableRoles,
     isLoading,
     isSubmitting,
     error,

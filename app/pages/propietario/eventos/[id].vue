@@ -15,6 +15,7 @@ import {
 } from 'lucide-vue-next'
 import { toast } from 'vue-sonner'
 import type { EventDetail, EventStatus, GuestStatus, CreateGuest } from '~~/shared/types/event'
+import { checkoutAuthorLabel } from '~~/shared/lib/event-window'
 
 const route = useRoute()
 const router = useRouter()
@@ -428,6 +429,9 @@ async function handleRemoveGuest(guestId: string) {
                       >
                         {{ GUEST_STATUS_LABELS[guest.status] }}
                       </span>
+                      <p v-if="checkoutAuthorLabel(guest)" class="mt-0.5 text-xs text-muted-foreground">
+                        {{ checkoutAuthorLabel(guest) }}
+                      </p>
                     </TableCell>
                     <TableCell class="text-right">
                       <Button
@@ -459,6 +463,9 @@ async function handleRemoveGuest(guestId: string) {
                     {{ GUEST_STATUS_LABELS[guest.status] }}
                   </span>
                 </div>
+                <p v-if="checkoutAuthorLabel(guest)" class="mt-0.5 text-[11px] text-muted-foreground">
+                  {{ checkoutAuthorLabel(guest) }}
+                </p>
                 <div class="mt-1 flex items-center gap-x-1 text-[11px] text-muted-foreground">
                   <template v-if="guest.document">
                     <IdCard class="size-3 shrink-0" />

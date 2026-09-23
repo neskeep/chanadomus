@@ -7,6 +7,7 @@ useHead({ title: 'Notificaciones' })
 
 const { preferences, isLoading, isSaving, error, fetchPreferences, toggleCategory } = usePushPreferences()
 const { isSupported, permission, isSubscribed, subscribe, unsubscribe, checkSubscription } = usePushNotifications()
+const { isIos, needsIosInstall } = usePwaPlatform()
 
 const isSubscribing = ref(false)
 const isUnsubscribing = ref(false)
@@ -54,8 +55,10 @@ function handleToggle(category: PushCategory, enabled: boolean) {
               {{ isSubscribed ? 'Notificaciones activas' : 'Notificaciones desactivadas' }}
             </p>
             <p class="text-xs text-muted-foreground">
-              <template v-if="!isSupported">Tu navegador no soporta notificaciones push</template>
-              <template v-else-if="permission === 'denied'">Permiso denegado — revisa la configuración de tu navegador</template>
+              <template v-if="needsIosInstall">En iPhone y iPad primero instala la app en la pantalla de inicio</template>
+              <template v-else-if="!isSupported">Tu navegador no admite notificaciones</template>
+              <template v-else-if="permission === 'denied' && isIos">Bloqueadas. Actívalas desde Ajustes del iPhone > Notificaciones > ChanaDomus</template>
+              <template v-else-if="permission === 'denied'">Bloqueadas. Toca el candado junto a la dirección del sitio y permite las notificaciones</template>
               <template v-else-if="isSubscribed">Recibirás notificaciones según tus preferencias</template>
               <template v-else>Activa las notificaciones para recibir alertas</template>
             </p>
@@ -80,6 +83,12 @@ function handleToggle(category: PushCategory, enabled: boolean) {
           <Loader2 v-if="isUnsubscribing" class="mr-2 size-4 animate-spin" />
           Desactivar
         </Button>
+      </div>
+
+      <!-- Instrucciones de instalacion en iPhone/iPad (mismo bloque que el aviso global) -->
+      <div v-if="needsIosInstall" class="mt-4 space-y-2 border-t pt-4">
+        <p class="text-sm font-medium">Cómo instalar ChanaDomus</p>
+        <PushIosInstallSteps />
       </div>
     </Card>
 

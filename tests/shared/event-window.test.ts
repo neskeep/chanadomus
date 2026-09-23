@@ -6,10 +6,16 @@ import {
   canCheckInEvent,
   canCheckOutEvent,
   canUndoCheckout,
+  AUTO_CHECKOUT_LABEL,
+  autoCheckoutAt,
+  autoCheckoutCutoff,
+  checkoutAuthorLabel,
   eventGuardPhase,
   guardCandidateMinEndsAt,
+  isAutoCheckout,
   isUpcomingOrOngoing,
   isVisibleToGuard,
+  shouldAutoCheckout,
 } from '~~/shared/lib/event-window'
 import { zonedDateRangeToUtc } from '~~/shared/lib/zoned-date'
 
@@ -120,5 +126,54 @@ describe('canUndoCheckout', () => {
     const old = new Date(now.getTime() - EVENT_CHECKOUT_UNDO_WINDOW_MS - 1)
     expect(canUndoCheckout({ guestStatus: 'salio', checkedOutAt: old, checkedOutBy: 'u1' }, guard, now)).toBe(false)
     expect(canUndoCheckout({ guestStatus: 'dentro', checkedOutAt: null, checkedOutBy: null }, guard, now)).toBe(false)
+  })
+})
+
+describe('cierre automático de salidas', () => {
+  it('shouldAutoCheckout solo tras superar la ventana de 24 h', () => {
+    const justInside = new Date(now.getTime() - EVENT_GUARD_CHECKOUT_WINDOW_MS)
+    expect(shouldAutoCheckout({ endsAt: justInside }, now)).toBe(false)
+    expect(shouldAutoCheckout({ endsAt: new Date(justInside.getTime() - 1) }, now)).toBe(true)
+    expect(shouldAutoCheckout({ endsAt: '2026-09-24T00:00:00Z' }, now)).toBe(false)
+  })
+
+  it('caso Desayuno: terminó el 20/09 a las 17:00Z, se cierra el 23/09', () => {
+    expect(shouldAutoCheckout({ endsAt: '2026-09-20T17:00:00Z' }, now)).toBe(true)
+  })
+
+  it('caso Aeropress: terminó hace unas 10 h, todavía no se cierra', () => {
+    expect(shouldAutoCheckout({ endsAt: '2026-09-23T03:55:00Z' }, now)).toBe(false)
+    expect(shouldAutoCheckout({ endsAt: '2026-09-23T03:55:00Z' }, new Date('2026-09-24T03:55:01Z'))).toBe(true)
+  })
+
+  it('autoCheckoutCutoff coincide con shouldAutoCheckout (pre-filtro SQL)', () => {
+    const cutoff = autoCheckoutCutoff(now)
+    expect(cutoff.getTime()).toBe(now.getTime() - EVENT_GUARD_CHECKOUT_WINDOW_MS)
+    expect(shouldAutoCheckout({ endsAt: cutoff }, now)).toBe(false)
+    expect(shouldAutoCheckout({ endsAt: new Date(cutoff.getTime() - 1) }, now)).toBe(true)
+  })
+
+  it('autoCheckoutAt usa el fin del evento, o la entrada si fue posterior', () => {
+    const end = '2026-09-20T17:00:00Z'
+    expect(autoCheckoutAt(end, '2026-09-20T15:00:00Z').toISOString()).toBe('2026-09-20T17:00:00.000Z')
+    expect(autoCheckoutAt(end, '2026-09-20T18:30:00Z').toISOString()).toBe('2026-09-20T18:30:00.000Z')
+    expect(autoCheckoutAt(new Date(end), null).toISOString()).toBe('2026-09-20T17:00:00.000Z')
+  })
+
+  it('una salida automática no se puede deshacer, ni siquiera un admin', () => {
+    const g = { guestStatus: 'salio' as const, checkedOutAt: autoCheckoutAt('2026-09-20T17:00:00Z', null), checkedOutBy: null }
+    expect(canUndoCheckout(g, { userId: 'a1', role: 'admin' }, now)).toBe(false)
+  })
+})
+
+describe('checkoutAuthorLabel', () => {
+  it('distingue salida automática, manual y sin salida', () => {
+    const at = '2026-09-20T17:00:00Z'
+    expect(isAutoCheckout({ checkedOutAt: at, checkedOutBy: null })).toBe(true)
+    expect(isAutoCheckout({ checkedOutAt: null, checkedOutBy: null })).toBe(false)
+    expect(checkoutAuthorLabel({ checkedOutAt: at, checkedOutBy: null, checkedOutByName: null })).toBe(AUTO_CHECKOUT_LABEL)
+    expect(checkoutAuthorLabel({ checkedOutAt: at, checkedOutBy: 'u1', checkedOutByName: 'Pedro' })).toBe('Salida: Pedro')
+    expect(checkoutAuthorLabel({ checkedOutAt: at, checkedOutBy: 'u1', checkedOutByName: null })).toBeNull()
+    expect(checkoutAuthorLabel({ checkedOutAt: null, checkedOutBy: null, checkedOutByName: null })).toBeNull()
   })
 })

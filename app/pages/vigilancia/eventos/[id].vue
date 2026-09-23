@@ -13,7 +13,7 @@ import {
 } from 'lucide-vue-next'
 import { toast } from 'vue-sonner'
 import type { EventDetail, EventGuest, GuestStatus } from '~~/shared/types/event'
-import { canCheckInEvent, eventGuardPhase, EVENT_LATE_CHECKIN_GRACE_MS } from '~~/shared/lib/event-window'
+import { canCheckInEvent, canCheckOutEvent, AUTO_CHECKOUT_LABEL, eventGuardPhase, isAutoCheckout, EVENT_LATE_CHECKIN_GRACE_MS } from '~~/shared/lib/event-window'
 
 const route = useRoute()
 const id = route.params.id as string
@@ -138,6 +138,8 @@ function handleUndoCheckout(guestId: string) {
   })
 }
 
+const checkoutAllowed = computed(() => !!event.value && canCheckOutEvent(event.value))
+
 const tabOptions: { value: GuestStatus | 'todos'; label: string }[] = [
   { value: 'todos', label: 'Todos' },
   { value: 'pendiente', label: 'Pendientes' },
@@ -201,6 +203,11 @@ const tabOptions: { value: GuestStatus | 'todos'; label: string }[] = [
           </div>
         </CardContent>
       </Card>
+
+      <!-- Salida masiva al cierre del evento -->
+      <div v-if="checkoutAllowed && stats.inside > 0" class="flex justify-end">
+        <EventCheckoutAllButton :event-id="id" :inside-count="stats.inside" @done="loadGuests()" />
+      </div>
 
       <!-- Search -->
       <div class="relative">
@@ -310,7 +317,9 @@ const tabOptions: { value: GuestStatus | 'todos'; label: string }[] = [
             <!-- Salio: Gray completed text -->
             <div v-else-if="guest.status === 'salio'" class="flex shrink-0 items-center gap-1.5 text-muted-foreground">
               <CheckCircle2 class="size-4" />
-              <span class="text-xs">{{ formatTime(guest.checkedOutAt) }}</span>
+              <span class="text-xs">
+                {{ formatTime(guest.checkedOutAt) }}<template v-if="isAutoCheckout(guest)"> · {{ AUTO_CHECKOUT_LABEL }}</template>
+              </span>
             </div>
           </div>
         </div>

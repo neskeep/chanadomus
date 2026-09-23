@@ -15,6 +15,7 @@ import {
 } from 'lucide-vue-next'
 import { toast } from 'vue-sonner'
 import type { EventDetail, EventStatus, GuestStatus, CreateGuest } from '~~/shared/types/event'
+import { canCheckOutEvent, checkoutAuthorLabel } from '~~/shared/lib/event-window'
 
 const route = useRoute()
 const router = useRouter()
@@ -128,6 +129,9 @@ const GUEST_STATUS_LABELS: Record<GuestStatus, string> = {
 }
 
 const { formatDateTime } = useFormatDate()
+
+const guestsInside = computed(() => guests.value.filter(g => g.status === 'dentro').length)
+const checkoutAllowed = computed(() => !!event.value && canCheckOutEvent(event.value))
 
 const filteredGuests = computed(() => {
   const q = searchQuery.value.trim().toLowerCase()
@@ -301,7 +305,14 @@ async function handleRemoveGuest(guestId: string) {
         <CardContent class="p-5 md:p-8">
           <div class="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <h2 class="text-base font-semibold">Invitados ({{ guests.length }})</h2>
-            <div class="flex gap-2">
+            <div class="flex flex-wrap gap-2">
+              <EventCheckoutAllButton
+                v-if="checkoutAllowed"
+                :event-id="id"
+                :inside-count="guestsInside"
+                size="sm"
+                @done="fetchGuests()"
+              />
               <Button
                 variant="outline"
                 size="sm"
@@ -428,6 +439,9 @@ async function handleRemoveGuest(guestId: string) {
                       >
                         {{ GUEST_STATUS_LABELS[guest.status] }}
                       </span>
+                      <p v-if="checkoutAuthorLabel(guest)" class="mt-0.5 text-xs text-muted-foreground">
+                        {{ checkoutAuthorLabel(guest) }}
+                      </p>
                     </TableCell>
                     <TableCell class="text-right">
                       <Button
@@ -459,6 +473,9 @@ async function handleRemoveGuest(guestId: string) {
                     {{ GUEST_STATUS_LABELS[guest.status] }}
                   </span>
                 </div>
+                <p v-if="checkoutAuthorLabel(guest)" class="mt-0.5 text-[11px] text-muted-foreground">
+                  {{ checkoutAuthorLabel(guest) }}
+                </p>
                 <div class="mt-1 flex items-center gap-x-1 text-[11px] text-muted-foreground">
                   <template v-if="guest.document">
                     <IdCard class="size-3 shrink-0" />

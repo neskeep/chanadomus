@@ -1,6 +1,7 @@
 import { db } from '~~/server/db'
 import { events } from '~~/server/db/schema/event'
 import { eq, and, lt } from 'drizzle-orm'
+import { autoCheckoutStaleGuests } from '~~/server/utils/event-checkout'
 
 /**
  * Expiracion perezosa ("lazy expiration") de eventos.
@@ -17,6 +18,9 @@ import { eq, and, lt } from 'drizzle-orm'
  * de invitados que salen despues de endsAt. El guard de check-out se ajusto para
  * permitir salidas de invitados en estado 'dentro' aunque el evento este
  * 'completado' (ver server/api/events/[id]/checkout/[guestId].post.ts).
+ *
+ * Tambien cierra las salidas de invitados que siguen 'dentro' en eventos que
+ * terminaron hace mas de EVENT_GUARD_CHECKOUT_WINDOW_MS (autoCheckoutStaleGuests).
  */
 export async function expireEvents(tenantId: string): Promise<void> {
   await db
@@ -30,4 +34,6 @@ export async function expireEvents(tenantId: string): Promise<void> {
       eq(events.status, 'activo'),
       lt(events.endsAt, new Date()),
     ))
+
+  await autoCheckoutStaleGuests(tenantId)
 }

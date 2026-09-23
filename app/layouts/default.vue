@@ -34,6 +34,8 @@ useContentResize(contentRef)
       <!-- Scrollable content -->
       <div ref="contentRef" class="relative flex-1 overflow-y-auto">
         <div class="px-4 py-6 lg:px-6">
+          <!-- Aviso descartable para activar push en este dispositivo -->
+          <PushPrompt class="mb-6" />
           <slot />
         </div>
         <!-- Bottom nav spacer on mobile -->

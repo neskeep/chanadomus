@@ -6,7 +6,7 @@ import type { Staff } from '~~/shared/types/staff'
 
 useHead({ title: 'Personal' })
 
-const { staffList, isLoading, isSubmitting, error, fetchStaff, deleteStaffMember, generateQr, roleOptions: roles, fetchRoles } = useStaff()
+const { staffList, isLoading, isSubmitting, error, fetchStaff, deleteStaffMember, generateQr, filterableRoles: roles, fetchRoles } = useStaff()
 const { downloadBadge, isGenerating: isDownloadingBadge } = useQrBadge()
 
 const { target, isMounted } = useTopbarPortal()

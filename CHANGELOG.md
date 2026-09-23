@@ -7,6 +7,17 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [1.10.0] - 2026-09-23
+
+### Added
+- Aviso descartable para activar las notificaciones en el dispositivo: botón "Activar" si el navegador lo admite, pasos para instalar la app en iPhone/iPad y cómo desbloquearlas si están bloqueadas. "Ahora no" lo oculta 7 días. Los pasos de iPhone también aparecen en Mi Chana > Notificaciones
+- Fusión de roles de servicio duplicados (`POST /api/admin/service-roles/:id/merge`): mueve proveedores, personal y personal por unidad al rol destino y deja el origen inactivo con la marca "Fusionado en <destino>"; el filtro de personal ya no muestra roles inactivos sin uso
+- Eventos: botón "Registrar salida de todos (N)" en vigilancia, conserje y admin (`POST /api/events/:id/checkout/all`), con confirmación y aviso del número de salidas registradas
+
+### Fixed
+- Eventos: los invitados que siguen "dentro" 24 h después del fin del evento salen automáticamente (hora de fin o de entrada si fue posterior, y cierre de su registro de acceso). La salida se muestra como "Salida automática"
+- La salida de un invitado ya no sobrescribe una hora de salida registrada antes en el control de accesos
+
 ## [1.9.0] - 2026-09-23
 
 ### Added

@@ -12,6 +12,8 @@
  *     b) mientras queden invitados dentro, hasta EVENT_GUARD_CHECKOUT_WINDOW_MS tras el fin.
  * - Check-out: permitido en 'activo' y 'completado' sin limite de tiempo (el servidor ya
  *   lo aceptaba); la ventana (b) solo acota la visibilidad en la lista de vigilancia.
+ * - Cierre automatico: al superar la ventana (b), los invitados que siguen 'dentro' pasan
+ *   a 'salio' con checkedOutBy = null ("salida automatica") y hora max(endsAt, checkedInAt).
  *
  * Funciones puras (sin Nuxt/Nitro): se usan en server y client y se testean con vitest.
  */
@@ -128,4 +130,52 @@ export function canUndoCheckout(
   if (actor.role !== 'admin' && guest.checkedOutBy !== actor.userId) return false
   const elapsed = now.getTime() - toMs(guest.checkedOutAt)
   return elapsed >= 0 && elapsed <= EVENT_CHECKOUT_UNDO_WINDOW_MS
+}
+
+// ─── Cierre automatico de salidas ────────────────────────────────────────────
+
+/**
+ * Limite de `endsAt` para el cierre automatico: los eventos que terminaron antes de
+ * este instante ya superaron EVENT_GUARD_CHECKOUT_WINDOW_MS.
+ */
+export function autoCheckoutCutoff(now: Date = new Date()): Date {
+  return new Date(now.getTime() - EVENT_GUARD_CHECKOUT_WINDOW_MS)
+}
+
+/** true si los invitados que siguen dentro de este evento deben salir automaticamente. */
+export function shouldAutoCheckout(ev: Pick<EventTimes, 'endsAt'>, now: Date = new Date()): boolean {
+  return toMs(ev.endsAt) < autoCheckoutCutoff(now).getTime()
+}
+
+/**
+ * Hora que se registra en una salida automatica: el fin del evento, salvo que el
+ * invitado entrara despues (check-in tardio), en cuyo caso su hora de entrada.
+ */
+export function autoCheckoutAt(endsAt: Date | string, checkedInAt: Date | string | null): Date {
+  const end = toMs(endsAt)
+  const entered = checkedInAt ? toMs(checkedInAt) : end
+  return new Date(Math.max(end, entered))
+}
+
+interface CheckoutAuthorInput {
+  checkedOutAt: string | Date | null
+  checkedOutBy: string | null
+}
+
+/** Etiqueta para las salidas que cerro el sistema (sin usuario). */
+export const AUTO_CHECKOUT_LABEL = 'Salida automática'
+
+/** true si la salida la registro el sistema: hay hora de salida pero no usuario. */
+export function isAutoCheckout(guest: CheckoutAuthorInput): boolean {
+  return guest.checkedOutAt !== null && guest.checkedOutBy === null
+}
+
+/**
+ * Texto de quien registro la salida: "Salida automática", "Salida: <nombre>" o null
+ * si el invitado no ha salido (o no se conoce el nombre).
+ */
+export function checkoutAuthorLabel(guest: CheckoutAuthorInput & { checkedOutByName: string | null }): string | null {
+  if (!guest.checkedOutAt) return null
+  if (isAutoCheckout(guest)) return AUTO_CHECKOUT_LABEL
+  return guest.checkedOutByName ? `Salida: ${guest.checkedOutByName}` : null
 }

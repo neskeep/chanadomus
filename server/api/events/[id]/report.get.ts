@@ -9,6 +9,9 @@ export default defineEventHandler(async (event) => {
   const session = await requireTenant(event)
   await requireRole(event, ['admin', 'propietario'])
 
+  // Lazy expiration + cierre automatico de salidas antes de calcular el reporte
+  await expireEvents(session.tenantId)
+
   const { id } = validateParams(event, paramsSchema)
   const role = session.user.role as string
 
