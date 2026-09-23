@@ -3,6 +3,7 @@ import { db } from '~~/server/db'
 import { accessLogs, qrCodes } from '~~/server/db/schema/access'
 import { units } from '~~/server/db/schema/unit'
 import type { AccessEvent } from '~~/shared/types/access'
+import { isDateString } from '~~/shared/lib/zoned-date'
 
 export default defineEventHandler(async (event) => {
   // 1. Auth: conserje, vigilancia, admin
@@ -16,21 +17,9 @@ export default defineEventHandler(async (event) => {
   const limitParam = typeof query.limit === 'string' ? parseInt(query.limit, 10) : 50
   const limit = Math.min(Math.max(limitParam || 50, 1), 100)
 
-  // 3. Calculate date range
-  let startOfDay: Date
-  let startOfNextDay: Date
-
-  if (dateStr && /^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
-    startOfDay = new Date(`${dateStr}T00:00:00.000Z`)
-    startOfNextDay = new Date(`${dateStr}T00:00:00.000Z`)
-    startOfNextDay.setUTCDate(startOfNextDay.getUTCDate() + 1)
-  } else {
-    const now = new Date()
-    const todayStr = now.toISOString().split('T')[0]
-    startOfDay = new Date(`${todayStr}T00:00:00.000Z`)
-    startOfNextDay = new Date(`${todayStr}T00:00:00.000Z`)
-    startOfNextDay.setUTCDate(startOfNextDay.getUTCDate() + 1)
-  }
+  // 3. Calculate date range — el día se interpreta en la zona del condominio
+  const day = dateStr && isDateString(dateStr) ? dateStr : localTodayString()
+  const { start: startOfDay, end: startOfNextDay } = localDateRangeToUtc(day, day)
 
   // 4. Query with LEFT JOINs
   const rows = await db

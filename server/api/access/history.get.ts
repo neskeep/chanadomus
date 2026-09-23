@@ -4,12 +4,13 @@ import { db } from '~~/server/db'
 import { accessLogs, qrCodes } from '~~/server/db/schema/access'
 import { units } from '~~/server/db/schema/unit'
 import type { AccessEvent } from '~~/shared/types/access'
+import { diffDateStrings, isDateString } from '~~/shared/lib/zoned-date'
 
 const dateRegex = /^\d{4}-\d{2}-\d{2}$/
 
 const querySchema = z.object({
-  from: z.string().regex(dateRegex, 'Invalid date format, expected YYYY-MM-DD'),
-  to: z.string().regex(dateRegex, 'Invalid date format, expected YYYY-MM-DD'),
+  from: z.string().regex(dateRegex, 'Invalid date format, expected YYYY-MM-DD').refine(isDateString, 'Invalid date'),
+  to: z.string().regex(dateRegex, 'Invalid date format, expected YYYY-MM-DD').refine(isDateString, 'Invalid date'),
   result: z.enum(['allowed', 'denied', 'expired', 'already_used']).optional(),
   entryType: z.enum(['qr', 'manual', 'webhook']).optional(),
   search: z.string().optional(),
@@ -44,27 +45,21 @@ export default defineEventHandler(async (event) => {
   }
 
   // Validate max range of 90 days
-  const fromDate = new Date(`${from}T00:00:00.000Z`)
-  const toDate = new Date(`${to}T00:00:00.000Z`)
-  const diffMs = toDate.getTime() - fromDate.getTime()
-  const diffDays = diffMs / (1000 * 60 * 60 * 24)
-
-  if (diffDays > 90) {
+  if (diffDateStrings(from, to) > 90) {
     throw createError({
       statusCode: 400,
       message: 'Date range must not exceed 90 days',
     })
   }
 
-  // toDate + 1 day for inclusive end
-  const toDatePlusOne = new Date(toDate)
-  toDatePlusOne.setUTCDate(toDatePlusOne.getUTCDate() + 1)
+  // from/to son fechas del condominio: [from 00:00 local, to+1 00:00 local)
+  const range = localDateRangeToUtc(from, to)
 
   // Build conditions
   const conditions = [
     eq(accessLogs.tenantId, tenantId),
-    gte(accessLogs.createdAt, fromDate),
-    lt(accessLogs.createdAt, toDatePlusOne),
+    gte(accessLogs.createdAt, range.start),
+    lt(accessLogs.createdAt, range.end),
   ]
 
   if (result) {

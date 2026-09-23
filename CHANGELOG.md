@@ -7,6 +7,19 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [1.7.2] - 2026-09-23
+
+### Fixed
+- Panel de administración: el gráfico "Accesos, últimos 7 días" ahora muestra hoy y los 6 días anteriores en hora de Caracas. Antes estaba desplazado 8 horas, no incluía el día actual y podía mostrar 8 barras
+- "Accesos hoy" (admin, conserje y vigilancia) ahora cuenta solo accesos permitidos y coincide con la barra de hoy. Antes sumaba los escaneos rechazados
+- El historial de accesos y el feed de vigilancia filtran por día de Caracas. Antes el filtro "hoy" incluía registros de la noche anterior y desde las 20:00 saltaba al día siguiente
+- Incidencias por mes y exportaciones CSV/PDF del panel usan la fecha local
+- La búsqueda de proveedores ignora acentos ("víveres" = "viveres")
+
+### Changed
+- Filtro de categoría de proveedores (propietario, conserje y admin): lista vertical con buscador en lugar de chips
+- Zona horaria del condominio configurable en `runtimeConfig.public.appTimezone` (por defecto `America/Caracas`)
+
 ## [1.7.1] - 2026-09-23
 
 ### Fixed

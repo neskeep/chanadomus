@@ -7,7 +7,7 @@ import { providers } from '~~/server/db/schema/provider'
 import { units } from '~~/server/db/schema/unit'
 import { accessLogs, qrCodes } from '~~/server/db/schema/access'
 import { panicEvents } from '~~/server/db/schema/panic'
-import { eq, and, count, gte, asc, inArray, isNull, gt, or, sql as dsql } from 'drizzle-orm'
+import { eq, and, count, gte, lt, asc, inArray, isNull, gt, sql as dsql } from 'drizzle-orm'
 
 interface DashboardStats {
   openIncidents: number
@@ -43,11 +43,8 @@ export default defineEventHandler(async (event) => {
   const { tenantId } = session
   const userId = session.user.id
   const now = new Date()
-  // Calculate midnight in Venezuela time (UTC-4)
-  const veNow = new Date(now.toLocaleString('en-US', { timeZone: 'America/Caracas' }))
-  veNow.setHours(0, 0, 0, 0)
-  // Convert back to UTC: Venezuela is UTC-4, so add 4 hours
-  const todayMidnight = new Date(veNow.getTime() + 4 * 60 * 60 * 1000)
+  // Día de hoy en la zona del condominio, como rango UTC [start, end)
+  const today = localTodayRangeUtc(now)
 
   const unitId = (session.user as Record<string, unknown>).unitId as string | undefined
 
@@ -62,7 +59,6 @@ export default defineEventHandler(async (event) => {
     totalUnits,
     pendingProviders,
     myOpenIncidents,
-    todayAccessCount,
     unitsInDebt,
     todayEntryCount,
     todayExitCount,
@@ -179,18 +175,6 @@ export default defineEventHandler(async (event) => {
       return row?.total ?? 0
     }),
 
-    // todayAccessCount
-    safeCount(async () => {
-      const [row] = await db
-        .select({ total: count() })
-        .from(accessLogs)
-        .where(and(
-          eq(accessLogs.tenantId, tenantId),
-          gte(accessLogs.createdAt, todayMidnight),
-        ))
-      return row?.total ?? 0
-    }),
-
     // unitsInDebt: units where sum of cargos > sum of abonos
     safeCount(async () => {
       const result = await db.execute(
@@ -206,30 +190,30 @@ export default defineEventHandler(async (event) => {
       return Number(rows[0]?.total ?? 0)
     }),
 
-    // todayEntryCount — actual entries today (exclude exit-only orphan rows)
+    // todayEntryCount — entradas permitidas de hoy (día local), sin filas "solo salida"
     safeCount(async () => {
       const [row] = await db
         .select({ total: count() })
         .from(accessLogs)
         .where(and(
           eq(accessLogs.tenantId, tenantId),
-          gte(accessLogs.createdAt, todayMidnight),
-          or(
-            isNull(accessLogs.exitAt),
-            dsql`${accessLogs.exitAt} > ${accessLogs.createdAt} + interval '1 minute'`,
-          ),
+          gte(accessLogs.createdAt, today.start),
+          lt(accessLogs.createdAt, today.end),
+          countedEntryCondition(),
         ))
       return row?.total ?? 0
     }),
 
-    // todayExitCount — access logs with exitAt today (exits)
+    // todayExitCount — salidas registradas hoy (día local) de accesos permitidos
     safeCount(async () => {
       const [row] = await db
         .select({ total: count() })
         .from(accessLogs)
         .where(and(
           eq(accessLogs.tenantId, tenantId),
-          gte(accessLogs.exitAt, todayMidnight),
+          eq(accessLogs.result, 'allowed'),
+          gte(accessLogs.exitAt, today.start),
+          lt(accessLogs.exitAt, today.end),
         ))
       return row?.total ?? 0
     }),
@@ -292,7 +276,9 @@ export default defineEventHandler(async (event) => {
     unitsInDebt,
     pendingProviders,
     myOpenIncidents,
-    todayAccessCount,
+    // "Accesos hoy" = entradas permitidas de hoy. Es el mismo número que la barra de hoy
+    // en trends.accessByDay; las salidas van aparte en todayExitCount.
+    todayAccessCount: todayEntryCount,
     todayEntryCount,
     todayExitCount,
     myBalance,

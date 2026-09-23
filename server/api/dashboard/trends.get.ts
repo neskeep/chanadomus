@@ -2,7 +2,7 @@ import { db } from '~~/server/db'
 import { incidents } from '~~/server/db/schema/incident'
 import { accessLogs } from '~~/server/db/schema/access'
 import { financialRecords } from '~~/server/db/schema/financial'
-import { eq, and, gte, sql as dsql } from 'drizzle-orm'
+import { eq, and, gte, lt, sql as dsql } from 'drizzle-orm'
 
 interface IncidentByMonth {
   month: string
@@ -31,9 +31,16 @@ export default defineEventHandler(async (event) => {
   const { tenantId } = await requireTenant(event)
 
   const now = new Date()
-  const sixMonthsAgo = new Date(now.getFullYear(), now.getMonth() - 5, 1)
-  // Use SQL string to avoid JS Date timezone offset with timestamp columns
-  const currentMonthISO = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-01`
+  // Meses y días se calculan en la zona del condominio, no en la del servidor
+  const sixMonthsAgoUtc = localMonthStartUtc(5, now)
+  // financial_records.date guarda la fecha de calendario (mediodía), se compara contra YYYY-MM-01
+  const sixMonthsAgoISO = localMonthStartString(5, now)
+  const currentMonthISO = localMonthStartString(0, now)
+
+  const accessDays = lastLocalDays(7, now)
+  const accessRange = localDateRangeToUtc(accessDays[0]!, accessDays[accessDays.length - 1]!)
+  const accessDayExpr = dsql<string>`to_char(${localDateOf(accessLogs.createdAt)}, 'YYYY-MM-DD')`
+  const incidentMonthExpr = dsql<string>`to_char(${localTimestampOf(incidents.createdAt)}, 'YYYY-MM')`
 
   const [incidentsByMonth, accessByDay, financeByMonth, financialKpis] = await Promise.all([
     // incidentsByMonth — last 6 months
@@ -41,41 +48,43 @@ export default defineEventHandler(async (event) => {
       try {
         const rows = await db
           .select({
-            month: dsql<string>`to_char(${incidents.createdAt}, 'YYYY-MM')`,
+            month: incidentMonthExpr,
             count: dsql<number>`cast(count(*) as integer)`,
           })
           .from(incidents)
           .where(and(
             eq(incidents.tenantId, tenantId),
-            gte(incidents.createdAt, sixMonthsAgo),
+            gte(incidents.createdAt, sixMonthsAgoUtc),
           ))
-          .groupBy(dsql`to_char(${incidents.createdAt}, 'YYYY-MM')`)
-          .orderBy(dsql`to_char(${incidents.createdAt}, 'YYYY-MM')`)
+          .groupBy(incidentMonthExpr)
+          .orderBy(incidentMonthExpr)
         return rows
       } catch {
         return []
       }
     })(),
 
-    // accessByDay — last 7 days
+    // accessByDay — hoy (zona del condominio) y los 6 días anteriores, días sin accesos en 0.
+    // Cuenta solo entradas permitidas (misma definición que stats.todayEntryCount).
     (async (): Promise<AccessByDay[]> => {
       try {
         const rows = await db
           .select({
-            day: dsql<string>`to_char(${accessLogs.createdAt} AT TIME ZONE 'America/Caracas', 'YYYY-MM-DD')`,
+            day: accessDayExpr,
             count: dsql<number>`cast(count(*) as integer)`,
           })
           .from(accessLogs)
           .where(and(
             eq(accessLogs.tenantId, tenantId),
-            dsql`(${accessLogs.createdAt} AT TIME ZONE 'America/Caracas')::date >= (CURRENT_DATE AT TIME ZONE 'America/Caracas' - INTERVAL '6 days')::date`,
-            dsql`(${accessLogs.createdAt} AT TIME ZONE 'America/Caracas')::date <= CURRENT_DATE AT TIME ZONE 'America/Caracas'`,
+            gte(accessLogs.createdAt, accessRange.start),
+            lt(accessLogs.createdAt, accessRange.end),
+            countedEntryCondition(),
           ))
-          .groupBy(dsql`to_char(${accessLogs.createdAt} AT TIME ZONE 'America/Caracas', 'YYYY-MM-DD')`)
-          .orderBy(dsql`to_char(${accessLogs.createdAt} AT TIME ZONE 'America/Caracas', 'YYYY-MM-DD')`)
-        return rows
+          .groupBy(accessDayExpr)
+        const byDay = new Map(rows.map(r => [r.day, r.count]))
+        return accessDays.map(day => ({ day, count: byDay.get(day) ?? 0 }))
       } catch {
-        return []
+        return accessDays.map(day => ({ day, count: 0 }))
       }
     })(),
 
@@ -91,7 +100,7 @@ export default defineEventHandler(async (event) => {
           .from(financialRecords)
           .where(and(
             eq(financialRecords.tenantId, tenantId),
-            gte(financialRecords.date, sixMonthsAgo),
+            dsql`${financialRecords.date} >= ${sixMonthsAgoISO}::date`,
           ))
           .groupBy(dsql`to_char(${financialRecords.date}, 'YYYY-MM')`)
           .orderBy(dsql`to_char(${financialRecords.date}, 'YYYY-MM')`)

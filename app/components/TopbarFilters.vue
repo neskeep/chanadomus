@@ -1,9 +1,19 @@
 <script setup lang="ts">
 import { SlidersHorizontal } from 'lucide-vue-next'
 
-defineProps<{
+withDefaults(defineProps<{
   active?: boolean
-}>()
+  /** `wide` da más ancho al popover, p. ej. para filtros en modo lista con nombres largos. */
+  size?: 'default' | 'wide'
+}>(), {
+  active: false,
+  size: 'default',
+})
+
+const WIDTH_CLASSES = {
+  default: 'w-56',
+  wide: 'w-72',
+} as const
 
 const emit = defineEmits<{
   clear: []
@@ -14,6 +24,8 @@ const emit = defineEmits<{
   <Popover>
     <PopoverTrigger as-child>
       <button
+        type="button"
+        aria-label="Filtros"
         class="relative flex size-8 shrink-0 items-center justify-center rounded-sm text-muted-foreground transition-colors hover:text-foreground"
       >
         <SlidersHorizontal class="size-3.5" />
@@ -26,7 +38,8 @@ const emit = defineEmits<{
     <PopoverContent
       align="end"
       :side-offset="8"
-      class="w-56 p-0"
+      class="max-w-[calc(100vw-2rem)] gap-0 p-0"
+      :class="WIDTH_CLASSES[size]"
       @interact-outside="(e: Event) => {
         const target = e.target as HTMLElement | null
         if (target?.closest('[data-unit-search]') || target?.closest('[data-unit-combobox-dropdown]')) {

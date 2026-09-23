@@ -1,9 +1,25 @@
-import { eq, and, isNull, desc } from 'drizzle-orm'
+import { eq, and, or, isNull, desc, sql, type SQL } from 'drizzle-orm'
 import { db } from '~~/server/db'
 import { accessLogs } from '~~/server/db/schema/access'
 import { broadcastAccessMessage } from '~~/server/utils/ws-access'
 
 const OPEN_ENTRY_WINDOW_MS = 30 * 24 * 60 * 60 * 1000 // 30 days — supports multi-day visitor stays
+
+/**
+ * Condición SQL de "entrada contabilizable" en access_logs:
+ * - solo accesos permitidos (excluye denied, expired, already_used)
+ * - excluye filas huérfanas "solo salida" (exit_at casi igual a created_at, ver fix 4882b0e)
+ * Fuente única para el badge "N hoy", la barra de hoy y el contador de entradas.
+ */
+export function countedEntryCondition(): SQL {
+  return and(
+    eq(accessLogs.result, 'allowed'),
+    or(
+      isNull(accessLogs.exitAt),
+      sql`${accessLogs.exitAt} > ${accessLogs.createdAt} + interval '1 minute'`,
+    ),
+  ) as SQL
+}
 
 export interface HasOpenEntryResult {
   exists: boolean

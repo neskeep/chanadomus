@@ -26,6 +26,14 @@ export default defineNuxtConfig({
 
   css: ['~/assets/css/main.css'],
 
+  runtimeConfig: {
+    public: {
+      // Zona horaria IANA del condominio: define qué es "hoy" en dashboards y filtros.
+      // Sobreescribible con NUXT_PUBLIC_APP_TIMEZONE.
+      appTimezone: 'America/Caracas',
+    },
+  },
+
   vite: {
     plugins: [
       // eslint-disable-next-line @typescript-eslint/no-explicit-any

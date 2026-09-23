@@ -30,6 +30,7 @@ export default defineEventHandler(async (event) => {
   }
 
   const now = new Date()
+  const timeZone = getAppTimezone()
 
   // --- Parallel queries ---
   const [financialData, openIncidents, statsData] = await Promise.all([
@@ -114,12 +115,13 @@ export default defineEventHandler(async (event) => {
     title: inc.title,
     priority: inc.priority,
     status: inc.status,
-    date: inc.createdAt.toLocaleDateString('es-VE'),
+    date: inc.createdAt.toLocaleDateString('es-VE', { timeZone }),
   }))
 
   // --- Build PDF ---
-  const dateStr = now.toISOString().split('T')[0]
+  const dateStr = localTodayString(now, timeZone)
   const formattedDate = now.toLocaleDateString('es-VE', {
+    timeZone,
     year: 'numeric',
     month: 'long',
     day: 'numeric',

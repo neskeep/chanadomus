@@ -4,6 +4,7 @@ export function useAccessStream() {
   const events = ref<AccessEvent[]>([])
   const isConnected = ref(false)
   const maxEvents = 20
+  const { today: localToday } = useLocalDate()
 
   const wsProtocol = computed(() => {
     if (import.meta.server) return 'ws'
@@ -55,7 +56,7 @@ export function useAccessStream() {
 
   async function loadInitialEvents() {
     try {
-      const today = new Date().toISOString().slice(0, 10)
+      const today = localToday()
       const result = await $fetch('/api/access/logs', {
         query: { date: today, limit: maxEvents },
       })

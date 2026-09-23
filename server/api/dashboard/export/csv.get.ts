@@ -3,6 +3,7 @@ import { financialRecords } from '~~/server/db/schema/financial'
 import { units } from '~~/server/db/schema/unit'
 import { incidents } from '~~/server/db/schema/incident'
 import { eq, and, inArray, sql as dsql } from 'drizzle-orm'
+import { zonedDateString } from '~~/shared/lib/zoned-date'
 
 interface FinancialRow {
   unitLabel: string | null
@@ -26,13 +27,14 @@ function escapeCsvField(value: string): string {
   return value
 }
 
-function formatDate(date: Date): string {
-  return date.toISOString().split('T')[0] ?? ''
+function formatDate(date: Date, timeZone: string): string {
+  return zonedDateString(date, timeZone)
 }
 
 export default defineEventHandler(async (event) => {
   const session = await requireTenant(event)
   const { tenantId } = session
+  const timeZone = getAppTimezone()
 
   // Admin-only endpoint
   if (session.user.role !== 'admin') {
@@ -116,14 +118,14 @@ export default defineEventHandler(async (event) => {
       high: 'Alta',
     }
     lines.push(
-      `${escapeCsvField(row.title)},${priorityMap[row.priority] ?? row.priority},${statusMap[row.status] ?? row.status},${formatDate(row.createdAt)}`,
+      `${escapeCsvField(row.title)},${priorityMap[row.priority] ?? row.priority},${statusMap[row.status] ?? row.status},${formatDate(row.createdAt, timeZone)}`,
     )
   }
 
   const csv = bom + lines.join('\n')
 
   // Date for filename
-  const today = new Date().toISOString().split('T')[0]
+  const today = localTodayString()
 
   setResponseHeaders(event, {
     'Content-Type': 'text/csv; charset=utf-8',

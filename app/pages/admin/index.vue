@@ -51,9 +51,16 @@ function monthLabel(yyyymm: string): string {
   return new Date(Number(y), Number(m) - 1).toLocaleDateString('es-VE', { month: 'short' })
 }
 
+// YYYY-MM-DD es una fecha de calendario: se formatea en UTC para que la zona del navegador no la desplace
 function dayLabel(yyyymmdd: string): string {
-  return new Date(yyyymmdd + 'T00:00:00').toLocaleDateString('es-VE', { weekday: 'short' })
+  return new Date(`${yyyymmdd}T12:00:00Z`).toLocaleDateString('es-VE', { weekday: 'short', timeZone: 'UTC' })
 }
+
+// El servidor devuelve 7 días terminando hoy: el badge "N hoy" es la última barra
+const todayAccessCount = computed(() => {
+  const items = trends.value?.accessByDay ?? []
+  return items.at(-1)?.count ?? stats.value?.todayAccessCount ?? 0
+})
 
 // --- Chart data ---
 
@@ -251,7 +258,7 @@ const groupedChartOpts = {
             <p class="text-xs text-muted-foreground">Últimos 7 días</p>
           </div>
           <Badge v-if="!isLoading" variant="secondary" class="tabular-nums">
-            {{ stats?.todayAccessCount ?? 0 }} hoy
+            {{ todayAccessCount }} hoy
           </Badge>
         </div>
         <div v-if="isLoading" class="h-56">

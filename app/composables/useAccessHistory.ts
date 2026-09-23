@@ -27,14 +27,12 @@ export function useAccessHistory() {
     totalPages: 0,
   })
 
-  // Default: last 7 days
-  const today = new Date()
-  const weekAgo = new Date(today)
-  weekAgo.setDate(weekAgo.getDate() - 7)
+  // Default: last 7 days (fechas del condominio, no UTC)
+  const { today, daysAgo } = useLocalDate()
 
   const filters = ref<HistoryFilters>({
-    from: weekAgo.toISOString().slice(0, 10),
-    to: today.toISOString().slice(0, 10),
+    from: daysAgo(7),
+    to: today(),
     result: '',
     entryType: '',
     search: '',
@@ -82,12 +80,9 @@ export function useAccessHistory() {
   }
 
   function resetFilters() {
-    const now = new Date()
-    const week = new Date(now)
-    week.setDate(week.getDate() - 7)
     filters.value = {
-      from: week.toISOString().slice(0, 10),
-      to: now.toISOString().slice(0, 10),
+      from: daysAgo(7),
+      to: today(),
       result: '',
       entryType: '',
       search: '',

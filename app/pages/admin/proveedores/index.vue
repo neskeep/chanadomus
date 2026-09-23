@@ -161,8 +161,8 @@ function renderStars(rating: number | undefined): number[] {
     <!-- Topbar actions -->
     <Teleport v-if="isMounted" :to="target" defer>
       <TopbarSearch v-model="searchQuery" placeholder="Buscar proveedor...">
-        <TopbarFilters :active="filterCategory !== '' || filterStatus !== ''" @clear="filterCategory = ''; filterStatus = ''">
-          <TopbarFilterGroup v-model="filterCategory" label="Categoria" :options="providerCategoryOptions" />
+        <TopbarFilters :active="filterCategory !== '' || filterStatus !== ''" size="wide" @clear="filterCategory = ''; filterStatus = ''">
+          <TopbarFilterGroup v-model="filterCategory" label="Categoría" :options="providerCategoryOptions" variant="list" search-placeholder="Buscar categoría..." all-label="Todas las categorías" />
           <TopbarFilterGroup v-model="filterStatus" label="Estado" :options="providerStatusOptions" />
         </TopbarFilters>
       </TopbarSearch>
@@ -186,8 +186,8 @@ function renderStars(rating: number | undefined): number[] {
     <!-- Mobile search -->
     <div class="mb-4 md:hidden">
       <TopbarSearch v-model="searchQuery" placeholder="Buscar proveedor...">
-        <TopbarFilters :active="filterCategory !== '' || filterStatus !== ''" @clear="filterCategory = ''; filterStatus = ''">
-          <TopbarFilterGroup v-model="filterCategory" label="Categoria" :options="providerCategoryOptions" />
+        <TopbarFilters :active="filterCategory !== '' || filterStatus !== ''" size="wide" @clear="filterCategory = ''; filterStatus = ''">
+          <TopbarFilterGroup v-model="filterCategory" label="Categoría" :options="providerCategoryOptions" variant="list" search-placeholder="Buscar categoría..." all-label="Todas las categorías" />
           <TopbarFilterGroup v-model="filterStatus" label="Estado" :options="providerStatusOptions" />
         </TopbarFilters>
       </TopbarSearch>

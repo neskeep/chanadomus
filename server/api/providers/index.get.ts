@@ -2,7 +2,8 @@ import { db } from '~~/server/db'
 import { providers, providerReviews } from '~~/server/db/schema/provider'
 import { user } from '~~/server/db/schema/auth'
 import { serviceStaffRoles } from '~~/server/db/schema/service-staff-role'
-import { eq, and, or, asc, count, ilike, avg, inArray, sql } from 'drizzle-orm'
+import { eq, and, or, asc, count, avg, inArray, sql } from 'drizzle-orm'
+import { buildSearchPattern, searchContains } from '~~/server/utils/search'
 import { isProviderCategory, type Provider, type ProviderStatus } from '~~/shared/types/provider'
 
 const VALID_STATUSES: ProviderStatus[] = ['active', 'inactive', 'pending']
@@ -50,14 +51,14 @@ export default defineEventHandler(async (event) => {
   }
 
   // Search by provider name, category (service role) name, or any listed service.
-  // Escape LIKE wildcards so the term is matched literally.
+  // Case- and accent-insensitive ("víveres" == "viveres"); LIKE wildcards escaped.
   const term = search?.trim()
   if (term) {
-    const pattern = `%${term.replace(/[\\%_]/g, '\\$&')}%`
+    const pattern = buildSearchPattern(term)
     const searchCondition = or(
-      ilike(providers.name, pattern),
-      ilike(serviceStaffRoles.name, pattern),
-      sql`array_to_string(${providers.services}, ' ') ilike ${pattern}`,
+      searchContains(providers.name, pattern),
+      searchContains(serviceStaffRoles.name, pattern),
+      searchContains(sql`array_to_string(${providers.services}, ' ')`, pattern),
     )
     if (searchCondition) conditions.push(searchCondition)
   }
