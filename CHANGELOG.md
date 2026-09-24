@@ -7,6 +7,11 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [1.10.1] - 2026-09-24
+
+### Added
+- Eventos: cuando la salida automática cierra invitados que seguían dentro, el propietario responsable recibe un aviso push con el total de invitados y el enlace al evento (el creador si es propietario de la unidad; si lo creó conserje o administración, los propietarios de la unidad). Respeta la preferencia "Anuncios"
+
 ## [1.10.0] - 2026-09-23
 
 ### Added

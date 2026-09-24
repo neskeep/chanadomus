@@ -3,6 +3,7 @@ import { db } from '~~/server/db'
 import { events, eventGuests } from '~~/server/db/schema/event'
 import { accessLogs } from '~~/server/db/schema/access'
 import { broadcastAccessMessage } from '~~/server/utils/ws-access'
+import { notifyAutoCheckout } from '~~/server/utils/notify-auto-checkout'
 import type { DbExecutor } from '~~/server/utils/access-entry-exit'
 import { autoCheckoutAt, autoCheckoutCutoff } from '~~/shared/lib/event-window'
 
@@ -76,6 +77,9 @@ export function broadcastGuestLogExits(rows: EventGuestRow[]): void {
  *
  * Acotado por tenant, en una transaccion e idempotente: si no hay candidatos solo
  * cuesta un SELECT indexado. Se llama desde expireEvents().
+ *
+ * Tras el commit avisa por push al propietario responsable de cada evento (un aviso por
+ * evento). El aviso no se espera: no retrasa la respuesta y, si falla, solo queda en log.
  */
 export async function autoCheckoutStaleGuests(tenantId: string, now: Date = new Date()): Promise<number> {
   const candidates = await db
@@ -113,5 +117,7 @@ export async function autoCheckoutStaleGuests(tenantId: string, now: Date = new 
   })
 
   broadcastGuestLogExits(closed)
+  // Solo las filas que este cierre cambio: un cierre paralelo que no cerro nada no avisa.
+  void notifyAutoCheckout(tenantId, closed)
   return closed.length
 }
