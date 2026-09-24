@@ -7,6 +7,11 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [1.11.1] - 2026-09-24
+
+### Fixed
+- Migraciones en producción (`scripts/migrate.mjs`): una sentencia precedida por una línea de comentario `--` se descartaba entera. Ahora solo se quitan las líneas de comentario. Afectó a la semilla de tarifas de la migración 0060, que se cargó después por la API
+
 ## [1.11.0] - 2026-09-24
 
 ### Added

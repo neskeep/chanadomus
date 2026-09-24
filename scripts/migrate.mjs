@@ -85,8 +85,10 @@ async function run() {
       .split('--> statement-breakpoint')
       .flatMap(block =>
         block.split(/;(?=\s*(?:--|$|\n|ALTER|CREATE|DROP|INSERT|UPDATE|DELETE))/i)
-          .map(s => s.trim())
-          .filter(s => s.length > 0 && !s.startsWith('--'))
+          // Quita solo las lineas de comentario: descartar el bloque entero por empezar
+          // con "--" se saltaba la sentencia que venia debajo (semilla de 0060).
+          .map(s => s.split('\n').filter(line => !line.trim().startsWith('--')).join('\n').trim())
+          .filter(s => s.length > 0)
       )
 
     for (const stmt of statements) {
