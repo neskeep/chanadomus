@@ -4,7 +4,7 @@ import {
   MessageCircle, Megaphone, Vote, Wrench, Calendar,
   ScanLine, ClipboardList, QrCode, FileText, CreditCard, Car,
   UserCog, ShieldAlert, BookOpen, UserPlus, History,
-  LifeBuoy, ScrollText, Send, PartyPopper,
+  LifeBuoy, ScrollText, Send, PartyPopper, Receipt,
 } from 'lucide-vue-next'
 import { ROLE_REDIRECTS } from '~~/shared/types/auth'
 
@@ -46,6 +46,7 @@ export function useNavigation() {
               { label: 'Proveedores y servicios', icon: Wrench, to: '/admin/proveedores' },
               { label: 'Roles de Servicio', icon: Users, to: '/admin/roles-servicio' },
               { label: 'Pases Vehiculares', icon: Car, to: '/admin/pases-vehiculares' },
+              { label: 'Membresía', icon: Receipt, to: '/admin/membresia' },
             ],
           },
           {

@@ -421,6 +421,13 @@
       "when": 1788460447016,
       "tag": "0059_last_wallflower",
       "breakpoints": true
+    },
+    {
+      "idx": 60,
+      "version": "7",
+      "when": 1790284774764,
+      "tag": "0060_membership",
+      "breakpoints": true
     }
   ]
 }

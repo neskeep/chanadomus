@@ -40,6 +40,8 @@ const PAGE_MAP: Record<string, PageInfo> = {
   '/admin/soporte': { title: 'Soporte', description: 'Gestión de tickets de soporte técnico' },
   '/admin/changelog': { title: 'Changelog', description: 'Historial de versiones y cambios' },
   '/admin/changelog/crear': { title: 'Nueva Entrada', description: 'Publica una nueva versión en el changelog', breadcrumbs: [{ label: 'Changelog', to: '/admin/changelog' }] },
+  '/admin/membresia': { title: 'Membresía', description: 'Cobro mensual de ChanaDomus por unidad' },
+  '/admin/membresia/tarifas': { title: 'Tarifas de membresía', description: 'Programa una tarifa nueva y consulta el historial', breadcrumbs: [{ label: 'Membresía', to: '/admin/membresia' }] },
   '/admin/documentacion': { title: 'Documentación', description: 'Manual de uso de ChanaDomus' },
 
   // Propietario
@@ -117,6 +119,7 @@ const DYNAMIC_ROUTES: Array<{ prefix: string; info: PageInfo }> = [
   { prefix: '/propietario/mi-unidad/editar-miembro/', info: { title: 'Editar Integrante', description: 'Actualiza información del miembro', breadcrumbs: [{ label: 'Mi Unidad', to: '/propietario/mi-unidad' }] } },
   { prefix: '/propietario/mi-unidad/editar-vehiculo/', info: { title: 'Editar Vehículo', description: 'Actualiza información del vehículo', breadcrumbs: [{ label: 'Mi Unidad', to: '/propietario/mi-unidad' }] } },
   { prefix: '/propietario/mi-unidad/editar-personal/', info: { title: 'Editar Personal', description: 'Actualiza información del personal de servicio', breadcrumbs: [{ label: 'Mi Unidad', to: '/propietario/mi-unidad' }] } },
+  { prefix: '/admin/membresia/', info: { title: 'Cierre del mes', description: 'Tarifa de cada unidad guardada al cerrar el mes', breadcrumbs: [{ label: 'Membresía', to: '/admin/membresia?tab=cierres' }] } },
   { prefix: '/admin/soporte/', info: { title: 'Detalle de Ticket', description: 'Información y estado del ticket', breadcrumbs: [{ label: 'Soporte', to: '/admin/soporte' }] } },
   { prefix: '/admin/changelog/', info: { title: 'Editar Changelog', description: 'Modificar entrada del changelog', breadcrumbs: [{ label: 'Changelog', to: '/admin/changelog' }] } },
   { prefix: '/mi-chana/soporte/', info: { title: 'Detalle de Ticket', description: 'Estado de tu ticket', breadcrumbs: [{ label: 'Soporte', to: '/mi-chana/soporte' }] } },

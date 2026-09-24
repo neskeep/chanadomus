@@ -7,6 +7,17 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [1.11.0] - 2026-09-24
+
+### Added
+- Membresía (backend): cálculo en vivo del cobro por unidad. Tarifa completa si la unidad tiene al menos un usuario, conserje, personal, miembro con pase activo, vehículo de residente o pase de residente; tarifa reducida en caso contrario. Las unidades inactivas siguen la misma regla y las DEMO no se cobran
+- API `/api/admin/membership`: resumen del mes en curso (totales por tarifa, por tipo y tipo×tarifa), lista de unidades con filtros y paginación, historial de tarifas, cierres mensuales con su detalle y exportación CSV. Crear tarifas y cerrar o regenerar un mes queda reservado al superadmin
+- Membresía (UI): panel `/admin/membresia` en el grupo Gestión con pestañas "Mes en curso" (total del mes con su cálculo, unidades por tarifa, desglose por ranchos y parcelas, regla de cobro, tabla de unidades con motivo, accesos de 30 días, movimientos y saldo, filtros, búsqueda y exportación CSV) y "Cierres" (lista por mes y detalle congelado en `/admin/membresia/:periodo` con CSV). El superadmin puede cerrar o regenerar un mes con confirmación y programar tarifas en `/admin/membresia/tarifas`; el admin del condominio lo ve en solo lectura
+- Cierre mensual automático del mes anterior la primera vez que un admin abre el panel de membresía o el dashboard, con bloqueo por tenant y periodo para no duplicarlo
+
+### Database
+- Migración 0060: tablas nuevas `membership_rates`, `membership_closings` y `membership_closing_units` (aditiva, con `tenant_id`) y tarifa inicial de 4,50 / 2,00 USD desde el 2026-10-01 para cada tenant (idempotente)
+
 ## [1.10.1] - 2026-09-24
 
 ### Added

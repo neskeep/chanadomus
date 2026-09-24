@@ -51,6 +51,11 @@ export default defineEventHandler(async (event) => {
   // Lazy expiration: cerrar votaciones vencidas antes de contar "activas"
   await expirePolls(tenantId)
 
+  // Cierre perezoso de la membresía del mes anterior (solo admin). Nunca rompe el dashboard.
+  if (session.user.role === 'admin') {
+    await ensureMonthlyClosingsSafe(tenantId)
+  }
+
   const [
     openIncidents,
     inProgressIncidents,
