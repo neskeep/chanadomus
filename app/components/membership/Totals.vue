@@ -42,12 +42,6 @@ function share(n: number): number {
   return total > 0 ? (n / total) * 100 : 0
 }
 
-const formula = computed(() => {
-  if (!props.totals || !props.rates) return null
-  const { full, reduced } = props.totals.byTier
-  return `${full.units} × ${formatCurrency(props.rates.fullRate)} + ${reduced.units} × ${formatCurrency(props.rates.reducedRate)}`
-})
-
 // "Otras" solo aparece si hay alguna (unidades sin prefijo R- ni P-).
 const kindRows = computed(() => {
   if (!props.totals) return []
@@ -71,8 +65,7 @@ const kindRows = computed(() => {
         <template v-else>
           <p class="text-sm text-muted-foreground">{{ totalLabel }}</p>
           <p class="mt-1 text-2xl font-bold tabular-nums tracking-tight sm:text-3xl">{{ money(totals?.total) }}</p>
-          <p v-if="formula" class="mt-2 text-sm tabular-nums text-muted-foreground">{{ formula }}</p>
-          <p v-else class="mt-2 text-sm text-muted-foreground">Sin tarifa configurada: solo se cuentan las unidades.</p>
+          <p v-if="!rates" class="mt-2 text-sm text-muted-foreground">Sin tarifa configurada: solo se cuentan las unidades.</p>
           <slot name="note" />
         </template>
       </Card>

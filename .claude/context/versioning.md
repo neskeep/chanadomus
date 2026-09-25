@@ -8,7 +8,7 @@ Formato: `MAJOR.MINOR.PATCH`
 - **MINOR** (0.1.0, 0.2.0): Nuevo modulo o feature completo (backward compatible)
 - **PATCH** (0.1.1, 0.1.2): Bug fixes, ajustes menores, hotfixes
 
-## Version actual: v1.11.2
+## Version actual: v1.11.3
 
 ## Historial de Versiones
 

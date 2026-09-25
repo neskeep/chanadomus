@@ -7,6 +7,11 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [1.11.3] - 2026-09-25
+
+### Changed
+- Membresías: se quita la fórmula bajo el total del mes, porque el costo por unidad ya aparece en las tarjetas de tarifa
+
 ## [1.11.2] - 2026-09-25
 
 ### Changed
