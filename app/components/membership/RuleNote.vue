@@ -14,7 +14,7 @@ import { Info } from 'lucide-vue-next'
       </p>
       <p>
         <span class="font-medium text-foreground">Tarifa reducida:</span>
-        unidades sin ninguno de ellos. Las unidades inactivas siguen la misma regla.
+        unidades sin ningún usuario y sin personas ni vehículos con QR permanente (miembro del hogar, personal o vehículo de residente). Las unidades inactivas siguen la misma regla.
       </p>
       <p>
         El cálculo es automático: cuando una unidad recibe su primer usuario o pase, pasa a tarifa completa.

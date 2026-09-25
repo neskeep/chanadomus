@@ -9,7 +9,7 @@ import {
   type MembershipClosing,
 } from '~~/shared/types/membership'
 
-useHead({ title: 'Membresía' })
+useHead({ title: 'Membresías' })
 
 // --- Pestañas (sincronizadas con ?tab=) ---
 

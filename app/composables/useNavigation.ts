@@ -46,7 +46,7 @@ export function useNavigation() {
               { label: 'Proveedores y servicios', icon: Wrench, to: '/admin/proveedores' },
               { label: 'Roles de Servicio', icon: Users, to: '/admin/roles-servicio' },
               { label: 'Pases Vehiculares', icon: Car, to: '/admin/pases-vehiculares' },
-              { label: 'Membresía', icon: Receipt, to: '/admin/membresia' },
+              { label: 'Membresías', icon: Receipt, to: '/admin/membresia' },
             ],
           },
           {

@@ -31,10 +31,10 @@ function money(value: number | null | undefined): string {
   return value === null || value === undefined ? '—' : formatCurrency(value)
 }
 
-/** "1 unidad, $ 4,50" / "73 unidades, $ 146,00" */
-function amountCaption(units: number, value: number | null): string {
-  const unitsText = units === 1 ? '1 unidad' : `${units} unidades`
-  return value === null ? unitsText : `${unitsText}, ${formatCurrency(value)}`
+/** "$ 4,50 c/u, total $ 333,00"; sin tarifa, solo el número de unidades. */
+function amountCaption(units: number, rate: number | undefined, value: number | null): string {
+  if (rate === undefined || value === null) return units === 1 ? '1 unidad' : `${units} unidades`
+  return `${formatCurrency(rate)} c/u, total ${formatCurrency(value)}`
 }
 
 function share(n: number): number {
@@ -83,7 +83,7 @@ const kindRows = computed(() => {
         :progress="share(totals?.byTier.full.units ?? 0)"
         :icon="CircleCheck"
         :icon-bg-class="ICON_BG.teal"
-        :caption="totals ? amountCaption(totals.byTier.full.units, totals.byTier.full.amount) : undefined"
+        :caption="totals ? amountCaption(totals.byTier.full.units, rates?.fullRate, totals.byTier.full.amount) : undefined"
         tooltip="Unidades con al menos un usuario o una persona o vehículo con QR permanente."
         :is-loading="isLoading"
       />
@@ -93,8 +93,8 @@ const kindRows = computed(() => {
         :progress="share(totals?.byTier.reduced.units ?? 0)"
         :icon="CircleDashed"
         :icon-bg-class="ICON_BG.orange"
-        :caption="totals ? amountCaption(totals.byTier.reduced.units, totals.byTier.reduced.amount) : undefined"
-        tooltip="Unidades sin usuarios ni personas o vehículos con QR permanente."
+        :caption="totals ? amountCaption(totals.byTier.reduced.units, rates?.reducedRate, totals.byTier.reduced.amount) : undefined"
+        tooltip="Unidades sin ningún usuario y sin personas ni vehículos con QR permanente."
         :is-loading="isLoading"
       />
     </div>

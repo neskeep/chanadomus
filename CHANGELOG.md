@@ -7,6 +7,11 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [1.11.2] - 2026-09-25
+
+### Changed
+- Membresías: el menú y el título pasan a plural, las tarjetas de tarifa muestran el costo por unidad ("$ 4,50 c/u, total $ 333,00") y la regla de tarifa reducida repite la condición completa
+
 ## [1.11.1] - 2026-09-24
 
 ### Fixed
